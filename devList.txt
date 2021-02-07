@@ -1,0 +1,42 @@
+Planned Features
+P0. Physics (Collision)
+P0. Animations (Single Idle Animation) --> needs skeletons
+P0. Animations (Switching Animations)
+P0. Resolution Switching
+P0. Text
+P1. Menus
+P1. Config Files
+P1. Improved Physics
+P1. Fix g++ optimzations
+P1. Camera (Switch to Other Game Object)
+P1. Controls (Gamepad)
+P1. Windows Testing
+P1. Lighting (Shadows)
+P1. Lighting (Transparency)
+P1. Mesh Generators
+p2. Camera Orbit (Switch from distance to rad/deg)
+P2. Lighting (Area)
+P2. Lighting (Raytraced)
+P2. Enemy AIs
+P2. Networking (Chat)
+P2. Lighting (Godrays)
+P2. Lighting (Bloom)
+P3. Anti-Aliasing
+P3. Fluids
+P3. Lighting (Reflections)
+P3. Networking (Gameplay)
+P4. Particle Effects (Gases)
+P4. Particle Effects (Hair)
+P4. Global Illumination
+P4. Ray Tracing Anti-Aliasing
+P4. Physics Fluids
+P4. Vulkan Port
+P4. Split Screen
+P5. Optimizations (In general)
+
+Implemented (Needs Review)
+1. Camera Orbit (Mouse Controls)
+2. Physics (Gravity)
+
+
+Finished

@@ -1,0 +1,4 @@
+game
+*.o
+build/*
+rpg
