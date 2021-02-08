@@ -1,7 +1,7 @@
 #pragma once
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <GL/glew.h>
-#include <SDL2/SDL_mixer.h>
+#include <SDL_mixer.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 

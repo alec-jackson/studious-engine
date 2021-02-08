@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <cstring>
 #ifndef SDL2_image
-#include <SDL2/SDL_image.h>
+#include <SDL_image.h>
 #endif
 
 #include "modelImport.hpp"

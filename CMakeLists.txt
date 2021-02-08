@@ -13,7 +13,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O0")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(GLEW REQUIRED)
+if (APPLE)
+include_directories(
+  /usr/local/Cellar/glew/2.2.0_1/include/
+  /usr/local/Cellar/glm/0.9.9.8/include/
+)
+endif (APPLE)
+
+find_package(GLEW 2.0 REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_image REQUIRED)
