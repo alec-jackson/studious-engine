@@ -24,7 +24,7 @@ int textLib::initText(){
   }
 
   FT_Face face;
-  if (FT_New_Face(ft, "fonts/arial.ttf", 0, &face))
+  if (FT_New_Face(ft, "misc/fonts/AovelSans.ttf", 0, &face))
   {
       cout << "ERROR::FREETYPE: Failed to load font" << endl;
       return -1;

@@ -26,6 +26,7 @@ using namespace std;
 #include "gameInstance.hpp"
 #include "inputMonitor.hpp"
 #include "physics.hpp"
+#include "misc/config.hpp"
 
 #define PI 3.14159265
 
@@ -39,7 +40,6 @@ GameInstance currentGame;
 // Should probably add flag parsing at some point for further call modularity
 // Function should probably also set system interupt handling
 int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
-	const char* soundList[] = {"sfx/music/endlessNight.wav"};
 	currentGame = *gamein;
 	printf("Starting the game instance\n");
 	SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -198,7 +198,7 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
 
 	// Additional threads should be added, pipes will most likely be required
 	// Might also be a good idea to keep the parent thread local to watch for unexpected failures and messages from children
-	pthread_t tid;
+	pthread_t tid; // Should be moved to SDL threads for better cross platform support
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_create(&tid, &attr, rotateShape, &currentGameInfo); // spawns thread to handle input handling and object manipulation

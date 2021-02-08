@@ -21,7 +21,7 @@ find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 
-add_executable(${PROJECT_NAME} game.cpp launcher.cpp modelImport.cpp shaderLoader.cpp gameInstance.cpp gameObject.cpp inputMonitor.cpp textLoader.cpp physics.cpp)
+add_executable(${PROJECT_NAME} game.cpp launcher.cpp modelImport.cpp shaderLoader.cpp gameInstance.cpp gameObject.cpp inputMonitor.cpp textLoader.cpp physics.cpp misc/config.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})

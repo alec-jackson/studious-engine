@@ -28,7 +28,7 @@ typedef struct gameCameraLL {
 
 typedef struct controllerReadout {
 	Sint16 leftAxis;
-}controllerReadout;
+} controllerReadout;
 
 class GameInstance {
 private:
