@@ -34,7 +34,6 @@ int setup(pthread_mutex_t *infoLock, GameInstance *currentGame, ConfigData* conf
   if (pthread_mutex_init(infoLock, NULL)) {
     printf("Mutex lock failed to engage!\n");
   }
-
   int flag = loadConfig(config, "misc/config.txt");
   if(!flag){
     currentGame -> startGameInstance(config -> resX, config -> resY, soundList, 1, vertShaders, fragShaders, 3, infoLock);

@@ -3,3 +3,10 @@ game
 build/*
 rpg
 engineExample
+*.DS_Store
+engineExample.xcodeproj/*
+CMakeCache.txt
+CMakeFiles/*
+CMakeScripts/*
+cmake_install.cmake
+engineExample.build/*

@@ -27,6 +27,7 @@ using namespace std;
 #include "inputMonitor.hpp"
 #include "physics.hpp"
 #include "misc/config.hpp"
+#include "textLoader.hpp"
 
 #define PI 3.14159265
 
@@ -148,6 +149,24 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
 	wolfObj.colliderObject = humanCollider;
 
 	gameObject[3] = currentGame.createGameObject(wolfObj);
+  
+  printf("Creating TEXT\n");
+
+  // Ready the gameObjectInfo for the wolf object
+  gameObjectInfo tobj;
+  textLib to;
+  tobj.characterModel = to.buildTextObj("Sans", 0, 0, 1, vec3(1,1,1));
+  tobj.scaleVec = vec3(0.02f, 0.02f, 0.02f); // Arbitrary hell
+  tobj.pos = vec3(0.00f, 0.01f, -0.08f);
+  tobj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
+  tobj.rotAngle = 0.0f;
+  tobj.camera = gameObject[2];
+  tobj.collisionTagName = "text";
+  tobj.programIDNo = currentGame.getProgramID(2);
+  tobj.orthographic = false;
+  tobj.colliderObject = NULL;
+
+  gameObject[3] = currentGame.createGameObject(wolfObj);
 
 	printf("Reserving space for text\n");
 	//Create Reusable text object

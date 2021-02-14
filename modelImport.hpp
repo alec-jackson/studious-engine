@@ -9,7 +9,6 @@ typedef struct polygon {
     GLfloat **vertices; // RAW vertex data
     GLfloat **textureCoords; // RAW texture coordinate data
     GLfloat **normalCoords; // RAW normal vector data
-    GLfloat size; // Deprecated :)
     GLint *pointCount; // describes the number of distinct points in each array
     GLint numberOfObjects; // Contains the number of objects in the model
     GLuint programID; // Used for storing most recent shader

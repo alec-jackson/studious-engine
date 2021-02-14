@@ -28,7 +28,7 @@ class textLib {
     int changeFontSize(FT_Face* face, int size);
     int initText();
     int genText(FT_Face* face);
-    int buildTextObj(string text, float x, float y, float scale, vec3 color, GameObjectText** renString);
+    polygon *buildTextObj(string text, float x, float y, float scale, vec3 color);
 
     map<char, Character> Characters;
 };

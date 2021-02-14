@@ -67,7 +67,7 @@ void *rotateShape(void *gameInfoStruct) {
 			cameraOffset[1] = 1.349999f;
 			cameraOffset[2] = 0;
 		}
-		if (currentGame.getKeystate()[SDL_SCANCODE_KP_2] || mouseY < 0 && trackMouse || controllerRightStateY > JOYSTICK_DEAD_ZONE) {
+		if (currentGame.getKeystate()[SDL_SCANCODE_KP_2] || (mouseY < 0 && trackMouse) || controllerRightStateY > JOYSTICK_DEAD_ZONE) {
 			float modifier = 1;
 			if(mouseY < 0){
 				modifier = (mouseY / 5) * -1;
@@ -89,7 +89,7 @@ void *rotateShape(void *gameInfoStruct) {
 			cameraOffset[2] /= distFinish;
 			cameraOffset[0] /= distFinish2;
 		}
-		if (currentGame.getKeystate()[SDL_SCANCODE_KP_8] || mouseY > 0 && trackMouse || controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
+		if (currentGame.getKeystate()[SDL_SCANCODE_KP_8] || (mouseY > 0 && trackMouse) || controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
 			//cameraOffset[1] += offsetSpeed;
 			float modifier = 1;
 			if(mouseY > 0){
@@ -118,7 +118,7 @@ void *rotateShape(void *gameInfoStruct) {
 		if (currentGame.getKeystate()[SDL_SCANCODE_KP_6]) {
 			cameraOffset[0] += offsetSpeed;
 		}
-		if (currentGame.getKeystate()[SDL_SCANCODE_KP_7] || mouseX < 0 && trackMouse || controllerRightStateX < -JOYSTICK_DEAD_ZONE) { // Rotate the camera about the y axis
+		if (currentGame.getKeystate()[SDL_SCANCODE_KP_7] || (mouseX < 0 && trackMouse) || controllerRightStateX < -JOYSTICK_DEAD_ZONE) { // Rotate the camera about the y axis
 			double distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
 			float multiplier = 1;
 			if(mouseX < 0){
@@ -147,7 +147,7 @@ void *rotateShape(void *gameInfoStruct) {
 			cameraOffset[2] /= distFinish;
 
 		}
-		if (currentGame.getKeystate()[SDL_SCANCODE_KP_9] || mouseX > 0 && trackMouse || controllerRightStateX > JOYSTICK_DEAD_ZONE) {
+		if (currentGame.getKeystate()[SDL_SCANCODE_KP_9] || (mouseX > 0 && trackMouse) || controllerRightStateX > JOYSTICK_DEAD_ZONE) {
 			double distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
 			float multiplier = 1;
 			if(mouseX > 0){
@@ -287,7 +287,7 @@ void *rotateShape(void *gameInfoStruct) {
 				SDL_SetRelativeMouseMode(SDL_TRUE);
 				trackMouse = 1;
 				sleep(1);
-			} else{
+			} else {
 				SDL_SetRelativeMouseMode(SDL_FALSE);
 				trackMouse = 0;
 				sleep(1);

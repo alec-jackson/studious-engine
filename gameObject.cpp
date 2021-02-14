@@ -234,6 +234,23 @@ void GameObject::setLock(pthread_mutex_t *lock) {
 	infoLock = lock;
 }
 
+/*
+ getCollision takes two GameObjects, (GameObject *)object1 and
+ (GameObject *)object2 and checks if they are colliding with one another.
+ Function will return -1 if object1 or object2 are missing collider objects.
+ Otherwise, function will return 0 when no collision is happening and 1
+ if the two objects are colliding.
+ */
+int GameObject::getCollision(GameObject *object1, GameObject *object2) {
+  vec3 center = vec3(0.0f, 0.0f, 0.0f);
+  // Check for collision objects on object1 and object2
+  if (object1 == NULL || object2 == NULL || object1->collider == NULL
+      || object2->collider == NULL) {
+    return -1;
+  }
+  // Assume rectangular box collider
+  return 0; 
+}
 
 /* GameCamera objects should be created with a create camera function inside of
  the GameInstance class.

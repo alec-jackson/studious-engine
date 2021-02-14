@@ -1,7 +1,7 @@
 #include <SDL.h>
 #include "config.hpp"
 
-int loadConfig(ConfigData* config, char* filename){
+int loadConfig(ConfigData* config, const char* filename){
   SDL_RWops* file;
   file = SDL_RWFromFile(filename, "r");
   if(file){

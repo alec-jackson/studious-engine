@@ -96,50 +96,35 @@ int textLib::genText(FT_Face* face){
   return 0;
 }
 
-int textLib::buildTextObj(string text, float x, float y, float scale, vec3 color, GameObjectText** renString){
-  // activate corresponding render state
-  // s.Use();
-  // Needs to switch to text shader
-  //glUniform3f(glGetUniformLocation(s.Program, "textColor"), color.x, color.y, color.z);
-  importObjInfo info;
-  gameObjectInfo objInfo;
-
-
-  // iterate through all characters
+polygon *textLib::buildTextObj(string text, float x, float y, float scale, vec3 color) {
+  // Create the (polygon *)model to hold the text
+  polygon *model = (polygon*)malloc(sizeof(polygon));
+  // Iterate through all the characters in (string)text
   std::string::const_iterator c;
   for (c = text.begin(); c != text.end(); c++)
   {
-      polygon *model = (polygon*)malloc(sizeof(struct polygon));
-      model->programID = info.programID;
-      model->shapebufferID = (GLuint*)malloc(sizeof(GLuint));
-      model->normalbufferID = (GLuint*)malloc(sizeof(GLuint));
-      model->textureCoordsID = (GLuint*)malloc(sizeof(GLuint));
-      model->textureID = (GLuint*)malloc(sizeof(GLuint));
-      model->pointCount = (GLint*)malloc(sizeof(GLint));
-      model->textureCoords = (GLfloat**)malloc(sizeof(GLfloat*));
-      model->vertices = (GLfloat**)malloc(sizeof(GLfloat*));
-      model->normalCoords = (GLfloat**)malloc(sizeof(GLfloat*));
+    // Set ch to the current character at c
+    Character ch = Characters[*c];
+    
 
-      Character ch = Characters[*c];
+    float xpos = x + ch.Bearing.x * scale;
+    float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
 
-      float xpos = x + ch.Bearing.x * scale;
-      float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+    float w = ch.Size.x * scale;
+    float h = ch.Size.y * scale;
+    // update VBO for each character
+    float vertices[6][3] = {
+        { xpos,     ypos + h,   1.0f },
+        { xpos,     ypos,       1.0f },
+        { xpos + w, ypos,       1.0f },
 
-      float w = ch.Size.x * scale;
-      float h = ch.Size.y * scale;
-      // update VBO for each character
-      float vertices[6][4] = {
-          { xpos,     ypos + h,   0.0f, 0.0f },
-          { xpos,     ypos,       0.0f, 1.0f },
-          { xpos + w, ypos,       1.0f, 1.0f },
+        { xpos,     ypos + h,   1.0f },
+        { xpos + w, ypos,       1.0f },
+        { xpos + w, ypos + h,   1.0f }
+    };
 
-          { xpos,     ypos + h,   0.0f, 0.0f },
-          { xpos + w, ypos,       1.0f, 1.0f },
-          { xpos + w, ypos + h,   1.0f, 0.0f }
-      };
-
-      // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-      x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+    // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+    x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
   }
   return 0;
 }

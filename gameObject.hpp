@@ -48,6 +48,7 @@ public:
   vec3 getPos();
   void setLuminance(GLfloat luminanceValue);
   void setLock(pthread_mutex_t *lock);
+  int getCollision(GameObject *object1, GameObject *object2);
 
 private:
 	polygon *model;

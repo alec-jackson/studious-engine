@@ -28,7 +28,7 @@ find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 
-add_executable(${PROJECT_NAME} game.cpp launcher.cpp modelImport.cpp shaderLoader.cpp gameInstance.cpp gameObject.cpp inputMonitor.cpp textLoader.cpp physics.cpp misc/config.cpp)
+add_executable(${PROJECT_NAME} game.cpp launcher.cpp launcher.hpp modelImport.cpp modelImport.hpp shaderLoader.cpp shaderLoader.hpp gameInstance.cpp gameInstance.hpp gameObject.cpp gameObject.hpp inputMonitor.cpp inputMonitor.hpp textLoader.cpp textLoader.hpp physics.cpp physics.hpp misc/config.cpp misc/config.hpp shaders/coll.frag shaders/coll.vert shaders/fragmentshader shaders/SimpleFragmentShader.fragmentshader shaders/SimpleVertexShader.vertexshader shaders/text.fragmentshader shaders/text.vertexshader shaders/vertexshader)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})

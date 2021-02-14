@@ -5,4 +5,4 @@ typedef struct ConfigData {
   int resY;
 } ConfigData;
 
-int loadConfig(ConfigData* config, char* filename);
+int loadConfig(ConfigData* config, const char* filename);
