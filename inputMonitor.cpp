@@ -11,7 +11,11 @@
 const int JOYSTICK_DEAD_ZONE = 4000;
 #define PI 3.14159265
 
-void *rotateShape(void *gameInfoStruct) {
+/*
+  THIS IS A REFERENCE FILE
+*/
+
+void* rotateShape(void *gameInfoStruct) {
   printf("Fork successful\n");
 	gameInfo *currentGameInfo = (gameInfo*)gameInfoStruct;
   GameInstance currentGame = currentGameInfo->currentGame;

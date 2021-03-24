@@ -18,4 +18,3 @@ typedef struct gameInfo {
 } gameInfo;
 
 int launch (pthread_mutex_t *infoLock, GameInstance *currentGame);
-float basicPhysics(float* pos, float fallspeed);

@@ -85,6 +85,12 @@ public:
 	GameObject *getGameObject(int gameObjectID);
 	GameCamera *getCamera(int gameCameraID);
 	GLdouble *getDeltaTime();
+	int setDeltaTime(GLdouble time);
 	void setLuminance(GLfloat luminanceValue);
 	void basicCollision(GameInstance* gameInstance);
+	int isWindowClosed();
+	void performOGL();
+	int updateCameras();
+	int updateObjects();
+	int updateWindow();
 };

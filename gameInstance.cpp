@@ -207,6 +207,61 @@ void GameInstance::mainLoop(bool *updated) {
 	cleanup();
 }
 
+int GameInstance::isWindowClosed(){
+	short running = 1;
+	while(SDL_PollEvent(&event)) {
+		if (event.type == SDL_QUIT || keystate[SDL_SCANCODE_ESCAPE]) {
+			printf("Closing now...\n");
+			running = 0;
+		}
+	}
+	return running;
+}
+
+void GameInstance::performOGL(){
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glClearColor(0.0f, 0.0f, 0.0, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+int GameInstance::updateCameras(){
+	gameCameraLL *currentGameCamera = gameCameras;
+	if (currentGameCamera == NULL) {
+		fprintf(stderr, "No cameras found in active scene!\n");
+		return 1;
+	}
+	// Update the VP matrix for each camera
+	for (int i = 0; i < gameCameraCount; i++) {
+		currentGameCamera->current->updateCamera();
+	}
+	return 0;
+}
+
+int GameInstance::updateObjects(){
+	gameObjectLL *currentGameObject = gameObjects;
+	for (int i = 0; i < gameObjectCount; i++) {
+		currentGameObject->current->setLock(infoLock);
+		currentGameObject->current->setDirectionalLight(directionalLight);
+		currentGameObject->current->setLuminance(luminance);
+		// Send the new VP matrix to the current gameObject being drawn.
+		currentGameObject->current->setVPMatrix(getCamera(currentGameObject->current->getCameraID())->getVPMatrix());
+		currentGameObject->current->drawShape();
+		currentGameObject = currentGameObject->next;
+	}
+	return 0;
+}
+
+int GameInstance::updateWindow(){
+	SDL_GL_SwapWindow(window);
+	return 0;
+}
+
+int GameInstance::setDeltaTime(GLdouble time){
+	deltaTime = time;
+	return 0;
+}
+
 // Creates a gameobject and returns the index of where it sits in the
 // gameObjects array.
 int GameInstance::createGameObject(gameObjectInfo objectInfo) {
