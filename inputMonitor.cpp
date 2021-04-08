@@ -34,7 +34,7 @@ void* rotateShape(void *gameInfoStruct) {
   int numJoySticks = SDL_NumJoysticks();
   short hasActiveController = 0;
   if(numJoySticks < 1){
-    printf("No joysticks connected, continuing without joysticks");
+    printf("No joysticks connected, continuing without joysticks\n");
   } else {
     for(int i = 0; i < numJoySticks; i++){
       if(SDL_IsGameController(i)){

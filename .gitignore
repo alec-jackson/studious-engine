@@ -1,5 +1,6 @@
 game
 *.o
 build/*
+lib/yaml/*
 rpg
 engineExample

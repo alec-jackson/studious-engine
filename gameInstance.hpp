@@ -89,7 +89,7 @@ public:
 	void setLuminance(GLfloat luminanceValue);
 	void basicCollision(GameInstance* gameInstance);
 	int isWindowClosed();
-	void performOGL();
+	void updateOGL();
 	int updateCameras();
 	int updateObjects();
 	int updateWindow();

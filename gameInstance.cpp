@@ -218,7 +218,7 @@ int GameInstance::isWindowClosed(){
 	return running;
 }
 
-void GameInstance::performOGL(){
+void GameInstance::updateOGL(){
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glClearColor(0.0f, 0.0f, 0.0, 1.0f);

@@ -1,9 +1,10 @@
 Planned Features
+P0. Scene Loading
 P0. Physics (Collision)
 P0. Animations (Single Idle Animation) --> needs skeletons
 P0. Animations (Switching Animations)
-P0. Resolution Switching
 P0. Text
+P0. Lambertian Lighting
 P1. Menus
 P1. Config Files
 P1. Improved Physics
@@ -14,6 +15,7 @@ P1. Windows Testing
 P1. Lighting (Shadows)
 P1. Lighting (Transparency)
 P1. Mesh Generators
+P1. Blinn Phong Lighting
 p2. Camera Orbit (Switch from distance to rad/deg)
 P2. Lighting (Area)
 P2. Lighting (Raytraced)
@@ -21,6 +23,7 @@ P2. Enemy AIs
 P2. Networking (Chat)
 P2. Lighting (Godrays)
 P2. Lighting (Bloom)
+P2. Better Resolution Switching
 P3. Anti-Aliasing
 P3. Fluids
 P3. Lighting (Reflections)

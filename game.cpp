@@ -36,6 +36,11 @@ const char *texturePath[] = {
   "images/shirttexture.jpg"
 };
 
+/*
+  THIS IS A REFERENCE FILE
+*/
+
+
 // Global Objects
 
 int setup(pthread_mutex_t *infoLock, GameInstance *currentGame, ConfigData* config);
@@ -260,7 +265,7 @@ int mainLoop(bool *updated, GameInstance* gamein) {
 	while (running) {
     running = currentGame.isWindowClosed();
 		begin = clock();
-		currentGame.performOGL();
+		currentGame.updateOGL();
     error = currentGame.updateCameras();
     error |= currentGame.updateObjects();
     error |= currentGame.updateWindow();
@@ -274,4 +279,5 @@ int mainLoop(bool *updated, GameInstance* gamein) {
 	}
 	printf("Running cleanup\n");
 	currentGame.cleanup();
+  return 0;
 }
