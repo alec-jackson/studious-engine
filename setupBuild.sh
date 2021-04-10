@@ -4,11 +4,7 @@ mkdir build
 cd build
 cmake ..
 make
-cd ..
-mv libyaml-cpp.a ../../lib/yaml/libyaml-cpp.a
-mkdir ../../lib/yaml/include
-cp -r include/yaml-cpp/* ../../lib/yaml/include/
-cd ../../
+cd ../../../
 
 # Setup Build Directories
 mkdir build
