@@ -7,6 +7,9 @@ out vec4 color;
 uniform sampler2D mytexture;
 uniform int hasTexture;
 uniform float luminance;
+
+varying vec3 Color;
+
 void main()
 {
 	// Output color = red
@@ -29,7 +32,8 @@ void main()
 		} else {
 			color = vec4(1.0f, 0.5f, 0.5f, 0.5f);
 		}*/
-		color = vec4(brightness * luminance, brightness * luminance, brightness * luminance, 1) / 2;
+		//color = vec4(brightness * luminance, brightness * luminance, brightness * luminance, 1) / 2;
+		color = vec4(Color, 1.0);
 	}
 
 

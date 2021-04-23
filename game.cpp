@@ -17,12 +17,12 @@ const char* soundList[] = {
   "sfx/music/endlessNight.wav"
 }; // A list of gameSounds to load
 const char* fragShaders[] = {
-  "shaders/SimpleFragmentShader.fragmentshader",
+  "shaders/standardFragment.frag",
   "shaders/coll.frag",
   "shaders/text.fragmentshader"
 }; // Contains collider renderer and basic object renderer.
 const char* vertShaders[] = {
-  "shaders/SimpleVertexShader.vertexshader",
+  "shaders/standardVertex.vert",
   "shaders/coll.vert",
   "shaders/text.vertexshader"
 }; // Contains collider renderer and basic object renderer.
@@ -91,8 +91,15 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     We need proper scene loading
   */
 
+  // Create our variables
+  struct gameInfo currentGameInfo;
+  bool isDone = false;
+  bool updated = false;
+  GLfloat stageRot[3] = {0,0,0};
+  GLfloat *stageRotPointers[3] = {&stageRot[0],&stageRot[1], &stageRot[2]};
+
   printf("Creating camera\n");
-  int gameObject[4];
+  int gameObject[3];
   GLfloat cameraOffset[3] = {5.140022f, 1.349999f, 2.309998f};
   // Configure a new createCameraInfo struct to pass to createCamera
   cameraInfo camInfo;
@@ -106,9 +113,9 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
 
   GLint texturePattern[] = {0, 1, 2, 3};
   GLint texturePatternStage[] = {0};
-  bool updated = false;
 
   printf("Created Camera\n");
+  
   printf("Creating map");
   //Create an importObj struct for importing the stage
   importObjInfo mapInfo;
@@ -131,9 +138,6 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
   map.colliderObject = NULL;
   gameObject[0] = currentGame.createGameObject(map);
 
-  GLfloat stageRot[3] = {0,0,0};
-  GLfloat *stageRotPointers[3] = {&stageRot[0],&stageRot[1], &stageRot[2]};
-
   printf("Creating player\n");
 	// The collider on the object is just a basic wire frame at the moment
 	// Configure the wireframe box around the player
@@ -146,28 +150,29 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
 
 	polygon *humanCollider = importObj(humColInfo);
 
-	// Import the sans player object
-	importObjInfo sans;
-	sans.modelPath = "models/tank.obj";
-	sans.texturePath = texturePath;
-	sans.numTextures = 0;
-	sans.texturePattern = texturePattern;
-	sans.programID = currentGame.getProgramID(0);
+	// Import the player object
+	importObjInfo player;
+	//player.modelPath = "models/tank.obj";
+  player.modelPath = "models/sphere.obj";
+	player.texturePath = texturePath;
+	player.numTextures = 0;
+	player.texturePattern = texturePattern;
+	player.programID = currentGame.getProgramID(0);
 
-	// Ready the gameObjectInfo for the sans object
-	gameObjectInfo sansObj;
-	sansObj.characterModel = importObj(sans);
-	sansObj.scaleVec = vec3(0.005f, 0.005f, 0.005f); // Arbitrary hell
-	sansObj.pos = vec3(0.0f, 0.0f, -1.0f);
-	sansObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
-	sansObj.rotAngle = 0.0f;
-	sansObj.camera = gameObject[2];
-	sansObj.collisionTagName = "player";
-	sansObj.programIDNo = currentGame.getProgramID(0);
-	sansObj.orthographic = false;
-	sansObj.colliderObject = humanCollider;
+	// Ready the gameObjectInfo for the player object
+	gameObjectInfo playerObj;
+	playerObj.characterModel = importObj(player);
+	playerObj.scaleVec = vec3(0.005f, 0.005f, 0.005f); // Arbitrary hell
+	playerObj.pos = vec3(0.0f, 0.0f, -1.0f);
+	playerObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
+	playerObj.rotAngle = 0.0f;
+	playerObj.camera = gameObject[2];
+	playerObj.collisionTagName = "player";
+	playerObj.programIDNo = currentGame.getProgramID(0);
+	playerObj.orthographic = false;
+	playerObj.colliderObject = 0;//humanCollider;
 
-	gameObject[1] = currentGame.createGameObject(sansObj);
+	gameObject[1] = currentGame.createGameObject(playerObj);
 
 	printf("Creating wolf\n");
 	// Import the wold object
@@ -205,6 +210,8 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
 	wolfObj.camera = gameObject[2];
 	wolfObj.programIDNo = currentGame.getProgramID(2);
 
+  
+
 	GameCamera *currentCamera = currentGame.getCamera(gameObject[2]);
 	currentCamera->setTarget(currentGame.getGameObject(gameObject[1]));
 	GameObject *currentGameObject = currentGame.getGameObject(gameObject[1]);
@@ -215,6 +222,10 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
 	// currentGameObject->rotateObject(stageRotPointers);
 	currentGameObject = currentGame.getGameObject(gameObject[1]);
 	printf("currentGameObject tag is %s\n", currentGameObject->getCollider());
+
+  
+
+
 	GLfloat xPos = -0.005f, yPos = 0.01f, zPos = 0.0f;
 	GLfloat xRot = 0.0f, yRot = 180.0f, zRot = 0.0f;
 	GLfloat scale = 0.0062f; // Starting scale
@@ -223,8 +234,7 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
 	GLfloat *rotation[3] = {&xRot, &yRot, &zRot};
 	currentGameObject->rotateObject(rotation);
 	currentGameObject->sendScale(&scale);
-	bool isDone = false;
-	gameInfo currentGameInfo;
+	
 	currentGameInfo.isDone = &isDone;
 	currentGameInfo.angleX = rotation[0];
 	currentGameInfo.angleY = rotation[1];
