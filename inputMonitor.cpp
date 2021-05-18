@@ -11,7 +11,11 @@
 const int JOYSTICK_DEAD_ZONE = 4000;
 #define PI 3.14159265
 
-void *rotateShape(void *gameInfoStruct) {
+/*
+  THIS IS A REFERENCE FILE
+*/
+
+void* rotateShape(void *gameInfoStruct) {
   printf("Fork successful\n");
 	gameInfo *currentGameInfo = (gameInfo*)gameInfoStruct;
   GameInstance currentGame = currentGameInfo->currentGame;
@@ -30,7 +34,7 @@ void *rotateShape(void *gameInfoStruct) {
   int numJoySticks = SDL_NumJoysticks();
   short hasActiveController = 0;
   if(numJoySticks < 1){
-    printf("No joysticks connected, continuing without joysticks");
+    printf("No joysticks connected, continuing without joysticks\n");
   } else {
     for(int i = 0; i < numJoySticks; i++){
       if(SDL_IsGameController(i)){

@@ -1,6 +1,7 @@
 game
 *.o
 build/*
+*.a
 rpg
 engineExample
 *.DS_Store
