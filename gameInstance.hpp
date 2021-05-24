@@ -1,19 +1,9 @@
 #pragma once
-#include <SDL.h>
-#include <GL/glew.h>
-#include <SDL_mixer.h>
-#include <glm/gtc/matrix_transform.hpp>
-
-
-using namespace glm;
-
+#include "common.h"
 #include "modelImport.hpp"
 #include "gameObject.hpp"
 #include "shaderLoader.hpp"
 #include "textLoader.hpp"
-
-
-
 // Linked List of GameObjects
 typedef struct gameObjectLL {
 	struct gameObjectLL *next;
@@ -30,20 +20,31 @@ typedef struct controllerReadout {
 	Sint16 leftAxis;
 } controllerReadout;
 
+typedef struct gameInstanceArgs {
+	int windowWidth;
+	int windowHeight;
+	const char **soundList;
+	int numberOfSounds;
+	const char** vertexShaders;
+	const char** fragmentShaders;
+	int shaderCount;
+	pthread_mutex_t *lock;
+} gameInstanceArgs;
+
 class GameInstance {
 private:
 	const Uint8 *keystate;
 	const char **sfxNames;
-
 	int sfxCount, gameObjectCount, audioID, controllersConnected, gameCameraCount, numShaders;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Surface* screenSurface;
 	SDL_Event event;
-	Mix_Chunk **sound;
+	vector<Mix_Chunk *> sound ;
 	gameObjectLL *gameObjects;
 	gameCameraLL *gameCameras;
-	GLuint *programID, vertexArrayID;
+	vector<GLuint> programID;
+	GLuint vertexArrayID;
 	GLdouble deltaTime;
 	SDL_GameController *gameControllers[2];
 	controllerReadout controllerInfo[2];
@@ -60,14 +61,9 @@ private:
 
 public:
 	//GameInstance(); //Constructor
-
-	void startGameInstance(int windowWidth, int windowHeight, const char *soundList[], int numberOfSounds,
-	          const char** vertexShaders, const char** fragmentShaders, int shaderCount, pthread_mutex_t *lock);
-
+	void startGameInstance(gameInstanceArgs args);
 	int createGameObject(gameObjectInfo objectInfo);
-
 	int createCamera(cameraInfo camInfo);
-
 	//SDL_Window *getWindow();
 	int getWidth();
 	int getHeight();

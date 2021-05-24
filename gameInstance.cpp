@@ -1,48 +1,21 @@
-#ifndef REQUIRED_LIBS
-#include <stdio.h>
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_mixer.h>
-#include <math.h>
-#include <cstring>
-#include <vector>
-#include <pthread.h>
-#include <unistd.h>
-#define SDL2_image
-#include <GL/glew.h>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/transform.hpp>
-using namespace glm;
-using namespace std;
-#define REQUIRED_LIBS
-#endif
-
 #include "gameInstance.hpp"
-#include "modelImport.hpp"
-#include "textLoader.hpp"
 
-void GameInstance::startGameInstance(int windowWidth, int windowHeight, const char *soundList[], int numberOfSounds, const char** vertexShaders, const char** fragmentShaders, int shaderCount, pthread_mutex_t *lock) {
-	//Arbitrary directional light position for now
-	numShaders = shaderCount; // Save the number of shaders used
-	programID = (GLuint*)malloc(sizeof(GLuint) * shaderCount);
-	infoLock = lock;
-	luminance = 1.0f;
+void GameInstance::startGameInstance(gameInstanceArgs args) {
+	// Arbitrary directional light position for now
+	numShaders = args.shaderCount; // Save the number of shaders used
+	infoLock = args.lock;
+	sfxNames = args.soundList;
+	sfxCount = args.numberOfSounds;
+	width = args.windowWidth;
+	height = args.windowHeight;
+	luminance = 1.0f; // Set default values
 	directionalLight = vec3(-100, 100, 100);
 	controllersConnected = 0;
-	if (numberOfSounds) {
-		sound = (Mix_Chunk**)malloc(sizeof(Mix_Chunk*) * numberOfSounds);
-	}
-	sfxNames = soundList;
-	sfxCount = numberOfSounds;
-	width = windowWidth;
-	height = windowHeight;
 	initWindow(width, height);
 	initAudio();
 	playSound(0, 1);
 	initController();
-	initApplication(vertexShaders, fragmentShaders);
+	initApplication(args.vertexShaders, args.fragmentShaders);
 	keystate = SDL_GetKeyboardState(NULL);
 	gameCameraCount = 0;
 	gameObjectCount = 0;
@@ -108,7 +81,6 @@ void GameInstance::cleanup() {
 	}
 	glDeleteVertexArrays(1, &vertexArrayID);
 	Mix_CloseAudio();
-	free(sound);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return;
@@ -430,8 +402,8 @@ void GameInstance::initAudio() {
 		exit(-1);
 	}
 
-	for( int i = 0; i < sfxCount; i++) {
-		sound[i] = Mix_LoadWAV(sfxNames[i]);
+	for(int i = 0; i < sfxCount; i++) {
+		sound.push_back(Mix_LoadWAV(sfxNames[i]));
 		if (sound[i] == NULL) {
 			fprintf(stderr, "Unable to load wave file: %s\n", sfxNames[i]);
 		}
@@ -467,7 +439,7 @@ void GameInstance::initApplication(const char** vertexPath, const char** fragmen
 	glGenVertexArrays(1, &vertexArrayID);
 	glBindVertexArray(vertexArrayID);
 	for (int i = 0; i < numShaders; i++) {
-		programID[i] = LoadShaders(vertexPath[i], fragmentPath[i]);
+		programID.push_back(LoadShaders(vertexPath[i], fragmentPath[i]));
 	}
 }
 
