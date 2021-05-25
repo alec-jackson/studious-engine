@@ -8,7 +8,7 @@ uniform sampler2D mytexture;
 uniform int hasTexture;
 uniform float luminance;
 
-varying vec3 Color;
+in vec3 Color;
 
 void main()
 {

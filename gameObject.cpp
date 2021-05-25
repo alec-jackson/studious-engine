@@ -162,10 +162,10 @@ void GameObject::drawShape() {
 				0,
 				(void*)0
 			);
-			glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i]  *9);
+			glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i]  *3);
 			glDisableVertexAttribArray(1);
 		} else {
-			glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i]  *9);
+			glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i]  * 3);
 		}
 		glDisableVertexAttribArray(2);
 		glDisableVertexAttribArray(0);
@@ -189,7 +189,7 @@ void GameObject::drawShape() {
 							  0,                  // stride
 							  (void*)0            // array buffer offset
 							  );
-		glDrawArrays(GL_TRIANGLES, 0, collider->pointCount[0] * 9);
+		glDrawArrays(GL_TRIANGLES, 0, collider->pointCount[0] * 3);
 		glDisableVertexAttribArray(0);
 	}
 }
@@ -249,7 +249,7 @@ int GameObject::getCollision(GameObject *object1, GameObject *object2) {
     return -1;
   }
   // Assume rectangular box collider
-  return 0; 
+  return 0;
 }
 
 /* GameCamera objects should be created with a create camera function inside of

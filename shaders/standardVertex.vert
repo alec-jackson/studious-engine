@@ -13,7 +13,7 @@ uniform mat4 VP;
 uniform vec3 directionalLight;
 uniform float rollOff;
 
-varying vec3 Color;
+out vec3 Color;
 
 const vec3 ka = 0.3*vec3(1, 0.5, 0.5);
 const vec3 kd = 0.7*vec3(1, 0.5, 0.5);
