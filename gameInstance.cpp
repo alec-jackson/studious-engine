@@ -61,7 +61,7 @@ vec3 GameInstance::getDirectionalLight() {
 (const Uint8 *) getKeystate returns the current keystate of the current
 GameInstance. The keystate is used for getting input from the user's keyboard.
 */
-const Uint8 * GameInstance::getKeystate() {
+const Uint8 *GameInstance::getKeystate() {
 	return keystate;
 }
 
@@ -77,6 +77,10 @@ GLuint GameInstance::getProgramID(int index) {
 	}
 	return programID[index];
 }
+
+/*
+(controllerReadout *) getControllers takes an (int) controllerIndex and
+*/
 controllerReadout* GameInstance::getControllers(int controllerIndex){
 	controllerInfo[controllerIndex].leftAxis = SDL_GameControllerGetAxis(gameControllers[controllerIndex], SDL_CONTROLLER_AXIS_LEFTY );
 	return &controllerInfo[controllerIndex];
@@ -416,6 +420,7 @@ void GameInstance::initWindow(int width, int height) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GLContext mainContext = SDL_GL_CreateContext(window);
+	SDL_GL_SetSwapInterval(0); // 0 - Disable VSYNC / 1 - Enable VSYNC
 	renderer = SDL_GetRenderer(window);
 	//SDL_RenderSetLogicalSize(renderer, 270, 480);
 

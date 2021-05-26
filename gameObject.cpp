@@ -1,24 +1,3 @@
-#ifndef REQUIRED_LIBS
-#include <stdio.h>
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_mixer.h>
-#include <math.h>
-#include <cstring>
-#include <vector>
-#include <pthread.h>
-#include <unistd.h>
-#define SDL2_image
-#include <GL/glew.h>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/transform.hpp>
-using namespace glm;
-using namespace std;
-#define REQUIRED_LIBS
-#endif
-
 #include "modelImport.hpp"
 #include "gameObject.hpp"
 
@@ -162,10 +141,10 @@ void GameObject::drawShape() {
 				0,
 				(void*)0
 			);
-			glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i]  *3);
+			glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i] * 3);
 			glDisableVertexAttribArray(1);
 		} else {
-			glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i]  * 3);
+			glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i] * 3);
 		}
 		glDisableVertexAttribArray(2);
 		glDisableVertexAttribArray(0);

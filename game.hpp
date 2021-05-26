@@ -9,4 +9,5 @@
 #include "inputMonitor.hpp"
 #include "physics.hpp"
 #include "textLoader.hpp"
+#include "common.hpp"
 #endif

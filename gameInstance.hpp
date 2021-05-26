@@ -1,25 +1,28 @@
 #pragma once
-#include "common.h"
+#include "common.hpp"
 #include "modelImport.hpp"
 #include "gameObject.hpp"
 #include "shaderLoader.hpp"
 #include "textLoader.hpp"
-// Linked List of GameObjects
+
+// Linked List of active GameObjects in Scene
 typedef struct gameObjectLL {
 	struct gameObjectLL *next;
 	struct GameObject *current;
 } gameObjectLL;
 
-// Contains all of the cameras being used in the current instance
+// Linked List of active Cameras in Scene
 typedef struct gameCameraLL {
 	struct gameCameraLL *next;
 	struct GameCamera *current;
 } gameCameraLL;
 
+// Used for reading controller input
 typedef struct controllerReadout {
 	Sint16 leftAxis;
 } controllerReadout;
 
+// Arguments for startGameInstance method
 typedef struct gameInstanceArgs {
 	int windowWidth;
 	int windowHeight;
@@ -62,7 +65,6 @@ public:
 	void startGameInstance(gameInstanceArgs args);
 	int createGameObject(gameObjectInfo objectInfo);
 	int createCamera(cameraInfo camInfo);
-	//SDL_Window *getWindow();
 	int getWidth();
 	int getHeight();
 	vec3 getDirectionalLight();

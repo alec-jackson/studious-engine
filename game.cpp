@@ -4,7 +4,7 @@ game engine. These two basic game files will generate a basic scene when the
 engine is compiled and ran.
 */
 #include "game.hpp"
-#include "common.h"
+
 // Global Variables, should eventually be moved to a config file
 vector<string> soundList = {
     "sfx/music/endlessNight.wav"
