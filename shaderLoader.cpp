@@ -91,52 +91,53 @@ GLuint LoadShaders(const char* vertexShader, const char* fragmentShader) {
         glGetProgramInfoLog(programID, logLength, NULL, errorLog);
         printf("%s\n", errorLog);
     }
-
+    
     glDetachShader(programID, vertexShaderID);
     glDetachShader(programID, fragmentShaderID);
-
+    
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
-
+    
     return programID;
 }
 /*
-int main () {
-    GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
-
-    return 0;
-}
-*/
+ int main () {
+ GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
+ 
+ return 0;
+ }
+ */
 /*
-int main () {
-    FILE *fp = fopen("SimpleVertexShader.vertexshader", "r");
-    if (fp == NULL) {
-        printf("File is missing!\n");
-        return 1;
-    }
-    char currentChar;
-    int charCount;
-    while (1) {
-        currentChar = fgetc(fp);
-        if (currentChar == EOF) {
-            break;
-        }
-        charCount++;
-        printf("%c", currentChar);
-    }
-    printf("\nThere were a total of %i non-EOF characters.\n", charCount);
-    currentChar = 0;
-    charCount = 0;
-    fseek(fp, 0, SEEK_SET);
-    while (1) {
-        currentChar = fgetc(fp);
-        if (currentChar == EOF) {
-            break;
-        }
-        charCount++;
-        printf("%c", currentChar);
-    }
-    printf("\nThere were a total of %i non-EOF characters.\n", charCount);
-    return 0;
-}
-*/
+ int main () {
+ FILE *fp = fopen("SimpleVertexShader.vertexshader", "r");
+ if (fp == NULL) {
+ printf("File is missing!\n");
+ return 1;
+ }
+ char currentChar;
+ int charCount;
+ while (1) {
+ currentChar = fgetc(fp);
+ if (currentChar == EOF) {
+ break;
+ }
+ charCount++;
+ printf("%c", currentChar);
+ }
+ printf("\nThere were a total of %i non-EOF characters.\n", charCount);
+ currentChar = 0;
+ charCount = 0;
+ fseek(fp, 0, SEEK_SET);
+ while (1) {
+ currentChar = fgetc(fp);
+ if (currentChar == EOF) {
+ break;
+ }
+ charCount++;
+ printf("%c", currentChar);
+ }
+ printf("\nThere were a total of %i non-EOF characters.\n", charCount);
+ return 0;
+ }
+ */
+

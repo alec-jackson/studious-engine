@@ -1,8 +1,8 @@
 /*
-game.cpp and game.hpp are example files demonstrating the use of the studious
-game engine. These two basic game files will generate a basic scene when the
-engine is compiled and ran.
-*/
+ game.cpp and game.hpp are example files demonstrating the use of the studious
+ game engine. These two basic game files will generate a basic scene when the
+ engine is compiled and ran.
+ */
 #include "game.hpp"
 
 // Global Variables, should eventually be moved to a config file
@@ -73,21 +73,21 @@ int setup(pthread_mutex_t *infoLock, GameInstance *currentGame, ConfigData* conf
 int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     // Call after setup
     printf("Starting the game instance\n");
-
+    
     GameInstance currentGame = *gamein;
     SDL_SetRelativeMouseMode(SDL_TRUE);
-
+    
     /*
-        We need proper scene loading
-    */
-
+     We need proper scene loading
+     */
+    
     // Create our variables
     struct gameInfo currentGameInfo;
     bool isDone = false;
     bool updated = false;
     GLfloat stageRot[3] = {0,0,0};
     GLfloat *stageRotPointers[3] = {&stageRot[0],&stageRot[1], &stageRot[2]};
-
+    
     printf("Creating camera\n");
     int gameObject[4];
     GLfloat cameraOffset[3] = {5.140022f, 1.349999f, 2.309998f};
@@ -100,12 +100,12 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     camInfo.viewNearClipping = 4.0f;
     camInfo.viewFarClipping = 90.0f;
     gameObject[2] = currentGame.createCamera(camInfo);
-
+    
     GLint texturePattern[] = {0, 1, 2, 3};
     GLint texturePatternStage[] = {0};
-
+    
     printf("Created Camera\n");
-
+    
     printf("Creating map");
     //Create an importObj struct for importing the stage
     importObjInfo mapInfo;
@@ -127,120 +127,120 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     map.orthographic = false;
     map.colliderObject = NULL;
     gameObject[0] = currentGame.createGameObject(map);
-
+    
     printf("Creating player\n");
-	// The collider on the object is just a basic wire frame at the moment
-	// Configure the wireframe box around the player
-	importObjInfo humColInfo;
-	humColInfo.modelPath = "models/rockStone.obj";
-	humColInfo.numTextures = 0;
-	humColInfo.texturePattern = NULL;
-	humColInfo.programID = currentGame.getProgramID(1);
-
-	polygon *humanCollider = importObj(humColInfo);
-
-	// Import the player object
-	importObjInfo player;
-	//player.modelPath = "models/tank.obj";
+    // The collider on the object is just a basic wire frame at the moment
+    // Configure the wireframe box around the player
+    importObjInfo humColInfo;
+    humColInfo.modelPath = "models/rockStone.obj";
+    humColInfo.numTextures = 0;
+    humColInfo.texturePattern = NULL;
+    humColInfo.programID = currentGame.getProgramID(1);
+    
+    polygon *humanCollider = importObj(humColInfo);
+    
+    // Import the player object
+    importObjInfo player;
+    //player.modelPath = "models/tank.obj";
     player.modelPath = "models/sphere.obj";
-	player.texturePath = texturePath;
-	player.numTextures = 0;
-	player.texturePattern = texturePattern;
-	player.programID = currentGame.getProgramID(0);
-
-	// Ready the gameObjectInfo for the player object
-	gameObjectInfo playerObj;
-	playerObj.characterModel = importObj(player);
-	playerObj.scaleVec = vec3(0.005f, 0.005f, 0.005f); // Arbitrary hell
-	playerObj.pos = vec3(0.0f, 0.0f, -1.0f);
-	playerObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
-	playerObj.rotAngle = 0.0f;
-	playerObj.camera = gameObject[2];
-	playerObj.collisionTagName = "player";
-	playerObj.programIDNo = currentGame.getProgramID(0);
-	playerObj.orthographic = false;
-	playerObj.colliderObject = 0;//humanCollider;
-
-	gameObject[1] = currentGame.createGameObject(playerObj);
-
-	printf("Creating wolf\n");
-	// Import the wold object
-	importObjInfo wolf;
-	wolf.modelPath = "models/wolf.obj";
-	wolf.texturePath = texturePath;
-	wolf.numTextures = 0;
-	wolf.texturePattern = texturePattern;
-	wolf.programID = currentGame.getProgramID(0);
-	// Ready the gameObjectInfo for the wolf object
-	gameObjectInfo wolfObj;
-	wolfObj.characterModel = importObj(wolf);
-	wolfObj.scaleVec = vec3(0.02f, 0.02f, 0.02f); // Arbitrary hell
-	wolfObj.pos = vec3(0.00f, 0.01f, -0.08f);
-	wolfObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
-	wolfObj.rotAngle = 0.0f;
-	wolfObj.camera = gameObject[2];
-	wolfObj.collisionTagName = "NPC";
-	wolfObj.programIDNo = currentGame.getProgramID(0);
-	wolfObj.orthographic = false;
-	wolfObj.colliderObject = humanCollider;
-
-	gameObject[3] = currentGame.createGameObject(wolfObj);
-
-	printf("Reserving space for text\n");
-	//Create Reusable text object
-	importObjInfo text;
-	text.numTextures = 0;
-
-	gameObjectInfo textObj;
-	wolfObj.scaleVec = vec3(0.02f, 0.02f, 0.02f); // Arbitrary hell
-	wolfObj.pos = vec3(0.00f, 0.01f, -0.08f);
-	wolfObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
-	wolfObj.rotAngle = 0.0f;
-	wolfObj.camera = gameObject[2];
-	wolfObj.programIDNo = currentGame.getProgramID(2);
-
-
-
-	GameCamera *currentCamera = currentGame.getCamera(gameObject[2]);
-	currentCamera->setTarget(currentGame.getGameObject(gameObject[1]));
-	GameObject *currentGameObject = currentGame.getGameObject(gameObject[1]);
-	currentGameObject->rotateObject(stageRotPointers);
-	currentGameObject = currentGame.getGameObject(gameObject[3]);
-	GLfloat wolfScale = 0.01f;
-	//currentGameObject -> sendScale(&wolfScale);
-	// currentGameObject->rotateObject(stageRotPointers);
-	currentGameObject = currentGame.getGameObject(gameObject[1]);
-	printf("currentGameObject tag is %s\n", currentGameObject->getCollider());
-
-
-
-
-	GLfloat xPos = -0.005f, yPos = 0.01f, zPos = 0.0f;
-	GLfloat xRot = 0.0f, yRot = 180.0f, zRot = 0.0f;
-	GLfloat scale = 0.0062f; // Starting scale
-	GLfloat *currentPos[] = {&xPos, &yPos, &zPos};
-	currentGameObject->sendPosition(currentPos);
-	GLfloat *rotation[3] = {&xRot, &yRot, &zRot};
-	currentGameObject->rotateObject(rotation);
-	currentGameObject->sendScale(&scale);
-
-	currentGameInfo.isDone = &isDone;
-	currentGameInfo.angleX = rotation[0];
-	currentGameInfo.angleY = rotation[1];
-	currentGameInfo.angleZ = rotation[2];
-	currentGameInfo.yPos = &yPos;
-	currentGameInfo.xPos = &xPos;
-	currentGameInfo.zPos = &zPos;
-	currentGameInfo.scale = &scale;
-	currentGameInfo.gameCamera = currentCamera;
-	currentGameInfo.updated = &updated;
-	currentGameInfo.currentGame = *gamein;
-	currentGameInfo.infoLock = infoLock;
-
+    player.texturePath = texturePath;
+    player.numTextures = 0;
+    player.texturePattern = texturePattern;
+    player.programID = currentGame.getProgramID(0);
+    
+    // Ready the gameObjectInfo for the player object
+    gameObjectInfo playerObj;
+    playerObj.characterModel = importObj(player);
+    playerObj.scaleVec = vec3(0.005f, 0.005f, 0.005f); // Arbitrary hell
+    playerObj.pos = vec3(0.0f, 0.0f, -1.0f);
+    playerObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
+    playerObj.rotAngle = 0.0f;
+    playerObj.camera = gameObject[2];
+    playerObj.collisionTagName = "player";
+    playerObj.programIDNo = currentGame.getProgramID(0);
+    playerObj.orthographic = false;
+    playerObj.colliderObject = 0;//humanCollider;
+    
+    gameObject[1] = currentGame.createGameObject(playerObj);
+    
+    printf("Creating wolf\n");
+    // Import the wold object
+    importObjInfo wolf;
+    wolf.modelPath = "models/wolf.obj";
+    wolf.texturePath = texturePath;
+    wolf.numTextures = 0;
+    wolf.texturePattern = texturePattern;
+    wolf.programID = currentGame.getProgramID(0);
+    // Ready the gameObjectInfo for the wolf object
+    gameObjectInfo wolfObj;
+    wolfObj.characterModel = importObj(wolf);
+    wolfObj.scaleVec = vec3(0.02f, 0.02f, 0.02f); // Arbitrary hell
+    wolfObj.pos = vec3(0.00f, 0.01f, -0.08f);
+    wolfObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
+    wolfObj.rotAngle = 0.0f;
+    wolfObj.camera = gameObject[2];
+    wolfObj.collisionTagName = "NPC";
+    wolfObj.programIDNo = currentGame.getProgramID(0);
+    wolfObj.orthographic = false;
+    wolfObj.colliderObject = humanCollider;
+    
+    gameObject[3] = currentGame.createGameObject(wolfObj);
+    
+    printf("Reserving space for text\n");
+    //Create Reusable text object
+    importObjInfo text;
+    text.numTextures = 0;
+    
+    gameObjectInfo textObj;
+    wolfObj.scaleVec = vec3(0.02f, 0.02f, 0.02f); // Arbitrary hell
+    wolfObj.pos = vec3(0.00f, 0.01f, -0.08f);
+    wolfObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
+    wolfObj.rotAngle = 0.0f;
+    wolfObj.camera = gameObject[2];
+    wolfObj.programIDNo = currentGame.getProgramID(2);
+    
+    
+    
+    GameCamera *currentCamera = currentGame.getCamera(gameObject[2]);
+    currentCamera->setTarget(currentGame.getGameObject(gameObject[1]));
+    GameObject *currentGameObject = currentGame.getGameObject(gameObject[1]);
+    currentGameObject->rotateObject(stageRotPointers);
+    currentGameObject = currentGame.getGameObject(gameObject[3]);
+    GLfloat wolfScale = 0.01f;
+    //currentGameObject -> sendScale(&wolfScale);
+    // currentGameObject->rotateObject(stageRotPointers);
+    currentGameObject = currentGame.getGameObject(gameObject[1]);
+    printf("currentGameObject tag is %s\n", currentGameObject->getCollider());
+    
+    
+    
+    
+    GLfloat xPos = -0.005f, yPos = 0.01f, zPos = 0.0f;
+    GLfloat xRot = 0.0f, yRot = 180.0f, zRot = 0.0f;
+    GLfloat scale = 0.0062f; // Starting scale
+    GLfloat *currentPos[] = {&xPos, &yPos, &zPos};
+    currentGameObject->sendPosition(currentPos);
+    GLfloat *rotation[3] = {&xRot, &yRot, &zRot};
+    currentGameObject->rotateObject(rotation);
+    currentGameObject->sendScale(&scale);
+    
+    currentGameInfo.isDone = &isDone;
+    currentGameInfo.angleX = rotation[0];
+    currentGameInfo.angleY = rotation[1];
+    currentGameInfo.angleZ = rotation[2];
+    currentGameInfo.yPos = &yPos;
+    currentGameInfo.xPos = &xPos;
+    currentGameInfo.zPos = &zPos;
+    currentGameInfo.scale = &scale;
+    currentGameInfo.gameCamera = currentCamera;
+    currentGameInfo.updated = &updated;
+    currentGameInfo.currentGame = *gamein;
+    currentGameInfo.infoLock = infoLock;
+    
     /*
-        End Scene Loading
-    */
-
+     End Scene Loading
+     */
+    
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for unexpected failures and messages from children
     pthread_t tid; // Should be moved to SDL threads for better cross platform support
@@ -250,33 +250,35 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     mainLoop(&updated, &currentGame);
     isDone = true;
     pthread_join(tid, NULL);
-
+    
     return 0;
 }
 
 // Go through gameObjectLL and call drawShape method on each.
 int mainLoop(bool *updated, GameInstance* gamein) {
-	clock_t begin, end;
-        int running = 1;
-        GameInstance currentGame = *gamein;
-        GLdouble deltaTime;
-        short error = 0;
-	while (running) {
+    clock_t begin, end;
+    int running = 1;
+    GameInstance currentGame = *gamein;
+    GLdouble deltaTime;
+    short error = 0;
+    while (running) {
         running = currentGame.isWindowClosed();
-		begin = clock();
-		currentGame.updateOGL();
+        begin = clock();
+        currentGame.updateOGL();
         error = currentGame.updateCameras();
         error |= currentGame.updateObjects();
         error |= currentGame.updateWindow();
         if(error){
             return 1;
         }
-		end = clock();
-		deltaTime = (double)(end - begin) / (double)CLOCKS_PER_SEC;
+        end = clock();
+        deltaTime = (double)(end - begin) / (double)CLOCKS_PER_SEC;
         currentGame.setDeltaTime(deltaTime);
-		*updated = true;
-	}
-	printf("Running cleanup\n");
-	currentGame.cleanup();
-        return 0;
+        *updated = true;
+    }
+    printf("Running cleanup\n");
+    currentGame.cleanup();
+    return 0;
 }
+
+

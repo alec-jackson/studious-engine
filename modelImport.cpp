@@ -20,12 +20,12 @@ polygon *importObj(importObjInfo objInfo) {
     int numberOfObjects = 0;
     // Repeat the below process for each object
     /*
-    numVertices contains the amount of distinct vertex points in the file
-    numNormals contains the amount of distinct normal vectors in the file
-    numTextureCoords contains the amount of distinct texture coordinate points
-    in the file
-    numFaces contains the amount of faces there will be in each array
-    */
+     numVertices contains the amount of distinct vertex points in the file
+     numNormals contains the amount of distinct normal vectors in the file
+     numTextureCoords contains the amount of distinct texture coordinate points
+     in the file
+     numFaces contains the amount of faces there will be in each array
+     */
     int numVertices = 0, numNormals = 0, numTextureCoords = 0, numFaces = 0;
     char tempLine[3];
     tempLine[2] = 0;
@@ -90,7 +90,7 @@ polygon *importObj(importObjInfo objInfo) {
         } else if (strcmp(tempLine, "f ") == 0) {
             sscanf(charBuffer, "%c %i/%i/%i %i/%i/%i %i/%i/%i\n", &tempChar, &commands[currentCIndex*9], &commands[currentCIndex*9+1], &commands[currentCIndex*9+2], &commands[currentCIndex*9+3], &commands[currentCIndex*9+4], &commands[currentCIndex*9+5], &commands[currentCIndex*9+6], &commands[currentCIndex*9+7], &commands[currentCIndex*9+8]);
             currentCIndex++;
-        // When we hit the first obect, ignore
+            // When we hit the first obect, ignore
         } else if (strcmp(tempLine, "o ") == 0) {
             // When currentObject == 0, run the following
             if (!currentObject) {
@@ -140,7 +140,7 @@ polygon *importObj(importObjInfo objInfo) {
     configureObject(args);
     free(charBuffer);
     model->textureUniformID = glGetUniformLocation(objInfo.programID,
-        "mytexture");
+                                                   "mytexture");
     model->numberOfObjects = numberOfObjects;
     return model;
 }
@@ -178,13 +178,13 @@ void configureObject(configureArgs args) {
     glGenBuffers(1, &args.model->shapebufferID[args.index]);
     glBindBuffer(GL_ARRAY_BUFFER, args.model->shapebufferID[args.index]);
     glBufferData(GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * args.model->pointCount[args.index] * 9,
-        args.model->vertices[args.index], GL_STATIC_DRAW);
+                 sizeof(GLfloat) * args.model->pointCount[args.index] * 9,
+                 args.model->vertices[args.index], GL_STATIC_DRAW);
     glGenBuffers(1, &(args.model->normalbufferID[args.index]));
     glBindBuffer(GL_ARRAY_BUFFER, args.model->normalbufferID[args.index]);
     glBufferData(GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * args.model->pointCount[args.index] * 9,
-        args.model->normalCoords[args.index], GL_STATIC_DRAW);
+                 sizeof(GLfloat) * args.model->pointCount[args.index] * 9,
+                 args.model->normalCoords[args.index], GL_STATIC_DRAW);
     // Specific case where the current object does not get a texture
     if (args.textureCount == 0 || args.texturePattern[args.index] >= args.textureCount || args.texturePattern[args.index] == -1) {
         args.model->textureCoords[args.index] = NULL;
@@ -197,15 +197,15 @@ void configureObject(configureArgs args) {
     glGenTextures(1, &(args.model->textureID[args.index]));
     glBindTexture(GL_TEXTURE_2D, args.model->textureID[args.index]);
     if (texture->format->Amask) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h,
-          0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
     } else {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture->w, texture->h, 0, GL_RGB,
-          GL_UNSIGNED_BYTE, texture->pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture->w, texture->h, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, texture->pixels);
     }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-        GL_NEAREST_MIPMAP_LINEAR);
+                    GL_NEAREST_MIPMAP_LINEAR);
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -214,7 +214,8 @@ void configureObject(configureArgs args) {
     glGenBuffers(1, &(args.model->textureCoordsID[args.index]));
     glBindBuffer(GL_ARRAY_BUFFER, args.model->textureCoordsID[args.index]);
     glBufferData(GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * args.model->pointCount[args.index] * 6,
-        args.model->textureCoords[args.index], GL_STATIC_DRAW);
+                 sizeof(GLfloat) * args.model->pointCount[args.index] * 6,
+                 args.model->textureCoords[args.index], GL_STATIC_DRAW);
     return;
 }
+

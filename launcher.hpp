@@ -13,8 +13,8 @@ typedef struct gameInfo {
 	GLfloat *scale;
 	GameCamera *gameCamera;
 	bool *updated;
-  GameInstance currentGame;
-  pthread_mutex_t *infoLock;
+ 	GameInstance currentGame;
+ 	pthread_mutex_t *infoLock;
 } gameInfo;
 
 int launch (pthread_mutex_t *infoLock, GameInstance *currentGame);
