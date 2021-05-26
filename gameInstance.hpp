@@ -23,19 +23,17 @@ typedef struct controllerReadout {
 typedef struct gameInstanceArgs {
 	int windowWidth;
 	int windowHeight;
-	const char **soundList;
-	int numberOfSounds;
-	const char** vertexShaders;
-	const char** fragmentShaders;
-	int shaderCount;
+	vector<string> soundList;
+	vector<string> vertexShaders;
+	vector<string> fragmentShaders;
 	pthread_mutex_t *lock;
 } gameInstanceArgs;
 
 class GameInstance {
 private:
 	const Uint8 *keystate;
-	const char **sfxNames;
-	int sfxCount, gameObjectCount, audioID, controllersConnected, gameCameraCount, numShaders;
+	vector<string> sfxNames;
+	int gameObjectCount, audioID, controllersConnected, gameCameraCount;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Surface* screenSurface;
@@ -57,7 +55,7 @@ private:
 	void initWindow(int width, int height);
 	void initAudio();
 	void initController();
-	void initApplication(const char** vertexPath, const char** fragmentPath);
+	void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
 
 public:
 	//GameInstance(); //Constructor

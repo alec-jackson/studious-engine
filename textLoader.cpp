@@ -88,7 +88,7 @@ int textLib::genText(FT_Face* face){
         texture,
         ivec2((*face)->glyph->bitmap.width, (*face)->glyph->bitmap.rows),
         ivec2((*face)->glyph->bitmap_left, (*face)->glyph->bitmap_top),
-        (*face)->glyph->advance.x
+        (unsigned int)(*face)->glyph->advance.x
     };
     Characters.insert(std::pair<char, Character>(i, character));
   }
@@ -105,7 +105,7 @@ polygon *textLib::buildTextObj(string text, float x, float y, float scale, vec3 
   {
     // Set ch to the current character at c
     Character ch = Characters[*c];
-    
+
 
     float xpos = x + ch.Bearing.x * scale;
     float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;

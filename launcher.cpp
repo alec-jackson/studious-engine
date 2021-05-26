@@ -60,8 +60,8 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
 	camInfo.viewFarClipping = 90.0f;
 	gameObject[2] = currentGame.createCamera(camInfo);
 
-	const char *texturePathStage[] = {"images/viking_room.png"};
-	const char *texturePath[] = {"images/Sans Tex.png", "images/denimtexture.jpg", "images/shoetexture.jpg", "images/shirttexture.jpg"};
+	vector<string> texturePathStage = {"images/viking_room.png"};
+	vector<string> texturePath = {"images/Sans Tex.png", "images/denimtexture.jpg", "images/shoetexture.jpg", "images/shirttexture.jpg"};
 	GLint texturePattern[] = {0, 1, 2, 3};
 	GLint texturePatternStage[] = {0};
 	bool updated = false;
@@ -97,7 +97,6 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
 	// Configure the wireframe box around the player
 	importObjInfo humColInfo;
 	humColInfo.modelPath = "models/rockStone.obj";
-	humColInfo.texturePath = NULL;
 	humColInfo.numTextures = 0;
 	humColInfo.texturePattern = NULL;
 	humColInfo.programID = currentGame.getProgramID(1);
@@ -149,7 +148,7 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
 	wolfObj.colliderObject = humanCollider;
 
 	gameObject[3] = currentGame.createGameObject(wolfObj);
-  
+
   printf("Creating TEXT\n");
 
   // Ready the gameObjectInfo for the wolf object

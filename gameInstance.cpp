@@ -1,11 +1,20 @@
 #include "gameInstance.hpp"
 
+/*
+(void) startGameInstance uses the passed struct (gameInstanceArgs) args to
+configure the new GameInstance. The args struct is defined as the following:
+int windowWidth - Defines the width of the application window
+int windowHeight - Defines the height of the application window
+vector<string> soundList - Contains paths to sound effects to load
+vector<string> vertexShaders - Contains paths to vertex shaders
+vector<string> fragmentShaders - Contains paths to vertex shaders
+pthread_mutex_t &lock - Reference to lock used for locking all shared resources
+
+(void) startGameInstance does not return any value.
+*/
 void GameInstance::startGameInstance(gameInstanceArgs args) {
-	// Arbitrary directional light position for now
-	numShaders = args.shaderCount; // Save the number of shaders used
 	infoLock = args.lock;
 	sfxNames = args.soundList;
-	sfxCount = args.numberOfSounds;
 	width = args.windowWidth;
 	height = args.windowHeight;
 	luminance = 1.0f; // Set default values
@@ -23,20 +32,49 @@ void GameInstance::startGameInstance(gameInstanceArgs args) {
 	gameCameras = NULL;
 	text.initText();
 }
+
+/*
+(int) getWidth returns the current width of the single window for the current
+GameInstance.
+*/
 int GameInstance::getWidth() {
 	return width;
 }
+
+/*
+(int) getHeight returns the current height of the single window for the current
+GameInstance.
+*/
 int GameInstance::getHeight() {
 	return height;
 }
+
+/*
+(vec3) getDirectionalLight returns the current location of the directionalLight
+in the scene.
+*/
 vec3 GameInstance::getDirectionalLight() {
 	return directionalLight;
 }
+
+/*
+(const Uint8 *) getKeystate returns the current keystate of the current
+GameInstance. The keystate is used for getting input from the user's keyboard.
+*/
 const Uint8 * GameInstance::getKeystate() {
-	//keystate = SDL_GetKeyboardState(NULL);
 	return keystate;
 }
+
+/*
+(GLuint) getProgramID returns the programID associated with the given
+(int) index. On success, function returns associated programID. On failure,
+-1 is returned and an error is written to stderr.
+*/
 GLuint GameInstance::getProgramID(int index) {
+	if (index < 0 || index >= programID.size()) {
+		cerr << "Error: Requested programID is not in available range [0, "
+			<< programID.size() - 1 << "]\n";
+	}
 	return programID[index];
 }
 controllerReadout* GameInstance::getControllers(int controllerIndex){
@@ -68,8 +106,9 @@ void GameInstance::cleanup() {
 	for (int i = 0; i < controllersConnected; i++) {
 		//SDL_GameControllerClose(gameControllers[i]);
 	}
-	for (int i = 0; i < numShaders; i++) {
-		glDeleteProgram(programID[i]);
+	vector<GLuint>::iterator it;
+	for (it = programID.begin(); it != programID.end(); ++it) {
+		glDeleteProgram(*it);
 	}
 	gameObjectLL *currentGameObject = gameObjects;
 	gameObjectLL *temp;
@@ -401,11 +440,12 @@ void GameInstance::initAudio() {
 		fprintf(stderr, "Unable to allocate mixing channels: %s\n", SDL_GetError());
 		exit(-1);
 	}
-
-	for(int i = 0; i < sfxCount; i++) {
-		sound.push_back(Mix_LoadWAV(sfxNames[i]));
-		if (sound[i] == NULL) {
-			fprintf(stderr, "Unable to load wave file: %s\n", sfxNames[i]);
+	vector<string>::iterator it;
+	int i = 0;
+	for (it = sfxNames.begin(); it != sfxNames.end(); ++it) {
+		sound.push_back(Mix_LoadWAV((*it).c_str()));
+		if (sound[i++] == NULL) {
+			cerr << "Unable to load wave file: " << sfxNames[i] << '\n';
 		}
 	}
 }
@@ -432,14 +472,13 @@ void GameInstance::initController(){
 	return;
 }
 
-void GameInstance::initApplication(const char** vertexPath, const char** fragmentPath) {
+void GameInstance::initApplication(vector<string> vertexPath, vector<string> fragmentPath) {
 	// Compile each of our shaders and assign them their own programID number
-
 	GLuint vertexArrayID;
 	glGenVertexArrays(1, &vertexArrayID);
 	glBindVertexArray(vertexArrayID);
-	for (int i = 0; i < numShaders; i++) {
-		programID.push_back(LoadShaders(vertexPath[i], fragmentPath[i]));
+	for (int i = 0; i < vertexPath.size(); i++) {
+		programID.push_back(LoadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str()));
 	}
 }
 

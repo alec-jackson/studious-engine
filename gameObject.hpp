@@ -14,7 +14,6 @@ typedef struct colliderInfo {
 	mat4 rotate;
 } colliderInfo;
 
-
 /*
 The gameObjectInfo struct is used as an argument for the createGameObject
 method. All of the current arguments for createGameObject will be morphed into
@@ -60,7 +59,7 @@ private:
 	GLfloat *size;
 	GLfloat *rotX, *rotY, *rotZ;
 	GLfloat *velX, *velY, *velZ;
-	bool dynamicPosition, dynamicRotation, dynamicScaling, configured = false;
+	bool dynamicPosition, dynamicRotation, dynamicScaling, configured;
 	const char *collisionTag;
 	int currentCamera;
 	vec3 directionalLight;

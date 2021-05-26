@@ -4,27 +4,25 @@ game engine. These two basic game files will generate a basic scene when the
 engine is compiled and ran.
 */
 #include "game.hpp"
-#include "gameInstance.hpp"
-#include "modelImport.hpp"
-#include "textLoader.hpp"
+#include "common.h"
 // Global Variables, should eventually be moved to a config file
-const char* soundList[] = {
+vector<string> soundList = {
     "sfx/music/endlessNight.wav"
 }; // A list of gameSounds to load
-const char* fragShaders[] = {
+vector<string> fragShaders = {
     "shaders/standardFragment.frag",
     "shaders/coll.frag",
     "shaders/text.fragmentshader"
 }; // Contains collider renderer and basic object renderer.
-const char* vertShaders[] = {
+vector<string> vertShaders = {
     "shaders/standardVertex.vert",
     "shaders/coll.vert",
     "shaders/text.vertexshader"
 }; // Contains collider renderer and basic object renderer.
-const char *texturePathStage[] = {
+vector<string> texturePathStage = {
     "images/viking_room.png"
 };
-const char *texturePath[] = {
+vector<string> texturePath = {
     "images/Sans Tex.png",
     "images/denimtexture.jpg",
     "images/shoetexture.jpg",
@@ -52,15 +50,13 @@ int main() {
 
 int setup(pthread_mutex_t *infoLock, GameInstance *currentGame, ConfigData* config){
     if (pthread_mutex_init(infoLock, NULL)) {
-        printf("Mutex lock failed to engage!\n");
+        fprintf(stderr, "Mutex lock failed to engage!\n");
     }
     int flag = loadConfig(config, "misc/config.txt");
     gameInstanceArgs args;
     args.soundList = soundList;
-    args.numberOfSounds = 1;
     args.vertexShaders = vertShaders;
     args.fragmentShaders = fragShaders;
-    args.shaderCount = 3;
     args.lock = infoLock;
     if (!flag) {
         args.windowWidth = config->resX;
@@ -93,7 +89,7 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     GLfloat *stageRotPointers[3] = {&stageRot[0],&stageRot[1], &stageRot[2]};
 
     printf("Creating camera\n");
-    int gameObject[3];
+    int gameObject[4];
     GLfloat cameraOffset[3] = {5.140022f, 1.349999f, 2.309998f};
     // Configure a new createCameraInfo struct to pass to createCamera
     cameraInfo camInfo;
@@ -137,7 +133,6 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
 	// Configure the wireframe box around the player
 	importObjInfo humColInfo;
 	humColInfo.modelPath = "models/rockStone.obj";
-	humColInfo.texturePath = NULL;
 	humColInfo.numTextures = 0;
 	humColInfo.texturePattern = NULL;
 	humColInfo.programID = currentGame.getProgramID(1);

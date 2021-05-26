@@ -13,11 +13,15 @@ if [ ! -d build ]; then
     mkdir build
 fi
 cd build
-cmake ..
+cmake -Wno-dev ..
 
 # Build Project
 make
+if [ $? != 0 ]; then
+    echo -e "\033[0;31m --- Build errors detected! ---"
+else
+    # Run program
+    cd ..
+    ./engineExample
+fi
 
-# Run program
-cd ..
-./engineExample

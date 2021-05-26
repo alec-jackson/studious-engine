@@ -1,4 +1,5 @@
 #pragma once
+#include "common.h"
 typedef struct polygon {
     GLuint *shapebufferID; // used for vertex buffer
     GLuint *textureCoordsID; // used for texture coordinate buffer
@@ -21,7 +22,7 @@ with the same names.
 */
 typedef struct importObjInfo {
 	const char *modelPath;
-	const char **texturePath;
+	vector<string> texturePath;
 	int numTextures, *texturePattern;
 	GLuint programID;
 } importObjInfo;

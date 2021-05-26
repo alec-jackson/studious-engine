@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
-#include <cstring>
+#include <string>
 #ifndef SDL2_image
 #include <SDL_image.h>
 #endif
 
 #include "modelImport.hpp"
 
-void configureObject(GLfloat *vertexFrame, GLfloat *textureFrame, GLfloat *normalFrame, GLint *commands, GLint index, GLint numVertices, GLint numTextureCoords, GLint numNormals, GLint numFaces, polygon *model, int textureCount, int *texturePattern, const char **texturePath);
+void configureObject(GLfloat *vertexFrame, GLfloat *textureFrame, GLfloat *normalFrame, GLint *commands, GLint index, GLint numVertices, GLint numTextureCoords, GLint numNormals, GLint numFaces, polygon *model, int textureCount, int *texturePattern, vector<string> texturePath);
 
 polygon *importObj(importObjInfo objInfo) {
     FILE *fp = fopen(objInfo.modelPath, "r");
@@ -131,7 +131,7 @@ polygon *importObj(importObjInfo objInfo) {
     return model;
 }
 
-void configureObject(GLfloat *vertexFrame, GLfloat *textureFrame, GLfloat *normalFrame, GLint *commands, GLint index, GLint numVertices, GLint numTextureCoords, GLint numNormals, GLint numFaces, polygon *model, int numTextures, int *texturePattern, const char **texturePath) {
+void configureObject(GLfloat *vertexFrame, GLfloat *textureFrame, GLfloat *normalFrame, GLint *commands, GLint index, GLint numVertices, GLint numTextureCoords, GLint numNormals, GLint numFaces, polygon *model, int numTextures, int *texturePattern, vector<string> texturePath) {
     model->textureCoords[index] = NULL;
     model->pointCount[index] = numFaces;
     GLfloat *vertexVBO = (GLfloat*)calloc(numFaces*3*3, sizeof(GLfloat));
@@ -172,7 +172,7 @@ void configureObject(GLfloat *vertexFrame, GLfloat *textureFrame, GLfloat *norma
         model->textureCoords[index] = NULL;
         return;
     }
-    SDL_Surface* texture = IMG_Load(texturePath[texturePattern[index]]);
+    SDL_Surface *texture = IMG_Load(texturePath[texturePattern[index]].c_str());
     if (texture == NULL) {
         return;
     }
