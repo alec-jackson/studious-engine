@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <GL/glew.h>
-#include <unistd.h>
-#include <pthread.h>
+#include "common.hpp"
 
 #include "gameInstance.hpp"
 #include "launcher.hpp"
@@ -19,7 +16,7 @@ void* rotateShape(void *gameInfoStruct) {
     printf("Fork successful\n");
     gameInfo *currentGameInfo = (gameInfo*)gameInfoStruct;
     GameInstance currentGame = currentGameInfo->currentGame;
-    pthread_mutex_t *infoLock = currentGameInfo->infoLock;
+    mutex *infoLock = currentGameInfo->infoLock;
     GLfloat speed = 0.001f, rotateSpeed = 1.0f, scaleSpeed = 0.0002f, offsetSpeed = 0.1f;
     GLfloat cameraOffset[3] = {5.140022f, 1.349999f, 0}, currentLuminance = 1.0f;
     int maxFrames = 1000, currentFrame = 0;
@@ -29,7 +26,7 @@ void* rotateShape(void *gameInfoStruct) {
     int mouseX, mouseY;
     float fallspeed = 0;
     short trackMouse = 1;
-    
+
     SDL_GameController* gameController1 = NULL;
     int numJoySticks = SDL_NumJoysticks();
     short hasActiveController = 0;
@@ -46,13 +43,13 @@ void* rotateShape(void *gameInfoStruct) {
             }
         }
     }
-    
+
     Sint16 controllerLeftStateY = 0;
     Sint16 controllerLeftStateX = 0;
     Sint16 controllerRightStateY = 0;
     Sint16 controllerRightStateX = 0;
     Uint8 buttonCheckA =  0;
-    
+
     while (!*currentGameInfo->isDone) {
         //printf("The current mouse position is x:%i y:%i\n", mouseX, mouseY);
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
@@ -149,7 +146,7 @@ void* rotateShape(void *gameInfoStruct) {
             distFinish /= distHold;
             cameraOffset[0] /= distFinish;
             cameraOffset[2] /= distFinish;
-            
+
         }
         if (currentGame.getKeystate()[SDL_SCANCODE_KP_9] || (mouseX > 0 && trackMouse) || controllerRightStateX > JOYSTICK_DEAD_ZONE) {
             double distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
@@ -210,24 +207,24 @@ void* rotateShape(void *gameInfoStruct) {
         if (currentGame.getKeystate()[SDL_SCANCODE_A] || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
             double xSpeed = sin((angles[1] - 180) * (PI / 180));
             double ySpeed = cos((angles[1] - 180) * (PI / 180));
-            
+
             double multiplier = 1;
             if(controllerLeftStateX < -JOYSTICK_DEAD_ZONE){
                 multiplier = ((float) (controllerLeftStateX * -1)) / 32767;
             }
-            
+
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
         if (currentGame.getKeystate()[SDL_SCANCODE_D] || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
             double xSpeed = sin(angles[1] * (PI / 180));
             double ySpeed = cos(angles[1] * (PI / 180));
-            
+
             double multiplier = 1;
             if(controllerLeftStateX > JOYSTICK_DEAD_ZONE){
                 multiplier = ((float) (controllerLeftStateX)) / 32767;
             }
-            
+
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
@@ -245,24 +242,24 @@ void* rotateShape(void *gameInfoStruct) {
         if (currentGame.getKeystate()[SDL_SCANCODE_W] || controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
             double xSpeed = sin((angles[1] + 90) * (PI / 180));
             double ySpeed = cos((angles[1] + 90) * (PI / 180));
-            
+
             double multiplier = 1;
             if(controllerLeftStateY < -JOYSTICK_DEAD_ZONE){
                 multiplier = ((float) (controllerLeftStateY * -1)) / 32767;
             }
-            
+
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
         if (currentGame.getKeystate()[SDL_SCANCODE_S] || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
             double xSpeed = sin((angles[1] - 90) * (PI / 180));
             double ySpeed = cos((angles[1] - 90) * (PI / 180));
-            
+
             double multiplier = 1;
             if(controllerLeftStateY > JOYSTICK_DEAD_ZONE){
                 multiplier = ((float) controllerLeftStateY) / 32767;
             }
-            
+
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
@@ -297,18 +294,18 @@ void* rotateShape(void *gameInfoStruct) {
                 sleep(1);
             }
         }
-        
+
         fallspeed = basicPhysics(&pos[1], fallspeed);
-        
+
         oldMouseX = mouseX;
         oldMouseY = mouseY;
-        
+
         dx = mouseX - currentGame.getWidth() / 2;
         dy = mouseY - currentGame.getHeight() / 2;
         //cameraOffset[0] += dx / 10.0f;
         //cameraOffset[2] += dy / 10.0f;
         // Lock the variables we are changing to avoid conflict
-        pthread_mutex_lock(infoLock);
+        infoLock->lock();
         currentGameInfo->gameCamera->setOffset(cameraOffset);
         currentGame.setLuminance(currentLuminance);
         *currentGameInfo->angleX = angles[0];
@@ -317,7 +314,7 @@ void* rotateShape(void *gameInfoStruct) {
         *currentGameInfo->xPos = pos[0];
         *currentGameInfo->yPos = pos[1];
         *currentGameInfo->zPos = pos[2];
-        pthread_mutex_unlock(infoLock);
+        infoLock->unlock();
         //printf("Mouse -> dx:%i, dy:%i\n", dx, dy);
         //printf("Pos x:%f, y:%f, z:%f. Rot x:%f, y:%f, z:%f. Scale: %f\n", *currentGameInfo->xPos, *currentGameInfo->yPos, *currentGameInfo->zPos, *currentGameInfo->angleX, *currentGameInfo->angleY, *currentGameInfo->angleZ, *currentGameInfo->scale);
         //printf("Current offset: x:%f, y:%f, z:%f\n\n", cameraOffset[0], cameraOffset[1], cameraOffset[2]);
@@ -345,8 +342,5 @@ void* rotateShape(void *gameInfoStruct) {
         //printf("FPS: %f\n", 1.0/ *currentGame.getDeltaTime());
     }
     SDL_GameControllerClose(gameController1);
-    pthread_exit(0);
-    //exit(0);
+    return NULL;
 }
-
-

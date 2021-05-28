@@ -1,4 +1,4 @@
 #include "launcher.hpp"
 #include "gameInstance.hpp"
-#include <pthread.h>
+#include <thread>
 void *rotateShape(void *gameInfoStruct);

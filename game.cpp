@@ -29,14 +29,14 @@ vector<string> texturePath = {
     "images/shirttexture.jpg"
 };
 
-int setup(pthread_mutex_t *infoLock, GameInstance *currentGame, ConfigData* config);
-int runtime(pthread_mutex_t *infoLock, GameInstance *gamein);
+int setup(std::mutex *infoLock, GameInstance *currentGame, ConfigData* config);
+int runtime(std::mutex *infoLock, GameInstance *gamein);
 int mainLoop(bool *updated, GameInstance *currentGame);
 
 int main() {
     int errorNum;
     GameInstance currentGame;
-    pthread_mutex_t infoLock;
+    std::mutex infoLock;
     ConfigData config;
     // Run setup, if fail exit gracefully
     if (setup(&infoLock, &currentGame, &config)){
@@ -44,14 +44,10 @@ int main() {
     }
     //errorNum = launch(&infoLock, &currentGame);
     errorNum = runtime(&infoLock, &currentGame);
-    pthread_mutex_destroy(&infoLock);
     return errorNum;
 }
 
-int setup(pthread_mutex_t *infoLock, GameInstance *currentGame, ConfigData* config){
-    if (pthread_mutex_init(infoLock, NULL)) {
-        fprintf(stderr, "Mutex lock failed to engage!\n");
-    }
+int setup(mutex *infoLock, GameInstance *currentGame, ConfigData* config){
     int flag = loadConfig(config, "misc/config.txt");
     gameInstanceArgs args;
     args.soundList = soundList;
@@ -70,24 +66,24 @@ int setup(pthread_mutex_t *infoLock, GameInstance *currentGame, ConfigData* conf
     return 0;
 }
 
-int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
+int runtime(mutex *infoLock, GameInstance *gamein){
     // Call after setup
     printf("Starting the game instance\n");
-    
+
     GameInstance currentGame = *gamein;
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    
+
     /*
      We need proper scene loading
      */
-    
+
     // Create our variables
     struct gameInfo currentGameInfo;
     bool isDone = false;
     bool updated = false;
     GLfloat stageRot[3] = {0,0,0};
     GLfloat *stageRotPointers[3] = {&stageRot[0],&stageRot[1], &stageRot[2]};
-    
+
     printf("Creating camera\n");
     int gameObject[4];
     GLfloat cameraOffset[3] = {5.140022f, 1.349999f, 2.309998f};
@@ -100,12 +96,12 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     camInfo.viewNearClipping = 4.0f;
     camInfo.viewFarClipping = 90.0f;
     gameObject[2] = currentGame.createCamera(camInfo);
-    
+
     GLint texturePattern[] = {0, 1, 2, 3};
     GLint texturePatternStage[] = {0};
-    
+
     printf("Created Camera\n");
-    
+
     printf("Creating map");
     //Create an importObj struct for importing the stage
     importObjInfo mapInfo;
@@ -127,7 +123,7 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     map.orthographic = false;
     map.colliderObject = NULL;
     gameObject[0] = currentGame.createGameObject(map);
-    
+
     printf("Creating player\n");
     // The collider on the object is just a basic wire frame at the moment
     // Configure the wireframe box around the player
@@ -136,9 +132,9 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     humColInfo.numTextures = 0;
     humColInfo.texturePattern = NULL;
     humColInfo.programID = currentGame.getProgramID(1);
-    
+
     polygon *humanCollider = importObj(humColInfo);
-    
+
     // Import the player object
     importObjInfo player;
     //player.modelPath = "models/tank.obj";
@@ -147,7 +143,7 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     player.numTextures = 0;
     player.texturePattern = texturePattern;
     player.programID = currentGame.getProgramID(0);
-    
+
     // Ready the gameObjectInfo for the player object
     gameObjectInfo playerObj;
     playerObj.characterModel = importObj(player);
@@ -160,9 +156,9 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     playerObj.programIDNo = currentGame.getProgramID(0);
     playerObj.orthographic = false;
     playerObj.colliderObject = 0;//humanCollider;
-    
+
     gameObject[1] = currentGame.createGameObject(playerObj);
-    
+
     printf("Creating wolf\n");
     // Import the wold object
     importObjInfo wolf;
@@ -183,14 +179,14 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     wolfObj.programIDNo = currentGame.getProgramID(0);
     wolfObj.orthographic = false;
     wolfObj.colliderObject = humanCollider;
-    
+
     gameObject[3] = currentGame.createGameObject(wolfObj);
-    
+
     printf("Reserving space for text\n");
     //Create Reusable text object
     importObjInfo text;
     text.numTextures = 0;
-    
+
     gameObjectInfo textObj;
     wolfObj.scaleVec = vec3(0.02f, 0.02f, 0.02f); // Arbitrary hell
     wolfObj.pos = vec3(0.00f, 0.01f, -0.08f);
@@ -198,9 +194,9 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     wolfObj.rotAngle = 0.0f;
     wolfObj.camera = gameObject[2];
     wolfObj.programIDNo = currentGame.getProgramID(2);
-    
-    
-    
+
+
+
     GameCamera *currentCamera = currentGame.getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame.getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame.getGameObject(gameObject[1]);
@@ -211,10 +207,10 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     // currentGameObject->rotateObject(stageRotPointers);
     currentGameObject = currentGame.getGameObject(gameObject[1]);
     printf("currentGameObject tag is %s\n", currentGameObject->getCollider());
-    
-    
-    
-    
+
+
+
+
     GLfloat xPos = -0.005f, yPos = 0.01f, zPos = 0.0f;
     GLfloat xRot = 0.0f, yRot = 180.0f, zRot = 0.0f;
     GLfloat scale = 0.0062f; // Starting scale
@@ -223,7 +219,7 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     GLfloat *rotation[3] = {&xRot, &yRot, &zRot};
     currentGameObject->rotateObject(rotation);
     currentGameObject->sendScale(&scale);
-    
+
     currentGameInfo.isDone = &isDone;
     currentGameInfo.angleX = rotation[0];
     currentGameInfo.angleY = rotation[1];
@@ -236,21 +232,17 @@ int runtime(pthread_mutex_t *infoLock, GameInstance *gamein){
     currentGameInfo.updated = &updated;
     currentGameInfo.currentGame = *gamein;
     currentGameInfo.infoLock = infoLock;
-    
+
     /*
      End Scene Loading
      */
-    
+
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for unexpected failures and messages from children
-    pthread_t tid; // Should be moved to SDL threads for better cross platform support
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_create(&tid, &attr, rotateShape, &currentGameInfo); // spawns thread to handle input handling and object manipulation
+    thread rotThread (rotateShape, &currentGameInfo);
     mainLoop(&updated, &currentGame);
     isDone = true;
-    pthread_join(tid, NULL);
-    
+    rotThread.join();
     return 0;
 }
 
@@ -280,5 +272,3 @@ int mainLoop(bool *updated, GameInstance* gamein) {
     currentGame.cleanup();
     return 0;
 }
-
-

@@ -19,7 +19,7 @@ GameInstance currentGame;
 // GameObject startGameInstance is used to actually start the instance, this is used to configure the instance
 // Should probably add flag parsing at some point for further call modularity
 // Function should probably also set system interupt handling
-int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
+int launch (mutex *infoLock, GameInstance *gamein) {
     currentGame = *gamein;
     printf("Starting the game instance\n");
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -38,7 +38,7 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     camInfo.viewNearClipping = 4.0f;
     camInfo.viewFarClipping = 90.0f;
     gameObject[2] = currentGame.createCamera(camInfo);
-    
+
     vector<string> texturePathStage = {"images/viking_room.png"};
     vector<string> texturePath = {"images/Sans Tex.png", "images/denimtexture.jpg", "images/shoetexture.jpg", "images/shirttexture.jpg"};
     GLint texturePattern[] = {0, 1, 2, 3};
@@ -67,10 +67,10 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     map.orthographic = false;
     map.colliderObject = NULL;
     gameObject[0] = currentGame.createGameObject(map);
-    
+
     GLfloat stageRot[3] = {0,0,0};
     GLfloat *stageRotPointers[3] = {&stageRot[0],&stageRot[1], &stageRot[2]};
-    
+
     printf("Creating player\n");
     // The collider on the object is just a basic wire frame at the moment
     // Configure the wireframe box around the player
@@ -79,9 +79,9 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     humColInfo.numTextures = 0;
     humColInfo.texturePattern = NULL;
     humColInfo.programID = currentGame.getProgramID(1);
-    
+
     polygon *humanCollider = importObj(humColInfo);
-    
+
     // Import the sans player object
     importObjInfo sans;
     sans.modelPath = "models/tank.obj";
@@ -89,7 +89,7 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     sans.numTextures = 0;
     sans.texturePattern = texturePattern;
     sans.programID = currentGame.getProgramID(0);
-    
+
     // Ready the gameObjectInfo for the sans object
     gameObjectInfo sansObj;
     sansObj.characterModel = importObj(sans);
@@ -102,9 +102,9 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     sansObj.programIDNo = currentGame.getProgramID(0);
     sansObj.orthographic = false;
     sansObj.colliderObject = humanCollider;
-    
+
     gameObject[1] = currentGame.createGameObject(sansObj);
-    
+
     printf("Creating wolf\n");
     // Import the wold object
     importObjInfo wolf;
@@ -125,11 +125,11 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     wolfObj.programIDNo = currentGame.getProgramID(0);
     wolfObj.orthographic = false;
     wolfObj.colliderObject = humanCollider;
-    
+
     gameObject[3] = currentGame.createGameObject(wolfObj);
-    
+
     printf("Creating TEXT\n");
-    
+
     // Ready the gameObjectInfo for the wolf object
     gameObjectInfo tobj;
     textLib to;
@@ -143,14 +143,14 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     tobj.programIDNo = currentGame.getProgramID(2);
     tobj.orthographic = false;
     tobj.colliderObject = NULL;
-    
+
     gameObject[3] = currentGame.createGameObject(wolfObj);
-    
+
     printf("Reserving space for text\n");
     //Create Reusable text object
     importObjInfo text;
     text.numTextures = 0;
-    
+
     gameObjectInfo textObj;
     wolfObj.scaleVec = vec3(0.02f, 0.02f, 0.02f); // Arbitrary hell
     wolfObj.pos = vec3(0.00f, 0.01f, -0.08f);
@@ -158,7 +158,7 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     wolfObj.rotAngle = 0.0f;
     wolfObj.camera = gameObject[2];
     wolfObj.programIDNo = currentGame.getProgramID(2);
-    
+
     GameCamera *currentCamera = currentGame.getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame.getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame.getGameObject(gameObject[1]);
@@ -191,18 +191,13 @@ int launch (pthread_mutex_t *infoLock, GameInstance *gamein) {
     currentGameInfo.updated = &updated;
     currentGameInfo.currentGame = *gamein;
     currentGameInfo.infoLock = infoLock;
-    
-    
+
+
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for unexpected failures and messages from children
-    pthread_t tid; // Should be moved to SDL threads for better cross platform support
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_create(&tid, &attr, rotateShape, &currentGameInfo); // spawns thread to handle input handling and object manipulation
+    thread rotThread(rotateShape, &currentGameInfo);
     currentGame.mainLoop(&updated);
     isDone = true;
-    pthread_join(tid, NULL);
-    
+    rotThread.join();
     return 0;
 }
-

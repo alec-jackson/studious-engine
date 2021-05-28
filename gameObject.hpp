@@ -42,7 +42,7 @@ public:
   vec3 getPos(GLfloat *offset);
   vec3 getPos();
   void setLuminance(GLfloat luminanceValue);
-  void setLock(pthread_mutex_t *lock);
+  void setLock(mutex *lock);
   int getCollision(GameObject *object1, GameObject *object2);
 
 private:
@@ -60,7 +60,7 @@ private:
 	int currentCamera;
 	vec3 directionalLight;
 	GLfloat luminance, rollOff;
-	pthread_mutex_t *infoLock;
+	mutex *infoLock;
 	polygon *collider;
 };
 

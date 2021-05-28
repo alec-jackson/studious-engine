@@ -86,7 +86,7 @@ void GameObject::drawShape() {
         if (!configured) {
             fprintf(stderr, "GameObject with tag %s has not been configured yet!\n", collisionTag);
         }
-        pthread_mutex_lock(infoLock);
+        infoLock->lock();
         if (dynamicPosition) {
             translateMatrix = glm::translate(mat4(1.0f), vec3(*posX, *posY, *posZ));
         }
@@ -106,7 +106,7 @@ void GameObject::drawShape() {
         glUniformMatrix4fv(rotateID, 1, GL_FALSE, &rotateMatrix[0][0]);
         glUniform1i(hasTextureID, hasTexture[i]);
         //printf("Starting draw\n");
-        pthread_mutex_unlock(infoLock);
+        infoLock->unlock();
         if (hasTexture[i]) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, model->textureID[i]);
@@ -127,7 +127,7 @@ void GameObject::drawShape() {
         glEnableVertexAttribArray(2);
         glBindBuffer(GL_ARRAY_BUFFER, model->normalbufferID[i]);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        
+
         //printf("Starting to draw shape");
         if (hasTexture[i]) {
             //printf("Running texture elements for object %s\n", collisionTag);
@@ -150,13 +150,13 @@ void GameObject::drawShape() {
         glDisableVertexAttribArray(0);
     }
     if (collider != NULL) {
-        pthread_mutex_lock(infoLock);
+        infoLock->lock();
         // After drawing the gameobject, draw the collider
         glUseProgram(collider->programID); // grab the programID from the object
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
         glUniformMatrix4fv(MVPID, 1, GL_FALSE, &MVP[0][0]);
-        pthread_mutex_unlock(infoLock);
+        infoLock->unlock();
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, collider->shapebufferID[0]);
         //printf("Bound the vertex buffer\n");
@@ -209,7 +209,7 @@ vec3 GameObject::getPos() {
 void GameObject::setLuminance(GLfloat luminanceValue) {
     luminance = luminanceValue;
 }
-void GameObject::setLock(pthread_mutex_t *lock) {
+void GameObject::setLock(mutex *lock) {
     infoLock = lock;
 }
 
@@ -271,6 +271,3 @@ void GameCamera::setOffset(GLfloat *newOffset) {
 void GameCamera::setTarget(GameObject *targetObject) {
     target = targetObject;
 }
-
-
-

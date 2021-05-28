@@ -29,7 +29,7 @@ typedef struct gameInstanceArgs {
 	vector<string> soundList;
 	vector<string> vertexShaders;
 	vector<string> fragmentShaders;
-	pthread_mutex_t *lock;
+	mutex *lock;
 } gameInstanceArgs;
 
 class GameInstance {
@@ -51,7 +51,7 @@ private:
 	controllerReadout controllerInfo[2];
 	vec3 directionalLight;
 	GLfloat luminance;
-	pthread_mutex_t *infoLock;
+	mutex *infoLock;
 	int width, height;
 	textLib text;
 

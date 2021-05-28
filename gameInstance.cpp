@@ -8,8 +8,8 @@
  vector<string> soundList - Contains paths to sound effects to load
  vector<string> vertexShaders - Contains paths to vertex shaders
  vector<string> fragmentShaders - Contains paths to vertex shaders
- pthread_mutex_t &lock - Reference to lock used for locking all shared resources
- 
+ mutex &lock - Reference to lock used for locking all shared resources
+
  (void) startGameInstance does not return any value.
  */
 void GameInstance::startGameInstance(gameInstanceArgs args) {
@@ -137,7 +137,7 @@ int GameInstance::destroyGameObject(GameObject *object) {
     if (object == NULL) {
         return -1;
     }
-    
+
     // Delete OpenGL buffers for the gameObjects
     for (int i = 0; i < object->getModel()->numberOfObjects; i++) {
         glDeleteBuffers(1, &object->getModel()->shapebufferID[i]);
@@ -415,7 +415,7 @@ void GameInstance::initWindow(int width, int height) {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
     window = SDL_CreateWindow("OGL Engine Beta", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
     //SDL_CreateWindowAndRenderer(width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI, &window, &renderer);
-    
+
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -423,7 +423,7 @@ void GameInstance::initWindow(int width, int height) {
     SDL_GL_SetSwapInterval(0); // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
     //SDL_RenderSetLogicalSize(renderer, 270, 480);
-    
+
     if (window == NULL) {
         fprintf(stderr, "Failed to create SDL window!");
         return;
@@ -491,14 +491,12 @@ void GameInstance::basicCollision(GameInstance* gameInstance) {
     gameObjectLL* objList = gameInstance -> gameObjects;
     GameObject* curObj;
     int runFlag = 1;
-    
+
     if(objList -> current != 0){
         do{
             curObj = objList -> current;
-            
-            
+
+
         }while(runFlag);
     }
 }
-
-

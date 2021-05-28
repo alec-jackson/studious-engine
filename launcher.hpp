@@ -1,5 +1,5 @@
 #pragma once
-#include <pthread.h>
+#include <thread>
 #include "gameInstance.hpp"
 
 /*
@@ -14,7 +14,7 @@ typedef struct gameInfo {
 	GameCamera *gameCamera;
 	bool *updated;
  	GameInstance currentGame;
- 	pthread_mutex_t *infoLock;
+ 	mutex *infoLock;
 } gameInfo;
 
-int launch (pthread_mutex_t *infoLock, GameInstance *currentGame);
+int launch (mutex *infoLock, GameInstance *currentGame);
