@@ -25,14 +25,6 @@ void main()
 		color = texColor;
 	//	color = texture(mytexture, f_texcoord);
 	} else {
-		// Test angles in radians
-		/*
-		if (brightness > 3.1415926f) {
-			color = vec4(0, 0.7f, 0.7f, 0.0f);
-		} else {
-			color = vec4(1.0f, 0.5f, 0.5f, 0.5f);
-		}*/
-		//color = vec4(brightness * luminance, brightness * luminance, brightness * luminance, 1) / 2;
 		color = vec4(Color, 1.0);
 	}
 

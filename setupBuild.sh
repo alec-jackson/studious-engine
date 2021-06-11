@@ -13,10 +13,15 @@ if [ ! -d build ]; then
     mkdir build
 fi
 cd build
-cmake -Wno-dev ..
+cmake -Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
 
 # Build Project
-make
+TYPE=`uname`
+if [ TYPE = "Darwin" ]; then
+    make -j$(sysctl -n hw.physicalcpu)
+else
+    make -j$(nproc)
+fi
 if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
 else
@@ -24,4 +29,3 @@ else
     cd ..
     ./engineExample
 fi
-

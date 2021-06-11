@@ -50,7 +50,7 @@ void* rotateShape(void *gameInfoStruct) {
     Sint16 controllerRightStateX = 0;
     Uint8 buttonCheckA =  0;
 
-    while (!*currentGameInfo->isDone) {
+    while (!(*currentGameInfo->isDone)) {
         //printf("The current mouse position is x:%i y:%i\n", mouseX, mouseY);
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         if(hasActiveController){
@@ -338,7 +338,6 @@ void* rotateShape(void *gameInfoStruct) {
             }
             printf("AVG FPS: %f\nMIN FPS: %f\n", sumFrames / (float)maxFrames, minimum);
         }
-        *currentGameInfo->updated = false;
         //printf("FPS: %f\n", 1.0/ *currentGame.getDeltaTime());
     }
     SDL_GameControllerClose(gameController1);

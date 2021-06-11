@@ -12,7 +12,7 @@ typedef struct gameInfo {
 	GLfloat *xPos, *yPos, *zPos;
 	GLfloat *scale;
 	GameCamera *gameCamera;
-	bool *updated;
+	mutex *sceneLock;
  	GameInstance currentGame;
  	mutex *infoLock;
 } gameInfo;

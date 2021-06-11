@@ -72,12 +72,11 @@ public:
 	GLuint getProgramID(int index);
 	controllerReadout *getControllers(int controllerIndex);
 	int getControllersConnected();
-	void swapBuffers();
 	void playSound(int soundIndex, int loop);
 	void changeWindowMode(int mode);
 	void cleanup();
 	int destroyGameObject(GameObject *object);
-	void mainLoop(bool *updated);
+	void mainLoop(mutex *sceneLock);
 	GameObject *getGameObject(int gameObjectID);
 	GameCamera *getCamera(int gameCameraID);
 	GLdouble *getDeltaTime();

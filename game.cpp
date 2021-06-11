@@ -31,7 +31,7 @@ vector<string> texturePath = {
 
 int setup(std::mutex *infoLock, GameInstance *currentGame, ConfigData* config);
 int runtime(std::mutex *infoLock, GameInstance *gamein);
-int mainLoop(bool *updated, GameInstance *currentGame);
+int mainLoop(mutex *sceneLock, GameInstance *currentGame);
 
 int main() {
     int errorNum;
@@ -80,7 +80,7 @@ int runtime(mutex *infoLock, GameInstance *gamein){
     // Create our variables
     struct gameInfo currentGameInfo;
     bool isDone = false;
-    bool updated = false;
+    mutex sceneLock;
     GLfloat stageRot[3] = {0,0,0};
     GLfloat *stageRotPointers[3] = {&stageRot[0],&stageRot[1], &stageRot[2]};
 
@@ -229,7 +229,7 @@ int runtime(mutex *infoLock, GameInstance *gamein){
     currentGameInfo.zPos = &zPos;
     currentGameInfo.scale = &scale;
     currentGameInfo.gameCamera = currentCamera;
-    currentGameInfo.updated = &updated;
+    currentGameInfo.sceneLock = &sceneLock;
     currentGameInfo.currentGame = *gamein;
     currentGameInfo.infoLock = infoLock;
 
@@ -240,33 +240,35 @@ int runtime(mutex *infoLock, GameInstance *gamein){
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for unexpected failures and messages from children
     thread rotThread (rotateShape, &currentGameInfo);
-    mainLoop(&updated, &currentGame);
+    mainLoop(&sceneLock, &currentGame);
     isDone = true;
     rotThread.join();
     return 0;
 }
 
 // Go through gameObjectLL and call drawShape method on each.
-int mainLoop(bool *updated, GameInstance* gamein) {
+int mainLoop(mutex *sceneLock, GameInstance* gamein) {
     clock_t begin, end;
     int running = 1;
     GameInstance currentGame = *gamein;
     GLdouble deltaTime;
     short error = 0;
     while (running) {
+        sceneLock->lock();
         running = currentGame.isWindowClosed();
         begin = clock();
         currentGame.updateOGL();
         error = currentGame.updateCameras();
         error |= currentGame.updateObjects();
         error |= currentGame.updateWindow();
-        if(error){
+        if (error){
+            sceneLock->unlock();
             return 1;
         }
         end = clock();
         deltaTime = (double)(end - begin) / (double)CLOCKS_PER_SEC;
         currentGame.setDeltaTime(deltaTime);
-        *updated = true;
+        sceneLock->unlock();
     }
     printf("Running cleanup\n");
     currentGame.cleanup();

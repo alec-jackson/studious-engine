@@ -79,21 +79,36 @@ GLuint GameInstance::getProgramID(int index) {
 }
 
 /*
- (controllerReadout *) getControllers takes an (int) controllerIndex and
+ (controllerReadout *) getControllers takes an (int) controllerIndex and returns
+ the associated controllerReadout struct.
  */
 controllerReadout* GameInstance::getControllers(int controllerIndex){
     controllerInfo[controllerIndex].leftAxis = SDL_GameControllerGetAxis(gameControllers[controllerIndex], SDL_CONTROLLER_AXIS_LEFTY );
     return &controllerInfo[controllerIndex];
 }
+
+/*
+ (int) getControllersConnected returns the number of controllers connected and
+ detected by the current SDL instance.
+*/
 int GameInstance::getControllersConnected() {
     return controllersConnected;
 }
-void GameInstance::swapBuffers() {
-    SDL_GL_SwapWindow(window);
-}
+
+/*
+ (void) playSound takes an (int) soundIndex number associated with a specific
+ sound piece loaded into the game instance and plays that sound (int) loop
+ number of times. If indefinite looping is desired, (int) loop can be set to -1.
+ Infinitely looping sounds must be stopped manually.
+*/
 void GameInstance::playSound(int soundIndex, int loop) {
     Mix_PlayChannel(-1, sound[soundIndex], loop);
 }
+
+/*
+ (void) changeWindowMode currently only changes the current gameInstance window
+ into fullscreen mode. (void) changeWindowMode does not return any value.
+*/
 void GameInstance::changeWindowMode(int mode){
     SDL_DisplayMode DM;
     // if(mode > 1){
@@ -106,6 +121,12 @@ void GameInstance::changeWindowMode(int mode){
     SDL_SetWindowFullscreen(window, mode);
     //SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 }
+
+/*
+ (void) cleanup attempts to clean up dynamically allocated variables in the
+ application, as well as other OpenGL variables created throughout the lifespan
+ of the application. (void) cleanup does not return any value.
+*/
 void GameInstance::cleanup() {
     for (int i = 0; i < controllersConnected; i++) {
         //SDL_GameControllerClose(gameControllers[i]);
@@ -129,15 +150,16 @@ void GameInstance::cleanup() {
     return;
 }
 /*
- Function used for properly destroying gameobjects in the game
- instance. Function returns a 0 after a successful clean. If the
- function returns a -1, the function was passed a null pointer.
+ (int) destroyGameObject takes a (GameObject *) object and attempts to clean up
+ all dynamically allocated attributes for that given object. On success, 0 is
+ returned and the memory used by that GameObject is freed. On failure, -1 is
+ returned and an error is printed to stderr.
  */
 int GameInstance::destroyGameObject(GameObject *object) {
     if (object == NULL) {
+        cerr << "Error: Cannot destroy empty GameObject!\n";
         return -1;
     }
-
     // Delete OpenGL buffers for the gameObjects
     for (int i = 0; i < object->getModel()->numberOfObjects; i++) {
         glDeleteBuffers(1, &object->getModel()->shapebufferID[i]);
@@ -164,13 +186,15 @@ int GameInstance::destroyGameObject(GameObject *object) {
 }
 
 // Go through gameObjectLL and call drawShape method on each.
-void GameInstance::mainLoop(bool *updated) {
+/*
+ (void) mainLoop starts rendering objects in the current GameInstance to the
+ main SDL window. //#B FINISH COMMENTING AFTER FIXING
+*/
+void GameInstance::mainLoop(mutex *sceneLock) {
     clock_t begin, end;
     int running = 1;
     while (running) {
-        while (*updated && running) {
-            //printf("HALTING DRAW\n");
-        }
+        sceneLock->lock();
         while(SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT || keystate[SDL_SCANCODE_ESCAPE]) {
                 printf("Closing now...\n");
@@ -216,7 +240,7 @@ void GameInstance::mainLoop(bool *updated) {
         end = clock();
         deltaTime = (double)(end - begin) / (double)CLOCKS_PER_SEC;
         //printf("FPS: %f\n", 1 / deltaTime);
-        *updated = true;
+        sceneLock->unlock();
     }
     printf("Running cleanup\n");
     cleanup();

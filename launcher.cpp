@@ -43,7 +43,7 @@ int launch (mutex *infoLock, GameInstance *gamein) {
     vector<string> texturePath = {"images/Sans Tex.png", "images/denimtexture.jpg", "images/shoetexture.jpg", "images/shirttexture.jpg"};
     GLint texturePattern[] = {0, 1, 2, 3};
     GLint texturePatternStage[] = {0};
-    bool updated = false;
+    mutex sceneLock;
     //GameCamera *currentCamera = currentGame.getGameCamera(gameObject[2]);
     printf("Created Camera\n");
     printf("Creating map");
@@ -188,7 +188,7 @@ int launch (mutex *infoLock, GameInstance *gamein) {
     currentGameInfo.zPos = &zPos;
     currentGameInfo.scale = &scale;
     currentGameInfo.gameCamera = currentCamera;
-    currentGameInfo.updated = &updated;
+    currentGameInfo.sceneLock = &sceneLock;
     currentGameInfo.currentGame = *gamein;
     currentGameInfo.infoLock = infoLock;
 
@@ -196,7 +196,7 @@ int launch (mutex *infoLock, GameInstance *gamein) {
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for unexpected failures and messages from children
     thread rotThread(rotateShape, &currentGameInfo);
-    currentGame.mainLoop(&updated);
+    currentGame.mainLoop(&sceneLock);
     isDone = true;
     rotThread.join();
     return 0;
