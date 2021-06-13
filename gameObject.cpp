@@ -18,7 +18,7 @@ void GameObject::configureGameObject(gameObjectInfo objectInfo) {
     //printf("Upper loop is %i\n", model->numberOfObjects);
     // Populate the hasTexture array with texture info
     for (int i = 0; i < model->numberOfObjects; i++) {
-        if (model->textureCoords[i] == NULL) {
+        if (model->textureCoordsID[i] == UINT_MAX) {
             hasTexture[i] = 0; // The current object does not have a texture
         } else {
             hasTexture[i] = 1; // The current object does have a texture

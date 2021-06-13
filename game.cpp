@@ -33,7 +33,7 @@ int setup(std::mutex *infoLock, GameInstance *currentGame, ConfigData* config);
 int runtime(std::mutex *infoLock, GameInstance *gamein);
 int mainLoop(mutex *sceneLock, GameInstance *currentGame);
 
-int main() {
+int main(int argc, char **argv) {
     int errorNum;
     GameInstance currentGame;
     std::mutex infoLock;
@@ -97,8 +97,8 @@ int runtime(mutex *infoLock, GameInstance *gamein){
     camInfo.viewFarClipping = 90.0f;
     gameObject[2] = currentGame.createCamera(camInfo);
 
-    GLint texturePattern[] = {0, 1, 2, 3};
-    GLint texturePatternStage[] = {0};
+    vector<GLint> texturePattern = {0, 1, 2, 3};
+    vector<GLint> texturePatternStage = {0};
 
     printf("Created Camera\n");
 
@@ -130,7 +130,6 @@ int runtime(mutex *infoLock, GameInstance *gamein){
     importObjInfo humColInfo;
     humColInfo.modelPath = "models/rockStone.obj";
     humColInfo.numTextures = 0;
-    humColInfo.texturePattern = NULL;
     humColInfo.programID = currentGame.getProgramID(1);
 
     polygon *humanCollider = importObj(humColInfo);

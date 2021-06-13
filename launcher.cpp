@@ -41,8 +41,8 @@ int launch (mutex *infoLock, GameInstance *gamein) {
 
     vector<string> texturePathStage = {"images/viking_room.png"};
     vector<string> texturePath = {"images/Sans Tex.png", "images/denimtexture.jpg", "images/shoetexture.jpg", "images/shirttexture.jpg"};
-    GLint texturePattern[] = {0, 1, 2, 3};
-    GLint texturePatternStage[] = {0};
+    vector<GLint> texturePattern = {0, 1, 2, 3};
+    vector<GLint> texturePatternStage = {0};
     mutex sceneLock;
     //GameCamera *currentCamera = currentGame.getGameCamera(gameObject[2]);
     printf("Created Camera\n");
@@ -77,7 +77,6 @@ int launch (mutex *infoLock, GameInstance *gamein) {
     importObjInfo humColInfo;
     humColInfo.modelPath = "models/rockStone.obj";
     humColInfo.numTextures = 0;
-    humColInfo.texturePattern = NULL;
     humColInfo.programID = currentGame.getProgramID(1);
 
     polygon *humanCollider = importObj(humColInfo);

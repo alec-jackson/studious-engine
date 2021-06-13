@@ -166,21 +166,8 @@ int GameInstance::destroyGameObject(GameObject *object) {
         glDeleteBuffers(1, &object->getModel()->textureCoordsID[i]);
         glDeleteBuffers(1, &object->getModel()->normalbufferID[i]);
         glDeleteTextures(1, &object->getModel()->textureID[i]);
-        free(object->getModel()->vertices[i]);
-        free(object->getModel()->normalCoords[i]);
-        if (object->getModel()->textureCoords[i] != NULL) {
-            free(object->getModel()->textureCoords[i]);
-        }
     }
-    free(object->getModel()->textureCoords);
-    free(object->getModel()->vertices);
-    free(object->getModel()->normalCoords);
-    free(object->getModel()->shapebufferID);
-    free(object->getModel()->normalbufferID);
-    free(object->getModel()->textureCoordsID);
-    free(object->getModel()->textureID);
-    free(object->getModel()->pointCount);
-    free(object->getModel());
+    delete object->getModel();
     free(object);
     return 0;
 }

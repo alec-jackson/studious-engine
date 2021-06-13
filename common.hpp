@@ -1,6 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
-#include <stdio.h>
+#include <cstdio>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
@@ -9,6 +9,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <fstream>
 #ifndef _WIN32 // Don't use unistd.h on windows
 #include <unistd.h>
 #endif

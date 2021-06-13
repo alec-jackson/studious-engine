@@ -1,6 +1,5 @@
 #pragma once
 #include "common.hpp"
-
 /*
 The polygon struct holds all of the relevant information for a given shape. The
 struct members are defined as the following:
@@ -29,17 +28,17 @@ models currently must have triangulated faces, where curr is the index of the
 object to be drawn.
 */
 typedef struct polygon {
-    GLuint *shapebufferID; // used for vertex buffer
-    GLuint *textureCoordsID; // used for texture coordinate buffer
-    GLuint *textureID; // ID for texture binding
-    GLuint *normalbufferID;
+    vector<GLuint> shapebufferID; // used for vertex buffer
+    vector<GLuint> textureCoordsID; // used for texture coordinate buffer
+    vector<GLuint> textureID; // ID for texture binding
+    vector<GLuint> normalbufferID;
     GLuint textureUniformID; // ID for finding texture sampler in OpenGL table
-    GLfloat **vertices; // RAW vertex data
-    GLfloat **textureCoords; // RAW texture coordinate data
-    GLfloat **normalCoords; // RAW normal vector data
-    GLint *pointCount; // describes the number of distinct points in each array
+    vector<vector<GLfloat>> vertices; // 2D vector for vertices
+    vector<vector<GLfloat>> textureCoords; // 2D vector for texture coord data
+    vector<vector<GLfloat>> normalCoords; // 2D vector for normal coord data
+    vector<GLint> pointCount; // no. of distinct points in shape
     GLint numberOfObjects; // Contains the number of objects in the model
-    GLuint programID; // Used for storing most recent shader
+    GLuint programID; // Used for storing programID of object's shader
 } polygon;
 
 /*
@@ -48,29 +47,26 @@ of the current arguments for importObj will be morphed into this single struct
 with the same names.
 */
 typedef struct importObjInfo {
-	const char *modelPath;
+	string modelPath;
 	vector<string> texturePath;
-	int numTextures, *texturePattern;
+	int numTextures;
+    vector<GLint> texturePattern;
 	GLuint programID;
 } importObjInfo;
 
 /*
 The configureArgs struct is strictly used for passing arguments into the
-configureObject function inside of modelImport.cpp. 
+configureObject function inside of modelImport.cpp.
 */
 typedef struct configureArgs {
-    GLfloat *vertexFrame;
-    GLfloat *textureFrame;
-    GLfloat *normalFrame;
-    GLint *commands;
+    vector<GLfloat> vertexFrame;
+    vector<GLfloat> textureFrame;
+    vector<GLfloat> normalFrame;
+    vector<GLint> commands;
     GLint index;
-    GLint numVertices;
-    GLint numTextureCoords;
-    GLint numNormals;
-    GLint numFaces;
     polygon *model;
     int textureCount;
-    int *texturePattern;
+    vector<GLint> texturePattern;
     vector<string> texturePath;
 } configureArgs;
 
