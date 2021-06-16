@@ -49,7 +49,6 @@ with the same names.
 typedef struct importObjInfo {
 	string modelPath;
 	vector<string> texturePath;
-	int numTextures;
     vector<GLint> texturePattern;
 	GLuint programID;
 } importObjInfo;

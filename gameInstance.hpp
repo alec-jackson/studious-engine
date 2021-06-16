@@ -29,7 +29,6 @@ typedef struct gameInstanceArgs {
 	vector<string> soundList;
 	vector<string> vertexShaders;
 	vector<string> fragmentShaders;
-	mutex *lock;
 } gameInstanceArgs;
 
 class GameInstance {
@@ -51,7 +50,6 @@ private:
 	controllerReadout controllerInfo[2];
 	vec3 directionalLight;
 	GLfloat luminance;
-	mutex *infoLock;
 	int width, height;
 	textLib text;
 
@@ -76,14 +74,13 @@ public:
 	void changeWindowMode(int mode);
 	void cleanup();
 	int destroyGameObject(GameObject *object);
-	void mainLoop(mutex *sceneLock);
 	GameObject *getGameObject(int gameObjectID);
 	GameCamera *getCamera(int gameCameraID);
-	GLdouble *getDeltaTime();
+	GLdouble getDeltaTime();
 	int setDeltaTime(GLdouble time);
 	void setLuminance(GLfloat luminanceValue);
 	void basicCollision(GameInstance* gameInstance);
-	int isWindowClosed();
+	bool isWindowOpen();
 	void updateOGL();
 	int updateCameras();
 	int updateObjects();

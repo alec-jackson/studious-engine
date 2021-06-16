@@ -20,29 +20,28 @@ typedef struct gameObjectInfo {
 	vec3 scaleVec, pos, rotateAxis;
 	GLfloat rotAngle;
 	int camera;
-	const char *collisionTagName;
-	GLuint programIDNo;
-	bool orthographic;
+	string collisionTagName;
 } gameObjectInfo;
 
 class GameObject{
 public:
   void configureGameObject(gameObjectInfo objectInfo);
 
-  const char *getCollider(void);
-  void rotateObject(GLfloat **rotation);
-  void sendPosition(GLfloat **pos);
-  void sendScale(GLfloat *scale);
+  string getCollider(void);
+  void rotateObject(vec3 rotation);
+  void sendPosition(vec3 pos);
+  void sendScale(GLfloat uniformScale);
+  GLfloat getScale();
   void setDirectionalLight(vec3 newLight);
   void drawShape();
   polygon *getModel();
   void deleteTextures();
   void setVPMatrix(mat4 VPMatrix);
   int getCameraID();
-  vec3 getPos(GLfloat *offset);
+  vec3 getPos(vec3 offset);
   vec3 getPos();
   void setLuminance(GLfloat luminanceValue);
-  void setLock(mutex *lock);
+  mutex *getLock();
   int getCollision(GameObject *object1, GameObject *object2);
 
 private:
@@ -50,17 +49,16 @@ private:
 	mat4 translateMatrix, scaleMatrix, rotateMatrix; // Model Matrix
 	mat4 vpMatrix; // Projection  *View matrix
 	GLuint rotateID, scaleID, translateID, vpID, textureID, textCoordsID, hasTextureID, directionalLightID, luminanceID, rollOffID, programID, MVPID;
-	GLint textureCoordID, uniform_mytexture, *hasTexture;
-	GLfloat *posX, *posY, *posZ, tPosX, tPosY, tPosZ;
-	GLfloat *size;
-	GLfloat *rotX, *rotY, *rotZ;
-	GLfloat *velX, *velY, *velZ;
-	bool dynamicPosition, dynamicRotation, dynamicScaling, configured;
-	const char *collisionTag;
+	GLint textureCoordID, uniform_mytexture;
+	vector<GLint> hasTexture;
+	vec3 pos, rot, vel; // Position, rotation and velocity 3D vectors
+	GLfloat scale;
+	bool configured;
+	string collisionTag;
 	int currentCamera;
 	vec3 directionalLight;
 	GLfloat luminance, rollOff;
-	mutex *infoLock;
+	mutex infoLock;
 	polygon *collider;
 };
 
@@ -75,7 +73,8 @@ struct with the same names.
 */
 typedef struct cameraInfo {
 	GameObject *objTarget;
-	GLfloat *offset, viewCameraAngle, viewAspectRatio,
+	vec3 offset;
+	GLfloat viewCameraAngle, viewAspectRatio,
 	viewNearClipping, viewFarClipping;
 } cameraInfo;
 
@@ -84,16 +83,17 @@ class GameCamera{
 public:
 	void configureCamera(cameraInfo camInfo);
 	GameObject *getTarget();
-	GLfloat *getOffset();
+	vec3 getOffset();
 	mat4 getVPMatrix();
 	void updateCamera();
-	void setOffset(GLfloat *newOffset);
+	void setOffset(vec3 newOffset);
 	void setTarget(GameObject *targetObject);
 
 private:
 	GameObject *target;
-	GLfloat *offset, cameraAngle;
-	GLfloat currentPosition[3];
+	vec3 offset;
+	GLfloat cameraAngle;
+	vec3 currentPosition;
 	mat4 VPmatrix;
 	GLfloat aspectRatio, nearClipping, farClipping;
 };

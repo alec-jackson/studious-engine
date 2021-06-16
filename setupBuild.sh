@@ -17,7 +17,7 @@ cmake -Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
 
 # Build Project
 TYPE=`uname`
-if [ TYPE = "Darwin" ]; then
+if [ ${TYPE} = "Darwin" ]; then
     make -j$(sysctl -n hw.physicalcpu)
 else
     make -j$(nproc)

@@ -74,7 +74,7 @@ polygon *importObj(importObjInfo objInfo) {
                 args.commands = commands;
                 args.index = currentObject - 1;
                 args.model = model;
-                args.textureCount = objInfo.numTextures;
+                args.textureCount = objInfo.texturePath.size();
                 args.texturePattern = objInfo.texturePattern;
                 args.texturePath = objInfo.texturePath;
                 configureObject(args);
@@ -90,7 +90,7 @@ polygon *importObj(importObjInfo objInfo) {
     args.commands = commands;
     args.index = currentObject - 1;
     args.model = model;
-    args.textureCount = objInfo.numTextures;
+    args.textureCount = objInfo.texturePath.size();
     args.texturePattern = objInfo.texturePattern;
     args.texturePath = objInfo.texturePath;
     configureObject(args);
@@ -144,11 +144,12 @@ void configureObject(configureArgs args) {
                  sizeof(GLfloat) * args.model->pointCount[args.index] * 9,
                  &(args.model->normalCoords[args.index][0]), GL_STATIC_DRAW);
     // Specific case where the current object does not get a texture
-    if (args.textureCount == 0 || args.texturePattern[args.index] >= args.textureCount || args.texturePattern[args.index] == -1) {
+    if (!args.textureCount || args.texturePattern[args.index] >= args.textureCount || args.texturePattern[args.index] == -1) {
         return;
     }
     SDL_Surface *texture = IMG_Load(args.texturePath[args.texturePattern[args.index]].c_str());
     if (texture == NULL) {
+        cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
     glGenTextures(1, &(args.model->textureID[args.index]));

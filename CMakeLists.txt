@@ -29,7 +29,6 @@ find_package(Freetype REQUIRED)
 
 add_executable(${PROJECT_NAME}
   game.cpp
-  launcher.cpp
   modelImport.cpp
   shaderLoader.cpp
   gameInstance.cpp

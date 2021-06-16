@@ -1,5 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
+#define SHOW_FPS 1 // Enables FPS logging to console when = 1, = 0 to disable
 #include <cstdio>
 #include <SDL.h>
 #include <SDL_image.h>

@@ -3,34 +3,30 @@
 
 void GameObject::configureGameObject(gameObjectInfo objectInfo) {
     //Arbitrary directional light value (PREVENT SEGFAULT)
-    programID = objectInfo.programIDNo;
+    programID = objectInfo.characterModel->programID;
     collider = objectInfo.colliderObject;
     luminance = 1.0f;
     rollOff = 0.9f;
     directionalLight = vec3(0,0,0);
     model = objectInfo.characterModel;
-    printf("Preparing to configure the game object\n");
-    // Create the hasTexture array for each object to have a single entry
-    hasTexture = (GLint*)malloc(sizeof(GLint)*model->numberOfObjects);
     configured = true;
     currentCamera = objectInfo.camera;
-    printf("Currently populating the hasTexture array!\n");
-    //printf("Upper loop is %i\n", model->numberOfObjects);
-    // Populate the hasTexture array with texture info
+    // Populate the hasTexture vector with texture info
     for (int i = 0; i < model->numberOfObjects; i++) {
         if (model->textureCoordsID[i] == UINT_MAX) {
-            hasTexture[i] = 0; // The current object does not have a texture
+            hasTexture.push_back(0); // No texture found for obj i
         } else {
-            hasTexture[i] = 1; // The current object does have a texture
+            hasTexture.push_back(1); // Texture found for obj i
         }
     }
-    dynamicPosition = false;
-    dynamicRotation = false;
-    dynamicScaling = false;
+    // Save initial scale, rot, pos for object
+    scale = objectInfo.scaleVec[0];
+    rot = vec3(objectInfo.rotAngle);
+    pos = objectInfo.pos;
     scaleMatrix = glm::scale(objectInfo.scaleVec);
     translateMatrix = glm::translate(mat4(1.0f), objectInfo.pos);
     rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(objectInfo.rotAngle),
-                               objectInfo.rotateAxis);
+        objectInfo.rotateAxis);
     collisionTag = objectInfo.collisionTagName;
     rotateID = glGetUniformLocation(programID, "rotate");
     scaleID = glGetUniformLocation(programID, "scale");
@@ -44,69 +40,56 @@ void GameObject::configureGameObject(gameObjectInfo objectInfo) {
         MVPID = glGetUniformLocation(collider->programID, "MVP");
     }
     vpMatrix = mat4(1.0f); // Set the VP matrix to the identity matrix by default.
-    tPosX = objectInfo.pos[0];
-    tPosY = objectInfo.pos[1];
-    tPosZ = objectInfo.pos[2];
 }
 
-const char* GameObject::getCollider(void) {
-    if (collisionTag == NULL) {
-        fprintf(stderr, "GameObject was not assigned a collider tag!");
-        return NULL;
+string GameObject::getCollider(void) {
+    if (collisionTag.empty()) {
+        cerr << "GameObject was not assigned a collider tag!\n";
     }
     return collisionTag;
 }
 // rotateObject takes a vec3 containing x, y and z rotation in degrees.
-void GameObject::rotateObject(GLfloat **rotation) {
-    rotX = rotation[0];
-    rotY = rotation[1];
-    rotZ = rotation[2];
-    dynamicRotation = true;
+void GameObject::rotateObject(vec3 rotation) {
+    rot = rotation;
 }
-void GameObject::sendPosition(GLfloat **pos) {
-    posX = pos[0];
-    posY = pos[1];
-    posZ = pos[2];
-    dynamicPosition = true;
+void GameObject::sendPosition(vec3 position) {
+    pos = position;
 }
-void GameObject::sendScale(GLfloat *scale) {
-    size = scale;
-    dynamicScaling = true;
+void GameObject::sendScale(GLfloat uniformScale) {
+    scale = uniformScale;
+}
+GLfloat GameObject::getScale() {
+    return scale;
 }
 void GameObject::setDirectionalLight(vec3 newLight) {
     directionalLight = newLight;
 }
 void GameObject::drawShape() {
-    //printf("Starting to draw the shape!\n");
+    infoLock.lock(); // Obtain lock for all current object data
     // Draw each shape individually
+    if (!configured) {
+        cerr << "GameObject with tag " << collisionTag
+            << " has not been configured yet!\n";
+        infoLock.unlock();
+        return;
+    }
     for (int i = 0; i < model->numberOfObjects; i++) {
-        //printf("Currently drawing %s[%i]\n", collisionTag, i);
         glUseProgram(programID);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        if (!configured) {
-            fprintf(stderr, "GameObject with tag %s has not been configured yet!\n", collisionTag);
-        }
-        infoLock->lock();
-        if (dynamicPosition) {
-            translateMatrix = glm::translate(mat4(1.0f), vec3(*posX, *posY, *posZ));
-        }
-        if (dynamicRotation) {
-            rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(*rotX), vec3(1,0,0))  *glm::rotate(mat4(1.0f), glm::radians(*rotY), vec3(0,1,0))  *glm::rotate(mat4(1.0f), glm::radians(*rotZ), vec3(0,0,1));
-        }
-        if (dynamicScaling) {
-            scaleMatrix = glm::scale(vec3(*size, *size, *size));
-        }
+        translateMatrix = glm::translate(mat4(1.0f), pos);
+        rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(rot[0]),
+                vec3(1,0,0))  *glm::rotate(mat4(1.0f), glm::radians(rot[1]),
+                vec3(0,1,0))  *glm::rotate(mat4(1.0f), glm::radians(rot[2]),
+                vec3(0,0,1)); // Refactor
+        scaleMatrix = glm::scale(vec3(scale, scale, scale));
         glUniform1f(luminanceID, luminance);
         glUniform1f(rollOffID, rollOff);
         glUniform3fv(directionalLightID, 1, &directionalLight[0]);
         glUniformMatrix4fv(vpID, 1, GL_FALSE, &vpMatrix[0][0]);
-        //printf("Drawing - DynamicPosition %i \n", dynamicPosition);
         glUniformMatrix4fv(translateID, 1, GL_FALSE, &translateMatrix[0][0]);
         glUniformMatrix4fv(scaleID, 1, GL_FALSE, &scaleMatrix[0][0]);
         glUniformMatrix4fv(rotateID, 1, GL_FALSE, &rotateMatrix[0][0]);
         glUniform1i(hasTextureID, hasTexture[i]);
-        //printf("Starting draw\n");
-        infoLock->unlock();
         if (hasTexture[i]) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, model->textureID[i]);
@@ -150,13 +133,13 @@ void GameObject::drawShape() {
         glDisableVertexAttribArray(0);
     }
     if (collider != NULL) {
-        infoLock->lock();
+        //infoLock.lock();
         // After drawing the gameobject, draw the collider
         glUseProgram(collider->programID); // grab the programID from the object
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
         glUniformMatrix4fv(MVPID, 1, GL_FALSE, &MVP[0][0]);
-        infoLock->unlock();
+        //infoLock.unlock();
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, collider->shapebufferID[0]);
         //printf("Bound the vertex buffer\n");
@@ -171,6 +154,7 @@ void GameObject::drawShape() {
         glDrawArrays(GL_TRIANGLES, 0, collider->pointCount[0] * 3);
         glDisableVertexAttribArray(0);
     }
+    infoLock.unlock();
 }
 // Returns a pointer to the gameObject's polygon data (contains vertices)
 // for the shape.
@@ -192,25 +176,17 @@ void GameObject::setVPMatrix(mat4 VPMatrix) {
 int GameObject::getCameraID() {
     return currentCamera;
 }
-vec3 GameObject::getPos(GLfloat *offset) {
-    if (dynamicPosition) {
-        return vec3(*posX + offset[0], *posY + offset[1], *posZ + offset[2]);
-    } else {
-        return vec3(tPosX + offset[0], tPosY + offset[1], tPosZ + offset[2]);
-    }
+vec3 GameObject::getPos(vec3 offset) {
+    return pos + offset;
 }
 vec3 GameObject::getPos() {
-    if (dynamicPosition) {
-        return vec3(*posX, *posY, *posZ);
-    } else {
-        return vec3(tPosX, tPosY, tPosZ);
-    }
+    return pos;
 }
 void GameObject::setLuminance(GLfloat luminanceValue) {
     luminance = luminanceValue;
 }
-void GameObject::setLock(mutex *lock) {
-    infoLock = lock;
+mutex *GameObject::getLock() {
+    return &infoLock;
 }
 
 /*
@@ -248,7 +224,7 @@ void GameCamera::configureCamera(cameraInfo camInfo) {
 GameObject* GameCamera::getTarget() {
     return target;
 }
-GLfloat* GameCamera::getOffset() {
+vec3 GameCamera::getOffset() {
     return offset;
 }
 mat4 GameCamera::getVPMatrix() {
@@ -257,7 +233,7 @@ mat4 GameCamera::getVPMatrix() {
 // Call updateCamera every frame to update VP matrix
 void GameCamera::updateCamera() {
     if (target == NULL) {
-        printf("UNABLE TO UPDATE CAMERA! NULL TARGET\n");
+        cerr << "Error: Unable to update camera! Camera target is NULL!\n";
         return;
     }
     mat4 viewMatrix = lookAt(target->getPos(offset), target->getPos(), vec3(0,1,0));
@@ -265,7 +241,7 @@ void GameCamera::updateCamera() {
     VPmatrix = projectionMatrix * viewMatrix;
 }
 // If you want to change the offset inside of the game
-void GameCamera::setOffset(GLfloat *newOffset) {
+void GameCamera::setOffset(vec3 newOffset) {
     offset = newOffset;
 }
 void GameCamera::setTarget(GameObject *targetObject) {
