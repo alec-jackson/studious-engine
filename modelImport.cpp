@@ -2,6 +2,15 @@
 
 void configureObject(configureArgs args);
 
+/*
+ (polygon *) importObj takes some (importObjInfo) objInfo and builds a new
+ polygon struct with the members of the objInfo struct (see objInfo struct and
+ polygon struct documentation in modelImport.hpp for more details).
+
+ On success, (polygon *) importObj returns a dynamically allocated polygon
+ struct containing an OpenGL-readable and textured object described by the
+ objInfo struct. On failure, NULL is returned and the object is not created.
+*/
 polygon *importObj(importObjInfo objInfo) {
     ifstream file; // Read file as read only
     file.open(objInfo.modelPath);
@@ -48,7 +57,7 @@ polygon *importObj(importObjInfo objInfo) {
         } else if (charBuffer.compare(0, 2, "f ") == 0) {
             vector<GLint> coms(9);
             // If the model is missing texture coordinates, take into account
-            if (charBuffer.find("//") != -1) {
+            if (charBuffer.find("//") != std::string::npos) {
                 sscanf(charBuffer.c_str(), "f %i//%i %i//%i %i//%i\n",
                     &coms[0], &coms[2], &coms[3], &coms[5], &coms[6], &coms[8]);
                 coms[1] = 0; coms[4] = 0; coms[7] = 0;
@@ -100,6 +109,13 @@ polygon *importObj(importObjInfo objInfo) {
     return model;
 }
 
+/*
+ (void) configureObject takes some (configureArgs) args and builds an object
+ using the generated vertex, texture and normal frames created above. This
+ function also binds the textures and vertex buffers for the objects in OpenGL.
+
+ (void) configureObject does not return any values.
+*/
 void configureObject(configureArgs args) {
     args.model->pointCount.push_back(args.commands.size() / 9);
     vector<GLfloat> vertexVBO;
@@ -174,5 +190,4 @@ void configureObject(configureArgs args) {
     glBufferData(GL_ARRAY_BUFFER,
                  sizeof(GLfloat) * args.model->pointCount[args.index] * 6,
                  &(args.model->textureCoords[args.index][0]), GL_STATIC_DRAW);
-    return;
 }
