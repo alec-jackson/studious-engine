@@ -149,7 +149,7 @@ int runtime(GameInstance *currentGame) {
 
     // Import the player object
     importObjInfo player;
-    player.modelPath = "models/sphere.obj";
+    player.modelPath = "models/Dracula.obj";
     player.texturePath = texturePath;
     player.texturePattern = texturePattern;
     player.programID = currentGame->getProgramID(0);

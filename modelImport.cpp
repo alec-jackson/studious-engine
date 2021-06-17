@@ -91,6 +91,7 @@ polygon *importObj(importObjInfo objInfo) {
             }
         }
     }
+    cout << "Built frames\n";
     // Send the final object to be configured in the function.
     configureArgs args;
     args.vertexFrame = vertexFrame;
@@ -117,6 +118,7 @@ polygon *importObj(importObjInfo objInfo) {
  (void) configureObject does not return any values.
 */
 void configureObject(configureArgs args) {
+    cout << "Configuring Object\n";
     args.model->pointCount.push_back(args.commands.size() / 9);
     vector<GLfloat> vertexVBO;
     vector<GLfloat> textureVBO;
@@ -132,8 +134,13 @@ void configureObject(configureArgs args) {
             }
             currentCommandIndex = (i*9) + (k*3) + 1; // textureCoord command
             currentCommand = args.commands[currentCommandIndex];
-            textureVBO.push_back(args.textureFrame[(currentCommand-1)*2]);
-            textureVBO.push_back(1.0f - args.textureFrame[(currentCommand-1)*2+1]);
+            if (args.textureFrame.size() > 0) {
+                textureVBO.push_back(args.textureFrame[(currentCommand-1)*2]);
+                textureVBO.push_back(1.0f - args.textureFrame[(currentCommand-1)*2+1]);
+            } else {
+                textureVBO.push_back(0.0f);
+                textureVBO.push_back(0.0f); // Add dummy values for missing data
+            }
             currentCommandIndex = (i*9) + (k*3) + 2; // normal command
             currentCommand = args.commands[currentCommandIndex];
             for (int l = 0; l < 3; l++) {
@@ -141,6 +148,7 @@ void configureObject(configureArgs args) {
             }
         }
     }
+    cout << "Finished building VBOs\n";
     args.model->vertices.push_back(vertexVBO);
     args.model->textureCoords.push_back(textureVBO);
     args.model->normalCoords.push_back(normalVBO);
