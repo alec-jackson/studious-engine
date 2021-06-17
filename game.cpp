@@ -5,6 +5,26 @@
  */
 #include "game.hpp"
 
+/*
+ IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
+ Currently, the below global vectors are used for loading in sound effect files,
+ texture files and shaders. Adding a new sound to the soundList allows the sound
+ to be played by calling the GameInstance::playSound(int soundIndex, int loop)
+ method (see documentation for use). When adding a new shader to be used in the
+ program, it is IMPORTANT that you pair the vertex shader with the fragment
+ shader you want to use together at the same index in the fragShaders and
+ vertShaders vectors. For instance, if we had a shader called swamp.vert and
+ swamp.frag, we would want both shaders to occur at the same spot in the vector
+ (if we already have 2 shader files present, we would add swamp.vert as the
+ third element in vertShaders, and swamp.frag as the third in fragShaders). After
+ doing this, you should be able to set the programID using the
+ GameInstance::getProgramID(int index) method to grab the programID for your
+ gameObject. If the shader is in index 2, we would call getProgramID(2) to get
+ the appropriate programID. For textures, we specify a path to an image that
+ will be opened for a given texture, and specify the textures to use as a
+ texture pattern (where each number in the vector corresponds to the index of
+ the texture to use).
+*/
 // Global Variables, should eventually be moved to a config file
 vector<string> soundList = {
     "sfx/music/endlessNight.wav"
@@ -29,14 +49,14 @@ vector<string> texturePath = {
     "images/shirttexture.jpg"
 };
 
-int setup(GameInstance *currentGame, ConfigData* config);
+int setup(GameInstance *currentGame, configData* config);
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
 
 int main(int argc, char **argv) {
     int errorNum;
     GameInstance currentGame;
-    ConfigData config;
+    configData config;
     // Run setup, if fail exit gracefully
     if (setup(&currentGame, &config)){
         exit(1);
@@ -48,10 +68,10 @@ int main(int argc, char **argv) {
 /*
  (int) setup takes a (mutex *)infoLock for locking elements in the scene,
  the (GameInstance *) currentGame instance to use for the game scene, and
- (ConfigData *) config data used for configuring window properties. (int) setup
+ (configData *) config data used for configuring window properties. (int) setup
  configures the resolution of the SDL window. On success, 0 is returned.
 */
-int setup(GameInstance *currentGame, ConfigData* config){
+int setup(GameInstance *currentGame, configData* config){
     int flag = loadConfig(config, "misc/config.txt");
     gameInstanceArgs args;
     args.soundList = soundList;
@@ -64,7 +84,7 @@ int setup(GameInstance *currentGame, ConfigData* config){
     } else {
         args.windowWidth = 1280;
         args.windowHeight = 720;
-        currentGame -> startGameInstance(args);
+        currentGame->startGameInstance(args);
     }
     return 0;
 }
@@ -110,10 +130,9 @@ int runtime(GameInstance *currentGame) {
     //Create a gameObjectInfo struct for creating a game object for the map
     gameObjectInfo map;
     map.characterModel = importObj(mapInfo);
-    map.scaleVec = vec3(0.009500f, 0.009500f, 0.009500f);
+    map.scale = 0.009500f;
     map.pos = vec3(-0.006f, -0.019f, 0.0f);
-    map.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
-    map.rotAngle = 0.0f;
+    map.rot = vec3(0.0f, 0.0f, 0.0f);
     map.camera = gameObject[2];
     map.collisionTagName = "map";
     map.colliderObject = NULL;
@@ -130,7 +149,6 @@ int runtime(GameInstance *currentGame) {
 
     // Import the player object
     importObjInfo player;
-    //player.modelPath = "models/tank.obj";
     player.modelPath = "models/sphere.obj";
     player.texturePath = texturePath;
     player.texturePattern = texturePattern;
@@ -139,10 +157,9 @@ int runtime(GameInstance *currentGame) {
     // Ready the gameObjectInfo for the player object
     gameObjectInfo playerObj;
     playerObj.characterModel = importObj(player);
-    playerObj.scaleVec = vec3(0.005f, 0.005f, 0.005f); // Arbitrary hell
+    playerObj.scale = 0.005f;
     playerObj.pos = vec3(0.0f, 0.0f, -1.0f);
-    playerObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
-    playerObj.rotAngle = 0.0f;
+    playerObj.rot = vec3(0.0f, 0.0f, 0.0f);
     playerObj.camera = gameObject[2];
     playerObj.collisionTagName = "player";
     playerObj.colliderObject = 0; //humanCollider;
@@ -159,10 +176,9 @@ int runtime(GameInstance *currentGame) {
     // Ready the gameObjectInfo for the wolf object
     gameObjectInfo wolfObj;
     wolfObj.characterModel = importObj(wolf);
-    wolfObj.scaleVec = vec3(0.02f, 0.02f, 0.02f); // Arbitrary hell
+    wolfObj.scale = 0.02f;
     wolfObj.pos = vec3(0.00f, 0.01f, -0.08f);
-    wolfObj.rotateAxis = vec3(0.0f, 0.0f, 1.0f);
-    wolfObj.rotAngle = 0.0f;
+    wolfObj.rot = vec3(0.0f, 0.0f, 0.0f);
     wolfObj.camera = gameObject[2];
     wolfObj.collisionTagName = "NPC";
     wolfObj.colliderObject = humanCollider;
@@ -172,17 +188,15 @@ int runtime(GameInstance *currentGame) {
     GameCamera *currentCamera = currentGame->getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);
-    currentGameObject->rotateObject(vec3(0, 0, 0));
+    currentGameObject->setRotation(vec3(0, 0, 0));
     currentGameObject = currentGame->getGameObject(gameObject[3]);
-    GLfloat wolfScale = 0.01f;
-
     currentGameObject = currentGame->getGameObject(gameObject[1]);
     cout << "currentGameObject tag is " << currentGameObject->getCollider()
         << '\n';
 
-    currentGameObject->sendPosition(vec3(-0.005f, 0.01f, 0.0f));
-    currentGameObject->rotateObject(vec3(0.0f, 180.0f, 0.0f));
-    currentGameObject->sendScale(0.0062f);
+    currentGameObject->setPosition(vec3(-0.005f, 0.01f, 0.0f));
+    currentGameObject->setRotation(vec3(0.0f, 180.0f, 0.0f));
+    currentGameObject->setScale(0.0062f);
 
     currentGameInfo.isDone = &isDone;
     currentGameInfo.gameCamera = currentCamera;
@@ -212,7 +226,8 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     clock_t begin, end; // Used for measuring FPS
-    int running = 1, sampleSize = 1000;
+    int running = 1;
+    uint sampleSize = 1000;
     GameInstance *currentGame = gamein->currentGame;
     GLdouble deltaTime;
     short error = 0;

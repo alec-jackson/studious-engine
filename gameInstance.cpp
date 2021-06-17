@@ -69,12 +69,13 @@ const Uint8 *GameInstance::getKeystate() {
  (int) index.
 
  On success, function returns associated programID. On failure,
- -1 is returned and an error is written to stderr.
+ UINT_MAX is returned and an error is written to stderr.
 */
-GLuint GameInstance::getProgramID(int index) {
-    if (index < 0 || index >= programID.size()) {
+GLuint GameInstance::getProgramID(uint index) {
+    if (index >= programID.size()) {
         cerr << "Error: Requested programID is not in available range [0, "
         << programID.size() - 1 << "]\n";
+        return UINT_MAX;
     }
     return programID[index];
 }
@@ -84,7 +85,9 @@ GLuint GameInstance::getProgramID(int index) {
  the associated controllerReadout struct.
 */
 controllerReadout* GameInstance::getControllers(int controllerIndex){
-    controllerInfo[controllerIndex].leftAxis = SDL_GameControllerGetAxis(gameControllers[controllerIndex], SDL_CONTROLLER_AXIS_LEFTY );
+    controllerInfo[controllerIndex].leftAxis =
+        SDL_GameControllerGetAxis(gameControllers[controllerIndex],
+        SDL_CONTROLLER_AXIS_LEFTY );
     return &controllerInfo[controllerIndex];
 }
 
@@ -115,7 +118,7 @@ void GameInstance::playSound(int soundIndex, int loop) {
  (void) changeWindowMode does not return any value.
 */
 void GameInstance::changeWindowMode(int mode){
-    SDL_DisplayMode DM;
+    //SDL_DisplayMode DM;
     // if(mode > 1){
     //     SDL_GetCurrentDisplayMode(0, &DM);
     // } else {
@@ -205,6 +208,8 @@ bool GameInstance::isWindowOpen() {
 */
 void GameInstance::updateOGL(){
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     glDepthFunc(GL_LESS);
     glClearColor(0.0f, 0.0f, 0.0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -226,6 +231,7 @@ int GameInstance::updateCameras() {
     // Update the VP matrix for each camera
     for (int i = 0; i < gameCameraCount; i++) {
         currentGameCamera->current->updateCamera();
+        currentGameCamera = currentGameCamera->next;
     }
     return 0;
 }
@@ -515,12 +521,12 @@ void GameInstance::initApplication(vector<string> vertexPath, vector<string> fra
     GLuint vertexArrayID;
     glGenVertexArrays(1, &vertexArrayID);
     glBindVertexArray(vertexArrayID);
-    for (int i = 0; i < vertexPath.size(); i++) {
-        programID.push_back(LoadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str()));
+    for (uint i = 0; i < vertexPath.size(); i++) {
+        programID.push_back(loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str()));
     }
 }
 
-/*
+/* [NOT IMPLEMENTED]
  (void) basicCollision takes a (GameInstance *) gameInstance and performs a
  basic collision check on all of the active GameObjects in the scene. This
  method is still a WIP and does not really do anything at the moment.

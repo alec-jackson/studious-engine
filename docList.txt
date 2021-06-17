@@ -1,7 +1,7 @@
 A list of the things we need to add documentation for
 (How to use, call, and/or modify. Probably good to note known issues, constraits, or nonstandard behavior)
 
-1. shaderLoader (LoadShaders)
+1. shaderLoader (loadShaders)
 2. modelImport (importObj)
 3. modelImport (configureObject)
 4. lighting
@@ -16,5 +16,5 @@ Standards we should agree on
 3. License (Probably MIT)
 4. A name would probably be good
 5. Whether we should write functions to be posix
-6. If we should make functions like loadshaders callable from an external
+6. If we should make functions like loadShaders callable from an external
     game function and require passing an gameInstance object for it to modify.

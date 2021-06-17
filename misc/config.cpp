@@ -1,9 +1,15 @@
-#include <SDL.h>
 #include "config.hpp"
 
-int loadConfig(ConfigData* config, const char* filename){
+/*
+ (int) loadConfig takes a (configData *) config file and populates it with
+ configuration items found in the (string) filename file.
+
+ On success, 0 is returned and teh config struct is populated with data. On
+ failure, 1 is returned and the config struct is not populated with data.
+*/
+int loadConfig(configData* config, string filename){
     SDL_RWops* file;
-    file = SDL_RWFromFile(filename, "r");
+    file = SDL_RWFromFile(filename.c_str(), "r");
     if(file){
         char buf[512];
         char convert[11];
@@ -34,14 +40,12 @@ int loadConfig(ConfigData* config, const char* filename){
             varSaves[j] = atoi(convert);
         }
         SDL_RWclose(file);
-        printf("Resolution X: %d Resolution Y: %d \n", varSaves[0], varSaves[1]);
-        config -> resX = varSaves[0];
-        config -> resY = varSaves[1];
-        
+        cout << "Resolution X: " << varSaves[0] << " Resolution Y: " << varSaves[1] << "\n";
+        config->resX = varSaves[0];
+        config->resY = varSaves[1];
         return 0;
     } else {
-        printf("Could not open config file\n");
+        cout << "Could not open config file\n";
         return 1;
     }
 }
-

@@ -47,7 +47,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
     Sint16 controllerRightStateX = 0;
     Uint8 buttonCheckA = 0;
     while (!(*currentGameInfo->isDone)) {
-        //printf("The current mouse position is x:%i y:%i\n", mouseX, mouseY);
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         if (hasActiveController) {
             controllerLeftStateY = SDL_GameControllerGetAxis(gameController1,
@@ -295,10 +294,12 @@ void rotateShape(void *gameInfoStruct, void *target) {
         //cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
         // Lock the variables we are changing to avoid conflict
         character->getLock()->lock();
+        currentGameInfo->gameCamera->getLock()->lock();
         currentGameInfo->gameCamera->setOffset(cameraOffset);
         currentGame->setLuminance(currentLuminance);
-        character->rotateObject(angles);
-        character->sendPosition(pos);
+        character->setRotation(angles);
+        character->setPosition(pos);
+        currentGameInfo->gameCamera->getLock()->unlock();
         character->getLock()->unlock();
     }
     SDL_GameControllerClose(gameController1);
