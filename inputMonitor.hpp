@@ -1,4 +1,5 @@
-#include "launcher.hpp"
-#include "gameInstance.hpp"
-#include <pthread.h>
-void *rotateShape(void *gameInfoStruct);
+#ifndef INPUT_MONITOR_HPP
+#define INPUT_MONITOR_HPP
+#include "game.hpp"
+void rotateShape(void *gameInfoStruct, void *target);
+#endif

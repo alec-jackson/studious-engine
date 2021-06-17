@@ -5,7 +5,7 @@ layout(location = 0) in vec3 vertexPosition_modelspace;
 layout(location = 1) in vec2 texcoord;
 layout(location = 2) in vec3 normals;
 out vec2 f_texcoord;
-out float brightness;
+//out float brightness;
 uniform mat4 move;
 uniform mat4 scale;
 uniform mat4 rotate;
@@ -45,9 +45,6 @@ void main() {
   //vec4 normal4D = rotate * vec4(normals, 1);
   //vec3 transformedNormals = vec3(1.0f, 1.0f, 1.0f);
 
-  // transformedNormals[0] = normal4D[0];
-  // transformedNormals[1] = normal4D[1];
-  // transformedNormals[2] = normal4D[2];
   // We want to find the angle from face to directional light.
   // brightness = invRatio(lightPosition, transformedNormals);
 

@@ -1,13 +1,14 @@
-#pragma once
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/transform.hpp>
-
+#ifndef GAMEOBJECT_H
+#define GAMEOBJECT_H
+#include "common.hpp"
 #include "modelImport.hpp"
 
 using namespace glm;
 
+/*
+ colliderInfo contains the scale, translate and rotate matrices for the collider
+ for a given object.
+*/
 typedef struct colliderInfo {
 	mat4 scale;
 	mat4 translate;
@@ -15,56 +16,75 @@ typedef struct colliderInfo {
 } colliderInfo;
 
 /*
-The gameObjectInfo struct is used as an argument for the createGameObject
-method. All of the current arguments for createGameObject will be morphed into
-this single struct with the same names.
+ gameObjectInfo contains arguments for the createGameObject method inside of the
+ GameInstance class. The gameObjectInfo struct contains the following members:
+ * (polygon *) characterModel - Reference to a polygon struct containing
+ 	information about an imported model using the modelImport functions.
+ * (polygon *) colliderObject - Reference to a polygon struct containing
+ 	information about an collider object imported using the modelImport
+	functions.
+ * (vec3) pos - A 3D vector containing the default position in local space of
+ 	the GameObject being created.
+ * (vec3) rot - A 3D vector describing the XYZ rotation to initially apply to
+ 	the GameObject upon creation.
+ * (GLfloat) scale - A scalar value that describes the uniform scale to apply
+   to the GameObject upon creation.
+ * (int) camera - Specifies the ID number of the camera in the current
+ 	GameInstance to use that the created GameObject will use to get the VP
+	transformation matrix from (stuff like camera angle and FOV).
+ * (string) collisionTagName - The tag name that the created GameObject will use
+ 	when handling collision in the current GameInstance.
 */
 typedef struct gameObjectInfo {
 	polygon *characterModel, *colliderObject;
-	vec3 scaleVec, pos, rotateAxis;
-	GLfloat rotAngle;
+	vec3 pos, rot;
+	GLfloat scale;
 	int camera;
-	const char *collisionTagName;
-	GLuint programIDNo;
-	bool orthographic;
+	string collisionTagName;
 } gameObjectInfo;
 
+/*
+ Each GameObject class contains information about a specific object present in
+ the current GameInstance. Information present in this class includes current
+ world space position, current XYZ rotation, current scale, imported model data,
+ directional light, etc. Instance variables in GameObject instances should only
+ be modified through public GameObject get/set functions.
+*/
 class GameObject{
 public:
-  void configureGameObject(gameObjectInfo objectInfo);
-
-  const char *getCollider(void);
-  void rotateObject(GLfloat **rotation);
-  void sendPosition(GLfloat **pos);
-  void sendScale(GLfloat *scale);
-  void setDirectionalLight(vec3 newLight);
-  void drawShape();
-  polygon *getModel();
-  void deleteTextures();
-  void setVPMatrix(mat4 VPMatrix);
-  int getCameraID();
-  vec3 getPos(GLfloat *offset);
-  vec3 getPos();
-  void setLuminance(GLfloat luminanceValue);
-  void setLock(pthread_mutex_t *lock);
-  int getCollision(GameObject *object1, GameObject *object2);
+	void configureGameObject(gameObjectInfo objectInfo);
+	void setRotation(vec3 rotation);
+	void setPosition(vec3 pos);
+	void setScale(GLfloat uniformScale);
+	void setDirectionalLight(vec3 newLight);
+	void setVPMatrix(mat4 VPMatrix);
+	void setLuminance(GLfloat luminanceValue);
+	void drawShape();
+	void deleteTextures();
+	int getCameraID();
+	int getCollision(GameObject *object1, GameObject *object2);
+	GLfloat getScale();
+	mutex *getLock();
+	vec3 getPos(vec3 offset);
+	vec3 getPos();
+	polygon *getModel();
+	string getCollider(void);
 
 private:
 	polygon *model;
 	mat4 translateMatrix, scaleMatrix, rotateMatrix; // Model Matrix
 	mat4 vpMatrix; // Projection  *View matrix
 	GLuint rotateID, scaleID, translateID, vpID, textureID, textCoordsID, hasTextureID, directionalLightID, luminanceID, rollOffID, programID, MVPID;
-	GLint textureCoordID, uniform_mytexture, *hasTexture;
-	GLfloat *posX, *posY, *posZ, tPosX, tPosY, tPosZ;
-	GLfloat *size;
-	GLfloat *rotX, *rotY, *rotZ;
-	GLfloat *velX, *velY, *velZ;
-	bool dynamicPosition, dynamicRotation, dynamicScaling, configured;
-	const char *collisionTag;
+	GLint textureCoordID, uniform_mytexture;
+	vector<GLint> hasTexture;
+	vec3 pos, rot, vel; // Position, rotation and velocity 3D vectors
+	GLfloat scale;
+	bool configured;
+	string collisionTag;
 	int currentCamera;
 	vec3 directionalLight;
 	GLfloat luminance, rollOff;
-	pthread_mutex_t *infoLock;
+	mutex infoLock;
 	polygon *collider;
 };
 
@@ -73,31 +93,51 @@ class GameObjectText : GameObject {
 };
 
 /*
-The cameraInfo struct is used as an argument for the createCamera method. All
-of the current arguments for createCamera will be morphed into this single
-struct with the same names.
+ The cameraInfo struct is used as an argument for the createCamera method inside
+ of the GameInstance class. Struct members are used in the following manner:
+ * (GameObject *) objTarget - Object for camera to target onto.
+ * (vec3) offset - 3D vector describing position offset of Camera relative to
+ 	the target GameObject.
+ * (GLfloat) viewCameraAngle - Describes the field of view of the GameCamera to
+ 	be created.
+ * (GLfloat) viewAspectRatio - Describes the aspect ratio of the camera view.
+ 	This value SHOULD always be set to the current aspect ratio of the SDL
+	window, or else things will look stretched out or compressed.
+ * (GLfloat) viewNearClipping - Describes the distance for near clipping to
+ 	occur. This value should be as low as the graphics card allows.
+ * (GLfloat) viewFarClipping - Describes the distance for far clipping to occur.
+ 	This value should be as high as the graphics card allows.
 */
 typedef struct cameraInfo {
 	GameObject *objTarget;
-	GLfloat *offset, viewCameraAngle, viewAspectRatio,
+	vec3 offset;
+	GLfloat viewCameraAngle, viewAspectRatio,
 	viewNearClipping, viewFarClipping;
 } cameraInfo;
 
-
-class GameCamera{
+/*
+ The GameCamera subclass of GameObject is used for information regarding
+ active cameras in the GameInstance. This class has more members than the
+ normal GameObject class that are specific to properties of the camera.
+*/
+class GameCamera : public GameObject {
 public:
 	void configureCamera(cameraInfo camInfo);
-	GameObject *getTarget();
-	GLfloat *getOffset();
-	mat4 getVPMatrix();
 	void updateCamera();
-	void setOffset(GLfloat *newOffset);
+	void setOffset(vec3 newOffset);
 	void setTarget(GameObject *targetObject);
+	void setAspectRatio(GLfloat ratio);
+	vec3 getOffset();
+	mat4 getVPMatrix();
+	GameObject *getTarget();
 
 private:
 	GameObject *target;
-	GLfloat *offset, cameraAngle;
-	GLfloat currentPosition[3];
+	vec3 offset;
+	GLfloat cameraAngle;
+	vec3 currentPosition;
 	mat4 VPmatrix;
 	GLfloat aspectRatio, nearClipping, farClipping;
 };
+
+#endif

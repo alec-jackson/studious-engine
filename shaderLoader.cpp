@@ -1,142 +1,78 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <GL/glew.h>
+#include "shaderLoader.hpp"
 
-GLuint LoadShaders(const char* vertexShader, const char* fragmentShader) {
+/*
+ (GLuint) loadShaders takes the path to a vertex shader (string) vertexShader,
+ and the path to a fragment shader (string) fragmentShader and compiles both
+ files for use with OpenGL.
+
+ On success, (GLuint) loadShaders returns the programID to a corresponding
+ vertex/fragment shader pair. On failure, loadShaders returns UINT_MAX and a
+ description of the error is logged to stderr.
+*/
+GLuint loadShaders(string vertexShader, string fragmentShader) {
     GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-    char currentChar;
-    int shaderSize = 1, logLength;
+    int logLength;
     GLint success = GL_FALSE;
-    FILE *fp = fopen(vertexShader, "r");
-    if (fp == NULL) {
-        printf("Error! Vertex shader not found!\n");
-        return 0;
+    string vertShader, fragShader, tempLine;
+    ifstream file;
+    file.open(vertexShader);
+    if (!file.is_open()) { // If the file does not exist or cannot be opened
+        cerr << "Error: Cannot open file " << vertexShader << "!\n";
+        return UINT_MAX;
     }
-    while (1) {
-        currentChar = fgetc(fp);
-        if (currentChar == EOF) {
-            break;
-        }
-        shaderSize++;
+    while (getline(file, tempLine)) {
+        vertShader.append(tempLine + '\n');
     }
-    GLchar vertexShaderData[shaderSize];
-    fseek(fp, 0, SEEK_SET);
-    for (int i = 0; i < shaderSize; i++) {
-        currentChar = fgetc(fp);
-        if (currentChar != EOF) {
-            vertexShaderData[i] = currentChar;
-        } else {
-            vertexShaderData[i] = 0;
-        }
-    }
-    //printf("\nVERTEX SHADER VIEW:\n\n%s\n\n", vertexShaderData);
-    printf("Now compiling %s...\n", vertexShader);
-    GLchar *vertShaderInfo[1];
-    vertShaderInfo[0] = vertexShaderData;
-    glShaderSource(vertexShaderID, 1, vertShaderInfo, NULL);
+    cout << "Now compiling " << vertexShader << "...\n";
+    vector<GLchar *> vertShaderInfo(1);
+    vertShaderInfo[0] = (GLchar *)vertShader.c_str();
+    glShaderSource(vertexShaderID, 1, &vertShaderInfo[0], NULL);
     glCompileShader(vertexShaderID);
     glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &success);
     glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-        char errorLog[logLength + 1];
+    if (logLength) {
+        vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
-        printf("%s\n", errorLog);
+        cerr << &errorLog[0] << "\n";
     }
-    //printf("VertexShader stage finished.\n");
-    fclose(fp);
+    file.close();
     success = GL_FALSE;
-    fp = fopen(fragmentShader, "r");
-    shaderSize = 1;
-    while (1) {
-        currentChar = fgetc(fp);
-        if (currentChar == EOF) {
-            break;
-        }
-        shaderSize++;
+    file.open(fragmentShader);
+    if (!file.is_open()) { // If the file does not exist or cannot be opened
+        cerr << "Error: Cannot open file " << fragmentShader << "!\n";
+        return UINT_MAX;
     }
-    GLchar fragmentShaderData[shaderSize];
-    fseek(fp, 0, SEEK_SET);
-    for (int i = 0; i < shaderSize; i++) {
-        currentChar = fgetc(fp);
-        if (currentChar != EOF) {
-            fragmentShaderData[i] = currentChar;
-        } else {
-            fragmentShaderData[i] = 0;
-        }
+    while (getline(file, tempLine)) {
+        fragShader.append(tempLine + '\n');
     }
-    //printf("\nFRAGMENT SHADER VIEW:\n\n%s\n\n", fragmentShaderData);
-    printf("Now compiling %s...\n", fragmentShader);
-    GLchar *fragShaderInfo[1];
-    fragShaderInfo[0] = fragmentShaderData;
-    glShaderSource(fragmentShaderID, 1, fragShaderInfo, NULL);
+    cout << "Now compiling " << fragmentShader << "...\n";
+    vector<GLchar *>fragShaderInfo(1);
+    fragShaderInfo[0] = (GLchar *)fragShader.c_str();
+    glShaderSource(fragmentShaderID, 1, &fragShaderInfo[0], NULL);
     glCompileShader(fragmentShaderID);
     glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &success);
     glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-        char errorLog[logLength + 1];
+    if (logLength) {
+        vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
-        printf("%s\n", errorLog);
+        cerr << &errorLog[0] << "\n";
     }
-    //printf("FragmentShader stage finished.\n");
-    fclose(fp);
+    file.close();
     GLuint programID = glCreateProgram();
     glAttachShader(programID, vertexShaderID);
     glAttachShader(programID, fragmentShaderID);
     glLinkProgram(programID);
     glGetProgramiv(programID, GL_LINK_STATUS, &success);
     glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-        GLchar errorLog[logLength + 1];
-        glGetProgramInfoLog(programID, logLength, NULL, errorLog);
-        printf("%s\n", errorLog);
+    if (logLength) {
+        vector<char> errorLog(logLength + 1);
+        glGetProgramInfoLog(programID, logLength, NULL, &errorLog[0]);
+        cerr << &errorLog[0] << "\n";
     }
-
     glDetachShader(programID, vertexShaderID);
     glDetachShader(programID, fragmentShaderID);
-
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
-
     return programID;
 }
-/*
-int main () {
-    GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
-
-    return 0;
-}
-*/
-/*
-int main () {
-    FILE *fp = fopen("SimpleVertexShader.vertexshader", "r");
-    if (fp == NULL) {
-        printf("File is missing!\n");
-        return 1;
-    }
-    char currentChar;
-    int charCount;
-    while (1) {
-        currentChar = fgetc(fp);
-        if (currentChar == EOF) {
-            break;
-        }
-        charCount++;
-        printf("%c", currentChar);
-    }
-    printf("\nThere were a total of %i non-EOF characters.\n", charCount);
-    currentChar = 0;
-    charCount = 0;
-    fseek(fp, 0, SEEK_SET);
-    while (1) {
-        currentChar = fgetc(fp);
-        if (currentChar == EOF) {
-            break;
-        }
-        charCount++;
-        printf("%c", currentChar);
-    }
-    printf("\nThere were a total of %i non-EOF characters.\n", charCount);
-    return 0;
-}
-*/
