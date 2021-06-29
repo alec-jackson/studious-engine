@@ -2,8 +2,8 @@
 #define GAMEOBJECT_H
 #include "common.hpp"
 #include "modelImport.hpp"
-
-using namespace glm;
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 /*
  colliderInfo contains the scale, translate and rotate matrices for the collider
@@ -43,6 +43,11 @@ typedef struct gameObjectInfo {
 	string collisionTagName;
 } gameObjectInfo;
 
+typedef struct textObjectInfo {
+	string message, fontPath;
+	GLuint programID;
+} textObjectInfo;
+
 /*
  Each GameObject class contains information about a specific object present in
  the current GameInstance. Information present in this class includes current
@@ -50,15 +55,18 @@ typedef struct gameObjectInfo {
  directional light, etc. Instance variables in GameObject instances should only
  be modified through public GameObject get/set functions.
 */
-class GameObject{
+class GameObject {
 public:
 	void configureGameObject(gameObjectInfo objectInfo);
 	void setRotation(vec3 rotation);
+	void setOrtho(bool ortho);
 	void setPosition(vec3 pos);
 	void setScale(GLfloat uniformScale);
 	void setDirectionalLight(vec3 newLight);
 	void setVPMatrix(mat4 VPMatrix);
 	void setLuminance(GLfloat luminanceValue);
+	void setProgramID(GLuint shaderID);
+	void setCollider(string coll);
 	void drawShape();
 	void deleteTextures();
 	int getCameraID();
@@ -67,29 +75,56 @@ public:
 	mutex *getLock();
 	vec3 getPos(vec3 offset);
 	vec3 getPos();
+	GLuint getProgramID();
 	polygon *getModel();
 	string getCollider(void);
+	mat4 getVPMatrix();
+	bool isOrtho();
 
 private:
 	polygon *model;
 	mat4 translateMatrix, scaleMatrix, rotateMatrix; // Model Matrix
 	mat4 vpMatrix; // Projection  *View matrix
-	GLuint rotateID, scaleID, translateID, vpID, textureID, textCoordsID, hasTextureID, directionalLightID, luminanceID, rollOffID, programID, MVPID;
+	GLuint rotateID, scaleID, translateID, vpID, textureID, textCoordsID,
+		hasTextureID, directionalLightID, luminanceID, rollOffID, programID,
+		MVPID;
 	GLint textureCoordID, uniform_mytexture;
 	vector<GLint> hasTexture;
 	vec3 pos, rot, vel; // Position, rotation and velocity 3D vectors
 	GLfloat scale;
-	bool configured;
+	bool configured, orthographic;
 	string collisionTag;
 	int currentCamera;
 	vec3 directionalLight;
 	GLfloat luminance, rollOff;
 	mutex infoLock;
 	polygon *collider;
+	unsigned int VAO;
 };
 
-class GameObjectText : GameObject {
+typedef struct Character {
+    unsigned int TextureID;  // ID handle of the glyph texture
+    ivec2 Size;       // Size of glyph
+    ivec2 Bearing;    // Offset from baseline to left/top of glyph
+    unsigned int Advance;    // Offset to advance to next glyph
+} Character;
 
+class GameObjectText : public GameObject {
+public:
+	int initializeText(textObjectInfo info);
+	int setFontSize(int size);
+	void cleanup();
+	void drawText();
+	void setMessage(string message);
+	string getMessage();
+
+private:
+	FT_Library ft;
+	FT_Face face;
+	string message;
+	int fontSize;
+	unsigned int VAO, VBO;
+	map<char, Character> characters;
 };
 
 /*

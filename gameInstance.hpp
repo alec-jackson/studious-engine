@@ -7,26 +7,6 @@
 #include "textLoader.hpp"
 
 /*
- gameObjectLL is a struct used for holding a Linked List of all of the active
- GameObjects in the scene. The next pointer points to another dynamically
- allocated gameObjectLL struct, and current contains the GameObject contained
- within the current gameObjectLL entry.
-*/
-typedef struct gameObjectLL {
-	struct gameObjectLL *next;
-	struct GameObject *current;
-} gameObjectLL;
-
-/*
- gameCameraLL works the same as gameObjectLL, however this Linked List
- exclusively contains all of the active cameras in the current game scene.
-*/
-typedef struct gameCameraLL {
-	struct gameCameraLL *next;
-	struct GameCamera *current;
-} gameCameraLL;
-
-/*
  controllerReadout is used for getting input from a controller. This struct
  will be used in conjunction with SDL_GameControllerGetAxis to get input from
  the left controller stick.
@@ -68,14 +48,15 @@ class GameInstance {
 private:
 	const Uint8 *keystate;
 	vector<string> sfxNames;
-	int gameObjectCount, audioID, controllersConnected, gameCameraCount;
+	int audioID, controllersConnected;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Surface* screenSurface;
 	SDL_Event event;
-	vector<Mix_Chunk *> sound ;
-	gameObjectLL *gameObjects;
-	gameCameraLL *gameCameras;
+	vector<Mix_Chunk *> sound;
+	vector<GameObject *> gameObjects;
+	vector<GameCamera *> gameCameras;
+	vector<GameObjectText *> gameTexts;
 	vector<GLuint> programID;
 	GLuint vertexArrayID;
 	GLdouble deltaTime;
@@ -84,7 +65,6 @@ private:
 	vec3 directionalLight;
 	GLfloat luminance;
 	int width, height;
-	textLib text;
 
 	void initWindow(int width, int height);
 	void initAudio();
@@ -95,6 +75,7 @@ public:
 	void startGameInstance(gameInstanceArgs args);
 	int createGameObject(gameObjectInfo objectInfo);
 	int createCamera(cameraInfo camInfo);
+	int createText(textObjectInfo info);
 	int getWidth();
 	int getHeight();
 	vec3 getDirectionalLight();
@@ -106,8 +87,9 @@ public:
 	void changeWindowMode(int mode);
 	void cleanup();
 	int destroyGameObject(GameObject *object);
-	GameObject *getGameObject(int gameObjectID);
-	GameCamera *getCamera(int gameCameraID);
+	GameObject *getGameObject(uint gameObjectID);
+	GameCamera *getCamera(uint gameCameraID);
+	GameObjectText *getText(uint gameTextID);
 	GLdouble getDeltaTime();
 	int setDeltaTime(GLdouble time);
 	void setLuminance(GLfloat luminanceValue);

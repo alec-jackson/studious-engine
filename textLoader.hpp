@@ -1,20 +1,10 @@
-#pragma once
-
-#include <stdio.h>
-#include <iostream>
-#include <map>
-#include <GL/glew.h>
+/*#ifndef TEXTLOADER_HPP
+#define TEXTLOADER_HPP
+#include "common.hpp"
 #include <ft2build.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/transform.hpp>
 #include FT_FREETYPE_H
-
 #include "gameObject.hpp"
 #include "modelImport.hpp"
-
-using namespace glm;
-using namespace std;
 
 struct Character {
     unsigned int TextureID;  // ID handle of the glyph texture
@@ -28,7 +18,10 @@ class textLib {
     int changeFontSize(FT_Face* face, int size);
     int initText();
     int genText(FT_Face* face);
-    polygon *buildTextObj(string text, float x, float y, float scale, vec3 color);
-
+    GameObjectText *buildTextObj(string text, float x, float y, float scale,
+        vec3 color);
     map<char, Character> Characters;
 };
+
+#endif
+*/

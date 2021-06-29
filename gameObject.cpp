@@ -15,6 +15,7 @@ void GameObject::configureGameObject(gameObjectInfo objectInfo) {
     luminance = 1.0f;
     rollOff = 0.9f; // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0,0,0);
+    orthographic = false;
     model = objectInfo.characterModel;
     currentCamera = objectInfo.camera;
     // Populate the hasTexture vector with texture info
@@ -76,6 +77,16 @@ void GameObject::setRotation(vec3 rotation) {
 }
 
 /*
+ (void) setOrtho takes a true/false (bool) ortho value and sets the GameObject's
+ orthographic value to that boolean.
+
+ (void) setOrtho does not return any values.
+*/
+void GameObject::setOrtho(bool ortho) {
+    orthographic = ortho;
+}
+
+/*
  (void) setPosition takes a (vec3) position argument and sets the GameObject's
  (vec3) pos instance variable equal to the given position. When successful, the
  GameObject should be rotated on the next draw.
@@ -115,6 +126,19 @@ GLfloat GameObject::getScale() {
 */
 void GameObject::setDirectionalLight(vec3 newLight) {
     directionalLight = newLight;
+}
+
+/*
+ (void) setProgramID takes a (GLuint) shaderID and sets the GameObject's
+ programID instance variable to shaderID. This function should NOT be used when
+ a GameObject is using a model loaded from modelImport functions, because those
+ already contain programID's tied to their polygon objects. This function
+ should mainly be used with sprites or 2D elements like text.
+
+ (void) setProgramID does not return any values.
+*/
+void GameObject::setProgramID(GLuint shaderID) {
+    programID = shaderID;
 }
 
 /*
@@ -274,6 +298,14 @@ vec3 GameObject::getPos() {
     return pos;
 }
 
+/*
+ (GLuint) getProgramID returns the current programID value associated with the
+ current GameObject.
+*/
+GLuint GameObject::getProgramID() {
+    return programID;
+}
+
 /* [DEPRECATED]
  (void) setLuminance uses the given (GLfloat) luminanceValue to set the
  GameObject's (GLfloat) luminance value, which controls the intensity of the
@@ -285,6 +317,9 @@ void GameObject::setLuminance(GLfloat luminanceValue) {
     luminance = luminanceValue;
 }
 
+void GameObject::setCollider(string coll) {
+    collisionTag = coll;
+}
 /*
  (mutex *) getLock returns a pointer to the GameObject's infoLock mutex. This
  mutex prevents race conditions when changes are made to the GameObject's
@@ -292,6 +327,19 @@ void GameObject::setLuminance(GLfloat luminanceValue) {
 */
 mutex *GameObject::getLock() {
     return &infoLock;
+}
+
+mat4 GameObject::getVPMatrix() {
+    return vpMatrix;
+}
+
+/*
+ (bool) isOrtho returns the value of the orthographic boolean in the GameObject
+ class. This function determines whether the object will be rendered
+ orthographically (should be rendered this way for UI text).
+*/
+bool GameObject::isOrtho() {
+    return orthographic;
 }
 
 /* [NOT IMPLEMENTED]
@@ -310,6 +358,133 @@ int GameObject::getCollision(GameObject *object1, GameObject *object2) {
     }
     // Assume rectangular box collider
     return 0;
+}
+
+int GameObjectText::initializeText(textObjectInfo info) {
+    setCollider("Text");
+    message = info.message;
+    setPosition(vec3(0.0f));
+    setScale(4.0f);
+    setProgramID(info.programID);
+    if (FT_Init_FreeType(&ft)) {
+        cerr << "Error: Freetype could not init FreeType Library\n";
+        return -1;
+    }
+    if (FT_New_Face(ft, info.fontPath.c_str(), 0, &face)) {
+        cerr << "Error: Freetype failed to load font\n";
+        return -1;
+    }
+    setFontSize(48);
+    if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
+    {
+        cerr << "Error: Freetype failed to load Glyph\n";
+        return -1;
+    }
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    unsigned int texture;
+    for (unsigned char i = 0; i < 128; i++) {
+        // load character glyph
+        if (FT_Load_Char(face, i, FT_LOAD_RENDER)){
+            cerr << "Error: Freetype failed to load Glyph\n";
+            continue;
+        }
+        // generate texture
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(
+                     GL_TEXTURE_2D,
+                     0,
+                     GL_RED,
+                     face->glyph->bitmap.width,
+                     face->glyph->bitmap.rows,
+                     0,
+                     GL_RED,
+                     GL_UNSIGNED_BYTE,
+                     face->glyph->bitmap.buffer
+                     );
+        // set texture options
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // now store character for later use
+        Character character = {
+            texture,
+            ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            (unsigned int)face->glyph->advance.x
+        };
+        characters.insert(pair<char, Character>(i, character));
+    }
+    //FT_Done_Face(face); // RUN DURING CLEANUP
+    //FT_Done_FreeType(ft); // RUN DURING CLEANUP
+    setVPMatrix(ortho(0.0f, 800.0f, 0.0f, 600.0f));
+    mat4 perspective = getVPMatrix();
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            cout << perspective[i][j] << " ";
+        }
+        cout << "\n";
+    }
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    setOrtho(true);
+    return 0;
+}
+
+int GameObjectText::setFontSize(int size) {
+    if (FT_Set_Pixel_Sizes(face, 0, size)) {
+        cerr << "Error: Could not change font size.";
+        return -1;
+    }
+    return 0;
+}
+
+void GameObjectText::drawText() {
+    int x = getPos().x;
+    int y = getPos().y;
+    vec3 color = vec3(1.0f, 1.0f, 1.0f);
+    //mutex *textLock = getLock();
+    //textLock->lock(); // Lock the text's properties when drawing.
+    glUseProgram(getProgramID());
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //glUniform3f(glGetUniformLocation(getProgramID(), "textColor"), color.x,
+    //    color.y, color.z);
+    glActiveTexture(GL_TEXTURE0);
+    std::string::const_iterator c;
+    for (c = message.begin(); c != message.end(); c++) {
+        Character ch = characters[*c];
+        float xpos = x + ch.Bearing.x * getScale();
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * getScale();
+        float w = ch.Size.x * getScale();
+        float h = ch.Size.y * getScale();
+
+        float vertices[6][4] = {
+            { xpos, ypos + h, 0.0f, 0.0f },
+            { xpos, ypos, 0.0f, 1.0f },
+            { xpos + w, ypos, 1.0f, 1.0f },
+            { xpos, ypos + h, 0.0f, 0.0f },
+            { xpos + w, ypos, 1.0f, 1.0f },
+            { xpos + w, ypos + h, 1.0f, 0.0f }
+        };
+        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        x += (ch.Advance >> 6) * getScale();
+    }
+    //glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    //textLock->unlock();
+}
+
+string GameObjectText::getMessage() {
+    return message;
 }
 
 /*
@@ -377,7 +552,8 @@ void GameCamera::updateCamera() {
     // Create critical section here to prevent race conditions
     this->getLock()->lock();
     mat4 viewMatrix = lookAt(target->getPos(offset), target->getPos(), vec3(0,1,0));
-    mat4 projectionMatrix = perspective(radians(cameraAngle), aspectRatio, nearClipping, farClipping);
+    mat4 projectionMatrix = perspective(radians(cameraAngle), aspectRatio,
+        nearClipping, farClipping);
     VPmatrix = projectionMatrix * viewMatrix;
     this->getLock()->unlock();
 }
@@ -399,6 +575,7 @@ void GameCamera::setOffset(vec3 newOffset) {
  (void) setTarget does not return any values.
 */
 void GameCamera::setTarget(GameObject *targetObject) {
+    if (targetObject == NULL) cout << "NULL detected!\n";
     target = targetObject;
 }
 

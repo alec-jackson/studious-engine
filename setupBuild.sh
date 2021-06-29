@@ -13,7 +13,7 @@ if [ ! -d build ]; then
     mkdir build
 fi
 cd build
-cmake -Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
+cmake -Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug ..
 
 # Build Project
 TYPE=`uname`

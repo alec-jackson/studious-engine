@@ -11,6 +11,7 @@
 #include <thread>
 #include <mutex>
 #include <fstream>
+#include <map>
 #ifndef _WIN32 // Don't use unistd.h on windows
 #include <unistd.h>
 #endif

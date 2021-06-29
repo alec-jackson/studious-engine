@@ -1,55 +1,36 @@
-#include "textLoader.hpp"
-#include <stdio.h>
-#include <iostream>
-#include <map>
-#include <GL/glew.h>
-#include <ft2build.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/transform.hpp>
-#include FT_FREETYPE_H
-
-#include "gameObject.hpp"
-#include "modelImport.hpp"
-
-using namespace std;
-using namespace glm;
+/*#include "textLoader.hpp"
 
 int textLib::initText(){
     FT_Library ft;
     if (FT_Init_FreeType(&ft))
     {
-        cout << "ERROR::FREETYPE: Could not init FreeType Library" << endl;
+        cerr << "ERROR::FREETYPE: Could not init FreeType Library" << endl;
         return -1;
     }
-    
+
     FT_Face face;
-    if (FT_New_Face(ft, "misc/fonts/AovelSans.ttf", 0, &face))
+    if (FT_New_Face(ft, "misc/fonts/Cave-Story.ttf", 0, &face))
     {
-        cout << "ERROR::FREETYPE: Failed to load font" << endl;
+        cerr << "ERROR::FREETYPE: Failed to load font" << endl;
         return -1;
     }
-    
+
     //FT_Set_Pixel_Sizes(face, 0, 48);
     changeFontSize(&face, 48);
-    
+
     if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
     {
-        cout << "ERROR::FREETYTPE: Failed to load Glyph" << endl;
+        cerr << "ERROR::FREETYTPE: Failed to load Glyph" << endl;
         return -1;
     }
-    
-    genText(&face);
-    
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    
+    genText(&face);
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
-    
     return 0;
 }
 
-int textLib::changeFontSize(FT_Face* face, int size){
+int textLib::changeFontSize(FT_Face *face, int size){
     if(FT_Set_Pixel_Sizes(*face, 0, size)){
         return -1;
     }
@@ -61,7 +42,7 @@ int textLib::genText(FT_Face* face){
     for(unsigned char i = 0; i < 128; i++){
         // load character glyph
         if (FT_Load_Char(*face, i, FT_LOAD_RENDER)){
-            cout << "ERROR::FREETYTPE: Failed to load Glyph" << endl;
+            cerr << "ERROR::FREETYTPE: Failed to load Glyph" << endl;
             continue;
         }
         // generate texture
@@ -90,42 +71,23 @@ int textLib::genText(FT_Face* face){
             ivec2((*face)->glyph->bitmap_left, (*face)->glyph->bitmap_top),
             (unsigned int)(*face)->glyph->advance.x
         };
-        Characters.insert(std::pair<char, Character>(i, character));
-    }
-    
-    return 0;
-}
-
-polygon *textLib::buildTextObj(string text, float x, float y, float scale, vec3 color) {
-    // Create the (polygon *)model to hold the text
-    polygon *model = (polygon*)malloc(sizeof(polygon));
-    // Iterate through all the characters in (string)text
-    std::string::const_iterator c;
-    for (c = text.begin(); c != text.end(); c++)
-    {
-        // Set ch to the current character at c
-        Character ch = Characters[*c];
-        
-        
-        float xpos = x + ch.Bearing.x * scale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-        
-        float w = ch.Size.x * scale;
-        float h = ch.Size.y * scale;
-        // update VBO for each character
-        float vertices[6][3] = {
-            { xpos,     ypos + h,   1.0f },
-            { xpos,     ypos,       1.0f },
-            { xpos + w, ypos,       1.0f },
-            
-            { xpos,     ypos + h,   1.0f },
-            { xpos + w, ypos,       1.0f },
-            { xpos + w, ypos + h,   1.0f }
-        };
-        
-        // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-        x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+        Characters.insert(pair<char, Character>(i, character));
     }
     return 0;
 }
 
+GameObjectText *textLib::buildTextObj(string text, float x, float y, float scale, vec3 color) {
+
+    mat4 projection = ortho(0.0f, 1280.0f, 0.0f, 720.0f);
+    unsigned int VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+*/

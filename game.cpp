@@ -32,12 +32,12 @@ vector<string> soundList = {
 vector<string> fragShaders = {
     "shaders/standardFragment.frag",
     "shaders/coll.frag",
-    "shaders/text.fragmentshader"
+    "shaders/text.frag"
 }; // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
     "shaders/standardVertex.vert",
     "shaders/coll.vert",
-    "shaders/text.vertexshader"
+    "shaders/text.vert"
 }; // Contains collider renderer and basic object renderer.
 vector<string> texturePathStage = {
     "images/skintexture.jpg"
@@ -106,7 +106,7 @@ int runtime(GameInstance *currentGame) {
     mutex sceneLock; // Lock used for locking scene elements
 
     cout << "Creating camera.\n";
-    int gameObject[4];
+    vector<int> gameObject(5);
     // Configure a new createCameraInfo struct to pass to createCamera
     cameraInfo camInfo;
     camInfo.objTarget = NULL;
@@ -185,6 +185,11 @@ int runtime(GameInstance *currentGame) {
 
     gameObject[3] = currentGame->createGameObject(wolfObj);
 
+    textObjectInfo textInfo = { "Sample Text Memes", "misc/fonts/AovelSans.ttf",
+        currentGame->getProgramID(2) };
+    gameObject[4] = currentGame->createText(textInfo);
+    GameObjectText *textObj = currentGame->getText(gameObject[4]);
+    textObj->setPosition(vec3(25.0f, 25.0f, 0.0f));
     GameCamera *currentCamera = currentGame->getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);

@@ -25,11 +25,6 @@ void GameInstance::startGameInstance(gameInstanceArgs args) {
     initController();
     initApplication(args.vertexShaders, args.fragmentShaders);
     keystate = SDL_GetKeyboardState(NULL);
-    gameCameraCount = 0;
-    gameObjectCount = 0;
-    gameObjects = NULL;
-    gameCameras = NULL;
-    text.initText();
 }
 
 /*
@@ -141,13 +136,9 @@ void GameInstance::cleanup() {
     for (int i = 0; i < controllersConnected; i++) {
         //SDL_GameControllerClose(gameControllers[i]);
     }
-    gameObjectLL *currentGameObject = gameObjects;
-    gameObjectLL *temp;
-    for (int i = 0; i < gameObjectCount; i++) {
-        temp = currentGameObject;
-        currentGameObject = currentGameObject->next;
-        destroyGameObject(temp->current);
-        delete temp;
+    vector<GameObject *>::iterator git;
+    for (git = gameObjects.begin(); git != gameObjects.end(); ++git) {
+        destroyGameObject((*git));
     }
     vector<GLuint>::iterator it;
     for (it = programID.begin(); it != programID.end(); ++it) {
@@ -209,6 +200,8 @@ bool GameInstance::isWindowOpen() {
 void GameInstance::updateOGL(){
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glCullFace(GL_BACK);
     glDepthFunc(GL_LESS);
     glClearColor(0.0f, 0.0f, 0.0, 1.0f);
@@ -220,18 +213,17 @@ void GameInstance::updateOGL(){
  game scene and updates their position matrices.
 
  On success, 0 is returned and the cameras in the game scene are updated. On
- failure, 1 is returned and the cameras in the game scene are not updated.
+ failure, -1 is returned and the cameras in the game scene are not updated.
 */
 int GameInstance::updateCameras() {
-    gameCameraLL *currentGameCamera = gameCameras;
-    if (currentGameCamera == NULL) {
+    if (gameCameras.empty()) {
         cerr << "Error: No cameras found in active scene!\n";
-        return 1;
+        return -1;
     }
+    vector<GameCamera *>::iterator it;
     // Update the VP matrix for each camera
-    for (int i = 0; i < gameCameraCount; i++) {
-        currentGameCamera->current->updateCamera();
-        currentGameCamera = currentGameCamera->next;
+    for (it = gameCameras.begin(); it != gameCameras.end(); ++it) {
+        (*it)->updateCamera();
     }
     return 0;
 }
@@ -245,21 +237,26 @@ int GameInstance::updateCameras() {
  After updating values for objects, the object is rendered to the SDL window
  surface.
 
- On success, 0 is returned and the GameInstance scene is rendered. On failure, 1
- is returned and nothing is rendered.
+ On success, 0 is returned and the GameInstance scene is rendered. On failure,
+ -1 is returned and nothing is rendered.
 */
 int GameInstance::updateObjects() {
-    if (gameObjects == NULL) {
+    if (gameObjects.empty()) {
         cerr << "Error: No active GameObjects in the current scene!\n";
+        return -1;
     }
-    gameObjectLL *currentGameObject = gameObjects;
-    for (int i = 0; i < gameObjectCount; i++) {
-        currentGameObject->current->setDirectionalLight(directionalLight);
-        currentGameObject->current->setLuminance(luminance);
+    std::vector<GameObject *>::iterator it;
+    for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {
+        (*it)->setDirectionalLight(directionalLight);
+        (*it)->setLuminance(luminance);
         // Send the new VP matrix to the current gameObject being drawn.
-        currentGameObject->current->setVPMatrix(getCamera(currentGameObject->current->getCameraID())->getVPMatrix());
-        currentGameObject->current->drawShape();
-        currentGameObject = currentGameObject->next;
+        (*it)->setVPMatrix(getCamera((*it)->getCameraID())->getVPMatrix());
+        (*it)->drawShape();
+    }
+    // If there is any active texts in the scene, render them
+    std::vector<GameObjectText *>::iterator text_it;
+    for (text_it = gameTexts.begin(); text_it != gameTexts.end(); ++text_it) {
+        (*text_it)->drawText();
     }
     return 0;
 }
@@ -288,7 +285,7 @@ int GameInstance::setDeltaTime(GLdouble time){
     return 0;
 }
 
-/*
+/* [OUTDATED]
  (int) createGameObject takes some (gameObjectInfo) objectInfo and constructs a
  new GameObject into the scene using information in the objectInfo struct. The
  new GameObject that is created is allocated in the heap, so it will need a
@@ -303,33 +300,14 @@ int GameInstance::setDeltaTime(GLdouble time){
  GameObject is not created.
 */
 int GameInstance::createGameObject(gameObjectInfo objectInfo) {
-    cout << "Creating GameObject " << gameObjectCount << "\n";
-    // If the gameObjects array is empty
-    if (!gameObjectCount) {
-        gameObjects = new gameObjectLL;
-        gameObjects->current = new GameObject;
-        gameObjects->current->configureGameObject(objectInfo);
-        gameObjectCount = 1;
-        gameObjects->next = NULL; // Set end of linked list
-        return 0;
-    } else {
-        int currentIndex = 1;
-        gameObjectLL *currentGameObject = gameObjects;
-        while (currentGameObject->next != NULL) {
-            currentGameObject = currentGameObject->next;
-            currentIndex++;
-        }
-        currentGameObject->next = new gameObjectLL;
-        currentGameObject = currentGameObject->next;
-        currentGameObject->current = new GameObject;
-        currentGameObject->current->configureGameObject(objectInfo);
-        gameObjectCount++;
-        currentGameObject->next = NULL;
-        return currentIndex;
-    }
+    cout << "Creating GameObject " << gameObjects.size() << "\n";
+    GameObject *gameObject = new GameObject();
+    gameObject->configureGameObject(objectInfo);
+    gameObjects.push_back(gameObject);
+    return gameObjects.size() - 1;
 }
 
-/*
+/* [OUTDATED]
  (int) createCamera takes some (cameraInfo) camInfo describing settings to use
  for a new camera, and creates a new camera in a similar manner to how standard
  GameObjects are created (see notes above for details on GameObject creation
@@ -339,33 +317,22 @@ int GameInstance::createGameObject(gameObjectInfo objectInfo) {
  GameCamera is not created and -1 is returned.
 */
 int GameInstance::createCamera(cameraInfo camInfo) {
-    cout << "Creating GameCamera " << gameCameraCount << "\n";
-    // If the gameObjects array is empty
-    if (!gameCameraCount) {
-        gameCameras = new gameCameraLL;
-        gameCameras->current = new GameCamera;
-        gameCameras->current->configureCamera(camInfo);
-        gameCameraCount = 1;
-        gameCameras->next = NULL;
-        return 0;
-    } else {
-        int currentIndex = 1;
-        gameCameraLL *currentGameCamera = gameCameras;
-        while (currentGameCamera->next != NULL) {
-            currentGameCamera = currentGameCamera->next;
-            currentIndex++;
-        }
-        currentGameCamera->next = new gameCameraLL;
-        currentGameCamera = currentGameCamera->next;
-        currentGameCamera->current = new GameCamera;
-        currentGameCamera->current->configureCamera(camInfo);
-        gameCameraCount++;
-        currentGameCamera->next = NULL;
-        return currentIndex;
-    }
+    cout << "Creating GameCamera " << gameCameras.size() << "\n";
+    GameCamera *gameCamera = new GameCamera();
+    gameCamera->configureCamera(camInfo);
+    gameCameras.push_back(gameCamera);
+    return gameCameras.size() - 1;
 }
 
-/*
+int GameInstance::createText(textObjectInfo info) {
+    cout << "Creating Gametext " << gameTexts.size() << "\n";
+    GameObjectText *text = new GameObjectText();
+    text->initializeText(info);
+    gameTexts.push_back(text);
+    return gameTexts.size() - 1;
+}
+
+/* [OUTDATED]
  (GameObject *) getGameObject walks through the (gameObjectLL *) gameObjects
  linked list in the current GameInstance and returns the GameObject with the
  matching (int) gameObjectID.
@@ -373,20 +340,15 @@ int GameInstance::createCamera(cameraInfo camInfo) {
  On success, a pointer to the discovered GameObject is returned. On failure,
  NULL is returned.
  */
-GameObject * GameInstance::getGameObject(int gameObjectID) {
-    if (gameObjectID > gameObjectCount - 1) {
-        cerr << "Error: GameObject with gameObjectID " << gameObjectID <<
-            " does not exist in teh current context!\n";
+GameObject *GameInstance::getGameObject(uint gameObjectID) {
+    if (!gameObjects.size() || gameObjects.size() < gameObjectID) {
+        cerr << "Error: getGameObject index out of bounds!\n";
         return NULL;
     }
-    gameObjectLL *currentGameObject = gameObjects;
-    for (int i = 0; i < gameObjectID; i++) {
-        currentGameObject = currentGameObject->next;
-    }
-    return currentGameObject->current;
+    return gameObjects[gameObjectID];
 }
 
-/*
+/* [OUTDATED]
  (GameCamera *) getCamera walks through the (gameCameraLL *) in the current
  GameInstance and returns the GameCamera in the game scene with the ID that
  matches (int) gameCameraID.
@@ -394,17 +356,20 @@ GameObject * GameInstance::getGameObject(int gameObjectID) {
  On success, a pointer to the matching GameCamera is returned. On failure, NULL
  is returned.
 */
-GameCamera *GameInstance::getCamera(int gameCameraID) {
-    if (gameCameraID > gameCameraCount - 1) {
-        cerr << "Error: GameCamera with gameCameraID " << gameCameraID <<
-            " does not exist in teh current context!\n";
+GameCamera *GameInstance::getCamera(uint gameCameraID) {
+    if (!gameCameras.size() || gameCameras.size() < gameCameraID) {
+        cerr << "Error: getCamera index out of bounds!\n";
         return NULL;
     }
-    gameCameraLL *currentGameCamera = gameCameras;
-    for (int i = 0; i < gameCameraID; i++) {
-        currentGameCamera = currentGameCamera->next;
+    return gameCameras[gameCameraID];
+}
+
+GameObjectText *GameInstance::getText(uint gameTextID) {
+    if (!gameTexts.size() || gameTexts.size() < gameTextID) {
+        cerr << "Error: getText index out of bounds!\n";
+        return NULL;
     }
-    return currentGameCamera->current;
+    return gameTexts[gameTextID];
 }
 
 /*
@@ -431,7 +396,7 @@ void GameInstance::setLuminance(GLfloat luminanceValue) {
 */
 void GameInstance::initWindow(int width, int height) {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
-    window = SDL_CreateWindow("OGL Engine Beta", SDL_WINDOWPOS_CENTERED,
+    window = SDL_CreateWindow("Studious Engine Example", SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED, width, height,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -526,7 +491,7 @@ void GameInstance::initApplication(vector<string> vertexPath, vector<string> fra
     }
 }
 
-/* [NOT IMPLEMENTED]
+/* [NOT IMPLEMENTED] [OLD WORK REMOVED DUE TO CHANGES]
  (void) basicCollision takes a (GameInstance *) gameInstance and performs a
  basic collision check on all of the active GameObjects in the scene. This
  method is still a WIP and does not really do anything at the moment.
@@ -534,12 +499,5 @@ void GameInstance::initApplication(vector<string> vertexPath, vector<string> fra
  (void) basicCollision does not return any values.
 */
 void GameInstance::basicCollision(GameInstance *gameInstance) {
-    gameObjectLL *objList = gameInstance->gameObjects;
-    GameObject *curObj;
-    bool runFlag = true;
-    if (objList->current != 0) {
-        do {
-            curObj = objList->current;
-        } while (runFlag);
-    }
+
 }
