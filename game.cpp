@@ -49,6 +49,8 @@ vector<string> texturePath = {
     "images/shirttexture.jpg"
 };
 
+GameObjectText *fps_counter;
+
 int setup(GameInstance *currentGame, configData* config);
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -185,11 +187,20 @@ int runtime(GameInstance *currentGame) {
 
     gameObject[3] = currentGame->createGameObject(wolfObj);
 
-    textObjectInfo textInfo = { "Sample Text Memes", "misc/fonts/AovelSans.ttf",
+    // Configure some in-game text objects
+    textObjectInfo textInfo = { "Studious Engine 2021", "misc/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
     GameObjectText *textObj = currentGame->getText(gameObject[4]);
-    textObj->setPosition(vec3(25.0f, 25.0f, 0.0f));
+    textObj->setPos(vec3(25.0f, 25.0f, 0.0f));
+    textInfo = { "FPS: ", "misc/fonts/AovelSans.ttf",
+        currentGame->getProgramID(2) };
+    gameObject[4] = currentGame->createText(textInfo);
+    textObj = currentGame->getText(gameObject[4]);
+    textObj->setPos(vec3(25.0f, 670.0f, 0.0f));
+    fps_counter = textObj;
+    fps_counter->setMessage("FPS: 0");
+    fps_counter->setScale(0.7f);
     GameCamera *currentCamera = currentGame->getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);
@@ -199,7 +210,7 @@ int runtime(GameInstance *currentGame) {
     cout << "currentGameObject tag is " << currentGameObject->getCollider()
         << '\n';
 
-    currentGameObject->setPosition(vec3(-0.005f, 0.01f, 0.0f));
+    currentGameObject->setPos(vec3(-0.005f, 0.01f, 0.0f));
     currentGameObject->setRotation(vec3(0.0f, 180.0f, 0.0f));
     currentGameObject->setScale(0.0062f);
 
@@ -209,7 +220,6 @@ int runtime(GameInstance *currentGame) {
     /*
      End Scene Loading
      */
-
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
@@ -220,9 +230,10 @@ int runtime(GameInstance *currentGame) {
     cout << "Running cleanup\n";
     currentGame->cleanup();
     return 0;
+
 }
 
-/*
+/* [OUTDATED]
  (void) mainLoop starts rendering objects in the current GameInstance to the
  main SDL window, locking variables in the scene using the (mutex *)sceneLock
  argument to prevent race conditions.
@@ -232,7 +243,7 @@ int runtime(GameInstance *currentGame) {
 int mainLoop(gameInfo* gamein) {
     clock_t begin, end; // Used for measuring FPS
     int running = 1;
-    uint sampleSize = 1000;
+    uint sampleSize = 200;
     GameInstance *currentGame = gamein->currentGame;
     GLdouble deltaTime;
     short error = 0;
@@ -244,8 +255,8 @@ int mainLoop(gameInfo* gamein) {
         error = currentGame->updateCameras();
         error |= currentGame->updateObjects();
         error |= currentGame->updateWindow();
-        if (error){
-            return 1;
+        if (error) {
+            return error;
         }
         end = clock();
         deltaTime = (double)(end - begin) / (double)CLOCKS_PER_SEC;
@@ -258,7 +269,8 @@ int mainLoop(gameInfo* gamein) {
                 for (it = times.begin(); it != times.end(); ++it) sum += *it;
                 sum /= times.size();
                 times.clear();
-                cout << "FPS :" << 1.0 / sum << '\n';
+                cout << "FPS: " << 1.0 / sum << '\n';
+                fps_counter->setMessage("FPS: " + to_string(int(1.0f / sum)));
             }
         }
     }

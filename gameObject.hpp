@@ -60,7 +60,7 @@ public:
 	void configureGameObject(gameObjectInfo objectInfo);
 	void setRotation(vec3 rotation);
 	void setOrtho(bool ortho);
-	void setPosition(vec3 pos);
+	void setPos(vec3 pos);
 	void setScale(GLfloat uniformScale);
 	void setDirectionalLight(vec3 newLight);
 	void setVPMatrix(mat4 VPMatrix);
@@ -72,7 +72,6 @@ public:
 	int getCameraID();
 	int getCollision(GameObject *object1, GameObject *object2);
 	GLfloat getScale();
-	mutex *getLock();
 	vec3 getPos(vec3 offset);
 	vec3 getPos();
 	GLuint getProgramID();
@@ -80,6 +79,8 @@ public:
 	string getCollider(void);
 	mat4 getVPMatrix();
 	bool isOrtho();
+	int lockObject();
+	int unlockObject();
 
 private:
 	polygon *model;
@@ -112,19 +113,18 @@ typedef struct Character {
 class GameObjectText : public GameObject {
 public:
 	int initializeText(textObjectInfo info);
-	int setFontSize(int size);
 	void cleanup();
 	void drawText();
 	void setMessage(string message);
 	string getMessage();
 
 private:
-	FT_Library ft;
-	FT_Face face;
 	string message;
 	int fontSize;
 	unsigned int VAO, VBO;
-	map<char, Character> characters;
+	map<GLchar, Character> characters;
+	unsigned int textureUniformID;
+
 };
 
 /*

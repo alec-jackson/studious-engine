@@ -217,7 +217,7 @@ void GameInstance::updateOGL(){
 */
 int GameInstance::updateCameras() {
     if (gameCameras.empty()) {
-        cerr << "Error: No cameras found in active scene!\n";
+        //cerr << "Error: No cameras found in active scene!\n";
         return -1;
     }
     vector<GameCamera *>::iterator it;
@@ -245,6 +245,7 @@ int GameInstance::updateObjects() {
         cerr << "Error: No active GameObjects in the current scene!\n";
         return -1;
     }
+    glBindVertexArray(vertexArrayID);
     std::vector<GameObject *>::iterator it;
     for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {
         (*it)->setDirectionalLight(directionalLight);
@@ -451,7 +452,7 @@ void GameInstance::initAudio() {
 
  (void) initController does not return any values.
 */
-void GameInstance::initController(){
+void GameInstance::initController() {
     int joyFlag = SDL_NumJoysticks();
     cout << "Number of joysticks connected: " << joyFlag << "\n";
     if (joyFlag < 1) {
@@ -483,7 +484,6 @@ void GameInstance::initController(){
 */
 void GameInstance::initApplication(vector<string> vertexPath, vector<string> fragmentPath) {
     // Compile each of our shaders and assign them their own programID number
-    GLuint vertexArrayID;
     glGenVertexArrays(1, &vertexArrayID);
     glBindVertexArray(vertexArrayID);
     for (uint i = 0; i < vertexPath.size(); i++) {

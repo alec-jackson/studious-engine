@@ -148,7 +148,6 @@ void configureObject(configureArgs args) {
             }
         }
     }
-    cout << "Finished building VBOs\n";
     args.model->vertices.push_back(vertexVBO);
     args.model->textureCoords.push_back(textureVBO);
     args.model->normalCoords.push_back(normalVBO);

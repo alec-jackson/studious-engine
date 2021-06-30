@@ -13,7 +13,15 @@ if [ ! -d build ]; then
     mkdir build
 fi
 cd build
-cmake -Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug ..
+# If -d flag is present, build in debug mode
+if [ "$1" = "-d" ]; then
+    echo "RUNNING UNDER DEBUG MODE"
+    ARGS="-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug"
+else
+    echo "RUNNING UNDER RELEASE MODE"
+    ARGS="-Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Release"
+fi
+cmake ${ARGS} ..
 
 # Build Project
 TYPE=`uname`
