@@ -34,7 +34,6 @@ add_executable(${PROJECT_NAME}
   gameInstance.cpp
   gameObject.cpp
   inputMonitor.cpp
-  textLoader.cpp
   physics.cpp
   misc/config.cpp
   misc/loadScene.cpp

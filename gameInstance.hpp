@@ -4,7 +4,6 @@
 #include "modelImport.hpp"
 #include "gameObject.hpp"
 #include "shaderLoader.hpp"
-#include "textLoader.hpp"
 
 /*
  controllerReadout is used for getting input from a controller. This struct

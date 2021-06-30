@@ -7,7 +7,6 @@
 #include "misc/config.hpp"
 #include "inputMonitor.hpp"
 #include "physics.hpp"
-#include "textLoader.hpp"
 #include "common.hpp"
 
 /*
