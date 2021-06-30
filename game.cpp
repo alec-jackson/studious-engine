@@ -110,13 +110,9 @@ int runtime(GameInstance *currentGame) {
     cout << "Creating camera.\n";
     vector<int> gameObject(5);
     // Configure a new createCameraInfo struct to pass to createCamera
-    cameraInfo camInfo;
-    camInfo.objTarget = NULL;
-    camInfo.offset = vec3(5.140022f, 1.349999f, 2.309998f);
-    camInfo.viewCameraAngle = 3.14159/5.0f;
-    camInfo.viewAspectRatio = 16.0f / 9.0f; // 16:9 Ratio
-    camInfo.viewNearClipping = 4.0f;
-    camInfo.viewFarClipping = 90.0f;
+    // See cameraInfo struct for documentation
+    cameraInfo camInfo = { NULL, vec3(5.140022f, 1.349999f, 2.309998f),
+        3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f };
     gameObject[2] = currentGame->createCamera(camInfo);
 
     vector<GLint> texturePattern = {0, 1, 2, 3};
@@ -124,20 +120,14 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
     //Create an importObj struct for importing the stage
-    importObjInfo mapInfo;
-    mapInfo.modelPath = "models/testMap1.obj";
-    mapInfo.texturePath = texturePathStage;
-    mapInfo.texturePattern = texturePatternStage;
-    mapInfo.programID = currentGame->getProgramID(0);
+    importObjInfo mapInfo = { "models/testMap1.obj", texturePathStage,
+        texturePatternStage, currentGame->getProgramID(0) };
+
     //Create a gameObjectInfo struct for creating a game object for the map
-    gameObjectInfo map;
-    map.characterModel = importObj(mapInfo);
-    map.scale = 0.009500f;
-    map.pos = vec3(-0.006f, -0.019f, 0.0f);
-    map.rot = vec3(0.0f, 0.0f, 0.0f);
-    map.camera = gameObject[2];
-    map.collisionTagName = "map";
-    map.colliderObject = NULL;
+    gameObjectInfo map = { importObj(mapInfo), NULL,
+        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
+        gameObject[2], "map" };
+
     gameObject[0] = currentGame->createGameObject(map);
 
     cout << "Creating Player\n";
@@ -150,40 +140,23 @@ int runtime(GameInstance *currentGame) {
     polygon *humanCollider = importObj(humColInfo);
 
     // Import the player object
-    importObjInfo player;
-    player.modelPath = "models/Dracula.obj";
-    player.texturePath = texturePath;
-    player.texturePattern = texturePattern;
-    player.programID = currentGame->getProgramID(0);
+    importObjInfo player = { "models/Dracula.obj", texturePath, texturePattern,
+        currentGame->getProgramID(0) };
 
     // Ready the gameObjectInfo for the player object
-    gameObjectInfo playerObj;
-    playerObj.characterModel = importObj(player);
-    playerObj.scale = 0.005f;
-    playerObj.pos = vec3(0.0f, 0.0f, -1.0f);
-    playerObj.rot = vec3(0.0f, 0.0f, 0.0f);
-    playerObj.camera = gameObject[2];
-    playerObj.collisionTagName = "player";
-    playerObj.colliderObject = 0; //humanCollider;
+    gameObjectInfo playerObj = { importObj(player), 0, vec3(0.0f, 0.0f, -1.0f),
+        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player" };
 
     gameObject[1] = currentGame->createGameObject(playerObj);
 
     cout << "Creating wolf\n";
     // Import the wold object
-    importObjInfo wolf;
-    wolf.modelPath = "models/wolf.obj";
-    wolf.texturePath = texturePath;
-    wolf.texturePattern = texturePattern;
-    wolf.programID = currentGame->getProgramID(0);
+    importObjInfo wolf = { "models/wolf.obj", texturePath, texturePattern,
+        currentGame->getProgramID(0) };
     // Ready the gameObjectInfo for the wolf object
-    gameObjectInfo wolfObj;
-    wolfObj.characterModel = importObj(wolf);
-    wolfObj.scale = 0.02f;
-    wolfObj.pos = vec3(0.00f, 0.01f, -0.08f);
-    wolfObj.rot = vec3(0.0f, 0.0f, 0.0f);
-    wolfObj.camera = gameObject[2];
-    wolfObj.collisionTagName = "NPC";
-    wolfObj.colliderObject = humanCollider;
+    gameObjectInfo wolfObj = { importObj(wolf), humanCollider,
+        vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
+        gameObject[2], "NPC"};
 
     gameObject[3] = currentGame->createGameObject(wolfObj);
 
@@ -201,6 +174,7 @@ int runtime(GameInstance *currentGame) {
     fps_counter = textObj;
     fps_counter->setMessage("FPS: 0");
     fps_counter->setScale(0.7f);
+    
     GameCamera *currentCamera = currentGame->getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);

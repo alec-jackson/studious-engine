@@ -36,6 +36,8 @@ We're using cmake for cross platform support. This allows us to work across mult
 
 -- A note on windows support. With cmake there should be windows support, but this is untested. This may require messing around with the threading libraries to get things working right with windows.
 
+To compile the studious engine in debug mode, pass the -d flag as a command line argument when running the setupBuild.sh shell script.
+
 ### libraries
 - SDL2
 - SDL2_mixer
