@@ -14,6 +14,10 @@
 #include <map>
 #ifndef _WIN32 // Don't use unistd.h on windows
 #include <unistd.h>
+#else
+#include <Windows.h>
+#define usleep(x) Sleep(x / 1000) // Windows does not have these nice sleep functions :(
+#define sleep(x) Sleep(x * 1000)
 #endif
 #include <iostream>
 #define SDL2_image // ? Should we remove this?
