@@ -58,10 +58,13 @@ void GameObject::configureGameObject(gameObjectInfo objectInfo) {
  GameObject instance.
 */
 string GameObject::getCollider(void) {
+    lockObject();
     if (collisionTag.empty()) {
         cerr << "GameObject was not assigned a collider tag!\n";
     }
-    return collisionTag;
+    string curTag = collisionTag;
+    unlockObject();
+    return curTag;
 }
 
 /*
@@ -316,10 +319,18 @@ void GameObject::setLuminance(GLfloat luminanceValue) {
     luminance = luminanceValue;
 }
 
+/*
+ (void) setCollider sets the collider tag for the current GameObject.
+
+ (void) setCollider does not return any values.
+*/
 void GameObject::setCollider(string coll) {
     collisionTag = coll;
 }
 
+/*
+ (mat4) getVPMatrix returns the current VP matrix for the GameObject.
+*/
 mat4 GameObject::getVPMatrix() {
     return vpMatrix;
 }
@@ -351,23 +362,45 @@ int GameObject::getCollision(GameObject *object1, GameObject *object2) {
     return 0;
 }
 
+/*
+ (int) lockObject uses the GameObject's internal infoLock mutex to obtain the
+ lock for the current GameObject.
+
+ (int) lockObject returns 0 on success.
+*/
 int GameObject::lockObject() {
     infoLock.lock();
     return 0;
 }
 
+/*
+ (int) unlockObject uses the GameObject's internal infoLock mutex to obtain the
+ lock for the current GameObject.
+
+ (int) unlockObject returns 0 on success.
+*/
 int GameObject::unlockObject() {
     infoLock.unlock();
     return 0;
 }
+
+/*
+ (int) initializeText takes an (textObjectInfo) info argument and creates a new
+ GameObjectText object in the current GameInstance. The textObjectInfo struct
+ contains information like the message to be rendered to the screen, the shader
+ ID to use for rendering, and the font to use for the text.
+
+ (int) initializeText returns 0 on success, otherwise -1 is returned and an
+ error is printed to stderr.
+*/
 int GameObjectText::initializeText(textObjectInfo info) {
+    mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
     setProgramID(info.programID);
     cout << "Initializing text with message " << info.message << endl;
     setCollider("Text");
     message = info.message;
     setPos(vec3(300.0f, 300.0f, 0.0f));
     setScale(1.0f);
-    mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
     glUseProgram(getProgramID()); // Load text shader
     glUniformMatrix4fv(glGetUniformLocation(getProgramID(),
         "projection"), 1, GL_FALSE, &projection[0][0]);
@@ -435,6 +468,13 @@ int GameObjectText::initializeText(textObjectInfo info) {
     return 0;
 }
 
+/*
+ (void) drawText draws the current message for the GameObjectText onto the
+ screen. Current GameObjectText is locked when rendering the text, and unlocked
+ when finished.
+
+ (void) drawText does not return any values.
+*/
 void GameObjectText::drawText() {
     lockObject();
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -560,7 +600,8 @@ void GameCamera::updateCamera() {
     }
     // Create critical section here to prevent race conditions
     lockObject();
-    mat4 viewMatrix = lookAt(target->getPos(offset), target->getPos(), vec3(0,1,0));
+    mat4 viewMatrix = lookAt(target->getPos(offset), target->getPos(),
+        vec3(0,1,0));
     mat4 projectionMatrix = perspective(radians(cameraAngle), aspectRatio,
         nearClipping, farClipping);
     VPmatrix = projectionMatrix * viewMatrix;

@@ -292,15 +292,14 @@ void rotateShape(void *gameInfoStruct, void *target) {
         //cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
         //    << ", Z: " << cameraOffset[2] << "\n";
         //cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
-        // Lock the variables we are changing to avoid conflict
-        character->lockObject();
         currentGameInfo->gameCamera->lockObject();
+        character->lockObject();
         currentGameInfo->gameCamera->setOffset(cameraOffset);
         currentGame->setLuminance(currentLuminance);
         character->setRotation(angles);
         character->setPos(pos);
-        currentGameInfo->gameCamera->unlockObject();
         character->unlockObject();
+        currentGameInfo->gameCamera->unlockObject();
     }
     SDL_GameControllerClose(gameController1);
     return;

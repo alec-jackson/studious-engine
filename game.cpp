@@ -68,10 +68,11 @@ int main(int argc, char **argv) {
 }
 
 /*
- (int) setup takes a (mutex *)infoLock for locking elements in the scene,
- the (GameInstance *) currentGame instance to use for the game scene, and
- (configData *) config data used for configuring window properties. (int) setup
- configures the resolution of the SDL window. On success, 0 is returned.
+ (int) setup takes a (GameInstance *) currentGame instance to use for the game
+ scene, and (configData *) config data used for configuring window properties.
+ (int) setup configures the resolution of the SDL window.
+
+ (int) setup returns 0 on success.
 */
 int setup(GameInstance *currentGame, configData* config){
     int flag = loadConfig(config, "misc/config.txt");
@@ -92,21 +93,20 @@ int setup(GameInstance *currentGame, configData* config){
 }
 
 /*
- (int) runtime takes a (mutex *) infoLock for locking shared resources between
- threads, and a (GameInstance *) gamein to create the current scene in. This
- function creates all of the GameObjects and GameCameras in the current scene
- and creates a seperate thread for handling user input. All of the setup done in
- the runtime function is for demonstration purposes for now. The final studious
- engine product will source scene information from a .yaml file supplied by the
- user and build the game scene based on that data. On success, 0 is returned.
+ (int) runtime takes a (GameInstance *) gamein to create the current scene in.
+ This function creates all of the GameObjects and GameCameras in the current
+ scene and creates a seperate thread for handling user input. All of the setup
+ done in the runtime function is for demonstration purposes for now. The final
+ studious engine product will source scene information from a .yaml file
+ supplied by the user and build the game scene based on that data.
+
+ (int) runtime returns 0 on success.
 */
 int runtime(GameInstance *currentGame) {
     cout << "Building game scene!\n";
     SDL_SetRelativeMouseMode(SDL_TRUE);
     struct gameInfo currentGameInfo;
     bool isDone = false;
-    mutex sceneLock; // Lock used for locking scene elements
-
     cout << "Creating camera.\n";
     vector<int> gameObject(5);
     // Configure a new createCameraInfo struct to pass to createCamera
