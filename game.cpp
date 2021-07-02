@@ -207,12 +207,13 @@ int runtime(GameInstance *currentGame) {
 
 }
 
-/* [OUTDATED]
- (void) mainLoop starts rendering objects in the current GameInstance to the
- main SDL window, locking variables in the scene using the (mutex *)sceneLock
- argument to prevent race conditions.
+/*
+ (int) mainLoop starts rendering objects in the current GameInstance to the
+ main SDL window. The methods called from the currentGame object render parts
+ of the scene.
 
- (void) mainLoop does not return a value.
+ (int) mainLoop returns 0 when closed successfully. When an error occurs and the
+ mainLoop closes prematurely, an error code is returned.
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;

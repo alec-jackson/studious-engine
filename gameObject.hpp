@@ -43,6 +43,14 @@ typedef struct gameObjectInfo {
 	string collisionTagName;
 } gameObjectInfo;
 
+/*
+ textObjectInfo struct is used for constructing new GameObjectText objects. The
+ following struct members are used in the following manner:
+ * (string) message - Message to display on the rendered text.
+ * (string) fontPath - Path to a font to use to render the text.
+ * (GLuint) programID - Shader ID used for vertex/fragment shader pair to render
+ 	text.
+*/
 typedef struct textObjectInfo {
 	string message, fontPath;
 	GLuint programID;
@@ -103,6 +111,10 @@ private:
 	unsigned int VAO;
 };
 
+/*
+ Character struct used for rendering and aligning text using freetype 2. This
+ struct contains information about the size and alignment of each character.
+*/
 typedef struct Character {
     unsigned int TextureID;  // ID handle of the glyph texture
     ivec2 Size;       // Size of glyph
@@ -110,6 +122,11 @@ typedef struct Character {
     unsigned int Advance;    // Offset to advance to next glyph
 } Character;
 
+/*
+ GameObjectText is a subclass of GameObject used for adding text to a
+ GameInstance. This class contains methods and variables unique to rendering
+ text.
+*/
 class GameObjectText : public GameObject {
 public:
 	int initializeText(textObjectInfo info);

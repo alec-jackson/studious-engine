@@ -286,15 +286,13 @@ int GameInstance::setDeltaTime(GLdouble time){
     return 0;
 }
 
-/* [OUTDATED]
+/*
  (int) createGameObject takes some (gameObjectInfo) objectInfo and constructs a
  new GameObject into the scene using information in the objectInfo struct. The
  new GameObject that is created is allocated in the heap, so it will need a
  delete statement in the cleanup function. When a new GameObject is created, it
- is put onto the (gameObjectLL) gameObjects linked list inside of the
- GameInstance and assigned an ID number. The ID number assigned to a GameObject
- in the scene corresponds to whatever the gameObjectCount was at the time of
- creation (hence why the first gameobject created will have an ID of 0).
+ is put into the (vector<GameObject>) gameObjects vector and rendered in the
+ updateObjects method.
 
  (int) createGameObject returns the index of the newly created GameObject inside
  of the current GameInstance on success. On failure, -1 is returned and the
@@ -308,14 +306,13 @@ int GameInstance::createGameObject(gameObjectInfo objectInfo) {
     return gameObjects.size() - 1;
 }
 
-/* [OUTDATED]
+/*
  (int) createCamera takes some (cameraInfo) camInfo describing settings to use
  for a new camera, and creates a new camera in a similar manner to how standard
- GameObjects are created (see notes above for details on GameObject creation
- and functionality of GameObject Linked Lists).
+ GameObjects are created (see notes above for details on GameObject creation).
 
- On success, the ID of the created GameCamera is returned. On failure, the
- GameCamera is not created and -1 is returned.
+ (int) createCamera returns the ID of the created GameCamera on success. On
+ failure, the GameCamera is not created and -1 is returned.
 */
 int GameInstance::createCamera(cameraInfo camInfo) {
     cout << "Creating GameCamera " << gameCameras.size() << "\n";
@@ -325,6 +322,13 @@ int GameInstance::createCamera(cameraInfo camInfo) {
     return gameCameras.size() - 1;
 }
 
+/*
+ (int) createText takes an (textObjectInfo) info argument and creates a new
+ GameObjectText GameObject inside of the current GameInstance.
+
+ (int) createText returns the index of the created GameObjectText in the current
+ GameInstance.
+*/
 int GameInstance::createText(textObjectInfo info) {
     cout << "Creating Gametext " << gameTexts.size() << "\n";
     GameObjectText *text = new GameObjectText();
@@ -333,13 +337,11 @@ int GameInstance::createText(textObjectInfo info) {
     return gameTexts.size() - 1;
 }
 
-/* [OUTDATED]
- (GameObject *) getGameObject walks through the (gameObjectLL *) gameObjects
- linked list in the current GameInstance and returns the GameObject with the
- matching (int) gameObjectID.
-
- On success, a pointer to the discovered GameObject is returned. On failure,
- NULL is returned.
+/*
+ (GameObject *) getGameObject returns the GameObject pointer for the GameObject
+ located at the index gameObjectID inside of the (vector<GameObject *>)
+ gameObjects vector on success. On failure, NULL is returned and an error is
+ printed to stderr.
  */
 GameObject *GameInstance::getGameObject(uint gameObjectID) {
     if (!gameObjects.size() || gameObjects.size() < gameObjectID) {
@@ -349,13 +351,11 @@ GameObject *GameInstance::getGameObject(uint gameObjectID) {
     return gameObjects[gameObjectID];
 }
 
-/* [OUTDATED]
- (GameCamera *) getCamera walks through the (gameCameraLL *) in the current
- GameInstance and returns the GameCamera in the game scene with the ID that
- matches (int) gameCameraID.
-
- On success, a pointer to the matching GameCamera is returned. On failure, NULL
- is returned.
+/*
+ (GameCamera *) getGameCamera returns the GameCamera pointer for the GameCamera
+ located at the index gameCameraID inside of the (vector<GameCamera *>)
+ gameCameras vector on success. On failure, NULL is returned and an error is
+ printed to stderr.
 */
 GameCamera *GameInstance::getCamera(uint gameCameraID) {
     if (!gameCameras.size() || gameCameras.size() < gameCameraID) {
@@ -365,6 +365,12 @@ GameCamera *GameInstance::getCamera(uint gameCameraID) {
     return gameCameras[gameCameraID];
 }
 
+/*
+ (GameObjectText *) getText returns the GameObjectText pointer for the
+ GameObjectText located at the index gameTextID inside of the
+ (vector<GameObjectText *>) gameTexts vector on success. On failure, NULL is
+ returned and an error is printed to stderr.
+*/
 GameObjectText *GameInstance::getText(uint gameTextID) {
     if (!gameTexts.size() || gameTexts.size() < gameTextID) {
         cerr << "Error: getText index out of bounds!\n";

@@ -150,12 +150,12 @@ void GameObject::setProgramID(GLuint shaderID) {
  (void) drawShape does not return any values.
 */
 void GameObject::drawShape() {
-    infoLock.lock(); // Obtain lock for all current object data
+    lockObject();
     // Draw each shape individually
     if (!configured) {
         cerr << "GameObject with tag " << collisionTag
             << " has not been configured yet!\n";
-        infoLock.unlock();
+        unlockObject();
         return;
     }
     for (int i = 0; i < model->numberOfObjects; i++) {
@@ -216,13 +216,11 @@ void GameObject::drawShape() {
         glDisableVertexAttribArray(0);
     }
     if (collider != NULL) {
-        //infoLock.lock();
         // After drawing the gameobject, draw the collider
         glUseProgram(collider->programID); // grab the programID from the object
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
         glUniformMatrix4fv(MVPID, 1, GL_FALSE, &MVP[0][0]);
-        //infoLock.unlock();
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, collider->shapebufferID[0]);
         glVertexAttribPointer(
@@ -237,7 +235,7 @@ void GameObject::drawShape() {
         glDisableVertexAttribArray(0);
     }
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    infoLock.unlock(); // End of critical section when drawing is complete
+    unlockObject();
 }
 
 /*
@@ -478,10 +476,20 @@ void GameObjectText::drawText() {
     unlockObject();
 }
 
+/*
+ (string) getMessage returns the (string) message being rendered to the
+ current game scene.
+*/
 string GameObjectText::getMessage() {
     return message;
 }
 
+/*
+ (void) setMessage takes a (string) phrase and sets the GameObjectText's
+ current (string) message variable to the given phrase.
+
+ (void) setMessage does not return any values.
+*/
 void GameObjectText::setMessage(string phrase) {
     lockObject();
     message = phrase;
