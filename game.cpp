@@ -174,7 +174,7 @@ int runtime(GameInstance *currentGame) {
     fps_counter = textObj;
     fps_counter->setMessage("FPS: 0");
     fps_counter->setScale(0.7f);
-    
+
     GameCamera *currentCamera = currentGame->getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);
@@ -215,16 +215,16 @@ int runtime(GameInstance *currentGame) {
  (void) mainLoop does not return a value.
 */
 int mainLoop(gameInfo* gamein) {
-    clock_t begin, end; // Used for measuring FPS
+    Uint64 begin, end;
     int running = 1;
-    uint sampleSize = 200;
+    double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
-    GLdouble deltaTime;
+    double deltaTime;
     short error = 0;
     vector<double> times;
     while (running) {
+        begin = SDL_GetPerformanceCounter();
         running = currentGame->isWindowOpen();
-        begin = clock();
         currentGame->updateOGL();
         error = currentGame->updateCameras();
         error |= currentGame->updateObjects();
@@ -232,19 +232,21 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
-        end = clock();
-        deltaTime = (double)(end - begin) / (double)CLOCKS_PER_SEC;
+        end = SDL_GetPerformanceCounter();
+        deltaTime = (double)(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
         if (SHOW_FPS) { // use sampleSize to find average FPS
             times.push_back(deltaTime);
-            if (times.size() > sampleSize) {
+            currentTime += deltaTime;
+            if (currentTime > sampleTime) {
+                currentTime = 0.0f;
                 double sum = 0.0;
                 vector<double>::iterator it;
                 for (it = times.begin(); it != times.end(); ++it) sum += *it;
                 sum /= times.size();
                 times.clear();
                 cout << "FPS: " << 1.0 / sum << '\n';
-                fps_counter->setMessage("FPS: " + to_string(int(1.0f / sum)));
+                fps_counter->setMessage("FPS: " + to_string(int(1.0 / sum)));
             }
         }
     }
