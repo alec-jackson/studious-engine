@@ -1,5 +1,5 @@
-#ifndef GAMEOBJECT_H
-#define GAMEOBJECT_H
+#ifndef GAMEOBJECT_HPP
+#define GAMEOBJECT_HPP
 #include "common.hpp"
 #include "modelImport.hpp"
 #include <ft2build.h>
@@ -36,7 +36,7 @@ typedef struct colliderInfo {
  	when handling collision in the current GameInstance.
 */
 typedef struct gameObjectInfo {
-	polygon *characterModel, *colliderObject;
+	polygon *characterModel;
 	vec3 pos, rot;
 	GLfloat scale;
 	int camera;
@@ -75,6 +75,7 @@ public:
 	void setLuminance(GLfloat luminanceValue);
 	void setProgramID(GLuint shaderID);
 	void setCollider(string coll);
+	int createCollider(int shaderID);
 	void drawShape();
 	void deleteTextures();
 	int getCameraID();
@@ -86,6 +87,8 @@ public:
 	polygon *getModel();
 	string getCollider(void);
 	mat4 getVPMatrix();
+ 	GLfloat getVert(vector<GLfloat> vertices, int axis,
+		bool (*test)(float a, float b));
 	bool isOrtho();
 	int lockObject();
 	int unlockObject();
@@ -96,7 +99,7 @@ private:
 	mat4 vpMatrix; // Projection  *View matrix
 	GLuint rotateID, scaleID, translateID, vpID, textureID, textCoordsID,
 		hasTextureID, directionalLightID, luminanceID, rollOffID, programID,
-		MVPID;
+		MVPID, collider_shaderID;
 	GLint textureCoordID, uniform_mytexture;
 	vector<GLint> hasTexture;
 	vec3 pos, rot, vel; // Position, rotation and velocity 3D vectors

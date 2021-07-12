@@ -11,7 +11,7 @@
 */
 void GameObject::configureGameObject(gameObjectInfo objectInfo) {
     programID = objectInfo.characterModel->programID;
-    collider = objectInfo.colliderObject;
+    collider = NULL; // Default to not having a collider
     luminance = 1.0f;
     rollOff = 0.9f; // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0,0,0);
@@ -221,6 +221,7 @@ void GameObject::drawShape() {
     if (collider != NULL) {
         // After drawing the gameobject, draw the collider
         glUseProgram(collider->programID); // grab the programID from the object
+        glDisable(GL_CULL_FACE); // Just do it
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
         glUniformMatrix4fv(MVPID, 1, GL_FALSE, &MVP[0][0]);
@@ -381,6 +382,146 @@ int GameObject::lockObject() {
 */
 int GameObject::unlockObject() {
     infoLock.unlock();
+    return 0;
+}
+
+/*
+ (bool) min_func takes some (float) a and (float) b values and returns the
+ boolean (a < b), so true if a is less than b, otherwise false.
+*/
+bool min_func(float a, float b) {
+    return a < b;
+}
+
+/*
+ (bool) max_func takes some (float) a and (float) b values and returns the
+ boolean (a > b), so true if a is greater than b, otherwise false.
+*/
+bool max_func(float a, float b) {
+    return a > b;
+}
+
+/*
+ (GLfloat) getVert takes some (vector<GLfloat>) vertices, takes an (int) axis
+ defining the axis we're looking at specifically (X, Y, Z -> 0, 1, 2
+ respectively). The test for the returned vertex is defined in the passed in
+ (bool (*test)(float a, float b)) function. An example parameter function can be
+ seen in the built in max_func and min_func functions.
+
+ (GLfloat) returns the desired vertex point on success. On error, 0.0f is
+ returned and an error message is printed to stderr.
+*/
+GLfloat GameObject::getVert(vector<GLfloat> vertices, int axis,
+    bool (*test)(float a, float b)) {
+    if (vertices.size() < 3) {
+        cerr << "Error: Vertices vector is empty!\n";
+        return 0.0f;
+    }
+    GLfloat currentMin = vertices[axis];
+    for (int i = 0; i < vertices.size() / 3; i++) {
+        GLfloat tempMin = vertices[i * 3 + axis];
+        if (test(tempMin, currentMin)) {
+            currentMin = tempMin;
+        }
+    }
+    return currentMin;
+}
+
+/*
+ (int) createCollider takes an (int) shaderID and creates a box collider that
+ tightly fits around the current GameObject. This process should be fully
+ automatic, so just call this method on any object that you want to create a
+ collider for and it should work just fine. The cube collider that is created
+ uses the minimum and maxmimum XYZ coordinates of the GameObject and creates a
+ box that fits those bounds.
+
+ (int) createCollider returns 0 upon success. On error, -1 is returned and an
+ error message is printed to stderr.
+*/
+int GameObject::createCollider(int shaderID) {
+    cout << "Building collider for " << collisionTag << endl;
+    GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
+    GLfloat max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
+    if (model == NULL) {
+        cerr <<
+            "Error: Cannot create collider because GameObject model is missing"
+            << endl;
+        return -1;
+    }
+    vector<vector<GLfloat>>::iterator it;
+    // Go through objects and get absolute min/max points
+    for (it = model->vertices.begin(); it != model->vertices.end(); ++it) {
+        for (int i = 0; i < 3; i++) {
+            tempMin[i] = getVert((*it), i, min_func);
+            tempMax[i] = getVert((*it), i, max_func);
+            if (tempMin[i] < min[i]) {
+                min[i] = tempMin[i];
+            }
+            if (tempMax[i] > max[i]) {
+                max[i] = tempMax[i];
+            }
+        }
+    }
+    // Create new polygon object for collider
+    collider = new polygon();
+    // Manually build triangles for cube collider
+    vector<GLfloat> colliderVertices = {
+        // First face
+        min[0], min[1], min[2],
+        min[0], min[1], max[2],
+        min[0], max[1], min[2],
+        min[0], max[1], max[2],
+        min[0], max[1], min[2],
+        min[0], min[1], max[2],
+        // Second face
+        min[0], min[1], max[2],
+        min[0], max[1], max[2],
+        max[0], min[1], max[2],
+        min[0], max[1], max[2],
+        max[0], min[1], max[2],
+        max[0], max[1], max[2],
+        // Third face
+        max[0], max[1], max[2],
+        max[0], min[1], max[2],
+        max[0], max[1], min[2],
+        max[0], min[1], min[2],
+        max[0], min[1], max[2],
+        max[0], max[1], min[2],
+        // Fourth face
+        max[0], max[1], min[2],
+        min[0], max[1], min[2],
+        max[0], min[1], min[2],
+        min[0], min[1], min[2],
+        min[0], max[1], min[2],
+        max[0], min[1], min[2],
+        // Fifth face
+        min[0], max[1], min[2],
+        max[0], max[1], min[2],
+        min[0], max[1], max[2],
+        max[0], max[1], max[2],
+        max[0], max[1], min[2],
+        min[0], max[1], max[2],
+        // Sixth Face
+        min[0], min[1], min[2],
+        max[0], min[1], min[2],
+        min[0], min[1], max[2],
+        max[0], min[1], max[2],
+        max[0], min[1], min[2],
+        min[0], min[1], max[2]
+    };
+    cout << "Min XYZ: " << min[0] << " " << min[1] << " " << min[2] << endl;
+    cout << "Max XYZ: " << max[0] << " " << max[1] << " " << max[2] << endl;
+    collider->vertices.push_back(colliderVertices);
+    collider->textureID.push_back(UINT_MAX);
+    collider->textureCoordsID.push_back(UINT_MAX);
+    collider->shapebufferID.push_back(0);
+    collider->pointCount.push_back(108);
+    collider->programID = shaderID;
+    glGenBuffers(1, &(collider->shapebufferID[0]));
+    glBindBuffer(GL_ARRAY_BUFFER, collider->shapebufferID[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 108,
+        &(collider->vertices[0][0]), GL_STATIC_DRAW);
+    cout << "Creating collider!\n";
     return 0;
 }
 

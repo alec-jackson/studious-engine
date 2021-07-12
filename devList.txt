@@ -3,7 +3,6 @@ P0. Scene Loading
 P0. Physics (Collision)
 P0. Animations (Single Idle Animation) --> needs skeletons
 P0. Animations (Switching Animations)
-P0. Text
 P1. Menus
 P1. Config Files
 P1. Improved Physics
@@ -38,7 +37,8 @@ P5. Optimizations (In general)
 Implemented (Needs Review)
 1. Camera Orbit (Mouse Controls)
 2. Physics (Gravity)
-3. Fix g++ optimzations
+3. Fix g++ optimizations
+4. Text (P0)
 
 
 Finished

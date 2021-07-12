@@ -124,41 +124,39 @@ int runtime(GameInstance *currentGame) {
         texturePatternStage, currentGame->getProgramID(0) };
 
     //Create a gameObjectInfo struct for creating a game object for the map
-    gameObjectInfo map = { importObj(mapInfo), NULL,
+    gameObjectInfo map = { importObj(mapInfo),
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
         gameObject[2], "map" };
 
     gameObject[0] = currentGame->createGameObject(map);
 
     cout << "Creating Player\n";
-    // The collider on the object is just a basic wire frame at the moment
-    // Configure the wireframe box around the player
-    importObjInfo humColInfo;
-    humColInfo.modelPath = "models/rockStone.obj";
-    humColInfo.programID = currentGame->getProgramID(1);
-
-    polygon *humanCollider = importObj(humColInfo);
 
     // Import the player object
     importObjInfo player = { "models/Dracula.obj", texturePath, texturePattern,
         currentGame->getProgramID(0) };
 
     // Ready the gameObjectInfo for the player object
-    gameObjectInfo playerObj = { importObj(player), 0, vec3(0.0f, 0.0f, -1.0f),
+    gameObjectInfo playerObj = { importObj(player), vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player" };
 
     gameObject[1] = currentGame->createGameObject(playerObj);
+    GameObject *dracs = currentGame->getGameObject(gameObject[1]);
+    dracs->createCollider(currentGame->getProgramID(1));
 
     cout << "Creating wolf\n";
     // Import the wold object
     importObjInfo wolf = { "models/wolf.obj", texturePath, texturePattern,
         currentGame->getProgramID(0) };
     // Ready the gameObjectInfo for the wolf object
-    gameObjectInfo wolfObj = { importObj(wolf), humanCollider,
+    gameObjectInfo wolfObj = { importObj(wolf),
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
         gameObject[2], "NPC"};
 
     gameObject[3] = currentGame->createGameObject(wolfObj);
+
+    GameObject *wolfObject = currentGame->getGameObject(gameObject[3]);
+    wolfObject->createCollider(currentGame->getProgramID(1));
 
     // Configure some in-game text objects
     textObjectInfo textInfo = { "Studious Engine 2021", "misc/fonts/AovelSans.ttf",
