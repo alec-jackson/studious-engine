@@ -5,14 +5,19 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-/*
- colliderInfo contains the scale, translate and rotate matrices for the collider
- for a given object.
+/* [OUTDATED]
+ The colliderInfo strut contains information about the collider paired with a
+ GameObject. The colliderInfo struct contains the following members:
+ * (vec3) offset - The distance between the center of the collider and its edges
+ 	for the X, Y and Z axis.
+ * (vec3) center - The X, Y and Z coordinates of the center of the
+ 	collider. This
 */
 typedef struct colliderInfo {
-	mat4 scale;
-	mat4 translate;
-	mat4 rotate;
+	vec4 offset, originalOffset;
+	vec4 center, originalCenter;
+	string collisionTag;
+	polygon *collider;
 } colliderInfo;
 
 /*
@@ -79,13 +84,13 @@ public:
 	void drawShape();
 	void deleteTextures();
 	int getCameraID();
-	int getCollision(GameObject *object1, GameObject *object2);
 	GLfloat getScale();
 	vec3 getPos(vec3 offset);
 	vec3 getPos();
 	GLuint getProgramID();
 	polygon *getModel();
-	string getCollider(void);
+	string getColliderTag(void);
+	colliderInfo getCollider(void);
 	mat4 getVPMatrix();
  	GLfloat getVert(vector<GLfloat> vertices, int axis,
 		bool (*test)(float a, float b));
@@ -105,13 +110,12 @@ private:
 	vec3 pos, rot, vel; // Position, rotation and velocity 3D vectors
 	GLfloat scale;
 	bool configured, orthographic;
-	string collisionTag;
 	int currentCamera;
 	vec3 directionalLight;
 	GLfloat luminance, rollOff;
 	mutex infoLock;
-	polygon *collider;
 	unsigned int VAO;
+	colliderInfo collider;
 };
 
 /*
@@ -166,8 +170,7 @@ private:
 typedef struct cameraInfo {
 	GameObject *objTarget;
 	vec3 offset;
-	GLfloat viewCameraAngle, viewAspectRatio,
-	viewNearClipping, viewFarClipping;
+	GLfloat viewCameraAngle, viewAspectRatio, viewNearClipping, viewFarClipping;
 } cameraInfo;
 
 /*

@@ -50,6 +50,8 @@ vector<string> texturePath = {
 };
 
 GameObjectText *fps_counter;
+GameObjectText *collDebugText;
+GameObject *wolfRef, *playerRef; // Used for collision testing
 
 int setup(GameInstance *currentGame, configData* config);
 int runtime(GameInstance *currentGame);
@@ -143,6 +145,7 @@ int runtime(GameInstance *currentGame) {
     gameObject[1] = currentGame->createGameObject(playerObj);
     GameObject *dracs = currentGame->getGameObject(gameObject[1]);
     dracs->createCollider(currentGame->getProgramID(1));
+    playerRef = dracs;
 
     cout << "Creating wolf\n";
     // Import the wold object
@@ -157,6 +160,7 @@ int runtime(GameInstance *currentGame) {
 
     GameObject *wolfObject = currentGame->getGameObject(gameObject[3]);
     wolfObject->createCollider(currentGame->getProgramID(1));
+    wolfRef = wolfObject;
 
     // Configure some in-game text objects
     textObjectInfo textInfo = { "Studious Engine 2021", "misc/fonts/AovelSans.ttf",
@@ -166,6 +170,16 @@ int runtime(GameInstance *currentGame) {
     textObj->setPos(vec3(25.0f, 25.0f, 0.0f));
     textInfo = { "FPS: ", "misc/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
+    // Re-using gameObject 4 for no particular reason
+    textInfo = { "Contact", "misc/fonts/AovelSans.ttf",
+        currentGame->getProgramID(2) };
+    gameObject[4] = currentGame->createText(textInfo);
+    textObj = currentGame->getText(gameObject[4]);
+    textObj->setPos(vec3(25.0f, 300.0f, 0.0f));
+    collDebugText = textObj;
+    collDebugText->setMessage("Contact: False");
+    collDebugText->setScale(0.7f);
+
     gameObject[4] = currentGame->createText(textInfo);
     textObj = currentGame->getText(gameObject[4]);
     textObj->setPos(vec3(25.0f, 670.0f, 0.0f));
@@ -179,7 +193,7 @@ int runtime(GameInstance *currentGame) {
     currentGameObject->setRotation(vec3(0, 0, 0));
     currentGameObject = currentGame->getGameObject(gameObject[3]);
     currentGameObject = currentGame->getGameObject(gameObject[1]);
-    cout << "currentGameObject tag is " << currentGameObject->getCollider()
+    cout << "currentGameObject tag is " << currentGameObject->getColliderTag()
         << '\n';
 
     currentGameObject->setPos(vec3(-0.005f, 0.01f, 0.0f));
@@ -215,7 +229,7 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int running = 1;
+    int running = 1, collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     double deltaTime;
@@ -248,6 +262,14 @@ int mainLoop(gameInfo* gamein) {
                 fps_counter->setMessage("FPS: " + to_string(int(1.0 / sum)));
             }
         }
+        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
+        string collMessage;
+        if (collision == 1) {
+            collMessage = "Contact: True";
+        } else {
+            collMessage = "Contact: False";
+        }
+        collDebugText->setMessage(collMessage);
     }
     return 0;
 }

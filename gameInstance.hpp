@@ -90,6 +90,7 @@ public:
 	GameCamera *getCamera(uint gameCameraID);
 	GameObjectText *getText(uint gameTextID);
 	GLdouble getDeltaTime();
+	int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
 	int setDeltaTime(GLdouble time);
 	void setLuminance(GLfloat luminanceValue);
 	void basicCollision(GameInstance* gameInstance);
