@@ -74,13 +74,11 @@ string GameObject::getColliderTag(void) {
 colliderInfo GameObject::getCollider(void) {
     // Update center position with model matrix then return
     collider.center = translateMatrix * scaleMatrix * rotateMatrix * collider.originalCenter;
-    vec4 minOffset = translateMatrix * scaleMatrix * rotateMatrix * collider.originalOffset;
-    vec4 newOffset;
+    vec4 minOffset = translateMatrix * scaleMatrix * rotateMatrix * collider.minPoints;
     // Use rescaled edge points to calculate offset on the fly!
     for (int i = 0; i < 4; i++) {
-        newOffset[i] = collider.center[i] - minOffset[i];
+        collider.offset[i] = collider.center[i] - minOffset[i];
     }
-    collider.offset = newOffset;
     return collider;
 }
 
@@ -508,8 +506,6 @@ int GameObject::createCollider(int shaderID) {
         max[0], min[1], min[2],
         min[0], min[1], max[2]
     };
-    cout << "Min XYZ: " << min[0] << " " << min[1] << " " << min[2] << endl;
-    cout << "Max XYZ: " << max[0] << " " << max[1] << " " << max[2] << endl;
     collider.collider->vertices.push_back(colliderVertices);
     collider.collider->textureID.push_back(UINT_MAX);
     collider.collider->textureCoordsID.push_back(UINT_MAX);
@@ -526,12 +522,11 @@ int GameObject::createCollider(int shaderID) {
     }
     collider.center[3] = 1; // SET W!!!
     collider.originalCenter = collider.center;
-    printf("c - [%f, %f, %f]\n", collider.center.x, collider.center.y, collider.center.z);
     // Update the offset for the collider to be distance between center and edge
     for (int i = 0; i < 3; i++) {
-        collider.originalOffset[i] = min[i]; // Use edge points for og offset
+        collider.minPoints[i] = min[i];
     }
-    collider.originalOffset[3] = 1; // SET W!!!
+    collider.minPoints[3] = 1; // SET W!!!
     return 0;
 }
 

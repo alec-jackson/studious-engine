@@ -5,16 +5,26 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-/* [OUTDATED]
+/*
  The colliderInfo strut contains information about the collider paired with a
  GameObject. The colliderInfo struct contains the following members:
- * (vec3) offset - The distance between the center of the collider and its edges
- 	for the X, Y and Z axis.
- * (vec3) center - The X, Y and Z coordinates of the center of the
- 	collider. This
+ * (vec4) offset - The distance between the center of the collider and its edges
+ 	on the X, Y and Z axis.
+ * (vec4) minPoints - Contains the minimum points used in the automatically
+ 	generated box collider for a GameObject.
+ * (vec4) center - The X, Y and Z coordinates of the center of the
+ 	collider.
+ * (vec4) originalCenter - The raw X, Y and Z points for the center of the
+ 	actual model. These points themselves should not be used for calculating
+	collision.
+ * (string) collisionTag - The name of the collisionTag associated with the
+ 	current GameObject. The collisionTag can be used to determine what two
+	GameObjects in a scene have collided.
+ * (polygon) *collider - The polygon data for the box collider drawn around a
+ 	GameObject it is attached to.
 */
 typedef struct colliderInfo {
-	vec4 offset, originalOffset;
+	vec4 offset, minPoints;
 	vec4 center, originalCenter;
 	string collisionTag;
 	polygon *collider;

@@ -387,22 +387,17 @@ GLdouble GameInstance::getDeltaTime() {
     return deltaTime;
 }
 
-
-void printVector(vec4 item) {
-    cout << "Item: " << item.x << " " << item.y << " " << item.z << " " << item.w << endl;
-}
-
-/* [OUTDATED]
+/*
  (int) getCollision takes a (GameObject *) object1 and compares it to
  (GameObject *) object2 and checks whether the two GameObjects are either
  colliding or about to collide. getCollision checks whether the two GameObjects
  are about to collide using the (vec3) moving parameter. The general formula for
  this function is thefollowing:
- 1. A collision is only currently occuring if object1's xDist, yDist and zDist
-    are in range of the center of object2's center + (xDist, yDist, zDist).
- 2. A collision is about to occur if object1's (xDist, yDist, zDist) +
-    (vec3) moving is in range of the center of object2's
-    center + (xDist, yDist, zDist).
+ 1. A collision is only currently occuring if object1's center point is within
+    range of object2's center point. Range is dictacted by the sum of the two
+    offset points for the corresponding axis.
+ 2. A collision is about to occur if object1's center point + (vec3) moving is
+    within range of object2's center point.
 
  On success, (int) getCollision will return 1 if the two GameObjects are
  currently colliding, 2 if the two objects are about to collide, or 0 if there
@@ -410,6 +405,8 @@ void printVector(vec4 item) {
 */
 int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     vec3 moving) {
+    colliderInfo coll1, coll2;
+    int matching = 0; // Number of axis that have collided
     if (object1 == NULL || object2 == NULL) {
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";
         return -1;
@@ -417,40 +414,14 @@ int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     // Obtain lock and update positions
     object1->lockObject();
     object2->lockObject();
-    int matching = 0; // Number of axis that have collided
-    colliderInfo obj1collider = object1->getCollider();
-    colliderInfo obj2collider = object2->getCollider();
-    vec4 center1, center2;
-    vec4 offset1, offset2;
-    center1 = obj1collider.center;
-    center2 = obj2collider.center;
-    //printVector(center1);
-    //printVector(center2);
-    offset1 = obj1collider.offset;
-    offset2 = obj2collider.offset;
-    /*
-    cout << "Object 1 Details" << endl;
-    printVector(center1);
-    printVector(vec4(offset1, 0));
-    cout << "Object 2 Details" << endl;
-    printVector(center2);
-    printVector(vec4(offset2, 0));
-    cout << "Actual position" << endl;
-    printVector(vec4(object1->getPos(), 0));
-    */
+    coll1 = object1->getCollider();
+    coll2 = object2->getCollider();
     object1->unlockObject();
     object2->unlockObject();
-
-    cout << "Center1: " << center1.x << " " << center1.y << " " << center1.z << endl;
-    cout << "Center2: " << center2.x << " " << center2.y << " " << center2.z << endl;
-    cout << "Offset1: " << offset1.x << " " << offset1.y << " " << offset1.z << endl;
-    cout << "Offset2: " << offset2.x << " " << offset2.y << " " << offset2.z << endl;
-    
     // First check if the two objects are currently colliding
     for (int i = 0; i < 3; i++) {
-        float delta = abs(center2[i] - center1[i]);
-        float range = offset1[i] + offset2[i];
-        //cout << "distance [ " << i << "] = " << delta - range << endl;
+        float delta = abs(coll2.center[i] - coll1.center[i]);
+        float range = coll1.offset[i] + coll2.offset[i];
         if (range >= delta) {
             matching++;
         }
@@ -459,12 +430,13 @@ int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     if (matching == 3) return 1;
     matching = 0;
     for (int i = 0; i < 3; i++) {
-        float delta = abs(center2[i] - abs(center1[i] + moving[i]));
-        float range = offset1[i] + offset2[i];
+        float delta = abs(coll2.center[i] - coll1.center[i] + moving[i]);
+        float range = coll1.offset[i] + coll2.offset[i];
         if (range >= delta) {
             matching++;
         }
     }
+    // Return if the objects are about to collide
     if (matching == 3) return 2;
     return 0;
 }
