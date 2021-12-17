@@ -118,7 +118,7 @@ int runtime(GameInstance *currentGame) {
     gameObject[2] = currentGame->createCamera(camInfo);
 
     vector<GLint> texturePattern = {0, 1, 2, 3};
-    vector<GLint> texturePatternStage = {1};
+    vector<GLint> texturePatternStage = {0};
 
     cout << "Creating Map.\n";
     //Create an importObj struct for importing the stage

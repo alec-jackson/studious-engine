@@ -12,11 +12,11 @@
 - GamePad Bindings
 - CMake Build System
 - Object modification (Rotation, Movement, Scaling)
+- Collision
 
 ### Planned Features
 - --- Improved Usability ---
 - Physics
-- Collision
 - Animations
 - Expanded Control System (Mouse and better GamePad support)
 - Better Lighting

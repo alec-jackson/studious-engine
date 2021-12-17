@@ -198,6 +198,7 @@ bool GameInstance::isWindowOpen() {
  (void) updateOGL does not return any value.
 */
 void GameInstance::updateOGL(){
+    glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
