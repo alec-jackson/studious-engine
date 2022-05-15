@@ -122,7 +122,7 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
     //Create an importObj struct for importing the stage
-    importObjInfo mapInfo = { "models/testMap1.obj", texturePathStage,
+    importObjInfo mapInfo = { "models/map2.obj", texturePathStage,
         texturePatternStage, currentGame->getProgramID(0) };
 
     //Create a gameObjectInfo struct for creating a game object for the map

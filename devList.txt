@@ -2,10 +2,12 @@ Planned Features
 P0. Scene Loading
 P0. Animations (Single Idle Animation) --> needs skeletons
 P0. Animations (Switching Animations)
+P0. Single OBJ with multiple colliders (per-object box bounding)
 P1. Menus
 P1. Config Files
 P1. Improved Physics
 P1. Camera (Switch to Other Game Object)
+P1. Camera (Orbit around obtruding Game Objects)
 P1. Controls (Gamepad)
 P1. Windows Testing
 P1. Lighting (Shadows)
