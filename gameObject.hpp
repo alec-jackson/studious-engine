@@ -105,8 +105,8 @@ public:
  	GLfloat getVert(vector<GLfloat> vertices, int axis,
 		bool (*test)(float a, float b));
 	bool isOrtho();
-	int lockObject();
-	int unlockObject();
+	int lockObject(); // Only use for cameras and text right now
+	int unlockObject(); // Per-object locking set to become obsolete
 
 private:
 	polygon *model;

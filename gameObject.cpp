@@ -168,12 +168,10 @@ void GameObject::setProgramID(GLuint shaderID) {
  (void) drawShape does not return any values.
 */
 void GameObject::drawShape() {
-    lockObject();
     // Draw each shape individually
     if (!configured) {
         cerr << "GameObject with tag " << collider.collisionTag
             << " has not been configured yet!\n";
-        unlockObject();
         return;
     }
     for (int i = 0; i < model->numberOfObjects; i++) {
@@ -254,7 +252,6 @@ void GameObject::drawShape() {
         glDisableVertexAttribArray(0);
     }
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    unlockObject();
 }
 
 /*
@@ -360,7 +357,7 @@ bool GameObject::isOrtho() {
     return orthographic;
 }
 
-/*
+/* DO NOT USE - outdated locking mechanism. Use sceneLock instead
  (int) lockObject uses the GameObject's internal infoLock mutex to obtain the
  lock for the current GameObject.
 
@@ -371,7 +368,7 @@ int GameObject::lockObject() {
     return 0;
 }
 
-/*
+/* DO NOT USE - outdated locking mechanism. Use sceneLock instead
  (int) unlockObject uses the GameObject's internal infoLock mutex to obtain the
  lock for the current GameObject.
 

@@ -236,6 +236,7 @@ int mainLoop(gameInfo* gamein) {
     short error = 0;
     vector<double> times;
     while (running) {
+        currentGame->lockScene();
         begin = SDL_GetPerformanceCounter();
         running = currentGame->isWindowOpen();
         currentGame->updateOGL();
@@ -245,6 +246,7 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
+        currentGame->unlockScene();
         end = SDL_GetPerformanceCounter();
         deltaTime = (double)(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
@@ -270,6 +272,7 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
+        usleep(2000); // Sleep for 2ms
     }
     return 0;
 }

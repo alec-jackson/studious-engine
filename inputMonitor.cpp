@@ -292,6 +292,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
         //cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
         //    << ", Z: " << cameraOffset[2] << "\n";
         //cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
+        currentGameInfo->currentGame->lockScene();
         currentGameInfo->gameCamera->lockObject();
         character->lockObject();
         currentGameInfo->gameCamera->setOffset(cameraOffset);
@@ -300,6 +301,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
         character->setPos(pos);
         character->unlockObject();
         currentGameInfo->gameCamera->unlockObject();
+        currentGameInfo->currentGame->unlockScene();
     }
     SDL_GameControllerClose(gameController1);
     return;

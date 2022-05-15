@@ -464,6 +464,8 @@ void GameInstance::initWindow(int width, int height) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, AASAMPLES);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
     SDL_GLContext mainContext = SDL_GL_CreateContext(window);
     SDL_GL_SetSwapInterval(0); // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
@@ -561,4 +563,14 @@ void GameInstance::initApplication(vector<string> vertexPath, vector<string> fra
 */
 void GameInstance::basicCollision(GameInstance *gameInstance) {
 
+}
+
+int GameInstance::lockScene() {
+    sceneLock.lock();
+    return 0;
+}
+
+int GameInstance::unlockScene() {
+    sceneLock.unlock();
+    return 0;
 }

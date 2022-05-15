@@ -5,6 +5,9 @@
 #include "gameObject.hpp"
 #include "shaderLoader.hpp"
 
+// Number of samples to use for anti-aliasing
+#define AASAMPLES 8
+
 /*
  controllerReadout is used for getting input from a controller. This struct
  will be used in conjunction with SDL_GameControllerGetAxis to get input from
@@ -64,6 +67,7 @@ private:
 	vec3 directionalLight;
 	GLfloat luminance;
 	int width, height;
+	mutex sceneLock;
 
 	void initWindow(int width, int height);
 	void initAudio();
@@ -99,6 +103,8 @@ public:
 	int updateCameras();
 	int updateObjects();
 	int updateWindow();
+	int lockScene();
+	int unlockScene();
 };
 
 #endif
