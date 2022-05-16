@@ -464,8 +464,10 @@ void GameInstance::initWindow(int width, int height) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#ifdef __APPLE__ // Temporarily restrict SDL AA to MACOS
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, AASAMPLES);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
+#endif
     SDL_GLContext mainContext = SDL_GL_CreateContext(window);
     SDL_GL_SetSwapInterval(0); // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
