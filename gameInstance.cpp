@@ -162,14 +162,6 @@ int GameInstance::destroyGameObject(GameObject *object) {
         cerr << "Error: Cannot destroy empty GameObject!\n";
         return -1;
     }
-    // Delete OpenGL buffers for the gameObjects
-    for (int i = 0; i < object->getModel()->numberOfObjects; i++) {
-        glDeleteBuffers(1, &object->getModel()->shapebufferID[i]);
-        glDeleteBuffers(1, &object->getModel()->textureCoordsID[i]);
-        glDeleteBuffers(1, &object->getModel()->normalbufferID[i]);
-        glDeleteTextures(1, &object->getModel()->textureID[i]);
-    }
-    delete object->getModel();
     delete object;
     return 0;
 }

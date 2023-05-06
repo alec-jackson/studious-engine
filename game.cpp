@@ -121,12 +121,15 @@ int runtime(GameInstance *currentGame) {
     vector<GLint> texturePatternStage = {0};
 
     cout << "Creating Map.\n";
-    //Create an importObj struct for importing the stage
+    // Create args for ModelImport constructor for map
     importObjInfo mapInfo = { "models/map2.obj", texturePathStage,
         texturePatternStage, currentGame->getProgramID(0) };
 
+    auto importedMapObj = ModelImport(mapInfo);
+    auto mapPoly = importedMapObj.getPolygon();
+
     //Create a gameObjectInfo struct for creating a game object for the map
-    gameObjectInfo map = { importObj(mapInfo),
+    gameObjectInfo map = { mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
         gameObject[2], "map" };
 
@@ -138,8 +141,11 @@ int runtime(GameInstance *currentGame) {
     importObjInfo player = { "models/Dracula.obj", texturePath, texturePattern,
         currentGame->getProgramID(0) };
 
+    auto importedPlayerObj = ModelImport(player);
+    auto playerPoly = importedPlayerObj.getPolygon();
+
     // Ready the gameObjectInfo for the player object
-    gameObjectInfo playerObj = { importObj(player), vec3(0.0f, 0.0f, -1.0f),
+    gameObjectInfo playerObj = { playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player" };
 
     gameObject[1] = currentGame->createGameObject(playerObj);
@@ -151,8 +157,11 @@ int runtime(GameInstance *currentGame) {
     // Import the wold object
     importObjInfo wolf = { "models/wolf.obj", texturePath, texturePattern,
         currentGame->getProgramID(0) };
+
+    auto importedWolfObj = ModelImport(wolf);
+    auto wolfPoly = importedWolfObj.getPolygon();
     // Ready the gameObjectInfo for the wolf object
-    gameObjectInfo wolfObj = { importObj(wolf),
+    gameObjectInfo wolfObj = { wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
         gameObject[2], "NPC"};
 

@@ -54,7 +54,7 @@ with the same names.
 typedef struct importObjInfo {
 	string modelPath;
 	vector<string> texturePath;
-    vector<GLint> texturePattern;
+   vector<GLint> texturePattern;
 	GLuint programID;
 } importObjInfo;
 
@@ -68,12 +68,24 @@ typedef struct configureArgs {
     vector<GLfloat> normalFrame;
     vector<GLint> commands;
     GLint index;
-    polygon *model;
     int textureCount;
     vector<GLint> texturePattern;
     vector<string> texturePath;
 } configureArgs;
 
-polygon *importObj(importObjInfo objInfo);
+/**
+ * @author Christian Galvez
+ * @date 05/06/23
+ * @brief Class used for importing .obj files for use in studious engine. 
+*/
+class ModelImport {
+   public:
+      ModelImport(importObjInfo objInfo);
+      ~ModelImport();
+      polygon *getPolygon();
+      void configureObject(configureArgs args);
+   private:
+      polygon model;
+};
 
 #endif
