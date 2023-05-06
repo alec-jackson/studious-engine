@@ -12,6 +12,8 @@
 #include <mutex>
 #include <fstream>
 #include <map>
+#include <stdexcept>
+#include <format>
 #ifndef _WIN32 // Don't use unistd.h on windows
 #include <unistd.h>
 #else
@@ -28,4 +30,8 @@
 #include <glm/gtx/transform.hpp>
 using namespace glm;
 using namespace std;
+typedef vector<GLuint> gluVec;
+typedef vector<GLint> gliVec;
+typedef vector<GLfloat> glfVec;
+typedef vector<vector<GLfloat>> glfVVec;
 #endif

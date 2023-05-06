@@ -1,7 +1,8 @@
 #ifndef GAMEOBJECT_HPP
 #define GAMEOBJECT_HPP
 #include "common.hpp"
-#include "modelImport.hpp"
+#include "polygon.hpp"
+#include "collider.hpp"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -27,7 +28,7 @@ typedef struct colliderInfo {
 	vec4 offset, minPoints;
 	vec4 center, originalCenter;
 	string collisionTag;
-	polygon *collider;
+	const Polygon &collider;
 } colliderInfo;
 
 /*
@@ -51,11 +52,12 @@ typedef struct colliderInfo {
  	when handling collision in the current GameInstance.
 */
 typedef struct gameObjectInfo {
-	polygon *characterModel;
+	const Polygon characterModel;
 	vec3 pos, rot;
 	GLfloat scale;
 	int camera;
 	string collisionTagName;
+	GLuint wireframeProgramId;
 } gameObjectInfo;
 
 /*
@@ -90,7 +92,7 @@ public:
 	void setLuminance(GLfloat luminanceValue);
 	void setProgramID(GLuint shaderID);
 	void setCollider(string coll);
-	int createCollider(int shaderID);
+	int createCollider(GLuint programID);
 	void drawShape();
 	void deleteTextures();
 	int getCameraID();
@@ -98,18 +100,21 @@ public:
 	vec3 getPos(vec3 offset);
 	vec3 getPos();
 	GLuint getProgramID();
-	polygon *getModel();
+	Polygon &getModel();
 	string getColliderTag(void);
-	colliderInfo getCollider(void);
+	Collider &getCollider(void);
 	mat4 getVPMatrix();
  	GLfloat getVert(vector<GLfloat> vertices, int axis,
 		bool (*test)(float a, float b));
 	bool isOrtho();
 	int lockObject(); // Only use for cameras and text right now
 	int unlockObject(); // Per-object locking set to become obsolete
+	GameObject(gameObjectInfo objectInfo);
+	// Copy constructor
+	GameObject(const GameObject &original);
 
 private:
-	polygon *model;
+	Polygon &model;
 	mat4 translateMatrix, scaleMatrix, rotateMatrix; // Model Matrix
 	mat4 vpMatrix; // Projection  *View matrix
 	GLuint rotateID, scaleID, translateID, vpID, textureID, textCoordsID,
@@ -119,13 +124,14 @@ private:
 	vector<GLint> hasTexture;
 	vec3 pos, rot, vel; // Position, rotation and velocity 3D vectors
 	GLfloat scale;
-	bool configured, orthographic;
+	bool configured, orthographic, hasCollider;
 	int currentCamera;
 	vec3 directionalLight;
 	GLfloat luminance, rollOff;
 	mutex infoLock;
 	unsigned int VAO;
-	colliderInfo collider;
+	Collider collider;
+	string collisionTag;
 };
 
 /*
@@ -146,7 +152,7 @@ typedef struct Character {
 */
 class GameObjectText : public GameObject {
 public:
-	int initializeText(textObjectInfo info);
+	GameObjectText(textObjectInfo info);
 	void cleanup();
 	void drawText();
 	void setMessage(string message);
@@ -190,7 +196,7 @@ typedef struct cameraInfo {
 */
 class GameCamera : public GameObject {
 public:
-	void configureCamera(cameraInfo camInfo);
+	GameCamera(cameraInfo camInfo);
 	void updateCamera();
 	void setOffset(vec3 newOffset);
 	void setTarget(GameObject *targetObject);

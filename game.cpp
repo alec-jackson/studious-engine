@@ -49,8 +49,8 @@ vector<string> texturePath = {
     "images/shirttexture.jpg"
 };
 
-GameObjectText *fps_counter;
-GameObjectText *collDebugText;
+GameObjectText fps_counter;
+GameObjectText collDebugText;
 GameObject *wolfRef, *playerRef; // Used for collision testing
 
 int setup(GameInstance *currentGame, configData* config);
@@ -85,7 +85,7 @@ int setup(GameInstance *currentGame, configData* config){
     if (!flag) {
         args.windowWidth = config->resX;
         args.windowHeight = config->resY;
-        currentGame -> startGameInstance(args);
+        currentGame->startGameInstance(args);
     } else {
         args.windowWidth = 1280;
         args.windowHeight = 720;
@@ -122,11 +122,12 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
     //Create an importObj struct for importing the stage
-    importObjInfo mapInfo = { "models/map2.obj", texturePathStage,
+    ImportObjInfo mapInfo = { "models/map2.obj", texturePathStage,
         texturePatternStage, currentGame->getProgramID(0) };
 
+    auto mapPoly = Polygon(mapInfo);
     //Create a gameObjectInfo struct for creating a game object for the map
-    gameObjectInfo map = { importObj(mapInfo),
+    gameObjectInfo map = { mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
         gameObject[2], "map" };
 
@@ -135,24 +136,27 @@ int runtime(GameInstance *currentGame) {
     cout << "Creating Player\n";
 
     // Import the player object
-    importObjInfo player = { "models/Dracula.obj", texturePath, texturePattern,
+    ImportObjInfo player = { "models/Dracula.obj", texturePath, texturePattern,
         currentGame->getProgramID(0) };
 
+    auto playerPoly = Polygon(player);
     // Ready the gameObjectInfo for the player object
-    gameObjectInfo playerObj = { importObj(player), vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player" };
+    gameObjectInfo playerObj = { playerPoly, vec3(0.0f, 0.0f, -1.0f),
+        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player",
+        currentGame->getProgramID(1) };
 
     gameObject[1] = currentGame->createGameObject(playerObj);
     GameObject *dracs = currentGame->getGameObject(gameObject[1]);
-    dracs->createCollider(currentGame->getProgramID(1));
+    dracs->createCollider(currentGame->getProgramID(1)); 
     playerRef = dracs;
 
     cout << "Creating wolf\n";
     // Import the wold object
-    importObjInfo wolf = { "models/wolf.obj", texturePath, texturePattern,
+    ImportObjInfo wolf = { "models/wolf.obj", texturePath, texturePattern,
         currentGame->getProgramID(0) };
+    auto wolfPoly = Polygon(wolf);
     // Ready the gameObjectInfo for the wolf object
-    gameObjectInfo wolfObj = { importObj(wolf),
+    gameObjectInfo wolfObj = { wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
         gameObject[2], "NPC"};
 
@@ -166,8 +170,8 @@ int runtime(GameInstance *currentGame) {
     textObjectInfo textInfo = { "Studious Engine 2021", "misc/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
-    GameObjectText *textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 25.0f, 0.0f));
+    auto textObj = currentGame->getText(gameObject[4]);
+    textObj.setPos(vec3(25.0f, 25.0f, 0.0f));
     textInfo = { "FPS: ", "misc/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     // Re-using gameObject 4 for no particular reason
@@ -175,17 +179,17 @@ int runtime(GameInstance *currentGame) {
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
     textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 300.0f, 0.0f));
+    textObj.setPos(vec3(25.0f, 300.0f, 0.0f));
     collDebugText = textObj;
     collDebugText->setMessage("Contact: False");
     collDebugText->setScale(0.7f);
 
     gameObject[4] = currentGame->createText(textInfo);
     textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 670.0f, 0.0f));
+    textObj.setPos(vec3(25.0f, 670.0f, 0.0f));
     fps_counter = textObj;
-    fps_counter->setMessage("FPS: 0");
-    fps_counter->setScale(0.7f);
+    fps_counter.setMessage("FPS: 0");
+    fps_counter.setScale(0.7f);
 
     GameCamera *currentCamera = currentGame->getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));

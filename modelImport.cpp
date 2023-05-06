@@ -1,122 +1,8 @@
-#include "modelImport.hpp"
+/*#include "modelImport.hpp"
 
 void configureObject(configureArgs args);
 
-/*
- (polygon *) importObj takes some (importObjInfo) objInfo and builds a new
- polygon struct with the members of the objInfo struct (see objInfo struct and
- polygon struct documentation in modelImport.hpp for more details).
 
- On success, (polygon *) importObj returns a dynamically allocated polygon
- struct containing an OpenGL-readable and textured object described by the
- objInfo struct. On failure, NULL is returned and the object is not created.
-*/
-polygon *importObj(importObjInfo objInfo) {
-    ifstream file; // Read file as read only
-    file.open(objInfo.modelPath);
-    if (!file.is_open()) { // If the file does not exist or cannot be opened
-        cerr << "Model path does not exist!";
-        return NULL;
-    }
-    int currentObject = 0;
-    string charBuffer; // Will temporarily hold each line in obj file
-    polygon *model = new polygon; // Create new polygon to fill data with
-    model->programID = objInfo.programID; // Save the current programID to use
-    vector<GLfloat> vertexFrame; // Unique vertex points
-    vector<GLfloat> normalFrame; // Unique normal points
-    vector<GLfloat> textureFrame; // Unique texture points
-    vector<GLint> commands; // Commands in obj file to build buffers
-    // Grab entire lines from the object file to read at once
-    while (getline(file, charBuffer)) {
-        // Compare the first two "header" bytes of the obj file below
-        if (charBuffer.compare(0, 2, "v ") == 0) {
-            vector<GLfloat> tempVertices(3);
-            sscanf(charBuffer.c_str(), "v %f %f %f\n", &tempVertices[0],
-                &tempVertices[1], &tempVertices[2]);
-            // Add tempVertices to vertexFrame
-            vector<GLfloat>::iterator it;
-            for (it = tempVertices.begin(); it != tempVertices.end(); ++it) {
-                vertexFrame.push_back(*it); // Add points to vertexFrame
-            }
-        } else if (charBuffer.compare(0, 2, "vt") == 0) {
-            vector<GLfloat> tempTextures(2);
-            sscanf(charBuffer.c_str(), "vt %f %f\n", &tempTextures[0],
-                &tempTextures[1]);
-            vector<GLfloat>::iterator it;
-            for (it = tempTextures.begin(); it != tempTextures.end(); ++it) {
-                textureFrame.push_back(*it); // Add points to textureFrame
-            }
-        } else if (charBuffer.compare(0, 2, "vn") == 0) {
-            vector<GLfloat> tempNormals(3);
-            sscanf(charBuffer.c_str(), "vn %f %f %f\n", &tempNormals[0],
-                &tempNormals[1], &tempNormals[2]);
-            vector<GLfloat>::iterator it;
-            for (it = tempNormals.begin(); it != tempNormals.end(); ++it) {
-                normalFrame.push_back(*it); // Add points to normalFrame
-            }
-        } else if (charBuffer.compare(0, 2, "f ") == 0) {
-            vector<GLint> coms(9);
-            // If the model is missing texture coordinates, take into account
-            if (charBuffer.find("//") != std::string::npos) {
-                sscanf(charBuffer.c_str(), "f %i//%i %i//%i %i//%i\n",
-                    &coms[0], &coms[2], &coms[3], &coms[5], &coms[6], &coms[8]);
-                coms[1] = 0; coms[4] = 0; coms[7] = 0;
-            } else {
-                sscanf(charBuffer.c_str(), "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
-                    &coms[0], &coms[1], &coms[2], &coms[3], &coms[4], &coms[5],
-                    &coms[6], &coms[7], &coms[8]);
-            }
-            vector<GLint>::iterator it;
-            for (it = coms.begin(); it != coms.end(); ++it) {
-                commands.push_back(*it); // Add commands from temp to main vec
-            }
-            // When we hit the first obect, ignore
-        } else if (charBuffer.compare(0, 2, "o ") == 0) {
-            // When currentObject == 0, run the following
-            if (!currentObject) {
-                currentObject++;
-            } else {
-                configureArgs args;
-                args.vertexFrame = vertexFrame;
-                args.textureFrame = textureFrame;
-                args.normalFrame = normalFrame;
-                args.commands = commands;
-                args.index = currentObject - 1;
-                args.model = model;
-                args.textureCount = objInfo.texturePath.size();
-                args.texturePattern = objInfo.texturePattern;
-                args.texturePath = objInfo.texturePath;
-                configureObject(args);
-                currentObject++;
-            }
-        }
-    }
-    cout << "Built frames\n";
-    // Send the final object to be configured in the function.
-    configureArgs args;
-    args.vertexFrame = vertexFrame;
-    args.textureFrame = textureFrame;
-    args.normalFrame = normalFrame;
-    args.commands = commands;
-    args.index = currentObject - 1;
-    args.model = model;
-    args.textureCount = objInfo.texturePath.size();
-    args.texturePattern = objInfo.texturePattern;
-    args.texturePath = objInfo.texturePath;
-    configureObject(args);
-    model->textureUniformID = glGetUniformLocation(objInfo.programID,
-        "mytexture");
-    model->numberOfObjects = currentObject;
-    return model;
-}
-
-/*
- (void) configureObject takes some (configureArgs) args and builds an object
- using the generated vertex, texture and normal frames created above. This
- function also binds the textures and vertex buffers for the objects in OpenGL.
-
- (void) configureObject does not return any values.
-*/
 void configureObject(configureArgs args) {
     cout << "Configuring Object\n";
     args.model->pointCount.push_back(args.commands.size() / 9);
@@ -198,3 +84,4 @@ void configureObject(configureArgs args) {
                  sizeof(GLfloat) * args.model->pointCount[args.index] * 6,
                  &(args.model->textureCoords[args.index][0]), GL_STATIC_DRAW);
 }
+*/

@@ -132,13 +132,10 @@ void GameInstance::changeWindowMode(int mode){
 
  (void) cleanup does not return any value.
 */
+// TODO - add to GameInstance destructor
 void GameInstance::cleanup() {
     for (int i = 0; i < controllersConnected; i++) {
         //SDL_GameControllerClose(gameControllers[i]);
-    }
-    vector<GameObject *>::iterator git;
-    for (git = gameObjects.begin(); git != gameObjects.end(); ++git) {
-        destroyGameObject((*git));
     }
     vector<GLuint>::iterator it;
     for (it = programID.begin(); it != programID.end(); ++it) {
@@ -157,19 +154,23 @@ void GameInstance::cleanup() {
  On success, 0 is returned and the memory used by that GameObject is freed. On
  failure, -1 is returned and an error is printed to stderr.
  */
+// TODO - add to GameObject destructor.
 int GameInstance::destroyGameObject(GameObject *object) {
     if (object == NULL) {
         cerr << "Error: Cannot destroy empty GameObject!\n";
         return -1;
     }
     // Delete OpenGL buffers for the gameObjects
-    for (int i = 0; i < object->getModel()->numberOfObjects; i++) {
-        glDeleteBuffers(1, &object->getModel()->shapebufferID[i]);
-        glDeleteBuffers(1, &object->getModel()->textureCoordsID[i]);
-        glDeleteBuffers(1, &object->getModel()->normalbufferID[i]);
-        glDeleteTextures(1, &object->getModel()->textureID[i]);
+    for (int i = 0; i < object->getModel().getNumberOfObjects(); i++) {
+        auto textureCoordsId = object->getModel().getTextureCoordsId(i);
+        auto normalBufferId = object->getModel().getNormalBufferId(i);
+        auto textureId = object->getModel().getTextureId(i);
+
+        glDeleteBuffers(1, object->getModel().getShapeBufferIdAddr(i));
+        glDeleteBuffers(1, &textureCoordsId);
+        glDeleteBuffers(1, &normalBufferId);
+        glDeleteTextures(1, &textureId);
     }
-    delete object->getModel();
     delete object;
     return 0;
 }
@@ -247,18 +248,18 @@ int GameInstance::updateObjects() {
         return -1;
     }
     glBindVertexArray(vertexArrayID);
-    std::vector<GameObject *>::iterator it;
+    std::vector<GameObject>::iterator it;
     for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {
-        (*it)->setDirectionalLight(directionalLight);
-        (*it)->setLuminance(luminance);
+        it->setDirectionalLight(directionalLight);
+        it->setLuminance(luminance);
         // Send the new VP matrix to the current gameObject being drawn.
-        (*it)->setVPMatrix(getCamera((*it)->getCameraID())->getVPMatrix());
-        (*it)->drawShape();
+        it->setVPMatrix(getCamera(it->getCameraID())->getVPMatrix());
+        it->drawShape();
     }
     // If there is any active texts in the scene, render them
     std::vector<GameObjectText *>::iterator text_it;
     for (text_it = gameTexts.begin(); text_it != gameTexts.end(); ++text_it) {
-        (*text_it)->drawText();
+        text_it->drawText();
     }
     return 0;
 }
@@ -301,9 +302,7 @@ int GameInstance::setDeltaTime(GLdouble time){
 */
 int GameInstance::createGameObject(gameObjectInfo objectInfo) {
     cout << "Creating GameObject " << gameObjects.size() << "\n";
-    GameObject *gameObject = new GameObject();
-    gameObject->configureGameObject(objectInfo);
-    gameObjects.push_back(gameObject);
+    gameObjects.push_back(GameObject(objectInfo));
     return gameObjects.size() - 1;
 }
 
@@ -317,8 +316,7 @@ int GameInstance::createGameObject(gameObjectInfo objectInfo) {
 */
 int GameInstance::createCamera(cameraInfo camInfo) {
     cout << "Creating GameCamera " << gameCameras.size() << "\n";
-    GameCamera *gameCamera = new GameCamera();
-    gameCamera->configureCamera(camInfo);
+    GameCamera gameCamera = GameCamera(camInfo);
     gameCameras.push_back(gameCamera);
     return gameCameras.size() - 1;
 }
@@ -332,8 +330,7 @@ int GameInstance::createCamera(cameraInfo camInfo) {
 */
 int GameInstance::createText(textObjectInfo info) {
     cout << "Creating Gametext " << gameTexts.size() << "\n";
-    GameObjectText *text = new GameObjectText();
-    text->initializeText(info);
+    GameObjectText text = GameObjectText(info);
     gameTexts.push_back(text);
     return gameTexts.size() - 1;
 }
@@ -372,7 +369,7 @@ GameCamera *GameInstance::getCamera(uint gameCameraID) {
  (vector<GameObjectText *>) gameTexts vector on success. On failure, NULL is
  returned and an error is printed to stderr.
 */
-GameObjectText *GameInstance::getText(uint gameTextID) {
+GameObjectText GameInstance::getText(uint gameTextID) {
     if (!gameTexts.size() || gameTexts.size() < gameTextID) {
         cerr << "Error: getText index out of bounds!\n";
         return NULL;
@@ -406,7 +403,6 @@ GLdouble GameInstance::getDeltaTime() {
 */
 int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     vec3 moving) {
-    colliderInfo coll1, coll2;
     int matching = 0; // Number of axis that have collided
     if (object1 == NULL || object2 == NULL) {
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";
@@ -415,14 +411,14 @@ int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     // Obtain lock and update positions
     object1->lockObject();
     object2->lockObject();
-    coll1 = object1->getCollider();
-    coll2 = object2->getCollider();
+    auto coll1 = object1->getCollider();
+    auto coll2 = object2->getCollider();
     object1->unlockObject();
     object2->unlockObject();
     // First check if the two objects are currently colliding
     for (int i = 0; i < 3; i++) {
-        float delta = abs(coll2.center[i] - coll1.center[i]);
-        float range = coll1.offset[i] + coll2.offset[i];
+        float delta = abs(coll2.getCenter(i) - coll1.getCenter(i));
+        float range = coll1.getOffset(i) + coll2.getOffset(i);
         if (range >= delta) {
             matching++;
         }
@@ -431,8 +427,8 @@ int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     if (matching == 3) return 1;
     matching = 0;
     for (int i = 0; i < 3; i++) {
-        float delta = abs(coll2.center[i] - coll1.center[i] + moving[i]);
-        float range = coll1.offset[i] + coll2.offset[i];
+        float delta = abs(coll2.getCenter(i) - coll1.getCenter(i) + moving[i]);
+        float range = coll1.getOffset(i) + coll2.getOffset(i);
         if (range >= delta) {
             matching++;
         }

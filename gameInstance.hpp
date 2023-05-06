@@ -56,9 +56,9 @@ private:
 	SDL_Surface* screenSurface;
 	SDL_Event event;
 	vector<Mix_Chunk *> sound;
-	vector<GameObject *> gameObjects;
-	vector<GameCamera *> gameCameras;
-	vector<GameObjectText *> gameTexts;
+	vector<GameObject> gameObjects;
+	vector<GameCamera> gameCameras;
+	vector<GameObjectText> gameTexts;
 	vector<GLuint> programID;
 	GLuint vertexArrayID;
 	GLdouble deltaTime;
@@ -92,7 +92,7 @@ public:
 	int destroyGameObject(GameObject *object);
 	GameObject *getGameObject(uint gameObjectID);
 	GameCamera *getCamera(uint gameCameraID);
-	GameObjectText *getText(uint gameTextID);
+	GameObjectText getText(uint gameTextID);
 	GLdouble getDeltaTime();
 	int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
 	int setDeltaTime(GLdouble time);

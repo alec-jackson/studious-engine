@@ -11,3 +11,4 @@ CMakeFiles/*
 CMakeScripts/*
 cmake_install.cmake
 engineExample.build/*
+.vscode/*
