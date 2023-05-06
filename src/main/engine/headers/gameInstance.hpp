@@ -1,7 +1,7 @@
 #ifndef GAMEINSTANCE_H
 #define GAMEINSTANCE_H
 #include "common.hpp"
-#include "modelImport.hpp"
+#include "ModelImport.hpp"
 #include "gameObject.hpp"
 #include "shaderLoader.hpp"
 

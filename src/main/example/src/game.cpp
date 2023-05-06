@@ -27,26 +27,26 @@
 */
 // Global Variables, should eventually be moved to a config file
 vector<string> soundList = {
-    "sfx/music/endlessNight.wav"
+    "src/resources/sfx/music/endlessNight.wav"
 }; // A list of gameSounds to load
 vector<string> fragShaders = {
-    "shaders/standardFragment.frag",
-    "shaders/coll.frag",
-    "shaders/text.frag"
+    "src/main/shaders/standardFragment.frag",
+    "src/main/shaders/coll.frag",
+    "src/main/shaders/text.frag"
 }; // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
-    "shaders/standardVertex.vert",
-    "shaders/coll.vert",
-    "shaders/text.vert"
+    "src/main/shaders/standardVertex.vert",
+    "src/main/shaders/coll.vert",
+    "src/main/shaders/text.vert"
 }; // Contains collider renderer and basic object renderer.
 vector<string> texturePathStage = {
-    "images/skintexture.jpg"
+    "src/resources/images/skintexture.jpg"
 };
 vector<string> texturePath = {
-    "images/rock_texture.jpg",
-    "images/rock_texture.jpg",
-    "images/shoetexture.jpg",
-    "images/shirttexture.jpg"
+    "src/resources/images/rock_texture.jpg",
+    "src/resources/images/rock_texture.jpg",
+    "src/resources/images/shoetexture.jpg",
+    "src/resources/images/shirttexture.jpg"
 };
 
 GameObjectText *fps_counter;
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
  (int) setup returns 0 on success.
 */
 int setup(GameInstance *currentGame, configData* config){
-    int flag = loadConfig(config, "misc/config.txt");
+    int flag = loadConfig(config, "src/resources/config.txt");
     gameInstanceArgs args;
     args.soundList = soundList;
     args.vertexShaders = vertShaders;
@@ -122,7 +122,7 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
     // Create args for ModelImport constructor for map
-    importObjInfo mapInfo = { "models/map2.obj", texturePathStage,
+    importObjInfo mapInfo = { "src/resources/models/map2.obj", texturePathStage,
         texturePatternStage, currentGame->getProgramID(0) };
 
     auto importedMapObj = ModelImport(mapInfo);
@@ -138,7 +138,7 @@ int runtime(GameInstance *currentGame) {
     cout << "Creating Player\n";
 
     // Import the player object
-    importObjInfo player = { "models/Dracula.obj", texturePath, texturePattern,
+    importObjInfo player = { "src/resources/models/Dracula.obj", texturePath, texturePattern,
         currentGame->getProgramID(0) };
 
     auto importedPlayerObj = ModelImport(player);
@@ -155,7 +155,7 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating wolf\n";
     // Import the wold object
-    importObjInfo wolf = { "models/wolf.obj", texturePath, texturePattern,
+    importObjInfo wolf = { "src/resources/models/wolf.obj", texturePath, texturePattern,
         currentGame->getProgramID(0) };
 
     auto importedWolfObj = ModelImport(wolf);
@@ -172,15 +172,15 @@ int runtime(GameInstance *currentGame) {
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
-    textObjectInfo textInfo = { "Studious Engine 2021", "misc/fonts/AovelSans.ttf",
+    textObjectInfo textInfo = { "Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
     GameObjectText *textObj = currentGame->getText(gameObject[4]);
     textObj->setPos(vec3(25.0f, 25.0f, 0.0f));
-    textInfo = { "FPS: ", "misc/fonts/AovelSans.ttf",
+    textInfo = { "FPS: ", "src/resources/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     // Re-using gameObject 4 for no particular reason
-    textInfo = { "Contact", "misc/fonts/AovelSans.ttf",
+    textInfo = { "Contact", "src/resources/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
     textObj = currentGame->getText(gameObject[4]);

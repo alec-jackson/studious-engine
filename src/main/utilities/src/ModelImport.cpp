@@ -1,4 +1,4 @@
-#include "modelImport.hpp"
+#include "ModelImport.hpp"
 
 /**
  * @brief Constructs the ModelImport object using the importObjInfo as parameters

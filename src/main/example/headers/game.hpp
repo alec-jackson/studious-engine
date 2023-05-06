@@ -1,10 +1,10 @@
 #ifndef GAME_HPP
 #define GAME_HPP
 #include "shaderLoader.hpp"
-#include "modelImport.hpp"
+#include "ModelImport.hpp"
 #include "gameObject.hpp"
 #include "gameInstance.hpp"
-#include "misc/config.hpp"
+#include "config.hpp"
 #include "inputMonitor.hpp"
 #include "physics.hpp"
 #include "common.hpp"

@@ -554,7 +554,7 @@ int GameObjectText::initializeText(textObjectInfo info) {
         return -1;
     }
     FT_Face face;
-    if (FT_New_Face(ft, "misc/fonts/AovelSans.ttf", 0, &face)) {
+    if (FT_New_Face(ft, "src/resources/fonts/AovelSans.ttf", 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
         return -1;
     }

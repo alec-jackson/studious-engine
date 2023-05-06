@@ -1,7 +1,7 @@
 #ifndef GAMEOBJECT_HPP
 #define GAMEOBJECT_HPP
 #include "common.hpp"
-#include "modelImport.hpp"
+#include "ModelImport.hpp"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 

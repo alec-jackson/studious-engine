@@ -1,4 +1,4 @@
-#include "../common.hpp"
+#include "common.hpp"
 
 /*
  configData contains data parsed from a configuration file for the purposes of
