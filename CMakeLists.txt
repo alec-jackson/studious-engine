@@ -18,6 +18,14 @@ include_directories(
 )
 endif (APPLE)
 
+include_directories(
+  src/main/utilities/headers
+  src/main/common/headers
+  src/main/engine/headers
+  src/main/example/headers
+  src/main/misc/headers
+)
+
 find_package(GLEW 2.0 REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_mixer REQUIRED)
@@ -28,15 +36,15 @@ find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 
 add_executable(${PROJECT_NAME}
-  game.cpp
-  modelImport.cpp
-  shaderLoader.cpp
-  gameInstance.cpp
-  gameObject.cpp
-  inputMonitor.cpp
-  physics.cpp
-  misc/config.cpp
-  misc/loadScene.cpp
+  src/main/example/src/game.cpp
+  src/main/utilities/src/ModelImport.cpp
+  src/main/utilities/src/shaderLoader.cpp
+  src/main/engine/src/gameInstance.cpp
+  src/main/engine/src/gameObject.cpp
+  src/main/engine/src/inputMonitor.cpp
+  src/main/engine/src/physics.cpp
+  src/main/misc/src/config.cpp
+  src/main/misc/src/loadScene.cpp
 )
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})

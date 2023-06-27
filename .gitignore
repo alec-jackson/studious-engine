@@ -1,3 +1,5 @@
+# Studious Temp Files #
+
 game
 *.o
 build/*
@@ -6,8 +8,18 @@ rpg
 engineExample
 *.DS_Store
 engineExample.xcodeproj/*
+
+# Cmake Temp Files #
+
 CMakeCache.txt
 CMakeFiles/*
 CMakeScripts/*
 cmake_install.cmake
 engineExample.build/*
+
+# Doxygen Related Files #
+html/
+latex/
+
+# Guilty As Charged #
+.vscode/
