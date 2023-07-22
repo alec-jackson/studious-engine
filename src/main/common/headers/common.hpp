@@ -28,4 +28,7 @@
 #include <glm/gtx/transform.hpp>
 using namespace glm;
 using namespace std;
+
+// TODO - move away from common.hpp anti-pattern
+enum ViewMode { ORTHOGRAPHIC, PERSPECTIVE };
 #endif

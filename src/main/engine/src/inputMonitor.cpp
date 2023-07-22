@@ -2,7 +2,7 @@
 //Analog joystick dead zone
 #define PI 3.14159265
 const int JOYSTICK_DEAD_ZONE = 4000;
-
+// TODO - Use event based input handling; DO NOT REFACTOR THIS FILE
 vector<double> cameraDistance(vec3 offset);
 
 /*
