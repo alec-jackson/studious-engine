@@ -14,7 +14,7 @@ ModelImport::ModelImport(importObjInfo objInfo) {
     }
     auto currentObject = 0;
     string charBuffer; // Will temporarily hold each line in obj file
-    model.programID = objInfo.programID; // Save the current programID to use
+    model.programId = objInfo.programId; // Save the current programId to use
     vector<GLfloat> vertexFrame; // Unique vertex points
     vector<GLfloat> normalFrame; // Unique normal points
     vector<GLfloat> textureFrame; // Unique texture points
@@ -95,7 +95,7 @@ ModelImport::ModelImport(importObjInfo objInfo) {
     args.texturePattern = objInfo.texturePattern;
     args.texturePath = objInfo.texturePath;
     configureObject(args);
-    model.textureUniformID = glGetUniformLocation(objInfo.programID,
+    model.textureUniformID = glGetUniformLocation(objInfo.programId,
         "mytexture");
     model.numberOfObjects = currentObject;
 }
@@ -142,7 +142,7 @@ void ModelImport::configureObject(configureArgs args) {
     model.shapebufferID.push_back(0); // Create space on vector for buffer
     model.normalbufferID.push_back(0); // Create space for normal buff
     // Texture values will default to UINT_MAX to signify no texture
-    model.textureID.push_back(UINT_MAX);
+    model.textureId.push_back(UINT_MAX);
     model.textureCoordsID.push_back(UINT_MAX);
     glGenBuffers(1, &(model.shapebufferID[args.index]));
     glBindBuffer(GL_ARRAY_BUFFER, model.shapebufferID[args.index]);
@@ -163,8 +163,8 @@ void ModelImport::configureObject(configureArgs args) {
         cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
-    glGenTextures(1, &(model.textureID[args.index]));
-    glBindTexture(GL_TEXTURE_2D, model.textureID[args.index]);
+    glGenTextures(1, &(model.textureId[args.index]));
+    glBindTexture(GL_TEXTURE_2D, model.textureId[args.index]);
     if (texture->format->Amask) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h,
                      0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
@@ -196,7 +196,7 @@ ModelImport::~ModelImport() {
         glDeleteBuffers(1, &model.shapebufferID[i]);
         glDeleteBuffers(1, &model.textureCoordsID[i]);
         glDeleteBuffers(1, &model.normalbufferID[i]);
-        glDeleteTextures(1, &model.textureID[i]);
+        glDeleteTextures(1, &model.textureId[i]);
     }
 }
 

@@ -5,7 +5,7 @@
  and the path to a fragment shader (string) fragmentShader and compiles both
  files for use with OpenGL.
 
- On success, (GLuint) loadShaders returns the programID to a corresponding
+ On success, (GLuint) loadShaders returns the programId to a corresponding
  vertex/fragment shader pair. On failure, loadShaders returns UINT_MAX and a
  description of the error is logged to stderr.
 */
@@ -59,20 +59,20 @@ GLuint loadShaders(string vertexShader, string fragmentShader) {
         cerr << &errorLog[0] << "\n";
     }
     file.close();
-    GLuint programID = glCreateProgram();
-    glAttachShader(programID, vertexShaderID);
-    glAttachShader(programID, fragmentShaderID);
-    glLinkProgram(programID);
-    glGetProgramiv(programID, GL_LINK_STATUS, &success);
-    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &logLength);
+    GLuint programId = glCreateProgram();
+    glAttachShader(programId, vertexShaderID);
+    glAttachShader(programId, fragmentShaderID);
+    glLinkProgram(programId);
+    glGetProgramiv(programId, GL_LINK_STATUS, &success);
+    glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength) {
         vector<char> errorLog(logLength + 1);
-        glGetProgramInfoLog(programID, logLength, NULL, &errorLog[0]);
+        glGetProgramInfoLog(programId, logLength, NULL, &errorLog[0]);
         cerr << &errorLog[0] << "\n";
     }
-    glDetachShader(programID, vertexShaderID);
-    glDetachShader(programID, fragmentShaderID);
+    glDetachShader(programId, vertexShaderID);
+    glDetachShader(programId, fragmentShaderID);
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
-    return programID;
+    return programId;
 }

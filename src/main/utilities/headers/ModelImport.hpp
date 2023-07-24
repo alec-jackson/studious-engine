@@ -7,7 +7,7 @@
  * vector<GLuint> shapebufferID - Contains IDs of buffers in OpenGL for vertices
  * vector<GLuint> textureCoordsID - Contains IDs of buffers in OpenGL for UV
     coordinates
- * vector<GLuint> textureID - Contains IDs of texture bindings
+ * vector<GLuint> textureId - Contains IDs of texture bindings
  * vector<GLuint> normalbufferID - Contains IDs of buffers in OpenGL for normals
  * GLuint textureUniformID - ID for finding texture sampler in OpenGL table
  * vector<vector<GLfloat>> vertices - RAW vertex data for model
@@ -18,7 +18,7 @@
     (format [x, y, z])
  * vector<GLint> pointCount - Number of faces for a given model
  * GLint numberOfObjects - Number of distinct objects in model
- * GLuint programID - Stores programID used for object
+ * GLuint programId - Stores programId used for object
 
  Notes:
  * Polygon should not be created manually, should instead be created using
@@ -35,7 +35,7 @@
 typedef struct polygon {
     vector<GLuint> shapebufferID; // used for vertex buffer
     vector<GLuint> textureCoordsID; // used for texture coordinate buffer
-    vector<GLuint> textureID; // ID for texture binding
+    vector<GLuint> textureId; // ID for texture binding
     vector<GLuint> normalbufferID;
     GLuint textureUniformID; // ID for finding texture sampler in OpenGL table
     vector<vector<GLfloat>> vertices; // 2D vector for vertices
@@ -43,7 +43,7 @@ typedef struct polygon {
     vector<vector<GLfloat>> normalCoords; // 2D vector for normal coord data
     vector<GLint> pointCount; // no. of distinct points in shape
     GLint numberOfObjects; // Contains the number of objects in the model
-    GLuint programID; // Used for storing programID of object's shader
+    GLuint programId; // Used for storing programId of object's shader
 } polygon;
 
 /*
@@ -55,7 +55,7 @@ typedef struct importObjInfo {
 	string modelPath;
 	vector<string> texturePath;
    vector<GLint> texturePattern;
-	GLuint programID;
+	GLuint programId;
 } importObjInfo;
 
 /*

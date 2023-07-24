@@ -31,4 +31,15 @@ using namespace std;
 
 // TODO - move away from common.hpp anti-pattern
 enum ViewMode { ORTHOGRAPHIC, PERSPECTIVE };
+
+// TODO: Doxygenize, maybe move somewhere else
+bool min_func(float a, float b) {
+    return a < b;
+}
+
+// TODO: Doxygenize
+bool max_func(float a, float b) {
+    return a > b;
+}
+
 #endif

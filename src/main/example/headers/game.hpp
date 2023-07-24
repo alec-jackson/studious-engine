@@ -2,7 +2,7 @@
 #define GAME_HPP
 #include "shaderLoader.hpp"
 #include "ModelImport.hpp"
-#include "gameObject.hpp"
+#include "GameObject.hpp"
 #include "gameInstance.hpp"
 #include "config.hpp"
 #include "inputMonitor.hpp"
@@ -15,7 +15,7 @@ to a function to handle input.
 */
 typedef struct gameInfo {
 	bool *isDone;
-	GameCamera *gameCamera;
+	CameraObject *gameCamera;
  	GameInstance *currentGame;
 } gameInfo;
 

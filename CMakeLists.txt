@@ -40,7 +40,7 @@ add_executable(${PROJECT_NAME}
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/shaderLoader.cpp
   src/main/engine/src/gameInstance.cpp
-  src/main/engine/src/gameObject.cpp
+  src/main/engine/src/GameObject.cpp
   src/main/engine/src/inputMonitor.cpp
   src/main/engine/src/physics.cpp
   src/main/misc/src/config.cpp

@@ -2,8 +2,10 @@
 #define GAMEINSTANCE_H
 #include "common.hpp"
 #include "ModelImport.hpp"
-#include "gameObject.hpp"
+#include "GameObject.hpp"
 #include "shaderLoader.hpp"
+#include "CameraObject.hpp"
+#include "TextObject.hpp"
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
@@ -43,7 +45,7 @@ typedef struct gameInstanceArgs {
  current game scene. Methods inside of this class are used to operate on
  most of the objects contained within the game scene. This class contains the
  Linked List containing active GameObjects, as well as a Linked List containing
- all of the active GameCameras. Objects inside of this class should be
+ all of the active CameraObjects. Objects inside of this class should be
  referenced externally through public get/set methods described in this class.
 */
 class GameInstance {
@@ -57,9 +59,9 @@ private:
 	SDL_Event event;
 	vector<Mix_Chunk *> sound;
 	vector<GameObject *> gameObjects;
-	vector<GameCamera *> gameCameras;
-	vector<GameObjectText *> gameTexts;
-	vector<GLuint> programID;
+	vector<CameraObject *> gameCameras;
+	vector<TextObject *> gameTexts;
+	vector<GLuint> programId;
 	GLuint vertexArrayID;
 	GLdouble deltaTime;
 	SDL_GameController *gameControllers[2];
@@ -91,8 +93,8 @@ public:
 	void cleanup();
 	int destroyGameObject(GameObject *object);
 	GameObject *getGameObject(uint gameObjectID);
-	GameCamera *getCamera(uint gameCameraID);
-	GameObjectText *getText(uint gameTextID);
+	CameraObject *getCamera(uint gameCameraID);
+	TextObject *getText(uint gameTextID);
 	GLdouble getDeltaTime();
 	int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
 	int setDeltaTime(GLdouble time);

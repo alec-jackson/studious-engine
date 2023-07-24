@@ -1,47 +1,65 @@
 #pragma once
 #include "common.hpp"
 #include "ModelImport.hpp"
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "SceneObject.hpp"
+#include "GameObjectStructs.hpp"
 
-class GameObject {
+class GameObject: public SceneObject {
     public:
-        /**
-         * @brief Sets the rotation of the GameObject
-         * 
-         * @param rotation to set on the GameObject
-         */
-        virtual void setRotation(vec3 rotation) {
-            rot = rotation;
-        }
+        // Constructurs
+        GameObject(gameObjectInfo objectInfo);
+        ~GameObject();
 
-        /**
-         * @brief Sets the rendering mode for the GameObject
-         * 
-         * @param mode for rendering GameObject; perspective or orthographic
-         */
-        virtual void setViewMode(ViewMode mode) {
-            viewMode = mode;
-        }
+        // Setters
+        inline void setViewMode(ViewMode viewMode) { this->viewMode = viewMode; };
+        inline void setScale(GLfloat scale) { this->scale = scale; };
+        inline void setDirectionalLight(vec3 directionalLight) { this->directionalLight = directionalLight; };
+        inline void setLuminance(GLfloat luminance) { this->luminance = luminance; };
+        inline void setProgramId(GLuint programId) { this->programId = programId; };
+        
+        // Getters
+        inline ViewMode getViewMode() { return this->viewMode; };
+        inline GLfloat getScale() { return this->scale; };
+        inline vec3 getDirectionalLight() { return this->directionalLight; };
+        inline GLfloat getLuminance() { return this->luminance; };
+        inline GLuint getProgramId() { return this->programId; };
+        inline int getCameraId() { return this->cameraId; };
 
+        // Special Getters
+        polygon *getModel(); // TODO: This should return a reference
+        colliderInfo getCollider();
+        GLfloat getColliderVertices(vector<GLfloat> vertices, int axis, bool (*test)(float a, float b));
+        string getCollisionTag();
+
+        // Special Setters
+        void setCollisionTag(string collisionTag);
+
+        // Render method (previously called drawShape)
+        void render();
+
+        // Other methods
+        void deleteTextures(); // TODO: DEPRECATED - Use destructor for this now...
+        int createCollider(int programId);
 
     private:
-        polygon *model;
-        mat4 translateMatrix, scaleMatrix, rotateMatrix; // Model Matrix
-        mat4 vpMatrix; // Projection  *View matrix
-        GLuint rotateID, scaleID, translateID, vpID, textureID, textCoordsID,
-            hasTextureID, directionalLightID, luminanceID, rollOffID, programID,
-            MVPID, collider_shaderID;
-        GLint textureCoordID, uniform_mytexture;
-        vector<GLint> hasTexture;
-        vec3 pos, rot, vel; // Position, rotation and velocity 3D vectors
+        polygon *model; // Change this to a proper class at some point
+
+        int cameraId; // TODO: Why is this managed in GameObject?
+        unsigned int VAO; // TODO: Why do we have this?
+
+        GLuint rotateId, scaleId, translateId, vpId, textureId, textCoordsId,
+            hasTextureId, directionalLightId, luminanceId, rollOffId, programId,
+            mvpId, collider_shaderId; // TODO: Organize these into another class
+
+        GLint textureCoordId; 
+
         GLfloat scale;
-        bool configured;
-        ViewMode viewMode;
-        int currentCamera;
+        GLfloat luminance;
+        GLfloat rollOff;
+
+        vector<GLint> hasTexture;
         vec3 directionalLight;
-        GLfloat luminance, rollOff;
-        mutex infoLock;
-        unsigned int VAO;
-        colliderInfo collider;
-}
+
+        ViewMode viewMode;
+        colliderInfo collider; // TODO: Refactor colliderInfo 
+};

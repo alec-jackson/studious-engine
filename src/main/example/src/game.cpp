@@ -17,10 +17,10 @@
  swamp.frag, we would want both shaders to occur at the same spot in the vector
  (if we already have 2 shader files present, we would add swamp.vert as the
  third element in vertShaders, and swamp.frag as the third in fragShaders). After
- doing this, you should be able to set the programID using the
- GameInstance::getProgramID(int index) method to grab the programID for your
+ doing this, you should be able to set the programId using the
+ GameInstance::getProgramID(int index) method to grab the programId for your
  gameObject. If the shader is in index 2, we would call getProgramID(2) to get
- the appropriate programID. For textures, we specify a path to an image that
+ the appropriate programId. For textures, we specify a path to an image that
  will be opened for a given texture, and specify the textures to use as a
  texture pattern (where each number in the vector corresponds to the index of
  the texture to use).
@@ -49,8 +49,8 @@ vector<string> texturePath = {
     "src/resources/images/shirttexture.jpg"
 };
 
-GameObjectText *fps_counter;
-GameObjectText *collDebugText;
+TextObject *fps_counter;
+TextObject *collDebugText;
 GameObject *wolfRef, *playerRef; // Used for collision testing
 
 int setup(GameInstance *currentGame, configData* config);
@@ -96,7 +96,7 @@ int setup(GameInstance *currentGame, configData* config){
 
 /*
  (int) runtime takes a (GameInstance *) gamein to create the current scene in.
- This function creates all of the GameObjects and GameCameras in the current
+ This function creates all of the GameObjects and CameraObjects in the current
  scene and creates a seperate thread for handling user input. All of the setup
  done in the runtime function is for demonstration purposes for now. The final
  studious engine product will source scene information from a .yaml file
@@ -175,8 +175,8 @@ int runtime(GameInstance *currentGame) {
     textObjectInfo textInfo = { "Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
-    GameObjectText *textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 25.0f, 0.0f));
+    TextObject *textObj = currentGame->getText(gameObject[4]);
+    textObj->setPosition(vec3(25.0f, 25.0f, 0.0f));
     textInfo = { "FPS: ", "src/resources/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     // Re-using gameObject 4 for no particular reason
@@ -184,28 +184,28 @@ int runtime(GameInstance *currentGame) {
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
     textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 300.0f, 0.0f));
+    textObj->setPosition(vec3(25.0f, 300.0f, 0.0f));
     collDebugText = textObj;
     collDebugText->setMessage("Contact: False");
     collDebugText->setScale(0.7f);
 
     gameObject[4] = currentGame->createText(textInfo);
     textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 670.0f, 0.0f));
+    textObj->setPosition(vec3(25.0f, 670.0f, 0.0f));
     fps_counter = textObj;
     fps_counter->setMessage("FPS: 0");
     fps_counter->setScale(0.7f);
 
-    GameCamera *currentCamera = currentGame->getCamera(gameObject[2]);
+    CameraObject *currentCamera = currentGame->getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);
     currentGameObject->setRotation(vec3(0, 0, 0));
     currentGameObject = currentGame->getGameObject(gameObject[3]);
     currentGameObject = currentGame->getGameObject(gameObject[1]);
-    cout << "currentGameObject tag is " << currentGameObject->getColliderTag()
+    cout << "currentGameObject tag is " << currentGameObject->getCollisionTag()
         << '\n';
 
-    currentGameObject->setPos(vec3(-0.005f, 0.01f, 0.0f));
+    currentGameObject->setPosition(vec3(-0.005f, 0.01f, 0.0f));
     currentGameObject->setRotation(vec3(0.0f, 180.0f, 0.0f));
     currentGameObject->setScale(0.0062f);
 

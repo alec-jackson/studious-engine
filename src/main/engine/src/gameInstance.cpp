@@ -60,19 +60,19 @@ const Uint8 *GameInstance::getKeystate() {
 }
 
 /*
- (GLuint) getProgramID returns the programID associated with the given
+ (GLuint) getProgramID returns the programId associated with the given
  (int) index.
 
- On success, function returns associated programID. On failure,
+ On success, function returns associated programId. On failure,
  UINT_MAX is returned and an error is written to stderr.
 */
 GLuint GameInstance::getProgramID(uint index) {
-    if (index >= programID.size()) {
-        cerr << "Error: Requested programID is not in available range [0, "
-        << programID.size() - 1 << "]\n";
+    if (index >= programId.size()) {
+        cerr << "Error: Requested programId is not in available range [0, "
+        << programId.size() - 1 << "]\n";
         return UINT_MAX;
     }
-    return programID[index];
+    return programId[index];
 }
 
 /*
@@ -141,7 +141,7 @@ void GameInstance::cleanup() {
         destroyGameObject((*git));
     }
     vector<GLuint>::iterator it;
-    for (it = programID.begin(); it != programID.end(); ++it) {
+    for (it = programId.begin(); it != programId.end(); ++it) {
         glDeleteProgram(*it);
     }
     glDeleteVertexArrays(1, &vertexArrayID);
@@ -213,7 +213,7 @@ int GameInstance::updateCameras() {
         //cerr << "Error: No cameras found in active scene!\n";
         return -1;
     }
-    vector<GameCamera *>::iterator it;
+    vector<CameraObject *>::iterator it;
     // Update the VP matrix for each camera
     for (it = gameCameras.begin(); it != gameCameras.end(); ++it) {
         (*it)->updateCamera();
@@ -238,19 +238,20 @@ int GameInstance::updateObjects() {
         cerr << "Error: No active GameObjects in the current scene!\n";
         return -1;
     }
+    // TODO: Polymorphism! Only need one structure for these game objects
     glBindVertexArray(vertexArrayID);
     std::vector<GameObject *>::iterator it;
     for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {
         (*it)->setDirectionalLight(directionalLight);
         (*it)->setLuminance(luminance);
         // Send the new VP matrix to the current gameObject being drawn.
-        (*it)->setVPMatrix(getCamera((*it)->getCameraID())->getVPMatrix());
-        (*it)->drawShape();
+        (*it)->setVpMatrix(getCamera((*it)->getCameraId())->getVpMatrix());
+        (*it)->render();
     }
     // If there is any active texts in the scene, render them
-    std::vector<GameObjectText *>::iterator text_it;
+    std::vector<TextObject *>::iterator text_it;
     for (text_it = gameTexts.begin(); text_it != gameTexts.end(); ++text_it) {
-        (*text_it)->drawText();
+        (*text_it)->render();
     }
     return 0;
 }
@@ -293,8 +294,7 @@ int GameInstance::setDeltaTime(GLdouble time){
 */
 int GameInstance::createGameObject(gameObjectInfo objectInfo) {
     cout << "Creating GameObject " << gameObjects.size() << "\n";
-    GameObject *gameObject = new GameObject();
-    gameObject->configureGameObject(objectInfo);
+    GameObject *gameObject = new GameObject(objectInfo);
     gameObjects.push_back(gameObject);
     return gameObjects.size() - 1;
 }
@@ -304,28 +304,26 @@ int GameInstance::createGameObject(gameObjectInfo objectInfo) {
  for a new camera, and creates a new camera in a similar manner to how standard
  GameObjects are created (see notes above for details on GameObject creation).
 
- (int) createCamera returns the ID of the created GameCamera on success. On
- failure, the GameCamera is not created and -1 is returned.
+ (int) createCamera returns the ID of the created CameraObject on success. On
+ failure, the CameraObject is not created and -1 is returned.
 */
 int GameInstance::createCamera(cameraInfo camInfo) {
-    cout << "Creating GameCamera " << gameCameras.size() << "\n";
-    GameCamera *gameCamera = new GameCamera();
-    gameCamera->configureCamera(camInfo);
+    cout << "Creating CameraObject " << gameCameras.size() << "\n";
+    CameraObject *gameCamera = new CameraObject(camInfo);
     gameCameras.push_back(gameCamera);
     return gameCameras.size() - 1;
 }
 
 /*
  (int) createText takes an (textObjectInfo) info argument and creates a new
- GameObjectText GameObject inside of the current GameInstance.
+ TextObject GameObject inside of the current GameInstance.
 
- (int) createText returns the index of the created GameObjectText in the current
+ (int) createText returns the index of the created TextObject in the current
  GameInstance.
 */
 int GameInstance::createText(textObjectInfo info) {
     cout << "Creating Gametext " << gameTexts.size() << "\n";
-    GameObjectText *text = new GameObjectText();
-    text->initializeText(info);
+    TextObject *text = new TextObject(info);
     gameTexts.push_back(text);
     return gameTexts.size() - 1;
 }
@@ -345,12 +343,12 @@ GameObject *GameInstance::getGameObject(uint gameObjectID) {
 }
 
 /*
- (GameCamera *) getGameCamera returns the GameCamera pointer for the GameCamera
- located at the index gameCameraID inside of the (vector<GameCamera *>)
+ (CameraObject *) getCameraObject returns the CameraObject pointer for the CameraObject
+ located at the index gameCameraID inside of the (vector<CameraObject *>)
  gameCameras vector on success. On failure, NULL is returned and an error is
  printed to stderr.
 */
-GameCamera *GameInstance::getCamera(uint gameCameraID) {
+CameraObject *GameInstance::getCamera(uint gameCameraID) {
     if (!gameCameras.size() || gameCameras.size() < gameCameraID) {
         cerr << "Error: getCamera index out of bounds!\n";
         return NULL;
@@ -359,12 +357,12 @@ GameCamera *GameInstance::getCamera(uint gameCameraID) {
 }
 
 /*
- (GameObjectText *) getText returns the GameObjectText pointer for the
- GameObjectText located at the index gameTextID inside of the
- (vector<GameObjectText *>) gameTexts vector on success. On failure, NULL is
+ (TextObject *) getText returns the TextObject pointer for the
+ TextObject located at the index gameTextID inside of the
+ (vector<TextObject *>) gameTexts vector on success. On failure, NULL is
  returned and an error is printed to stderr.
 */
-GameObjectText *GameInstance::getText(uint gameTextID) {
+TextObject *GameInstance::getText(uint gameTextID) {
     if (!gameTexts.size() || gameTexts.size() < gameTextID) {
         cerr << "Error: getText index out of bounds!\n";
         return NULL;
@@ -404,13 +402,9 @@ int GameInstance::getCollision(GameObject *object1, GameObject *object2,
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";
         return -1;
     }
-    // Obtain lock and update positions
-    object1->lockObject();
-    object2->lockObject();
+
     coll1 = object1->getCollider();
     coll2 = object2->getCollider();
-    object1->unlockObject();
-    object2->unlockObject();
     // First check if the two objects are currently colliding
     for (int i = 0; i < 3; i++) {
         float delta = abs(coll2.center[i] - coll1.center[i]);
@@ -540,11 +534,11 @@ void GameInstance::initController() {
  (void) initApplication does not return any values.
 */
 void GameInstance::initApplication(vector<string> vertexPath, vector<string> fragmentPath) {
-    // Compile each of our shaders and assign them their own programID number
+    // Compile each of our shaders and assign them their own programId number
     glGenVertexArrays(1, &vertexArrayID);
     glBindVertexArray(vertexArrayID);
     for (uint i = 0; i < vertexPath.size(); i++) {
-        programID.push_back(loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str()));
+        programId.push_back(loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str()));
     }
 }
 
