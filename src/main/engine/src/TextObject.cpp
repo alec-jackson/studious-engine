@@ -1,4 +1,15 @@
-#include "TextObject.hpp"
+/**
+ * @file TextObject.cpp
+ * @author Christian Galvez
+ * @brief Implementation of TextObject
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+#include <TextObject.hpp>
 
 /// @todo: Either use super() or restructure class inheritance - refactor this constructor
 TextObject::TextObject(textObjectInfo info) {
@@ -9,12 +20,11 @@ TextObject::TextObject(textObjectInfo info) {
     message = info.message;
     this->position = vec3(300.0f, 300.0f, 0.0f);
     this->scale = 1.0f;
-    glUseProgram(this->programId); // Load text shader
+    glUseProgram(this->programId);  // Load text shader
     glUniformMatrix4fv(glGetUniformLocation(this->programId,
         "projection"), 1, GL_FALSE, &projection[0][0]);
     FT_Library ft;
-    if (FT_Init_FreeType(&ft))
-    {
+    if (FT_Init_FreeType(&ft)) {
         std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
         throw std::runtime_error("Failed to initialize FreeType Library");
     }
@@ -22,14 +32,11 @@ TextObject::TextObject(textObjectInfo info) {
     if (FT_New_Face(ft, "src/resources/fonts/AovelSans.ttf", 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
         throw std::runtime_error("Failed to load font");
-    }
-    else {
+    } else {
         FT_Set_Pixel_Sizes(face, 0, 48);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        for (unsigned char c = 0; c < 128; c++)
-        {
-            if (FT_Load_Char(face, c, FT_LOAD_RENDER))
-            {
+        for (unsigned char c = 0; c < 128; c++) {
+            if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
                 cout << "ERROR::FREETYTPE: Failed to load Glyph\n";
                 continue;
             }
@@ -45,8 +52,7 @@ TextObject::TextObject(textObjectInfo info) {
                          0,
                          GL_RED,
                          GL_UNSIGNED_BYTE,
-                         face->glyph->bitmap.buffer
-                         );
+                         face->glyph->bitmap.buffer);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -75,6 +81,10 @@ TextObject::TextObject(textObjectInfo info) {
     setViewMode(ORTHOGRAPHIC);
 }
 
+/// @todo Do something useful here
+TextObject::~TextObject() {
+}
+
 void TextObject::render() {
     glClear(GL_DEPTH_BUFFER_BIT);
     vec3 color = vec3(1.0f);
@@ -86,8 +96,7 @@ void TextObject::render() {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
     std::string::const_iterator c;
-    for (c = message.begin(); c != message.end(); c++)
-    {
+    for (c = message.begin(); c != message.end(); c++) {
         Character ch = characters[*c];
         float xpos = x + ch.Bearing.x * scale;
         float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
@@ -113,4 +122,3 @@ void TextObject::render() {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
-

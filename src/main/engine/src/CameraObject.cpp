@@ -9,7 +9,7 @@
  * 
  */
 
-#include "CameraObject.hpp"
+#include <CameraObject.hpp>
 
 /// @todo: Initializer lists for all SceneObject classes
 CameraObject::CameraObject(cameraInfo camInfo) {
@@ -21,6 +21,10 @@ CameraObject::CameraObject(cameraInfo camInfo) {
     cameraAngle = camInfo.viewCameraAngle;
 }
 
+/// @todo: Figure out what the destructor should do
+CameraObject::~CameraObject() {
+}
+
 /// @todo: Change NULL checks to nullptr
 void CameraObject::updateCamera() {
     if (target == NULL) {
@@ -29,7 +33,7 @@ void CameraObject::updateCamera() {
     }
     // Create critical section here to prevent race conditions
     mat4 viewMatrix = lookAt(target->getPosition(offset), target->getPosition(),
-        vec3(0,1,0));
+        vec3(0, 1, 0));
     mat4 projectionMatrix = perspective(radians(cameraAngle), aspectRatio,
         nearClipping, farClipping);
     vpMatrix = projectionMatrix * viewMatrix;

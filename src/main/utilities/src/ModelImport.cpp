@@ -1,4 +1,15 @@
-#include "ModelImport.hpp"
+/**
+ * @file ModelImport.cpp
+ * @author Christian Galvez
+ * @brief Loads .OBJ files into the app as Polygons that can be rendered in the GameInstance
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+#include <ModelImport.hpp>
 
 /**
  * @brief Constructs the ModelImport object using the importObjInfo as parameters
@@ -6,19 +17,19 @@
  * @throws runtime_error exception when passed a model path that does not exist
 */
 ModelImport::ModelImport(importObjInfo objInfo) {
-    ifstream file; // Read file as read only
+    ifstream file;  // Read file as read only
     file.open(objInfo.modelPath);
-    if (!file.is_open()) { // If the file does not exist or cannot be opened
+    if (!file.is_open()) {  // If the file does not exist or cannot be opened
         cerr << "Model path does not exist!";
         throw runtime_error("Model path does not exist");
     }
     auto currentObject = 0;
-    string charBuffer; // Will temporarily hold each line in obj file
-    model.programId = objInfo.programId; // Save the current programId to use
-    vector<GLfloat> vertexFrame; // Unique vertex points
-    vector<GLfloat> normalFrame; // Unique normal points
-    vector<GLfloat> textureFrame; // Unique texture points
-    vector<GLint> commands; // Commands in obj file to build buffers
+    string charBuffer;  // Will temporarily hold each line in obj file
+    model.programId = objInfo.programId;  // Save the current programId to use
+    vector<GLfloat> vertexFrame;  // Unique vertex points
+    vector<GLfloat> normalFrame;  // Unique normal points
+    vector<GLfloat> textureFrame;  // Unique texture points
+    vector<GLint> commands;  // Commands in obj file to build buffers
     // Grab entire lines from the object file to read at once
     while (getline(file, charBuffer)) {
         // Compare the first two "header" bytes of the obj file below
@@ -29,7 +40,7 @@ ModelImport::ModelImport(importObjInfo objInfo) {
             // Add tempVertices to vertexFrame
             vector<GLfloat>::iterator it;
             for (it = tempVertices.begin(); it != tempVertices.end(); ++it) {
-                vertexFrame.push_back(*it); // Add points to vertexFrame
+                vertexFrame.push_back(*it);  // Add points to vertexFrame
             }
         } else if (charBuffer.compare(0, 2, "vt") == 0) {
             vector<GLfloat> tempTextures(2);
@@ -37,7 +48,7 @@ ModelImport::ModelImport(importObjInfo objInfo) {
                 &tempTextures[1]);
             vector<GLfloat>::iterator it;
             for (it = tempTextures.begin(); it != tempTextures.end(); ++it) {
-                textureFrame.push_back(*it); // Add points to textureFrame
+                textureFrame.push_back(*it);  // Add points to textureFrame
             }
         } else if (charBuffer.compare(0, 2, "vn") == 0) {
             vector<GLfloat> tempNormals(3);
@@ -45,7 +56,7 @@ ModelImport::ModelImport(importObjInfo objInfo) {
                 &tempNormals[1], &tempNormals[2]);
             vector<GLfloat>::iterator it;
             for (it = tempNormals.begin(); it != tempNormals.end(); ++it) {
-                normalFrame.push_back(*it); // Add points to normalFrame
+                normalFrame.push_back(*it);  // Add points to normalFrame
             }
         } else if (charBuffer.compare(0, 2, "f ") == 0) {
             vector<GLint> coms(9);
@@ -53,7 +64,9 @@ ModelImport::ModelImport(importObjInfo objInfo) {
             if (charBuffer.find("//") != std::string::npos) {
                 sscanf(charBuffer.c_str(), "f %i//%i %i//%i %i//%i\n",
                     &coms[0], &coms[2], &coms[3], &coms[5], &coms[6], &coms[8]);
-                coms[1] = 0; coms[4] = 0; coms[7] = 0;
+                coms[1] = 0;
+                coms[4] = 0;
+                coms[7] = 0;
             } else {
                 sscanf(charBuffer.c_str(), "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
                     &coms[0], &coms[1], &coms[2], &coms[3], &coms[4], &coms[5],
@@ -61,7 +74,7 @@ ModelImport::ModelImport(importObjInfo objInfo) {
             }
             vector<GLint>::iterator it;
             for (it = coms.begin(); it != coms.end(); ++it) {
-                commands.push_back(*it); // Add commands from temp to main vec
+                commands.push_back(*it);  // Add commands from temp to main vec
             }
             // When we hit the first obect, ignore
         } else if (charBuffer.compare(0, 2, "o ") == 0) {
@@ -113,23 +126,23 @@ void ModelImport::configureObject(configureArgs args) {
     vector<GLfloat> normalVBO;
     // Iterate over each polygon in model
     for (int i = 0; i < model.pointCount[args.index]; i++) {
-        for (int k = 0; k < 3; k++) { // Loop through each point
-            int currentCommandIndex = (i*9) + (k*3); // vertex coord command
+        for (int k = 0; k < 3; k++) {  // Loop through each point
+            int currentCommandIndex = (i*9) + (k*3);  // vertex coord command
             int currentCommand = args.commands[currentCommandIndex];
             // Assign vertex data
             for (int l = 0; l < 3; l++) {
                 vertexVBO.push_back(args.vertexFrame[(currentCommand-1)*3+l]);
             }
-            currentCommandIndex = (i*9) + (k*3) + 1; // textureCoord command
+            currentCommandIndex = (i*9) + (k*3) + 1;  // textureCoord command
             currentCommand = args.commands[currentCommandIndex];
             if (args.textureFrame.size() > 0) {
                 textureVBO.push_back(args.textureFrame[(currentCommand-1)*2]);
                 textureVBO.push_back(1.0f - args.textureFrame[(currentCommand-1)*2+1]);
             } else {
                 textureVBO.push_back(0.0f);
-                textureVBO.push_back(0.0f); // Add dummy values for missing data
+                textureVBO.push_back(0.0f);  // Add dummy values for missing data
             }
-            currentCommandIndex = (i*9) + (k*3) + 2; // normal command
+            currentCommandIndex = (i*9) + (k*3) + 2;  // normal command
             currentCommand = args.commands[currentCommandIndex];
             for (int l = 0; l < 3; l++) {
                 normalVBO.push_back(args.normalFrame[(currentCommand-1)*3+l]);
@@ -139,8 +152,8 @@ void ModelImport::configureObject(configureArgs args) {
     model.vertices.push_back(vertexVBO);
     model.textureCoords.push_back(textureVBO);
     model.normalCoords.push_back(normalVBO);
-    model.shapebufferID.push_back(0); // Create space on vector for buffer
-    model.normalbufferID.push_back(0); // Create space for normal buff
+    model.shapebufferID.push_back(0);  // Create space on vector for buffer
+    model.normalbufferID.push_back(0);  // Create space for normal buff
     // Texture values will default to UINT_MAX to signify no texture
     model.textureId.push_back(UINT_MAX);
     model.textureCoordsID.push_back(UINT_MAX);
@@ -155,7 +168,8 @@ void ModelImport::configureObject(configureArgs args) {
                  sizeof(GLfloat) * model.pointCount[args.index] * 9,
                  &(model.normalCoords[args.index][0]), GL_STATIC_DRAW);
     // Specific case where the current object does not get a texture
-    if (!args.textureCount || args.texturePattern[args.index] >= args.textureCount || args.texturePattern[args.index] == -1) {
+    if (!args.textureCount || args.texturePattern[args.index] >= args.textureCount ||
+        args.texturePattern[args.index] == -1) {
         return;
     }
     SDL_Surface *texture = IMG_Load(args.texturePath[args.texturePattern[args.index]].c_str());
@@ -175,11 +189,11 @@ void ModelImport::configureObject(configureArgs args) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                     GL_NEAREST_MIPMAP_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10);
     glGenerateMipmap(GL_TEXTURE_2D);
     SDL_FreeSurface(texture);
-    //glGenerateMipmap(GL_TEXTURE_2D);
+    // glGenerateMipmap(GL_TEXTURE_2D);
     glGenBuffers(1, &(model.textureCoordsID[args.index]));
     glBindBuffer(GL_ARRAY_BUFFER, model.textureCoordsID[args.index]);
     glBufferData(GL_ARRAY_BUFFER,

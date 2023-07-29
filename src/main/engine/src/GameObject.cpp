@@ -9,24 +9,24 @@
  * 
  */
 
-#include "GameObject.hpp"
+#include <GameObject.hpp>
 
 /// @todo: Refactor to use initializer lists
 GameObject::GameObject(gameObjectInfo objectInfo) {
     programId = objectInfo.characterModel->programId;
-    collider.collider = NULL; // Default to not having a collider
+    collider.collider = NULL;  // Default to not having a collider
     luminance = 1.0f;
-    rollOff = 0.9f; // Rolloff describes the intensity of the light dropoff
-    directionalLight = vec3(0,0,0);
+    rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
+    directionalLight = vec3(0, 0, 0);
     viewMode = PERSPECTIVE;
     model = objectInfo.characterModel;
     cameraId = objectInfo.camera;
     // Populate the hasTexture vector with texture info
     for (int i = 0; i < model->numberOfObjects; i++) {
         if (model->textureCoordsID[i] == UINT_MAX) {
-            hasTexture.push_back(0); // No texture found for obj i
+            hasTexture.push_back(0);  // No texture found for obj i
         } else {
-            hasTexture.push_back(1); // Texture found for obj i
+            hasTexture.push_back(1);  // Texture found for obj i
         }
     }
     // Save initial scale, rotation, position for object
@@ -36,9 +36,9 @@ GameObject::GameObject(gameObjectInfo objectInfo) {
     scaleMatrix = glm::scale(vec3(scale, scale, scale));
     translateMatrix = glm::translate(mat4(1.0f), objectInfo.position);
     rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
-            vec3(1,0,0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
-            vec3(0,1,0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
-            vec3(0,0,1));
+            vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
+            vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
+            vec3(0, 0, 1));
     collider.collisionTag = objectInfo.collisionTagName;
     // Grab IDs for shared variables between app and program (shader)
     rotateId = glGetUniformLocation(programId, "rotate");
@@ -52,12 +52,11 @@ GameObject::GameObject(gameObjectInfo objectInfo) {
     if (collider.collider != NULL) {
         mvpId = glGetUniformLocation(collider.collider->programId, "MVP");
     }
-    vpMatrix = mat4(1.0f); // Default VP matrix to identity matrix
+    vpMatrix = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
 /// @todo Default constructor for base class... might want to re-consider class hierarchy
 GameObject::GameObject() {
-    
 }
 
 GameObject::~GameObject() {
@@ -66,7 +65,7 @@ GameObject::~GameObject() {
 }
 
 string GameObject::getCollisionTag(void) {
-    return collider.collisionTag; /// @todo: Null check here
+    return collider.collisionTag;  /// @todo: Null check here
 }
 
 colliderInfo GameObject::getCollider(void) {
@@ -97,9 +96,9 @@ void GameObject::render() {
         // Update our model transformation matrices
         translateMatrix = glm::translate(mat4(1.0f), position);
         rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
-                vec3(1,0,0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
-                vec3(0,1,0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
-                vec3(0,0,1));
+                vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
+                vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
+                vec3(0, 0, 1));
         scaleMatrix = glm::scale(vec3(scale, scale, scale));
         // Send our shared variables over to our program (shader)
         glUniform1f(luminanceId, luminance);
@@ -119,16 +118,16 @@ void GameObject::render() {
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, model->shapebufferID[i]);
         glVertexAttribPointer(
-                              0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-                              3,                  // size
-                              GL_FLOAT,           // type
-                              GL_FALSE,           // normalized?
-                              0,                  // stride
-                              (void*)0            // array buffer offset
-                              );
+                              0,            // attribute 0. No particular reason for 0, but must match
+                                            // the layout in the shader.
+                              3,            // size
+                              GL_FLOAT,     // type
+                              GL_FALSE,     // normalized?
+                              0,            // stride
+                              0);           // array buffer offset
         glEnableVertexAttribArray(2);
         glBindBuffer(GL_ARRAY_BUFFER, model->normalbufferID[i]);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
         if (hasTexture[i]) {
             glEnableVertexAttribArray(1);
             glBindBuffer(GL_ARRAY_BUFFER, model->textureCoordsID[i]);
@@ -138,8 +137,7 @@ void GameObject::render() {
                                   GL_FLOAT,
                                   GL_FALSE,
                                   0,
-                                  (void*)0
-                                  );
+                                  0);
             glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i] * 3);
             glDisableVertexAttribArray(1);
         } else {
@@ -150,21 +148,21 @@ void GameObject::render() {
     }
     if (collider.collider != NULL) {
         // After drawing the gameobject, draw the collider
-        glUseProgram(collider.collider->programId); // grab the programId from the object
-        glDisable(GL_CULL_FACE); // Just do it
+        glUseProgram(collider.collider->programId);  // grab the programId from the object
+        glDisable(GL_CULL_FACE);  // Just do it
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
         glUniformMatrix4fv(mvpId, 1, GL_FALSE, &MVP[0][0]);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, collider.collider->shapebufferID[0]);
         glVertexAttribPointer(
-                              0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+                              0,                  // attribute 0. No particular reason for 0, but must match
+                                                  // the layout in the shader.
                               3,                  // size
                               GL_FLOAT,           // type
                               GL_FALSE,           // normalized?
                               0,                  // stride
-                              (void*)0            // array buffer offset
-                              );
+                              0);            // array buffer offset
         glDrawArrays(GL_TRIANGLES, 0, collider.collider->pointCount[0] * 3);
         glDisableVertexAttribArray(0);
     }
@@ -291,12 +289,12 @@ int GameObject::createCollider(int shaderID) {
     for (int i = 0; i < 3; i++) {
         collider.center[i] = max[i] - ((abs(max[i] - min[i])) / 2);
     }
-    collider.center[3] = 1; // SET W!!!
+    collider.center[3] = 1;  // SET W!!!
     collider.originalCenter = collider.center;
     // Update the offset for the collider to be distance between center and edge
     for (int i = 0; i < 3; i++) {
         collider.minPoints[i] = min[i];
     }
-    collider.minPoints[3] = 1; // SET W!!!
+    collider.minPoints[3] = 1;  // SET W!!!
     return 0;
 }

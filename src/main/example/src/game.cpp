@@ -1,9 +1,16 @@
-/*
- game.cpp and game.hpp are example files demonstrating the use of the studious
- game engine. These two basic game files will generate a basic scene when the
- engine is compiled and ran.
+/**
+ * @file game.cpp
+ * @author Alec Jackson, Christian Galvez
+ * @brief game.cpp and game.hpp are example files demonstrating the use of the studious
+ *       game engine. These two basic game files will generate a basic scene when the
+ *       engine is compiled and ran.
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
  */
-#include "game.hpp"
+#include <game.hpp>
 
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
@@ -28,17 +35,17 @@
 // Global Variables, should eventually be moved to a config file
 vector<string> soundList = {
     "src/resources/sfx/music/endlessNight.wav"
-}; // A list of gameSounds to load
+};  // A list of gameSounds to load
 vector<string> fragShaders = {
     "src/main/shaders/standardFragment.frag",
     "src/main/shaders/coll.frag",
     "src/main/shaders/text.frag"
-}; // Contains collider renderer and basic object renderer.
+};  // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
     "src/main/shaders/standardVertex.vert",
     "src/main/shaders/coll.vert",
     "src/main/shaders/text.vert"
-}; // Contains collider renderer and basic object renderer.
+};  // Contains collider renderer and basic object renderer.
 vector<string> texturePathStage = {
     "src/resources/images/skintexture.jpg"
 };
@@ -51,7 +58,7 @@ vector<string> texturePath = {
 
 TextObject *fps_counter;
 TextObject *collDebugText;
-GameObject *wolfRef, *playerRef; // Used for collision testing
+GameObject *wolfRef, *playerRef;  // Used for collision testing
 
 int setup(GameInstance *currentGame, configData* config);
 int runtime(GameInstance *currentGame);
@@ -62,7 +69,7 @@ int main(int argc, char **argv) {
     GameInstance currentGame;
     configData config;
     // Run setup, if fail exit gracefully
-    if (setup(&currentGame, &config)){
+    if (setup(&currentGame, &config)) {
         exit(1);
     }
     errorNum = runtime(&currentGame);
@@ -76,7 +83,7 @@ int main(int argc, char **argv) {
 
  (int) setup returns 0 on success.
 */
-int setup(GameInstance *currentGame, configData* config){
+int setup(GameInstance *currentGame, configData* config) {
     int flag = loadConfig(config, "src/resources/config.txt");
     gameInstanceArgs args;
     args.soundList = soundList;
@@ -128,7 +135,7 @@ int runtime(GameInstance *currentGame) {
     auto importedMapObj = ModelImport(mapInfo);
     auto mapPoly = importedMapObj.getPolygon();
 
-    //Create a gameObjectInfo struct for creating a game object for the map
+    // Create a gameObjectInfo struct for creating a game object for the map
     gameObjectInfo map = { mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
         gameObject[2], "map" };
@@ -225,7 +232,6 @@ int runtime(GameInstance *currentGame) {
     cout << "Running cleanup\n";
     currentGame->cleanup();
     return 0;
-
 }
 
 /*
@@ -242,7 +248,7 @@ int mainLoop(gameInfo* gamein) {
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     double deltaTime;
-    short error = 0;
+    int error = 0;
     vector<double> times;
     while (running) {
         currentGame->lockScene();
@@ -257,9 +263,9 @@ int mainLoop(gameInfo* gamein) {
         }
         currentGame->unlockScene();
         end = SDL_GetPerformanceCounter();
-        deltaTime = (double)(end - begin) / (SDL_GetPerformanceFrequency());
+        deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
-        if (SHOW_FPS) { // use sampleSize to find average FPS
+        if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;
             if (currentTime > sampleTime) {
@@ -270,7 +276,7 @@ int mainLoop(gameInfo* gamein) {
                 sum /= times.size();
                 times.clear();
                 cout << "FPS: " << 1.0 / sum << '\n';
-                fps_counter->setMessage("FPS: " + to_string(int(1.0 / sum)));
+                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
         collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
@@ -281,7 +287,7 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
-        usleep(2000); // Sleep for 2ms
+        usleep(2000);  // Sleep for 2ms
     }
     return 0;
 }

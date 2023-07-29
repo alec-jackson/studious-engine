@@ -1,6 +1,18 @@
-#ifndef MODEL_IMPORT_HPP
-#define MODEL_IMPORT_HPP
-#include "common.hpp"
+/**
+ * @file ModelImport.hpp
+ * @author Christian Galvez
+ * @brief Contains ModelImport class definition and structs for ModelImport
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+#pragma once
+#include <string>
+#include <vector>
+#include <common.hpp>
 /*
  The polygon struct holds all of the relevant information for a given shape. The
  struct members are defined as the following:
@@ -33,17 +45,17 @@
  object to be drawn.
 */
 typedef struct polygon {
-    vector<GLuint> shapebufferID; // used for vertex buffer
-    vector<GLuint> textureCoordsID; // used for texture coordinate buffer
-    vector<GLuint> textureId; // ID for texture binding
+    vector<GLuint> shapebufferID;  // used for vertex buffer
+    vector<GLuint> textureCoordsID;  // used for texture coordinate buffer
+    vector<GLuint> textureId;  // ID for texture binding
     vector<GLuint> normalbufferID;
-    GLuint textureUniformID; // ID for finding texture sampler in OpenGL table
-    vector<vector<GLfloat>> vertices; // 2D vector for vertices
-    vector<vector<GLfloat>> textureCoords; // 2D vector for texture coord data
-    vector<vector<GLfloat>> normalCoords; // 2D vector for normal coord data
-    vector<GLint> pointCount; // no. of distinct points in shape
-    GLint numberOfObjects; // Contains the number of objects in the model
-    GLuint programId; // Used for storing programId of object's shader
+    GLuint textureUniformID;  // ID for finding texture sampler in OpenGL table
+    vector<vector<GLfloat>> vertices;  // 2D vector for vertices
+    vector<vector<GLfloat>> textureCoords;  // 2D vector for texture coord data
+    vector<vector<GLfloat>> normalCoords;  // 2D vector for normal coord data
+    vector<GLint> pointCount;  // no. of distinct points in shape
+    GLint numberOfObjects;  // Contains the number of objects in the model
+    GLuint programId;  // Used for storing programId of object's shader
 } polygon;
 
 /*
@@ -52,10 +64,10 @@ of the current arguments for importObj will be morphed into this single struct
 with the same names.
 */
 typedef struct importObjInfo {
-	string modelPath;
-	vector<string> texturePath;
-   vector<GLint> texturePattern;
-	GLuint programId;
+    string modelPath;
+    vector<string> texturePath;
+    vector<GLint> texturePattern;
+    GLuint programId;
 } importObjInfo;
 
 /*
@@ -79,13 +91,11 @@ typedef struct configureArgs {
  * @brief Class used for importing .obj files for use in studious engine. 
 */
 class ModelImport {
-   public:
-      ModelImport(importObjInfo objInfo);
+ public:
+      explicit ModelImport(importObjInfo objInfo);
       ~ModelImport();
       polygon *getPolygon();
       void configureObject(configureArgs args);
-   private:
+ private:
       polygon model;
 };
-
-#endif

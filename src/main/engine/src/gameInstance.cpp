@@ -9,7 +9,7 @@
  * 
  */
 
-#include "gameInstance.hpp"
+#include <gameInstance.hpp>
 
 /*
  (void) startGameInstance uses the passed struct (gameInstanceArgs) args to
@@ -27,7 +27,7 @@ void GameInstance::startGameInstance(gameInstanceArgs args) {
     sfxNames = args.soundList;
     width = args.windowWidth;
     height = args.windowHeight;
-    luminance = 1.0f; // Set default values
+    luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;
     initWindow(width, height);
@@ -90,10 +90,10 @@ GLuint GameInstance::getProgramID(uint index) {
  (controllerReadout *) getControllers takes an (int) controllerIndex and returns
  the associated controllerReadout struct.
 */
-controllerReadout* GameInstance::getControllers(int controllerIndex){
+controllerReadout* GameInstance::getControllers(int controllerIndex) {
     controllerInfo[controllerIndex].leftAxis =
         SDL_GameControllerGetAxis(gameControllers[controllerIndex],
-        SDL_CONTROLLER_AXIS_LEFTY );
+        SDL_CONTROLLER_AXIS_LEFTY);
     return &controllerInfo[controllerIndex];
 }
 
@@ -123,17 +123,17 @@ void GameInstance::playSound(int soundIndex, int loop) {
 
  (void) changeWindowMode does not return any value.
 */
-void GameInstance::changeWindowMode(int mode){
-    //SDL_DisplayMode DM;
+void GameInstance::changeWindowMode(int mode) {
+    // SDL_DisplayMode DM;
     // if(mode > 1){
     //     SDL_GetCurrentDisplayMode(0, &DM);
     // } else {
     //     DM.w = width;
     //     DM.h = height;
     // }
-    //SDL_SetWindowSize(window, DM.w, DM.h);
+    // SDL_SetWindowSize(window, DM.w, DM.h);
     SDL_SetWindowFullscreen(window, mode);
-    //SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    // SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 }
 
 /*
@@ -145,7 +145,7 @@ void GameInstance::changeWindowMode(int mode){
 */
 void GameInstance::cleanup() {
     for (int i = 0; i < controllersConnected; i++) {
-        //SDL_GameControllerClose(gameControllers[i]);
+        // SDL_GameControllerClose(gameControllers[i]);
     }
     vector<GameObject *>::iterator git;
     for (git = gameObjects.begin(); git != gameObjects.end(); ++git) {
@@ -185,7 +185,7 @@ int GameInstance::destroyGameObject(GameObject *object) {
 */
 bool GameInstance::isWindowOpen() {
     bool running = true;
-    while(SDL_PollEvent(&event)) {
+    while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT || keystate[SDL_SCANCODE_ESCAPE]) {
             cout << "Closing now...\n";
             running = false;
@@ -200,7 +200,7 @@ bool GameInstance::isWindowOpen() {
 
  (void) updateOGL does not return any value.
 */
-void GameInstance::updateOGL(){
+void GameInstance::updateOGL() {
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -221,7 +221,7 @@ void GameInstance::updateOGL(){
 */
 int GameInstance::updateCameras() {
     if (gameCameras.empty()) {
-        //cerr << "Error: No cameras found in active scene!\n";
+        // cerr << "Error: No cameras found in active scene!\n";
         return -1;
     }
     vector<CameraObject *>::iterator it;
@@ -286,7 +286,7 @@ int GameInstance::updateWindow() {
 
  (int) setDeltaTime returns 0 upon success.
 */
-int GameInstance::setDeltaTime(GLdouble time){
+int GameInstance::setDeltaTime(GLdouble time) {
     deltaTime = time;
     return 0;
 }
@@ -408,7 +408,7 @@ GLdouble GameInstance::getDeltaTime() {
 int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     vec3 moving) {
     colliderInfo coll1, coll2;
-    int matching = 0; // Number of axis that have collided
+    int matching = 0;  // Number of axis that have collided
     if (object1 == NULL || object2 == NULL) {
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";
         return -1;
@@ -462,12 +462,12 @@ void GameInstance::initWindow(int width, int height) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-#ifdef __APPLE__ // Temporarily restrict SDL AA to MACOS
+#ifdef __APPLE__  // Temporarily restrict SDL AA to MACOS
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, AASAMPLES);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
 #endif
     SDL_GLContext mainContext = SDL_GL_CreateContext(window);
-    SDL_GL_SetSwapInterval(0); // 0 - Disable VSYNC / 1 - Enable VSYNC
+    SDL_GL_SetSwapInterval(0);  // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
     if (window == NULL) {
         cerr << "Error: Failed to create SDL window!\n";
@@ -562,7 +562,6 @@ void GameInstance::initApplication(vector<string> vertexPath, vector<string> fra
  (void) basicCollision does not return any values.
 */
 void GameInstance::basicCollision(GameInstance *gameInstance) {
-
 }
 
 int GameInstance::lockScene() {

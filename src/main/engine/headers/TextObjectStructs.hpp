@@ -1,12 +1,26 @@
 /**
+ * @file TextObjectStructs.hpp
+ * @author Christian Galvez
+ * @brief Contains structs relevant to the TextObject class
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+#pragma once
+#include <string>
+
+/**
  * @brief Used for constructing TextObjects
  * @param message(string) Message to display on the rendered text.
  * @param fontPath(string) Path to a font to use to render the text.
  * @param programId(GLuint) ProgramId for shaders to render text 
  */
 typedef struct textObjectInfo {
-	string message, fontPath;
-	GLuint programId;
+    string message, fontPath;
+    GLuint programId;
 } textObjectInfo;
 
 /**

@@ -1,4 +1,15 @@
-#include "shaderLoader.hpp"
+/**
+ * @file shaderLoader.cpp
+ * @author Chrisitan Galvez
+ * @brief Loads vertex/fragment shaders into application context
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+#include <shaderLoader.hpp>
 
 /*
  (GLuint) loadShaders takes the path to a vertex shader (string) vertexShader,
@@ -17,7 +28,7 @@ GLuint loadShaders(string vertexShader, string fragmentShader) {
     string vertShader, fragShader, tempLine;
     ifstream file;
     file.open(vertexShader);
-    if (!file.is_open()) { // If the file does not exist or cannot be opened
+    if (!file.is_open()) {  // If the file does not exist or cannot be opened
         cerr << "Error: Cannot open file " << vertexShader << "!\n";
         return UINT_MAX;
     }
@@ -26,7 +37,7 @@ GLuint loadShaders(string vertexShader, string fragmentShader) {
     }
     cout << "Now compiling " << vertexShader << "...\n";
     vector<GLchar *> vertShaderInfo(1);
-    vertShaderInfo[0] = (GLchar *)vertShader.c_str();
+    vertShaderInfo[0] = reinterpret_cast<GLchar *>(vertShader.c_str());
     glShaderSource(vertexShaderID, 1, &vertShaderInfo[0], NULL);
     glCompileShader(vertexShaderID);
     glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &success);
@@ -39,7 +50,7 @@ GLuint loadShaders(string vertexShader, string fragmentShader) {
     file.close();
     success = GL_FALSE;
     file.open(fragmentShader);
-    if (!file.is_open()) { // If the file does not exist or cannot be opened
+    if (!file.is_open()) {  // If the file does not exist or cannot be opened
         cerr << "Error: Cannot open file " << fragmentShader << "!\n";
         return UINT_MAX;
     }
@@ -48,7 +59,7 @@ GLuint loadShaders(string vertexShader, string fragmentShader) {
     }
     cout << "Now compiling " << fragmentShader << "...\n";
     vector<GLchar *>fragShaderInfo(1);
-    fragShaderInfo[0] = (GLchar *)fragShader.c_str();
+    fragShaderInfo[0] = reinterpret_cast<GLchar *>fragShader.c_str();
     glShaderSource(fragmentShaderID, 1, &fragShaderInfo[0], NULL);
     glCompileShader(fragmentShaderID);
     glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &success);

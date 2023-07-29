@@ -9,30 +9,31 @@
  * 
  */
 #pragma once
-#include "GameObject.hpp"
-#include <ft2build.h>
+#include <string>
+#include <GameObject.hpp>
+#include <ft2build.h> //NOLINT
 #include FT_FREETYPE_H
-#include "TextObjectStructs.hpp"
+#include <TextObjectStructs.hpp>
 
 
 class TextObject: public GameObject {
-    public:
+ public:
         // Constructors
-        TextObject(textObjectInfo info);
+        explicit TextObject(textObjectInfo info);
         ~TextObject();
 
         // Setters
-        inline void setMessage(string message) { this->message = message; };
+        inline void setMessage(string message) { this->message = message; }
 
         // Getters
-        inline string getMessage() { return this->message; };
+        inline string getMessage() { return this->message; }
 
         // Render method
         void render();
-    private:
+ private:
         string message;
         int fontSize;
-        unsigned int VAO, VBO; /// @todo: Where are these being used? Protected at a level above?
-        unsigned int textureUniformId; /// @todo: Investigate whether this can be protected  at a level above
-        map<GLchar, Character> characters;    
+        unsigned int VAO, VBO;  /// @todo: Where are these being used? Protected at a level above?
+        unsigned int textureUniformId;  /// @todo: Investigate whether this can be protected  at a level above
+        map<GLchar, Character> characters;
 };

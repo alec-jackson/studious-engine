@@ -1,7 +1,7 @@
 /**
  * @file inputMonitor.cpp
- * @author your name (you@domain.com)
- * @brief 
+ * @author Alec Jackson
+ * @brief Contains functions for manipulating GameObjects given some input. Supports keyboard, mouse and controller
  * @version 0.1
  * @date 2023-07-28
  * 
@@ -9,10 +9,10 @@
  * 
  */
 
-#include "inputMonitor.hpp"
-//Analog joystick dead zone
-#define PI 3.14159265
+#include <inputMonitor.hpp>
+// Analog joystick dead zone
 const int JOYSTICK_DEAD_ZONE = 4000;
+#define PI 3.14159265
 /// @todo - Use event based input handling; DO NOT REFACTOR THIS FILE
 vector<double> cameraDistance(vec3 offset);
 
@@ -27,9 +27,10 @@ vector<double> cameraDistance(vec3 offset);
 */
 void rotateShape(void *gameInfoStruct, void *target) {
     int mouseX, mouseY, numJoySticks = SDL_NumJoysticks();
-    gameInfo *currentGameInfo = (gameInfo *)gameInfoStruct;
+    /// @todo Refactor and remove reinterpret_casts if re-using this code
+    gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
-    GameObject *character = (GameObject *)target; // GameObject to rotate
+    GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
     GLfloat speed = 0.001f, rotateSpeed = 1.0f, scaleSpeed = 0.0002f,
         offsetSpeed = 0.1f, currentScale = character->getScale(),
         currentLuminance = 1.0f;
@@ -61,30 +62,31 @@ void rotateShape(void *gameInfoStruct, void *target) {
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         if (hasActiveController) {
             controllerLeftStateY = SDL_GameControllerGetAxis(gameController1,
-                SDL_CONTROLLER_AXIS_LEFTY );
+                SDL_CONTROLLER_AXIS_LEFTY);
             controllerLeftStateX = SDL_GameControllerGetAxis(gameController1,
-                SDL_CONTROLLER_AXIS_LEFTX );
+                SDL_CONTROLLER_AXIS_LEFTX);
             controllerRightStateY = SDL_GameControllerGetAxis(gameController1,
-                SDL_CONTROLLER_AXIS_RIGHTY );
+                SDL_CONTROLLER_AXIS_RIGHTY);
             controllerRightStateX = SDL_GameControllerGetAxis(gameController1,
-                SDL_CONTROLLER_AXIS_RIGHTX );
+                SDL_CONTROLLER_AXIS_RIGHTX);
             buttonCheckA = SDL_GameControllerGetButton(gameController1,
-                SDL_CONTROLLER_BUTTON_A );
+                SDL_CONTROLLER_BUTTON_A);
         }
-        //SDL_WarpMouseInWindow(currentGame->getWindow(), currentGame->getWidth() / 2, currentGame->getHeight() / 2);
+        // SDL_WarpMouseInWindow(currentGame->getWindow(), currentGame->getWidth() / 2, currentGame->getHeight() / 2);
         usleep(9000);
-        //Begin Camera Controls
-        if(currentGame->getKeystate()[SDL_SCANCODE_KP_5]) {
-            cameraOffset[0] = 5.140022f; // Set values back to inital values
+        // Begin Camera Controls
+        if (currentGame->getKeystate()[SDL_SCANCODE_KP_5]) {
+            cameraOffset[0] = 5.140022f;  // Set values back to inital values
             cameraOffset[1] = 1.349999f;
             cameraOffset[2] = 2.309998f;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_KP_2] || (mouseY < 0 && trackMouse) || controllerRightStateY > JOYSTICK_DEAD_ZONE) {
+        if (currentGame->getKeystate()[SDL_SCANCODE_KP_2] ||
+            (mouseY < 0 && trackMouse) || controllerRightStateY > JOYSTICK_DEAD_ZONE) {
             float modifier = 1.0f;
             if (mouseY < 0) {
                 modifier = (mouseY / 5.0f) * -1;
-            } else if(controllerRightStateY > JOYSTICK_DEAD_ZONE){
-                modifier = ((float)controllerRightStateY) / 32767;
+            } else if (controllerRightStateY > JOYSTICK_DEAD_ZONE) {
+                modifier = (static_cast<float>controllerRightStateY) / 32767;
             }
             vector<double> distHold = cameraDistance(cameraOffset);
             cameraOffset[1] -= offsetSpeed * modifier;
@@ -99,13 +101,14 @@ void rotateShape(void *gameInfoStruct, void *target) {
             cameraOffset[2] /= distFinish[0];
             cameraOffset[0] /= distFinish[1];
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_KP_8] || (mouseY > 0 && trackMouse) || controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
-            //cameraOffset[1] += offsetSpeed;
+        if (currentGame->getKeystate()[SDL_SCANCODE_KP_8] ||
+            (mouseY > 0 && trackMouse) || controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
+            // cameraOffset[1] += offsetSpeed;
             float modifier = 1.0f;
-            if(mouseY > 0){
+            if (mouseY > 0) {
                 modifier = mouseY / 5.0f;
-            } else if(controllerRightStateY < -JOYSTICK_DEAD_ZONE){
-                modifier = ((double)(controllerRightStateY * -1)) / 32767;
+            } else if (controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
+                modifier = (static_cast<double>(controllerRightStateY * -1)) / 32767;
             }
             vector<double> distHold = cameraDistance(cameraOffset);
             cameraOffset[1] += offsetSpeed * modifier;
@@ -126,13 +129,15 @@ void rotateShape(void *gameInfoStruct, void *target) {
         if (currentGame->getKeystate()[SDL_SCANCODE_KP_6]) {
             cameraOffset[0] += offsetSpeed;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_KP_7] || (mouseX < 0 && trackMouse) || controllerRightStateX < -JOYSTICK_DEAD_ZONE) { // Rotate the camera about the y axis
+        if (currentGame->getKeystate()[SDL_SCANCODE_KP_7] ||
+            (mouseX < 0 && trackMouse) || controllerRightStateX < -JOYSTICK_DEAD_ZONE) {
+            // Rotate the camera about the y axis
             double distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
             float multiplier = 1.0f;
             if (mouseX < 0) {
                 multiplier = (mouseX * -1.0f) / 5.0f;
             } else if (controllerRightStateX < -JOYSTICK_DEAD_ZONE) {
-                multiplier = ((float) (controllerRightStateX * -1)) / 32767;
+                multiplier = (static_cast<float>(controllerRightStateX * -1)) / 32767;
             }
             if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
                 cameraOffset[0] += offsetSpeed * multiplier;
@@ -153,26 +158,26 @@ void rotateShape(void *gameInfoStruct, void *target) {
             distFinish /= distHold;
             cameraOffset[0] /= distFinish;
             cameraOffset[2] /= distFinish;
-
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_KP_9] || (mouseX > 0 && trackMouse) || controllerRightStateX > JOYSTICK_DEAD_ZONE) {
+        if (currentGame->getKeystate()[SDL_SCANCODE_KP_9] ||
+            (mouseX > 0 && trackMouse) || controllerRightStateX > JOYSTICK_DEAD_ZONE) {
             double distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
             float multiplier = 1.0f;
-            if(mouseX > 0){
+            if (mouseX > 0) {
                 multiplier = mouseX / 5.0f;
-            } else if(controllerRightStateX > JOYSTICK_DEAD_ZONE){
-                multiplier = ((float)controllerRightStateX) / 32767;
+            } else if (controllerRightStateX > JOYSTICK_DEAD_ZONE) {
+                multiplier = static_cast<float>(controllerRightStateX) / 32767;
             }
-            if(cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]){
+            if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
                 cameraOffset[0] -= offsetSpeed * multiplier;
                 cameraOffset[2] += offsetSpeed * multiplier;
-            } else if(cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]){
+            } else if (cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]) {
                 cameraOffset[0] += offsetSpeed * multiplier;
                 cameraOffset[2] += offsetSpeed * multiplier;
-            } else if(cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]){
+            } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]) {
                 cameraOffset[0] -= offsetSpeed * multiplier;
                 cameraOffset[2] -= offsetSpeed * multiplier;
-            } else if(cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]){
+            } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]) {
                 cameraOffset[0] += offsetSpeed * multiplier;
                 cameraOffset[2] -= offsetSpeed * multiplier;
             }
@@ -183,13 +188,13 @@ void rotateShape(void *gameInfoStruct, void *target) {
             cameraOffset[0] /= distFinish;
             cameraOffset[2] /= distFinish;
         }
-        if(currentGame->getKeystate()[SDL_SCANCODE_KP_MINUS]){
-            cameraOffset[0] *= 1.01f; // Zoom out
+        if (currentGame->getKeystate()[SDL_SCANCODE_KP_MINUS]) {
+            cameraOffset[0] *= 1.01f;  // Zoom out
             cameraOffset[1] *= 1.01f;
             cameraOffset[2] *= 1.01f;
         }
-        if(currentGame->getKeystate()[SDL_SCANCODE_KP_PLUS]){
-            cameraOffset[0] *= 0.99f; // Zoom in
+        if (currentGame->getKeystate()[SDL_SCANCODE_KP_PLUS]) {
+            cameraOffset[0] *= 0.99f;  // Zoom in
             cameraOffset[1] *= 0.99f;
             cameraOffset[2] *= 0.99f;
         }
@@ -216,8 +221,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             double ySpeed = cos((angles[1] - 180) * (PI / 180));
 
             double multiplier = 1;
-            if(controllerLeftStateX < -JOYSTICK_DEAD_ZONE){
-                multiplier = ((float) (controllerLeftStateX * -1)) / 32767;
+            if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
+                multiplier = (static_cast<float>(controllerLeftStateX * -1)) / 32767;
             }
 
             pos[0] += (xSpeed / 300) * multiplier;
@@ -228,14 +233,14 @@ void rotateShape(void *gameInfoStruct, void *target) {
             double ySpeed = cos(angles[1] * (PI / 180));
             double multiplier = 1;
             if (controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
-                multiplier = ((float) (controllerLeftStateX)) / 32767;
+                multiplier = (static_cast<float>(controllerLeftStateX)) / 32767;
             }
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
         if ((currentGame->getKeystate()[SDL_SCANCODE_SPACE] || buttonCheckA) && pos[1] == 0) {
             fallspeed = -0.003f;
-            //pos[1] += 0.05f;
+            // pos[1] += 0.05f;
         }
         if (currentGame->getKeystate()[SDL_SCANCODE_E]) {
             fallspeed = 0;
@@ -249,8 +254,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             double ySpeed = cos((angles[1] + 90) * (PI / 180));
 
             double multiplier = 1;
-            if(controllerLeftStateY < -JOYSTICK_DEAD_ZONE){
-                multiplier = ((float) (controllerLeftStateY * -1)) / 32767;
+            if (controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
+                multiplier = (static_cast<float>(controllerLeftStateY * -1)) / 32767;
             }
 
             pos[0] += (xSpeed / 300) * multiplier;
@@ -261,8 +266,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             double ySpeed = cos((angles[1] - 90) * (PI / 180));
 
             double multiplier = 1;
-            if(controllerLeftStateY > JOYSTICK_DEAD_ZONE){
-                multiplier = ((float) controllerLeftStateY) / 32767;
+            if (controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
+                multiplier = static_cast<float>(controllerLeftStateY) / 32767;
             }
 
             pos[0] += (xSpeed / 300) * multiplier;
@@ -280,10 +285,9 @@ void rotateShape(void *gameInfoStruct, void *target) {
         if (currentGame->getKeystate()[SDL_SCANCODE_V]) {
             currentLuminance -= 0.01f;
         }
-        if(currentGame->getKeystate()[SDL_SCANCODE_P]){
+        if (currentGame->getKeystate()[SDL_SCANCODE_P]) {
             currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN_DESKTOP);
-        }
-        else if (currentGame->getKeystate()[SDL_SCANCODE_O]) {
+        } else if (currentGame->getKeystate()[SDL_SCANCODE_O]) {
             currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN);
         } else if (currentGame->getKeystate()[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
@@ -300,9 +304,9 @@ void rotateShape(void *gameInfoStruct, void *target) {
             }
         }
         fallspeed = basicPhysics(&pos[1], fallspeed);
-        //cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
+        // cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
         //    << ", Z: " << cameraOffset[2] << "\n";
-        //cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
+        // cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
         currentGameInfo->currentGame->lockScene();
         currentGameInfo->gameCamera->setOffset(cameraOffset);
         currentGame->setLuminance(currentLuminance);
@@ -312,7 +316,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     }
     SDL_GameControllerClose(gameController1);
     return;
-}
+} //NOLINT - refactor required
 
 /*
  (vector<double>) cameraDistance takes a 3D vector containing the offset of the
