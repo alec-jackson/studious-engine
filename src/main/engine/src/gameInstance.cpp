@@ -405,6 +405,7 @@ int GameInstance::getCollision(GameObject *object1, GameObject *object2,
 
     coll1 = object1->getCollider();
     coll2 = object2->getCollider();
+
     // First check if the two objects are currently colliding
     for (int i = 0; i < 3; i++) {
         float delta = abs(coll2.center[i] - coll1.center[i]);

@@ -14,12 +14,12 @@ CameraObject::CameraObject(cameraInfo camInfo) {
 void CameraObject::updateCamera() {
     if (target == NULL) {
         cerr << "Error: Unable to update camera! Camera target is NULL!\n";
-        throw std:runtime_error("Camera target is NULL");
+        throw std::runtime_error("Camera target is NULL");
     }
     // Create critical section here to prevent race conditions
-    mat4 viewMatrix = lookAt(target->getPos(offset), target->getPos(),
+    mat4 viewMatrix = lookAt(target->getPosition(offset), target->getPosition(),
         vec3(0,1,0));
     mat4 projectionMatrix = perspective(radians(cameraAngle), aspectRatio,
         nearClipping, farClipping);
-    VPmatrix = projectionMatrix * viewMatrix;
+    vpMatrix = projectionMatrix * viewMatrix;
 }

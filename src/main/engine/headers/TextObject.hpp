@@ -1,6 +1,5 @@
 #pragma once
-#include "common.hpp"
-#include "ModelImport.hpp"
+#include "GameObject.hpp"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include "TextObjectStructs.hpp"

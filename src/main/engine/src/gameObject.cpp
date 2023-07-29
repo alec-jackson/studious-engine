@@ -44,6 +44,16 @@ GameObject::GameObject(gameObjectInfo objectInfo) {
     vpMatrix = mat4(1.0f); // Default VP matrix to identity matrix
 }
 
+// Default constructor for base class... might want to TODO re-consider class hierarchy
+GameObject::GameObject() {
+    
+}
+
+GameObject::~GameObject() {
+    // TODO: Run cleanup methods here
+    cout << "Destroying gameobject\n";
+}
+
 string GameObject::getCollisionTag(void) {
     return collider.collisionTag; // TODO: Null check here
 }
@@ -196,8 +206,10 @@ int GameObject::createCollider(int shaderID) {
     // Go through objects and get absolute min/max points
     for (it = model->vertices.begin(); it != model->vertices.end(); ++it) {
         for (int i = 0; i < 3; i++) {
-            tempMin[i] = getColliderVertices((*it), i, min_func);
-            tempMax[i] = getColliderVertices((*it), i, max_func);
+            // Calculate min
+            tempMin[i] = getColliderVertices((*it), i, [](float a, float b) { return a < b; });
+            // Calculate max
+            tempMax[i] = getColliderVertices((*it), i, [](float a, float b) { return a > b; });
             if (tempMin[i] < min[i]) {
                 min[i] = tempMin[i];
             }

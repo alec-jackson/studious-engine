@@ -1,3 +1,5 @@
+#include "GameObject.hpp"
+
 /**
  * @brief Used to construct CameraObjects
  * @param objTarget(GameObject*) Object for camera to target onto.

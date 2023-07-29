@@ -5,6 +5,7 @@
  *          deprecated very soon.
  * @date 2023-07-23
  */
+// TODO - Change naming from [...]Structs to [...]Misc
 
 /**
  * @brief Stores info about a GameObject's internal collider object.
@@ -56,4 +57,3 @@ typedef struct gameObjectInfo {
 	int camera;
 	string collisionTagName;
 } gameObjectInfo;
-

@@ -1,15 +1,16 @@
 #include "TextObject.hpp"
 
+// TODO: Either use super() or restructure class inheritance - refactor this constructor
 TextObject::TextObject(textObjectInfo info) {
     mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
-    setProgramID(info.programId);
+    this->programId = info.programId;
     cout << "Initializing text with message " << info.message << endl;
-    setCollider("Text");
+    this->collider.collisionTag = "Text";
     message = info.message;
-    setPos(vec3(300.0f, 300.0f, 0.0f));
-    setScale(1.0f);
-    glUseProgram(getProgramID()); // Load text shader
-    glUniformMatrix4fv(glGetUniformLocation(getProgramID(),
+    this->position = vec3(300.0f, 300.0f, 0.0f);
+    this->scale = 1.0f;
+    glUseProgram(this->programId); // Load text shader
+    glUniformMatrix4fv(glGetUniformLocation(this->programId,
         "projection"), 1, GL_FALSE, &projection[0][0]);
     FT_Library ft;
     if (FT_Init_FreeType(&ft))
@@ -71,16 +72,16 @@ TextObject::TextObject(textObjectInfo info) {
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    setOrtho(true);
+    setViewMode(ORTHOGRAPHIC);
 }
 
 void TextObject::render() {
     glClear(GL_DEPTH_BUFFER_BIT);
     vec3 color = vec3(1.0f);
     float scale = getScale();
-    int x = getPos().x, y = getPos().y;
-    glUseProgram(getProgramID());
-    glUniform3f(glGetUniformLocation(getProgramID(), "textColor"),
+    int x = this->position.x, y = this->position.y;
+    glUseProgram(this->programId);
+    glUniform3f(glGetUniformLocation(this->programId, "textColor"),
         color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);

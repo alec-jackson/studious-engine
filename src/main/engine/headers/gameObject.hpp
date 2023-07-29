@@ -8,6 +8,7 @@ class GameObject: public SceneObject {
     public:
         // Constructurs
         GameObject(gameObjectInfo objectInfo);
+        GameObject();
         ~GameObject();
 
         // Setters
@@ -48,18 +49,20 @@ class GameObject: public SceneObject {
         unsigned int VAO; // TODO: Why do we have this?
 
         GLuint rotateId, scaleId, translateId, vpId, textureId, textCoordsId,
-            hasTextureId, directionalLightId, luminanceId, rollOffId, programId,
+            hasTextureId, directionalLightId, luminanceId, rollOffId,
             mvpId, collider_shaderId; // TODO: Organize these into another class
 
         GLint textureCoordId; 
 
-        GLfloat scale;
         GLfloat luminance;
         GLfloat rollOff;
 
         vector<GLint> hasTexture;
         vec3 directionalLight;
 
-        ViewMode viewMode;
-        colliderInfo collider; // TODO: Refactor colliderInfo 
+        ViewMode viewMode; 
+    protected:
+        GLfloat scale;
+        GLuint programId;
+        colliderInfo collider; // TODO: Refactor colliderInfo
 };

@@ -1,5 +1,4 @@
-#ifndef COMMON_H
-#define COMMON_H
+#pragma once
 #define SHOW_FPS 1 // Enables FPS logging to console when = 1, = 0 to disable
 #include <cstdio>
 #include <SDL.h>
@@ -31,15 +30,3 @@ using namespace std;
 
 // TODO - move away from common.hpp anti-pattern
 enum ViewMode { ORTHOGRAPHIC, PERSPECTIVE };
-
-// TODO: Doxygenize, maybe move somewhere else
-bool min_func(float a, float b) {
-    return a < b;
-}
-
-// TODO: Doxygenize
-bool max_func(float a, float b) {
-    return a > b;
-}
-
-#endif
