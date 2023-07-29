@@ -45,6 +45,7 @@ To compile the studious engine in debug mode, pass the -d flag as a command line
 - GLEW
 - glm
 - freetype2
+- googletest
 
 ### How to use this
 This started as an expansion of a pong engine we wrote so we didn't properly separate engine features and gameplay features. This is something we're working on planning on fixing while we're implementing the last of the essential features. (Text, Collision, Animation) We're planning to get this to a place where the engine can be called like a library, but right now some of the app level features are running inside our source files.

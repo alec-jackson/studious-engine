@@ -11,25 +11,21 @@
 
 #include <ModelImport.hpp>
 
-/**
- * @brief Constructs the ModelImport object using the importObjInfo as parameters
- * @param objInfo that contains the .obj file path, texture path, texture pattern and shader program ID
- * @throws runtime_error exception when passed a model path that does not exist
-*/
-ModelImport::ModelImport(importObjInfo objInfo) {
+ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId) :
+    modelPath { modelPath }, texturePath { texturePath }, texturePattern { texturePattern }, programId { programId } {
+}
+
+Polygon* ModelImport::createPolygonFromFile() {
     ifstream file;  // Read file as read only
-    file.open(objInfo.modelPath);
+    file.open(modelPath);
     if (!file.is_open()) {  // If the file does not exist or cannot be opened
         cerr << "Model path does not exist!";
         throw runtime_error("Model path does not exist");
     }
+    auto polygon = new Polygon();
     auto currentObject = 0;
+    textureCount = texturePath.size();
     string charBuffer;  // Will temporarily hold each line in obj file
-    model.programId = objInfo.programId;  // Save the current programId to use
-    vector<GLfloat> vertexFrame;  // Unique vertex points
-    vector<GLfloat> normalFrame;  // Unique normal points
-    vector<GLfloat> textureFrame;  // Unique texture points
-    vector<GLint> commands;  // Commands in obj file to build buffers
     // Grab entire lines from the object file to read at once
     while (getline(file, charBuffer)) {
         // Compare the first two "header" bytes of the obj file below
@@ -76,109 +72,86 @@ ModelImport::ModelImport(importObjInfo objInfo) {
             for (it = coms.begin(); it != coms.end(); ++it) {
                 commands.push_back(*it);  // Add commands from temp to main vec
             }
-            // When we hit the first obect, ignore
         } else if (charBuffer.compare(0, 2, "o ") == 0) {
-            // When currentObject == 0, run the following
-            if (!currentObject) {
-                currentObject++;
-            } else {
-                configureArgs args;
-                args.vertexFrame = vertexFrame;
-                args.textureFrame = textureFrame;
-                args.normalFrame = normalFrame;
-                args.commands = commands;
-                args.index = currentObject - 1;
-                args.textureCount = objInfo.texturePath.size();
-                args.texturePattern = objInfo.texturePattern;
-                args.texturePath = objInfo.texturePath;
-                configureObject(args);
-                currentObject++;
+            if (currentObject) {  // Ignore first object
+                // Merge polygon into master polygon object
+                polygon->merge(buildObject(currentObject - 1));  // Start index at zero just because
+                // Clear frame buffers
+                vertexFrame.clear();
+                normalFrame.clear();
+                textureFrame.clear();
+                commands.clear();
             }
+            ++currentObject;
         }
     }
-    cout << "Built frames\n";
-    // Send the final object to be configured in the function.
-    configureArgs args;
-    args.vertexFrame = vertexFrame;
-    args.textureFrame = textureFrame;
-    args.normalFrame = normalFrame;
-    args.commands = commands;
-    args.index = currentObject - 1;
-    args.textureCount = objInfo.texturePath.size();
-    args.texturePattern = objInfo.texturePattern;
-    args.texturePath = objInfo.texturePath;
-    configureObject(args);
-    model.textureUniformID = glGetUniformLocation(objInfo.programId,
-        "mytexture");
-    model.numberOfObjects = currentObject;
+    // Create the final object in the polygon
+    polygon->merge(buildObject(currentObject - 1));
+    return polygon;
 }
 
-/**
- * @brief Builds objects in the model using the passed vertex, texture and normal frames; also configures OpenGL related settings for the object
- * @param args containing details for current object @see configureArgs
- * @bug This method and the constructor need to be refactored, this single method should not need 10 arguments
-*/
-void ModelImport::configureObject(configureArgs args) {
-    cout << "Configuring Object\n";
-    model.pointCount.push_back(args.commands.size() / 9);
-    vector<GLfloat> vertexVBO;
-    vector<GLfloat> textureVBO;
-    vector<GLfloat> normalVBO;
+Polygon* ModelImport::buildObject(int objectId) {
+    cout << "Building GameObject " << objectId << endl;
+    auto pointCount = commands.size() / 9;
+    vector<GLfloat> vertexVbo;
+    vector<GLfloat> textureVbo;
+    vector<GLfloat> normalVbo;
+    /// @todo If any glitches occur, clear frame buffers between each buildObject call...
     // Iterate over each polygon in model
-    for (int i = 0; i < model.pointCount[args.index]; i++) {
+    cout << "pointCount is " << pointCount << endl;
+    for (int i = 0; i < pointCount; i++) {
         for (int k = 0; k < 3; k++) {  // Loop through each point
             int currentCommandIndex = (i*9) + (k*3);  // vertex coord command
-            int currentCommand = args.commands[currentCommandIndex];
+            int currentCommand = commands[currentCommandIndex];
             // Assign vertex data
             for (int l = 0; l < 3; l++) {
-                vertexVBO.push_back(args.vertexFrame[(currentCommand-1)*3+l]);
+                vertexVbo.push_back(vertexFrame[(currentCommand-1)*3+l]);
             }
             currentCommandIndex = (i*9) + (k*3) + 1;  // textureCoord command
-            currentCommand = args.commands[currentCommandIndex];
-            if (args.textureFrame.size() > 0) {
-                textureVBO.push_back(args.textureFrame[(currentCommand-1)*2]);
-                textureVBO.push_back(1.0f - args.textureFrame[(currentCommand-1)*2+1]);
+            currentCommand = commands[currentCommandIndex];
+            if (textureFrame.size() > 0) {
+                textureVbo.push_back(textureFrame[(currentCommand-1)*2]);
+                textureVbo.push_back(1.0f - textureFrame[(currentCommand-1)*2+1]);
             } else {
-                textureVBO.push_back(0.0f);
-                textureVBO.push_back(0.0f);  // Add dummy values for missing data
+                textureVbo.push_back(0.0f);
+                textureVbo.push_back(0.0f);  // Add dummy values for missing data
             }
             currentCommandIndex = (i*9) + (k*3) + 2;  // normal command
-            currentCommand = args.commands[currentCommandIndex];
+            currentCommand = commands[currentCommandIndex];
             for (int l = 0; l < 3; l++) {
-                normalVBO.push_back(args.normalFrame[(currentCommand-1)*3+l]);
+                normalVbo.push_back(normalFrame[(currentCommand-1)*3+l]);
             }
         }
     }
-    model.vertices.push_back(vertexVBO);
-    model.textureCoords.push_back(textureVBO);
-    model.normalCoords.push_back(normalVBO);
-    model.shapebufferID.push_back(0);  // Create space on vector for buffer
-    model.normalbufferID.push_back(0);  // Create space for normal buff
-    // Texture values will default to UINT_MAX to signify no texture
-    model.textureId.push_back(UINT_MAX);
-    model.textureCoordsID.push_back(UINT_MAX);
-    glGenBuffers(1, &(model.shapebufferID[args.index]));
-    glBindBuffer(GL_ARRAY_BUFFER, model.shapebufferID[args.index]);
+    auto polygon = new Polygon(pointCount, vertexVbo, textureVbo, normalVbo);
+    /// @todo Run configureOpenGL once when all objects are created - figure out deal with destructor
+    configureOpenGl(polygon, objectId);
+    return polygon;
+}
+
+void ModelImport::configureOpenGl(Polygon* polygon, int objectId) {
+    glGenBuffers(1, &(polygon->shapeBufferId[objectId]));
+    glBindBuffer(GL_ARRAY_BUFFER, polygon->shapeBufferId[objectId]);
     glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * model.pointCount[args.index] * 9,
-                 &(model.vertices[args.index][0]), GL_STATIC_DRAW);
-    glGenBuffers(1, &(model.normalbufferID[args.index]));
-    glBindBuffer(GL_ARRAY_BUFFER, model.normalbufferID[args.index]);
+                 sizeof(GLfloat) * polygon->pointCount[objectId] * 9,
+                 &(polygon->vertices[objectId][0]), GL_STATIC_DRAW);
+    glGenBuffers(1, &(polygon->normalBufferId[objectId]));
+    glBindBuffer(GL_ARRAY_BUFFER, polygon->normalBufferId[objectId]);
     glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * model.pointCount[args.index] * 9,
-                 &(model.normalCoords[args.index][0]), GL_STATIC_DRAW);
+                 sizeof(GLfloat) * polygon->pointCount[objectId] * 9,
+                 &(polygon->normalCoords[objectId][0]), GL_STATIC_DRAW);
     // Specific case where the current object does not get a texture
-    if (!args.textureCount || args.texturePattern[args.index] >= args.textureCount ||
-        args.texturePattern[args.index] == -1) {
+    if (!textureCount || texturePattern[objectId] >= textureCount ||
+        texturePattern[objectId] == -1) {
         return;
     }
-    SDL_Surface *texture = IMG_Load(args.texturePath[args.texturePattern[args.index]].c_str());
+    SDL_Surface *texture = IMG_Load(texturePath[texturePattern[objectId]].c_str());
     if (texture == NULL) {
         cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
-    glGenTextures(1, &(model.textureId[args.index]));
-    glBindTexture(GL_TEXTURE_2D, model.textureId[args.index]);
+    glGenTextures(1, &(polygon->textureId[objectId]));
+    glBindTexture(GL_TEXTURE_2D, polygon->textureId[objectId]);
     if (texture->format->Amask) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h,
                      0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
@@ -194,30 +167,15 @@ void ModelImport::configureObject(configureArgs args) {
     glGenerateMipmap(GL_TEXTURE_2D);
     SDL_FreeSurface(texture);
     // glGenerateMipmap(GL_TEXTURE_2D);
-    glGenBuffers(1, &(model.textureCoordsID[args.index]));
-    glBindBuffer(GL_ARRAY_BUFFER, model.textureCoordsID[args.index]);
+    glGenBuffers(1, &(polygon->textureCoordsId[objectId]));
+    glBindBuffer(GL_ARRAY_BUFFER, polygon->textureCoordsId[objectId]);
     glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * model.pointCount[args.index] * 6,
-                 &(model.textureCoords[args.index][0]), GL_STATIC_DRAW);
+                 sizeof(GLfloat) * polygon->pointCount[objectId] * 6,
+                 &(polygon->textureCoords[objectId][0]), GL_STATIC_DRAW);
 }
 
 /**
- * @brief Cleans up memory allocated by OpenGL for the imported object
+ * @todo Not sure what to do here yet... but might keep state of OpenGL imports
 */
 ModelImport::~ModelImport() {
-    // Delete OpenGL buffers for the gameObjects
-    for (int i = 0; i < model.numberOfObjects; i++) {
-        glDeleteBuffers(1, &model.shapebufferID[i]);
-        glDeleteBuffers(1, &model.textureCoordsID[i]);
-        glDeleteBuffers(1, &model.normalbufferID[i]);
-        glDeleteTextures(1, &model.textureId[i]);
-    }
-}
-
-/**
- * @brief Returns a pointer to the model member
- * @return polygon * pointing to internal polygon member
-*/
-polygon *ModelImport::getPolygon() {
-    return &model;
 }

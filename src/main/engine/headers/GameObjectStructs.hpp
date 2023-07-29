@@ -33,7 +33,7 @@ typedef struct colliderInfo {
     vec4 offset, minPoints;
     vec4 center, originalCenter;
     string collisionTag;
-    polygon *collider;
+    Polygon *collider;
 } colliderInfo;
 
 /**
@@ -56,7 +56,7 @@ typedef struct colliderInfo {
  *    when handling collision in the current GameInstance.
 */
 typedef struct gameObjectInfo {
-    polygon *characterModel;
+    Polygon *characterModel;
     vec3 position, rotation;
     GLfloat scale;
     int camera;

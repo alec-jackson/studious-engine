@@ -23,7 +23,7 @@ GameObject::GameObject(gameObjectInfo objectInfo) {
     cameraId = objectInfo.camera;
     // Populate the hasTexture vector with texture info
     for (int i = 0; i < model->numberOfObjects; i++) {
-        if (model->textureCoordsID[i] == UINT_MAX) {
+        if (model->textureCoordsId[i] == UINT_MAX) {
             hasTexture.push_back(0);  // No texture found for obj i
         } else {
             hasTexture.push_back(1);  // Texture found for obj i
@@ -112,11 +112,11 @@ void GameObject::render() {
         if (hasTexture[i]) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, model->textureId[i]);
-            glUniform1i(model->textureUniformID, 0);
+            glUniform1i(model->textureUniformId, 0);
         }
         // Actually start drawing polygons :)
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, model->shapebufferID[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, model->shapeBufferId[i]);
         glVertexAttribPointer(
                               0,            // attribute 0. No particular reason for 0, but must match
                                             // the layout in the shader.
@@ -126,11 +126,11 @@ void GameObject::render() {
                               0,            // stride
                               0);           // array buffer offset
         glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, model->normalbufferID[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, model->normalBufferId[i]);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
         if (hasTexture[i]) {
             glEnableVertexAttribArray(1);
-            glBindBuffer(GL_ARRAY_BUFFER, model->textureCoordsID[i]);
+            glBindBuffer(GL_ARRAY_BUFFER, model->textureCoordsId[i]);
             glVertexAttribPointer(
                                   1,
                                   2,
@@ -154,7 +154,7 @@ void GameObject::render() {
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
         glUniformMatrix4fv(mvpId, 1, GL_FALSE, &MVP[0][0]);
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, collider.collider->shapebufferID[0]);
+        glBindBuffer(GL_ARRAY_BUFFER, collider.collider->shapeBufferId[0]);
         glVertexAttribPointer(
                               0,                  // attribute 0. No particular reason for 0, but must match
                                                   // the layout in the shader.
@@ -229,7 +229,7 @@ int GameObject::createCollider(int shaderID) {
         }
     }
     // Create new polygon object for collider
-    collider.collider = new polygon();
+    collider.collider = new Polygon();
     // Manually build triangles for cube collider
     vector<GLfloat> colliderVertices = {
         // First face
@@ -277,12 +277,12 @@ int GameObject::createCollider(int shaderID) {
     };
     collider.collider->vertices.push_back(colliderVertices);
     collider.collider->textureId.push_back(UINT_MAX);
-    collider.collider->textureCoordsID.push_back(UINT_MAX);
-    collider.collider->shapebufferID.push_back(0);
+    collider.collider->textureCoordsId.push_back(UINT_MAX);
+    collider.collider->shapeBufferId.push_back(0);
     collider.collider->pointCount.push_back(108);
     collider.collider->programId = shaderID;
-    glGenBuffers(1, &(collider.collider->shapebufferID[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, collider.collider->shapebufferID[0]);
+    glGenBuffers(1, &(collider.collider->shapeBufferId[0]));
+    glBindBuffer(GL_ARRAY_BUFFER, collider.collider->shapeBufferId[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 108,
         &(collider.collider->vertices[0][0]), GL_STATIC_DRAW);
     // Set the correct center points

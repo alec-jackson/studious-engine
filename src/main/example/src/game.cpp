@@ -124,18 +124,22 @@ int runtime(GameInstance *currentGame) {
         3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f };
     gameObject[2] = currentGame->createCamera(camInfo);
 
+    /// @todo Make loading textures for objects a little more user friendly
+    // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
     vector<GLint> texturePattern = {0, 1, 2, 3};
-    vector<GLint> texturePatternStage = {0};
+    vector<GLint> texturePatternStage = {-1, -1, -1, -1};
 
     cout << "Creating Map.\n";
-    // Create args for ModelImport constructor for map
-    importObjInfo mapInfo = { "src/resources/models/map2.obj", texturePathStage,
-        texturePatternStage, currentGame->getProgramID(0) };
 
-    auto importedMapObj = ModelImport(mapInfo);
-    auto mapPoly = importedMapObj.getPolygon();
+    auto importedMapObj = ModelImport("src/resources/models/map2.obj",
+        texturePathStage,
+        texturePatternStage,
+        currentGame->getProgramID(0));
+
+    auto mapPoly = importedMapObj.createPolygonFromFile();
 
     // Create a gameObjectInfo struct for creating a game object for the map
+    /// @todo mapPoly can be a reference I think
     gameObjectInfo map = { mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
         gameObject[2], "map" };
@@ -144,12 +148,13 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Player\n";
 
-    // Import the player object
-    importObjInfo player = { "src/resources/models/Dracula.obj", texturePath, texturePattern,
-        currentGame->getProgramID(0) };
+    auto importedPlayerObj = ModelImport(
+        "src/resources/models/Dracula.obj",
+        texturePath,
+        texturePattern,
+        currentGame->getProgramID(0));
 
-    auto importedPlayerObj = ModelImport(player);
-    auto playerPoly = importedPlayerObj.getPolygon();
+    auto playerPoly = importedPlayerObj.createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
     gameObjectInfo playerObj = { playerPoly, vec3(0.0f, 0.0f, -1.0f),
@@ -161,12 +166,14 @@ int runtime(GameInstance *currentGame) {
     playerRef = dracs;
 
     cout << "Creating wolf\n";
-    // Import the wold object
-    importObjInfo wolf = { "src/resources/models/wolf.obj", texturePath, texturePattern,
-        currentGame->getProgramID(0) };
 
-    auto importedWolfObj = ModelImport(wolf);
-    auto wolfPoly = importedWolfObj.getPolygon();
+    auto importedWolfObj = ModelImport("src/resources/models/wolf.obj",
+        texturePath,
+        texturePattern,
+        currentGame->getProgramID(0));
+
+    auto wolfPoly = importedWolfObj.createPolygonFromFile();
+
     // Ready the gameObjectInfo for the wolf object
     gameObjectInfo wolfObj = { wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
