@@ -1,6 +1,6 @@
 #include "GameObject.hpp"
 
-// TODO: Refactor to use initializer lists
+/// @todo: Refactor to use initializer lists
 GameObject::GameObject(gameObjectInfo objectInfo) {
     programId = objectInfo.characterModel->programId;
     collider.collider = NULL; // Default to not having a collider
@@ -44,18 +44,18 @@ GameObject::GameObject(gameObjectInfo objectInfo) {
     vpMatrix = mat4(1.0f); // Default VP matrix to identity matrix
 }
 
-// Default constructor for base class... might want to TODO re-consider class hierarchy
+/// @todo Default constructor for base class... might want to re-consider class hierarchy
 GameObject::GameObject() {
     
 }
 
 GameObject::~GameObject() {
-    // TODO: Run cleanup methods here
+    /// @todo: Run cleanup methods here
     cout << "Destroying gameobject\n";
 }
 
 string GameObject::getCollisionTag(void) {
-    return collider.collisionTag; // TODO: Null check here
+    return collider.collisionTag; /// @todo: Null check here
 }
 
 colliderInfo GameObject::getCollider(void) {
@@ -69,7 +69,8 @@ colliderInfo GameObject::getCollider(void) {
     return collider;
 }
 
-/* TODO: Update and doxygenize this method
+/// @todo Update and doxygenize this method
+/* 
  (void) drawShape draws the current GameObject inside of the scene. This is the
  method that interacts with OpenGL the most (just to let you know). Method
  walks through all of the objects inside of the current model and renders them
@@ -159,7 +160,7 @@ void GameObject::render() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-// TODO: Deprecated - merge this into the GameObject destructor
+/// @todo: Deprecated - merge this into the GameObject destructor
 void GameObject::deleteTextures() {
     for (int i = 0; model->numberOfObjects; i++) {
         if (hasTexture[i]) {
@@ -169,7 +170,7 @@ void GameObject::deleteTextures() {
     }
 }
 
-// TODO: Add a null check here
+/// @todo: Add a null check here
 void GameObject::setCollisionTag(string collisionTag) {
     this->collider.collisionTag = collisionTag;
 }
@@ -191,7 +192,7 @@ GLfloat GameObject::getColliderVertices(vector<GLfloat> vertices, int axis,
     return currentMin;
 }
 
-// TODO: Refactor...? Will replace this anyway, so maybe not
+/// @todo: Refactor...? Will replace this anyway, so maybe not
 int GameObject::createCollider(int shaderID) {
     cout << "Building collider for " << collider.collisionTag << endl;
     GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};

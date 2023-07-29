@@ -1,3 +1,13 @@
+/**
+ * @file TextObject.hpp
+ * @author Christian Galvez
+ * @brief TextObject is a GameObject; orthographically rendered on-screen text object
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #pragma once
 #include "GameObject.hpp"
 #include <ft2build.h>
@@ -22,7 +32,7 @@ class TextObject: public GameObject {
     private:
         string message;
         int fontSize;
-        unsigned int VAO, VBO; // TODO: Where are these being used? Protected at a level above?
-        unsigned int textureUniformId; // TODO: Investigate whether this can be protected  at a level above
+        unsigned int VAO, VBO; /// @todo: Where are these being used? Protected at a level above?
+        unsigned int textureUniformId; /// @todo: Investigate whether this can be protected  at a level above
         map<GLchar, Character> characters;    
 };

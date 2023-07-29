@@ -1,3 +1,14 @@
+/**
+ * @file CameraObject.hpp
+ * @author Christian Galvez
+ * @brief CameraObject class is a SceneObject; used for rendering GameObjects
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #pragma once
 #include "common.hpp"
 #include "ModelImport.hpp"
@@ -16,7 +27,7 @@ class CameraObject: public SceneObject {
 
         // Getters
         inline vec3 getOffset() { return this->offset; };
-        inline GameObject *getTarget() { return this->target; }; // TODO: Reference here
+        inline GameObject *getTarget() { return this->target; }; /// @todo: Reference here
         inline GLfloat getAspectRatio() { return this->aspectRatio; };
 
         // Camera Specific Methods

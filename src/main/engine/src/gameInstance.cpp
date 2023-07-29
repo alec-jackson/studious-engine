@@ -1,3 +1,14 @@
+/**
+ * @file gameInstance.cpp
+ * @author Christian Galvez
+ * @brief Implementation of gameInstance
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include "gameInstance.hpp"
 
 /*
@@ -238,7 +249,7 @@ int GameInstance::updateObjects() {
         cerr << "Error: No active GameObjects in the current scene!\n";
         return -1;
     }
-    // TODO: Polymorphism! Only need one structure for these game objects
+    /// @todo: Polymorphism! Only need one structure for these game objects
     glBindVertexArray(vertexArrayID);
     std::vector<GameObject *>::iterator it;
     for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {

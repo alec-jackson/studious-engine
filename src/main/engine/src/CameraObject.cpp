@@ -1,6 +1,17 @@
+/**
+ * @file CameraObject.cpp
+ * @author Christian Galvez
+ * @brief Implementation for CameraObject
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include "CameraObject.hpp"
 
-// TODO: Initializer lists for all SceneObject classes
+/// @todo: Initializer lists for all SceneObject classes
 CameraObject::CameraObject(cameraInfo camInfo) {
     aspectRatio = camInfo.viewAspectRatio;
     nearClipping = camInfo.viewNearClipping;
@@ -10,7 +21,7 @@ CameraObject::CameraObject(cameraInfo camInfo) {
     cameraAngle = camInfo.viewCameraAngle;
 }
 
-// TODO: Change NULL checks to nullptr
+/// @todo: Change NULL checks to nullptr
 void CameraObject::updateCamera() {
     if (target == NULL) {
         cerr << "Error: Unable to update camera! Camera target is NULL!\n";

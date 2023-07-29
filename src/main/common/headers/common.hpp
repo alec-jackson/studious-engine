@@ -1,3 +1,14 @@
+/**
+ * @file common.hpp
+ * @author Christian Galvez
+ * @brief Contains common definitions and imports used across studious-engine
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #pragma once
 #define SHOW_FPS 1 // Enables FPS logging to console when = 1, = 0 to disable
 #include <cstdio>
@@ -28,5 +39,5 @@
 using namespace glm;
 using namespace std;
 
-// TODO - move away from common.hpp anti-pattern
+/// @todo - move away from common.hpp anti-pattern
 enum ViewMode { ORTHOGRAPHIC, PERSPECTIVE };

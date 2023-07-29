@@ -1,8 +1,19 @@
+/**
+ * @file inputMonitor.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include "inputMonitor.hpp"
 //Analog joystick dead zone
 #define PI 3.14159265
 const int JOYSTICK_DEAD_ZONE = 4000;
-// TODO - Use event based input handling; DO NOT REFACTOR THIS FILE
+/// @todo - Use event based input handling; DO NOT REFACTOR THIS FILE
 vector<double> cameraDistance(vec3 offset);
 
 /*

@@ -1,6 +1,6 @@
 #include "TextObject.hpp"
 
-// TODO: Either use super() or restructure class inheritance - refactor this constructor
+/// @todo: Either use super() or restructure class inheritance - refactor this constructor
 TextObject::TextObject(textObjectInfo info) {
     mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
     this->programId = info.programId;
