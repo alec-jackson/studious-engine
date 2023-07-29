@@ -87,6 +87,7 @@ Polygon* ModelImport::createPolygonFromFile() {
     }
     // Create the final object in the polygon
     polygon->merge(buildObject(currentObject - 1));
+    polygon->textureUniformId = glGetUniformLocation(programId, "mytexture");
     return polygon;
 }
 
@@ -130,16 +131,16 @@ Polygon* ModelImport::buildObject(int objectId) {
 }
 
 void ModelImport::configureOpenGl(Polygon* polygon, int objectId) {
-    glGenBuffers(1, &(polygon->shapeBufferId[objectId]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon->shapeBufferId[objectId]);
+    glGenBuffers(1, &(polygon->shapeBufferId[0]));
+    glBindBuffer(GL_ARRAY_BUFFER, polygon->shapeBufferId[0]);
     glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon->pointCount[objectId] * 9,
-                 &(polygon->vertices[objectId][0]), GL_STATIC_DRAW);
-    glGenBuffers(1, &(polygon->normalBufferId[objectId]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon->normalBufferId[objectId]);
+                 sizeof(GLfloat) * polygon->pointCount[0] * 9,
+                 &(polygon->vertices[0][0]), GL_STATIC_DRAW);
+    glGenBuffers(1, &(polygon->normalBufferId[0]));
+    glBindBuffer(GL_ARRAY_BUFFER, polygon->normalBufferId[0]);
     glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon->pointCount[objectId] * 9,
-                 &(polygon->normalCoords[objectId][0]), GL_STATIC_DRAW);
+                 sizeof(GLfloat) * polygon->pointCount[0] * 9,
+                 &(polygon->normalCoords[0][0]), GL_STATIC_DRAW);
     // Specific case where the current object does not get a texture
     if (!textureCount || texturePattern[objectId] >= textureCount ||
         texturePattern[objectId] == -1) {
@@ -150,8 +151,8 @@ void ModelImport::configureOpenGl(Polygon* polygon, int objectId) {
         cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
-    glGenTextures(1, &(polygon->textureId[objectId]));
-    glBindTexture(GL_TEXTURE_2D, polygon->textureId[objectId]);
+    glGenTextures(1, &(polygon->textureId[0]));
+    glBindTexture(GL_TEXTURE_2D, polygon->textureId[0]);
     if (texture->format->Amask) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h,
                      0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
@@ -167,11 +168,11 @@ void ModelImport::configureOpenGl(Polygon* polygon, int objectId) {
     glGenerateMipmap(GL_TEXTURE_2D);
     SDL_FreeSurface(texture);
     // glGenerateMipmap(GL_TEXTURE_2D);
-    glGenBuffers(1, &(polygon->textureCoordsId[objectId]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon->textureCoordsId[objectId]);
+    glGenBuffers(1, &(polygon->textureCoordsId[0]));
+    glBindBuffer(GL_ARRAY_BUFFER, polygon->textureCoordsId[0]);
     glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon->pointCount[objectId] * 6,
-                 &(polygon->textureCoords[objectId][0]), GL_STATIC_DRAW);
+                 sizeof(GLfloat) * polygon->pointCount[0] * 6,
+                 &(polygon->textureCoords[0][0]), GL_STATIC_DRAW);
 }
 
 /**

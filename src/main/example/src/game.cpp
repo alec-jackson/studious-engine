@@ -127,7 +127,7 @@ int runtime(GameInstance *currentGame) {
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
     vector<GLint> texturePattern = {0, 1, 2, 3};
-    vector<GLint> texturePatternStage = {-1, -1, -1, -1};
+    vector<GLint> texturePatternStage = {0, 0, 0, 0};
 
     cout << "Creating Map.\n";
 
