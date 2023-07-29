@@ -46,7 +46,6 @@ add_executable(${PROJECT_NAME}
   src/main/engine/src/inputMonitor.cpp
   src/main/engine/src/physics.cpp
   src/main/misc/src/config.cpp
-  src/main/misc/src/loadScene.cpp
 )
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})

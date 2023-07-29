@@ -86,7 +86,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
             if (mouseY < 0) {
                 modifier = (mouseY / 5.0f) * -1;
             } else if (controllerRightStateY > JOYSTICK_DEAD_ZONE) {
-                modifier = (static_cast<float>controllerRightStateY) / 32767;
+                modifier = static_cast<float>(controllerRightStateY) / 32767;
             }
             vector<double> distHold = cameraDistance(cameraOffset);
             cameraOffset[1] -= offsetSpeed * modifier;

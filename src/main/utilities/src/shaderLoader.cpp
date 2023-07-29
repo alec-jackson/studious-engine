@@ -36,8 +36,8 @@ GLuint loadShaders(string vertexShader, string fragmentShader) {
         vertShader.append(tempLine + '\n');
     }
     cout << "Now compiling " << vertexShader << "...\n";
-    vector<GLchar *> vertShaderInfo(1);
-    vertShaderInfo[0] = reinterpret_cast<GLchar *>(vertShader.c_str());
+    vector<const GLchar *> vertShaderInfo(1);
+    vertShaderInfo[0] = reinterpret_cast<const GLchar *>(vertShader.c_str());
     glShaderSource(vertexShaderID, 1, &vertShaderInfo[0], NULL);
     glCompileShader(vertexShaderID);
     glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &success);
@@ -58,8 +58,8 @@ GLuint loadShaders(string vertexShader, string fragmentShader) {
         fragShader.append(tempLine + '\n');
     }
     cout << "Now compiling " << fragmentShader << "...\n";
-    vector<GLchar *>fragShaderInfo(1);
-    fragShaderInfo[0] = reinterpret_cast<GLchar *>fragShader.c_str();
+    vector<const GLchar *>fragShaderInfo(1);
+    fragShaderInfo[0] = reinterpret_cast<const GLchar *>(fragShader.c_str());
     glShaderSource(fragmentShaderID, 1, &fragShaderInfo[0], NULL);
     glCompileShader(fragmentShaderID);
     glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &success);
