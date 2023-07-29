@@ -1,3 +1,14 @@
+/**
+ * @file GameObject.cpp
+ * @author Christian Galvez
+ * @brief Implementation for GameObject
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include "GameObject.hpp"
 
 /// @todo: Refactor to use initializer lists
