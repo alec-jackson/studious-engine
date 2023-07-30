@@ -49,9 +49,7 @@ GameObject::GameObject(gameObjectInfo objectInfo) {
     directionalLightId = glGetUniformLocation(programId, "directionalLight");
     luminanceId = glGetUniformLocation(programId, "luminance");
     rollOffId = glGetUniformLocation(programId, "rollOff");
-    if (collider.collider != NULL) {
-        mvpId = glGetUniformLocation(collider.collider->programId, "MVP");
-    }
+    mvpId = -1;
     vpMatrix = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
@@ -202,7 +200,7 @@ GLfloat GameObject::getColliderVertices(vector<GLfloat> vertices, int axis,
 }
 
 /// @todo: Refactor...? Will replace this anyway, so maybe not
-int GameObject::createCollider(int shaderID) {
+int GameObject::createCollider(int shaderId) {
     cout << "Building collider for " << collider.collisionTag << endl;
     GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
     GLfloat max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
@@ -212,6 +210,8 @@ int GameObject::createCollider(int shaderID) {
             << endl;
         return -1;
     }
+    // Set MVP ID for collider object
+    mvpId = glGetUniformLocation(shaderId, "MVP");
     vector<vector<GLfloat>>::iterator it;
     // Go through objects and get absolute min/max points
     for (it = model->vertices.begin(); it != model->vertices.end(); ++it) {
@@ -228,8 +228,6 @@ int GameObject::createCollider(int shaderID) {
             }
         }
     }
-    // Create new polygon object for collider
-    collider.collider = new Polygon();
     // Manually build triangles for cube collider
     vector<GLfloat> colliderVertices = {
         // First face
@@ -275,15 +273,11 @@ int GameObject::createCollider(int shaderID) {
         max[0], min[1], min[2],
         min[0], min[1], max[2]
     };
-    collider.collider->vertices.push_back(colliderVertices);
-    collider.collider->textureId.push_back(UINT_MAX);
-    collider.collider->textureCoordsId.push_back(UINT_MAX);
-    collider.collider->shapeBufferId.push_back(0);
-    collider.collider->pointCount.push_back(108);
-    collider.collider->programId = shaderID;
+    auto pointCount = colliderVertices.size();
+    collider.collider = new Polygon(pointCount, shaderId, colliderVertices);
     glGenBuffers(1, &(collider.collider->shapeBufferId[0]));
     glBindBuffer(GL_ARRAY_BUFFER, collider.collider->shapeBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 108,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * pointCount,
         &(collider.collider->vertices[0][0]), GL_STATIC_DRAW);
     // Set the correct center points
     for (int i = 0; i < 3; i++) {

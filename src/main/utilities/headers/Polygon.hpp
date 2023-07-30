@@ -14,7 +14,9 @@
 
 class Polygon {
  public:
-    Polygon(GLint pointCount, vector<GLfloat> vertices, vector<GLfloat> textures, vector<GLfloat> normals);
+    Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
+        vector<GLfloat> normals);
+    Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices);
     Polygon();  // Default constructor for merging
     Polygon* merge(Polygon*);
 

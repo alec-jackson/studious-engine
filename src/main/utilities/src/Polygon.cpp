@@ -14,13 +14,17 @@
 using std::cout;
 using std::endl;
 
-Polygon::Polygon(GLint pointCount, vector<GLfloat> vertices, vector<GLfloat> textures, vector<GLfloat> normals) :
-    pointCount { pointCount }, numberOfObjects { 0 }, textureUniformId { 0 } {
+Polygon::Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
+    vector<GLfloat> normals) : Polygon(pointCount, programId, vertices) {
     cout << "Creating GameObject" << endl;
 
-    this->vertices.push_back(vertices);
     this->textureCoords.push_back(textures);
     this->normalCoords.push_back(normals);
+}
+
+Polygon::Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices) : pointCount { pointCount },
+    numberOfObjects { 0 }, textureUniformId { 0 }, programId { programId } {
+    this->vertices.push_back(vertices);
 
     // Push zeroes into vectors for glBuffer functions to write into
     this->shapeBufferId.push_back(0);

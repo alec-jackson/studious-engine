@@ -77,9 +77,6 @@ Polygon* ModelImport::createPolygonFromFile() {
                 // Merge polygon into master polygon object
                 polygon->merge(buildObject(currentObject - 1));  // Start index at zero just because
                 // Clear frame buffers
-                vertexFrame.clear();
-                normalFrame.clear();
-                textureFrame.clear();
                 commands.clear();
             }
             ++currentObject;
@@ -88,6 +85,7 @@ Polygon* ModelImport::createPolygonFromFile() {
     // Create the final object in the polygon
     polygon->merge(buildObject(currentObject - 1));
     polygon->textureUniformId = glGetUniformLocation(programId, "mytexture");
+    polygon->programId = this->programId;
     return polygon;
 }
 
@@ -124,7 +122,7 @@ Polygon* ModelImport::buildObject(int objectId) {
             }
         }
     }
-    auto polygon = new Polygon(pointCount, vertexVbo, textureVbo, normalVbo);
+    auto polygon = new Polygon(pointCount, this->programId, vertexVbo, textureVbo, normalVbo);
     /// @todo Run configureOpenGL once when all objects are created - figure out deal with destructor
     configureOpenGl(polygon, objectId);
     return polygon;
