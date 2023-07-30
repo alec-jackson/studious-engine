@@ -25,10 +25,10 @@ class ModelImport {
  public:
       explicit ModelImport(string, vector<string>, vector<GLint>, GLuint);
       Polygon *createPolygonFromFile();
-      Polygon *buildObject(int objectId);
+      int processLine(string, int, Polygon *, bool);
+      Polygon *buildObject(int objectId, bool oglConfigure);
       void configureOpenGl(Polygon *, int);
       ~ModelImport();
-      Polygon *getPolygon();
  private:
       string modelPath;
       vector<string> texturePath;

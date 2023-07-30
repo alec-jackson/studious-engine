@@ -25,4 +25,4 @@ latex/
 .vscode/
 
 # Tests #
-ModelImportTests
+gtest_ModelImportTests

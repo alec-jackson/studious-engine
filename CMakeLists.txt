@@ -23,6 +23,7 @@ endif (APPLE)
 
 include_directories(
   src/main/utilities/headers
+  src/main/utilities/test/headers
   src/main/common/headers
   src/main/engine/headers
   src/main/example/headers
@@ -56,10 +57,13 @@ add_executable(${PROJECT_NAME}
   src/main/misc/src/config.cpp
 )
 add_executable(
-  ModelImportTests
-  src/main/utilities/test/ModelImportTests.cpp
+  gtest_ModelImportTests
+  src/main/utilities/test/src/ModelImportTests.cpp
+  src/main/utilities/src/ModelImport.cpp
+  src/main/utilities/src/Polygon.cpp
 )
 
+# Project include dirs
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
@@ -75,11 +79,27 @@ target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} Threads::Threads)
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
+
+target_include_directories(gtest_ModelImportTests PUBLIC ${SDL2_INCLUDE_DIRS})
+target_include_directories(gtest_ModelImportTests PUBLIC ${GLEW_INCLUDE_DIRS})
+target_include_directories(gtest_ModelImportTests PUBLIC ${OPENGL_INCLUDE_DIR})
+target_include_directories(gtest_ModelImportTests PUBLIC ${FREETYPE_INCLUDE_DIRS})
+#target_include_directories(gtest_ModelImportTests PUBLIC ${SDL2_NET_INCLUDE_DIRS})
+
+target_link_libraries(gtest_ModelImportTests SDL2::Main)
+target_link_libraries(gtest_ModelImportTests SDL2::Mixer)
+target_link_libraries(gtest_ModelImportTests SDL2::Image)
+#target_link_libraries(gtest_ModelImportTests SDL2::Net)
+target_link_libraries(gtest_ModelImportTests ${OPENGL_LIBRARIES})
+target_link_libraries(gtest_ModelImportTests ${GLEW_LIBRARIES})
+target_link_libraries(gtest_ModelImportTests Threads::Threads)
+target_link_libraries(gtest_ModelImportTests ${FREETYPE_LIBRARIES})
+
 target_link_libraries(
-  ModelImportTests
+  gtest_ModelImportTests
   GTest::gtest_main
 )
 
-gtest_discover_tests(ModelImportTests)
+gtest_discover_tests(gtest_ModelImportTests)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}")

@@ -28,68 +28,73 @@ Polygon* ModelImport::createPolygonFromFile() {
     string charBuffer;  // Will temporarily hold each line in obj file
     // Grab entire lines from the object file to read at once
     while (getline(file, charBuffer)) {
-        // Compare the first two "header" bytes of the obj file below
-        if (charBuffer.compare(0, 2, "v ") == 0) {
-            vector<GLfloat> tempVertices(3);
-            sscanf(charBuffer.c_str(), "v %f %f %f\n", &tempVertices[0],
-                &tempVertices[1], &tempVertices[2]);
-            // Add tempVertices to vertexFrame
-            vector<GLfloat>::iterator it;
-            for (it = tempVertices.begin(); it != tempVertices.end(); ++it) {
-                vertexFrame.push_back(*it);  // Add points to vertexFrame
-            }
-        } else if (charBuffer.compare(0, 2, "vt") == 0) {
-            vector<GLfloat> tempTextures(2);
-            sscanf(charBuffer.c_str(), "vt %f %f\n", &tempTextures[0],
-                &tempTextures[1]);
-            vector<GLfloat>::iterator it;
-            for (it = tempTextures.begin(); it != tempTextures.end(); ++it) {
-                textureFrame.push_back(*it);  // Add points to textureFrame
-            }
-        } else if (charBuffer.compare(0, 2, "vn") == 0) {
-            vector<GLfloat> tempNormals(3);
-            sscanf(charBuffer.c_str(), "vn %f %f %f\n", &tempNormals[0],
-                &tempNormals[1], &tempNormals[2]);
-            vector<GLfloat>::iterator it;
-            for (it = tempNormals.begin(); it != tempNormals.end(); ++it) {
-                normalFrame.push_back(*it);  // Add points to normalFrame
-            }
-        } else if (charBuffer.compare(0, 2, "f ") == 0) {
-            vector<GLint> coms(9);
-            // If the model is missing texture coordinates, take into account
-            if (charBuffer.find("//") != std::string::npos) {
-                sscanf(charBuffer.c_str(), "f %i//%i %i//%i %i//%i\n",
-                    &coms[0], &coms[2], &coms[3], &coms[5], &coms[6], &coms[8]);
-                coms[1] = 0;
-                coms[4] = 0;
-                coms[7] = 0;
-            } else {
-                sscanf(charBuffer.c_str(), "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
-                    &coms[0], &coms[1], &coms[2], &coms[3], &coms[4], &coms[5],
-                    &coms[6], &coms[7], &coms[8]);
-            }
-            vector<GLint>::iterator it;
-            for (it = coms.begin(); it != coms.end(); ++it) {
-                commands.push_back(*it);  // Add commands from temp to main vec
-            }
-        } else if (charBuffer.compare(0, 2, "o ") == 0) {
-            if (currentObject) {  // Ignore first object
-                // Merge polygon into master polygon object
-                polygon->merge(buildObject(currentObject - 1));  // Start index at zero just because
-                // Clear frame buffers
-                commands.clear();
-            }
-            ++currentObject;
-        }
+        currentObject = processLine(charBuffer, currentObject, polygon, true);
     }
     // Create the final object in the polygon
-    polygon->merge(buildObject(currentObject - 1));
+    polygon->merge(buildObject(currentObject - 1, true));
     polygon->textureUniformId = glGetUniformLocation(programId, "mytexture");
     polygon->programId = this->programId;
     return polygon;
 }
 
-Polygon* ModelImport::buildObject(int objectId) {
+int ModelImport::processLine(string charBuffer, int currentObject, Polygon *polygon, bool oglConfigure) {
+    // Compare the first two "header" bytes of the obj file below
+    if (charBuffer.compare(0, 2, "v ") == 0) {
+        vector<GLfloat> tempVertices(3);
+        sscanf(charBuffer.c_str(), "v %f %f %f\n", &tempVertices[0],
+            &tempVertices[1], &tempVertices[2]);
+        // Add tempVertices to vertexFrame
+        vector<GLfloat>::iterator it;
+        for (it = tempVertices.begin(); it != tempVertices.end(); ++it) {
+            vertexFrame.push_back(*it);  // Add points to vertexFrame
+        }
+    } else if (charBuffer.compare(0, 2, "vt") == 0) {
+        vector<GLfloat> tempTextures(2);
+        sscanf(charBuffer.c_str(), "vt %f %f\n", &tempTextures[0],
+            &tempTextures[1]);
+        vector<GLfloat>::iterator it;
+        for (it = tempTextures.begin(); it != tempTextures.end(); ++it) {
+            textureFrame.push_back(*it);  // Add points to textureFrame
+        }
+    } else if (charBuffer.compare(0, 2, "vn") == 0) {
+        vector<GLfloat> tempNormals(3);
+        sscanf(charBuffer.c_str(), "vn %f %f %f\n", &tempNormals[0],
+            &tempNormals[1], &tempNormals[2]);
+        vector<GLfloat>::iterator it;
+        for (it = tempNormals.begin(); it != tempNormals.end(); ++it) {
+            normalFrame.push_back(*it);  // Add points to normalFrame
+        }
+    } else if (charBuffer.compare(0, 2, "f ") == 0) {
+        vector<GLint> coms(9);
+        // If the model is missing texture coordinates, take into account
+        if (charBuffer.find("//") != std::string::npos) {
+            sscanf(charBuffer.c_str(), "f %i//%i %i//%i %i//%i\n",
+                &coms[0], &coms[2], &coms[3], &coms[5], &coms[6], &coms[8]);
+            coms[1] = 0;
+            coms[4] = 0;
+            coms[7] = 0;
+        } else {
+            sscanf(charBuffer.c_str(), "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
+                &coms[0], &coms[1], &coms[2], &coms[3], &coms[4], &coms[5],
+                &coms[6], &coms[7], &coms[8]);
+        }
+        vector<GLint>::iterator it;
+        for (it = coms.begin(); it != coms.end(); ++it) {
+            commands.push_back(*it);  // Add commands from temp to main vec
+        }
+    } else if (charBuffer.compare(0, 2, "o ") == 0) {
+        if (currentObject) {  // Ignore first object
+            // Merge polygon into master polygon object
+            polygon->merge(buildObject(currentObject - 1, oglConfigure));  // Start index at zero just because
+            // Clear frame buffers
+            commands.clear();
+        }
+        ++currentObject;
+    }
+    return currentObject;
+}
+
+Polygon* ModelImport::buildObject(int objectId, bool oglConfigure) {
     cout << "Building GameObject " << objectId << endl;
     auto pointCount = commands.size() / 9;
     vector<GLfloat> vertexVbo;
@@ -124,7 +129,7 @@ Polygon* ModelImport::buildObject(int objectId) {
     }
     auto polygon = new Polygon(pointCount, this->programId, vertexVbo, textureVbo, normalVbo);
     /// @todo Run configureOpenGL once when all objects are created - figure out deal with destructor
-    configureOpenGl(polygon, objectId);
+    if (oglConfigure) configureOpenGl(polygon, objectId);
     return polygon;
 }
 

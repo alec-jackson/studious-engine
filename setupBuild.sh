@@ -34,7 +34,7 @@ if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
 else
     if [ "$1" = "-t" ] || [ "$2" = "-t" ]; then
-        ctest
+        ctest --output-on-failure
     else
         # Run program
         cd ..
