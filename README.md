@@ -1,6 +1,10 @@
 # OpenGL Game Engine
 ## Christian Galvez and Alec Jackson
 
+### Current Build
+
+![Studious GIF Small](https://github.com/alec-jackson/studious-engine/assets/42315696/d287bf0a-e415-407b-a88e-39902169ddfb)
+
 ### Current Features
 - Interaction with SDL to draw window
 - Loading Shaders
