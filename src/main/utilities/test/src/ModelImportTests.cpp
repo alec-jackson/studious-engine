@@ -27,6 +27,9 @@ class ModelImportTest: public ::testing::Test {
     ModelImport *modelImport;
 };
 
+/**
+ * @brief When parsing proper OBJ data, vertex data is properly built in polygon
+ */
 TEST_F(ModelImportTest, GivenObjData_WhenProcessLinesForPolygon_ThenPolygonHasCorrectVertexData) {
     // Preparation
     Polygon *polygon = new Polygon();
@@ -37,11 +40,14 @@ TEST_F(ModelImportTest, GivenObjData_WhenProcessLinesForPolygon_ThenPolygonHasCo
         currentObject = modelImport->processLine(*it, currentObject, polygon, false);
     }
 
+    // Add an extra object line to create poly
+    currentObject = modelImport->processLine("o something", currentObject, polygon, false);
+
     // Validation
     ASSERT_NE(nullptr, polygon);
-    ASSERT_GT(polygon->vertices.size(), 0);
+    ASSERT_EQ(108, polygon->vertices[0].size());
 
-    // Checking vertices at start, middle and end
+    // Spot checking vertices at start, middle and end
     ASSERT_FLOAT_EQ(-23.3, polygon->vertices[0][0]);
     ASSERT_FLOAT_EQ(24.039999, polygon->vertices[0][1]);
     ASSERT_FLOAT_EQ(-25.859999, polygon->vertices[0][2]);
@@ -55,10 +61,154 @@ TEST_F(ModelImportTest, GivenObjData_WhenProcessLinesForPolygon_ThenPolygonHasCo
     ASSERT_FLOAT_EQ(-25.859999, polygon->vertices[0][107]);
 }
 
+/**
+ * @brief When parsing proper OBJ data, texture coordinate data is properly built in polygon
+ * 
+ */
 TEST_F(ModelImportTest, GivenObjData_WhenProcessLinesForPolygon_ThenPolygonHasNormalizedTextureCoordinates) {
-    
+    // Preparation
+    Polygon *polygon = new Polygon();
+    auto currentObject = 0;
+
+    // Action
+    for (auto it = fakeObjFile.begin(); it != fakeObjFile.end(); ++it) {
+        currentObject = modelImport->processLine(*it, currentObject, polygon, false);
+    }
+
+    // Add an extra object line to create poly
+    currentObject = modelImport->processLine("o something", currentObject, polygon, false);
+
+    // Validation
+    ASSERT_NE(nullptr, polygon);
+    ASSERT_EQ(72, polygon->textureCoords[0].size());
+
+    // Ensure that texture coords are all non-negative and between 0.0 and 1.0
+    for (auto it = polygon->textureCoords[0].begin(); it != polygon->textureCoords[0].end(); ++it) {
+        ASSERT_GE(*it, 0.0f);
+        ASSERT_LE(*it, 1.0f);
+    }
+
+    // Spot checking texture coordinates at start, middle and end
+    ASSERT_FLOAT_EQ(0.875000, polygon->textureCoords[0][0]);
+    ASSERT_FLOAT_EQ(0.5, polygon->textureCoords[0][1]);
+    ASSERT_FLOAT_EQ(0.625, polygon->textureCoords[0][2]);
+
+    ASSERT_FLOAT_EQ(0.625, polygon->textureCoords[0][30]);
+    // This value is 0.75 because we "normalize" the second coordinate (aka 1.0f - value)
+    ASSERT_FLOAT_EQ(0.75, polygon->textureCoords[0][31]);
+    ASSERT_FLOAT_EQ(0.375, polygon->textureCoords[0][32]);
+
+    ASSERT_FLOAT_EQ(0.5, polygon->textureCoords[0][69]);
+    ASSERT_FLOAT_EQ(0.375, polygon->textureCoords[0][70]);
+    ASSERT_FLOAT_EQ(0.5, polygon->textureCoords[0][71]);
 }
 
+/**
+ * @brief When given proper OBJ data, normal coordinates are properly built in polygon
+ * 
+ */
+TEST_F(ModelImportTest, GivenObjData_WhenProcessLinesForPolygon_ThenPolygonHasCorrectNormals) {
+    // Preparation
+    Polygon *polygon = new Polygon();
+    auto currentObject = 0;
+
+    // Action
+    for (auto it = fakeObjFile.begin(); it != fakeObjFile.end(); ++it) {
+        currentObject = modelImport->processLine(*it, currentObject, polygon, false);
+    }
+
+    // Add an extra object line to create poly
+    currentObject = modelImport->processLine("o something", currentObject, polygon, false);
+
+    // Validation
+    ASSERT_NE(nullptr, polygon);
+    ASSERT_EQ(108, polygon->normalCoords[0].size());
+
+    // Spot checking normals at start, middle and end
+    ASSERT_FLOAT_EQ(0.0, polygon->normalCoords[0][0]);
+    ASSERT_FLOAT_EQ(1.0, polygon->normalCoords[0][1]);
+    ASSERT_FLOAT_EQ(0.0, polygon->normalCoords[0][2]);
+
+    ASSERT_FLOAT_EQ(0.0, polygon->normalCoords[0][63]);
+    ASSERT_FLOAT_EQ(0.0, polygon->normalCoords[0][64]);
+    ASSERT_FLOAT_EQ(1.0, polygon->normalCoords[0][65]);
+
+    ASSERT_FLOAT_EQ(0.0, polygon->normalCoords[0][105]);
+    ASSERT_FLOAT_EQ(0.0, polygon->normalCoords[0][106]);
+    ASSERT_FLOAT_EQ(-1.0, polygon->normalCoords[0][107]);
+}
+
+/**
+ * @brief When parsing proper OBJ data with multiple objects, data in polygon (vertex, texture, normal) is properly set
+ * 
+ */
+TEST_F(ModelImportTest, GivenTwoObjs_WhenProcessLinesForPolygon_ThenPolygonHasCorrectVertexData) {
+    // Preparation
+    Polygon *polygon = new Polygon();
+    auto currentObject = 0;
+
+    // Action
+    // Process same fake file twice to create two objects
+    for (auto it = fakeObjFile.begin(); it != fakeObjFile.end(); ++it) {
+        currentObject = modelImport->processLine(*it, currentObject, polygon, false);
+    }
+
+    for (auto it = fakeObjFile.begin(); it != fakeObjFile.end(); ++it) {
+        currentObject = modelImport->processLine(*it, currentObject, polygon, false);
+    }
+
+    // Add an extra object line to create poly
+    currentObject = modelImport->processLine("o something", currentObject, polygon, false);
+
+    // Validation
+    ASSERT_NE(nullptr, polygon);
+    ASSERT_EQ(2, polygon->vertices.size());  // Two sets of vertices
+    ASSERT_EQ(2, polygon->textureCoords.size());  // Two sets of texture coords
+
+    ASSERT_EQ(108, polygon->vertices[0].size());
+    ASSERT_EQ(108, polygon->vertices[1].size());
+    ASSERT_EQ(72, polygon->textureCoords[0].size());
+    ASSERT_EQ(72, polygon->textureCoords[1].size());
+
+    // Spot checking vertices at start, middle and end
+    ASSERT_FLOAT_EQ(-23.3, polygon->vertices[0][0]);
+    ASSERT_FLOAT_EQ(-23.3, polygon->vertices[1][0]);
+
+    ASSERT_FLOAT_EQ(24.039999, polygon->vertices[0][64]);
+    ASSERT_FLOAT_EQ(24.039999, polygon->vertices[1][64]);
+
+    ASSERT_FLOAT_EQ(-25.859999, polygon->vertices[0][107]);
+    ASSERT_FLOAT_EQ(-25.859999, polygon->vertices[1][107]);
+
+    // Spot checking texture coordinates at start, middle and end
+    ASSERT_FLOAT_EQ(0.875000, polygon->textureCoords[0][0]);
+    ASSERT_FLOAT_EQ(0.875000, polygon->textureCoords[1][0]);
+
+    // This value is 0.75 because we "normalize" the second coordinate (aka 1.0f - value)
+    ASSERT_FLOAT_EQ(0.75, polygon->textureCoords[0][31]);
+    ASSERT_FLOAT_EQ(0.75, polygon->textureCoords[1][31]);
+
+    ASSERT_FLOAT_EQ(0.5, polygon->textureCoords[0][71]);
+    ASSERT_FLOAT_EQ(0.5, polygon->textureCoords[1][71]);
+
+    // Spot checking normal coordinates at start, middle and end
+    ASSERT_FLOAT_EQ(0.0, polygon->normalCoords[0][0]);
+    ASSERT_FLOAT_EQ(0.0, polygon->normalCoords[0][0]);
+
+    ASSERT_FLOAT_EQ(1.0, polygon->normalCoords[0][65]);
+    ASSERT_FLOAT_EQ(1.0, polygon->normalCoords[0][65]);
+
+    ASSERT_FLOAT_EQ(-1.0, polygon->normalCoords[0][107]);
+    ASSERT_FLOAT_EQ(-1.0, polygon->normalCoords[0][107]);
+}
+
+/**
+ * @brief Launches google test suite defined in file
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     cout << "Running GTESTS" << endl;
@@ -71,5 +221,3 @@ int main(int argc, char **argv) {
 
     return result;
 }
-
-
