@@ -21,6 +21,7 @@
 typedef struct textObjectInfo {
     string message, fontPath;
     GLuint programId;
+    string objectName;
 } textObjectInfo;
 
 /**

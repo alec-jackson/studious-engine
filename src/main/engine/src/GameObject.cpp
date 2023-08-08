@@ -11,16 +11,14 @@
 
 #include <GameObject.hpp>
 
-/// @todo: Refactor to use initializer lists
-GameObject::GameObject(gameObjectInfo objectInfo) {
-    programId = objectInfo.characterModel->programId;
-    collider.collider = NULL;  // Default to not having a collider
+GameObject::GameObject(gameObjectInfo objectInfo):
+    SceneObject(objectInfo.position, objectInfo.rotation, objectInfo.objectName, objectInfo.scale,
+    objectInfo.characterModel->programId), model { objectInfo.characterModel }, cameraId { objectInfo.camera } {
+    collider.collider = nullptr;  // Default to not having a collider
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
     viewMode = PERSPECTIVE;
-    model = objectInfo.characterModel;
-    cameraId = objectInfo.camera;
     // Populate the hasTexture vector with texture info
     for (int i = 0; i < model->numberOfObjects; i++) {
         if (model->textureCoordsId[i] == UINT_MAX) {
@@ -29,17 +27,12 @@ GameObject::GameObject(gameObjectInfo objectInfo) {
             hasTexture.push_back(1);  // Texture found for obj i
         }
     }
-    // Save initial scale, rotation, position for object
-    scale = objectInfo.scale;
-    rotation = objectInfo.rotation;
-    position = objectInfo.position;
     scaleMatrix = glm::scale(vec3(scale, scale, scale));
     translateMatrix = glm::translate(mat4(1.0f), objectInfo.position);
     rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
-    collider.collisionTag = objectInfo.collisionTagName;
     // Grab IDs for shared variables between app and program (shader)
     rotateId = glGetUniformLocation(programId, "rotate");
     scaleId = glGetUniformLocation(programId, "scale");
@@ -53,17 +46,10 @@ GameObject::GameObject(gameObjectInfo objectInfo) {
     vpMatrix = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
-/// @todo Default constructor for base class... might want to re-consider class hierarchy
-GameObject::GameObject() {
-}
-
 GameObject::~GameObject() {
     /// @todo: Run cleanup methods here
-    cout << "Destroying gameobject\n";
-}
-
-string GameObject::getCollisionTag(void) {
-    return collider.collisionTag;  /// @todo: Null check here
+    cout << "Destroying gameobject" << objectName << endl;
+    deleteTextures();
 }
 
 colliderInfo GameObject::getCollider(void) {
@@ -167,7 +153,6 @@ void GameObject::render() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-/// @todo: Deprecated - merge this into the GameObject destructor
 void GameObject::deleteTextures() {
     for (int i = 0; model->numberOfObjects; i++) {
         if (hasTexture[i]) {
@@ -176,12 +161,6 @@ void GameObject::deleteTextures() {
         }
     }
 }
-
-/// @todo: Add a null check here
-void GameObject::setCollisionTag(string collisionTag) {
-    this->collider.collisionTag = collisionTag;
-}
-
 
 GLfloat GameObject::getColliderVertices(vector<GLfloat> vertices, int axis,
     bool (*test)(float a, float b)) {
@@ -199,9 +178,8 @@ GLfloat GameObject::getColliderVertices(vector<GLfloat> vertices, int axis,
     return currentMin;
 }
 
-/// @todo: Refactor...? Will replace this anyway, so maybe not
 int GameObject::createCollider(int shaderId) {
-    cout << "Building collider for " << collider.collisionTag << endl;
+    cout << "Building collider for " << objectName << endl;
     GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
     GLfloat max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
     if (model == NULL) {

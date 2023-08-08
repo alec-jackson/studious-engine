@@ -216,7 +216,7 @@ int runtime(GameInstance *currentGame) {
     currentGameObject->setRotation(vec3(0, 0, 0));
     currentGameObject = currentGame->getGameObject(gameObject[3]);
     currentGameObject = currentGame->getGameObject(gameObject[1]);
-    cout << "currentGameObject tag is " << currentGameObject->getCollisionTag()
+    cout << "currentGameObject tag is " << currentGameObject->getObjectName()
         << '\n';
 
     currentGameObject->setPosition(vec3(-0.005f, 0.01f, 0.0f));

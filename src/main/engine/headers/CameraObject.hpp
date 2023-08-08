@@ -31,7 +31,7 @@ class CameraObject: public SceneObject {
         inline GLfloat getAspectRatio() { return this->aspectRatio; }
 
         // Camera Specific Methods
-        void updateCamera();
+        void render() override;
 
  private:
         GameObject *target;

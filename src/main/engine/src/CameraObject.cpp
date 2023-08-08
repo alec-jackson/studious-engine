@@ -11,22 +11,16 @@
 
 #include <CameraObject.hpp>
 
-/// @todo: Initializer lists for all SceneObject classes
-CameraObject::CameraObject(cameraInfo camInfo) {
-    aspectRatio = camInfo.viewAspectRatio;
-    nearClipping = camInfo.viewNearClipping;
-    farClipping = camInfo.viewFarClipping;
-    offset = camInfo.offset;
-    target = camInfo.objTarget;
-    cameraAngle = camInfo.viewCameraAngle;
-}
+CameraObject::CameraObject(cameraInfo camInfo): SceneObject(), aspectRatio(camInfo.viewAspectRatio),
+    nearClipping(camInfo.viewNearClipping), farClipping(camInfo.viewFarClipping), offset(camInfo.offset),
+    target(camInfo.objTarget), cameraAngle(camInfo.viewCameraAngle) {}
 
 /// @todo: Figure out what the destructor should do
 CameraObject::~CameraObject() {
 }
 
 /// @todo: Change NULL checks to nullptr
-void CameraObject::updateCamera() {
+void CameraObject::render() {
     if (target == NULL) {
         cerr << "Error: Unable to update camera! Camera target is NULL!\n";
         throw std::runtime_error("Camera target is NULL");

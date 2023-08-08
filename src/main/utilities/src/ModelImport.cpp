@@ -16,6 +16,7 @@ ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GL
 }
 
 Polygon* ModelImport::createPolygonFromFile() {
+    // File is closed when ifstream is destroyed
     ifstream file;  // Read file as read only
     file.open(modelPath);
     if (!file.is_open()) {  // If the file does not exist or cannot be opened
@@ -182,4 +183,5 @@ void ModelImport::configureOpenGl(Polygon* polygon, int objectId) {
  * @todo Not sure what to do here yet... but might keep state of OpenGL imports
 */
 ModelImport::~ModelImport() {
+
 }

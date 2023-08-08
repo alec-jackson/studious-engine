@@ -20,7 +20,6 @@ class GameObject: public SceneObject {
  public:
         // Constructurs
         explicit GameObject(gameObjectInfo objectInfo);
-        GameObject();
         ~GameObject();
 
         // Setters
@@ -42,17 +41,12 @@ class GameObject: public SceneObject {
         Polygon *getModel();  /// @todo: This should return a reference
         colliderInfo getCollider();
         GLfloat getColliderVertices(vector<GLfloat> vertices, int axis, bool (*test)(float a, float b));
-        string getCollisionTag();
-
-        // Special Setters
-        void setCollisionTag(string collisionTag);
-
-        // Render method (previously called drawShape)
-        void render();
 
         // Other methods
         void deleteTextures();  /// @todo: DEPRECATED - Use destructor for this now...
         int createCollider(int programId);
+
+        void render() override;
 
  private:
         Polygon *model;  // Change this to a proper class at some point
@@ -71,11 +65,8 @@ class GameObject: public SceneObject {
 
         vector<GLint> hasTexture;
         vec3 directionalLight;
+        vec3 velocity;
 
         ViewMode viewMode;
-
- protected:
-        GLfloat scale;
-        GLuint programId;
-        colliderInfo collider;  /// @todo: Refactor colliderInfo
+        colliderInfo collider;  /// @todo: Refactor colliderInfo/create collider class
 };

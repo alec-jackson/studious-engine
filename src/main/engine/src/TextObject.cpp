@@ -11,15 +11,14 @@
 
 #include <TextObject.hpp>
 
+/// @todo: Finish this code - lots of hard-coded values
 /// @todo: Either use super() or restructure class inheritance - refactor this constructor
-TextObject::TextObject(textObjectInfo info) {
+TextObject::TextObject(textObjectInfo info): SceneObject(vec3(300.0f, 300.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f),
+    info.objectName, 1.0f, info.programId), message(info.message), fontPath(info.fontPath) {
+
     mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
-    this->programId = info.programId;
-    cout << "Initializing text with message " << info.message << endl;
-    this->collider.collisionTag = "Text";
-    message = info.message;
-    this->position = vec3(300.0f, 300.0f, 0.0f);
-    this->scale = 1.0f;
+    cout << "Initializing text with message " << message << endl;
+
     glUseProgram(this->programId);  // Load text shader
     glUniformMatrix4fv(glGetUniformLocation(this->programId,
         "projection"), 1, GL_FALSE, &projection[0][0]);
@@ -29,7 +28,7 @@ TextObject::TextObject(textObjectInfo info) {
         throw std::runtime_error("Failed to initialize FreeType Library");
     }
     FT_Face face;
-    if (FT_New_Face(ft, "src/resources/fonts/AovelSans.ttf", 0, &face)) {
+    if (FT_New_Face(ft, fontPath.c_str(), 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
         throw std::runtime_error("Failed to load font");
     } else {
@@ -78,7 +77,7 @@ TextObject::TextObject(textObjectInfo info) {
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    setViewMode(ORTHOGRAPHIC);
+    this->viewMode = ORTHOGRAPHIC;
 }
 
 /// @todo Do something useful here
@@ -88,7 +87,6 @@ TextObject::~TextObject() {
 void TextObject::render() {
     glClear(GL_DEPTH_BUFFER_BIT);
     vec3 color = vec3(1.0f);
-    float scale = getScale();
     int x = this->position.x, y = this->position.y;
     glUseProgram(this->programId);
     glUniform3f(glGetUniformLocation(this->programId, "textColor"),

@@ -23,16 +23,12 @@
  * @param originalCenter(vec4) The raw X, Y and Z points for the center of the
  *    actual model. These points themselves should not be used for calculating
  *    collision.
- * @param collisionTag(string) The name of the collisionTag associated with the
- *    current GameObject. The collisionTag can be used to determine what two
- *    GameObjects in a scene have collided.
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
 typedef struct colliderInfo {
     vec4 offset, minPoints;
     vec4 center, originalCenter;
-    string collisionTag;
     Polygon *collider;
 } colliderInfo;
 
@@ -60,5 +56,5 @@ typedef struct gameObjectInfo {
     vec3 position, rotation;
     GLfloat scale;
     int camera;
-    string collisionTagName;
+    string objectName;
 } gameObjectInfo;

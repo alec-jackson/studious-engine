@@ -227,7 +227,7 @@ int GameInstance::updateCameras() {
     vector<CameraObject *>::iterator it;
     // Update the VP matrix for each camera
     for (it = gameCameras.begin(); it != gameCameras.end(); ++it) {
-        (*it)->updateCamera();
+        (*it)->render();
     }
     return 0;
 }

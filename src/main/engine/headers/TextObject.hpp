@@ -16,7 +16,7 @@
 #include <TextObjectStructs.hpp>
 
 
-class TextObject: public GameObject {
+class TextObject: public SceneObject {
  public:
         // Constructors
         explicit TextObject(textObjectInfo info);
@@ -32,8 +32,10 @@ class TextObject: public GameObject {
         void render();
  private:
         string message;
+        string fontPath;
         int fontSize;
         unsigned int VAO, VBO;  /// @todo: Where are these being used? Protected at a level above?
         unsigned int textureUniformId;  /// @todo: Investigate whether this can be protected  at a level above
         map<GLchar, Character> characters;
+        ViewMode viewMode;
 };
