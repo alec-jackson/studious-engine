@@ -154,7 +154,8 @@ void GameObject::render() {
 }
 
 void GameObject::deleteTextures() {
-    for (int i = 0; model->numberOfObjects; i++) {
+    cout << "GameObject::deleteTextures" << endl;
+    for (int i = 0; i < model->numberOfObjects; i++) {
         if (hasTexture[i]) {
             glDeleteTextures(1, &textureId);
             hasTexture[i] = false;
