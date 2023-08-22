@@ -1,4 +1,15 @@
-#include "config.hpp"
+/**
+ * @file config.cpp
+ * @author Alec Jackson, Christian Galvez
+ * @brief Configures runtime application settings
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+#include <config.hpp>
 
 /*
  (int) loadConfig takes a (configData *) config file and populates it with
@@ -7,10 +18,10 @@
  On success, 0 is returned and teh config struct is populated with data. On
  failure, 1 is returned and the config struct is not populated with data.
 */
-int loadConfig(configData* config, string filename){
+int loadConfig(configData* config, string filename) {
     SDL_RWops* file;
     file = SDL_RWFromFile(filename.c_str(), "r");
-    if(file){
+    if (file) {
         char buf[512];
         char convert[11];
         int varSaves[2];
@@ -18,18 +29,18 @@ int loadConfig(configData* config, string filename){
         int loops = 2;
         int offset = 0;
         retSize = SDL_RWread(file, buf, sizeof(char), 1024);
-        for(int j = 0; j < loops; j++){
-            for(int i = offset; i < retSize + offset; i++){
-                if(buf[i] == '='){
+        for (int j = 0; j < loops; j++) {
+            for (int i = offset; i < retSize + offset; i++) {
+                if (buf[i] == '=') {
                     int start = i + 1;
                     i++;
-                    while(isdigit(buf[i])){ i++; }
+                    while (isdigit(buf[i])) { i++; }
                     int end = i + 1;
                     int dif = end - start;
-                    if(dif > 10){
+                    if (dif > 10) {
                         dif = 10;
                     }
-                    for(int k = 0; k < dif; k++){
+                    for (int k = 0; k < dif; k++) {
                         convert[k] = buf[k + start];
                     }
                     convert[dif] = '\n';

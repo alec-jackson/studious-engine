@@ -23,3 +23,6 @@ latex/
 
 # Guilty As Charged #
 .vscode/
+
+# Tests #
+gtest_ModelImportTests

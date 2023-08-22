@@ -14,7 +14,7 @@ if [ ! -d build ]; then
 fi
 cd build
 # If -d flag is present, build in debug mode
-if [ "$1" = "-d" ]; then
+if [ "$1" = "-d" ] || [ "$2" = "-d" ]; then
     echo "RUNNING UNDER DEBUG MODE"
     ARGS="-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug"
 else
@@ -33,7 +33,11 @@ fi
 if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
 else
-    # Run program
-    cd ..
-    ./engineExample
+    if [ "$1" = "-t" ] || [ "$2" = "-t" ]; then
+        ctest --output-on-failure
+    else
+        # Run program
+        cd ..
+        ./engineExample
+    fi
 fi

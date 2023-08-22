@@ -1,9 +1,16 @@
-/*
- game.cpp and game.hpp are example files demonstrating the use of the studious
- game engine. These two basic game files will generate a basic scene when the
- engine is compiled and ran.
+/**
+ * @file game.cpp
+ * @author Alec Jackson, Christian Galvez
+ * @brief game.cpp and game.hpp are example files demonstrating the use of the studious
+ *       game engine. These two basic game files will generate a basic scene when the
+ *       engine is compiled and ran.
+ * @version 0.1
+ * @date 2023-07-28
+ * 
+ * @copyright Copyright (c) 2023
+ * 
  */
-#include "game.hpp"
+#include <game.hpp>
 
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
@@ -17,10 +24,10 @@
  swamp.frag, we would want both shaders to occur at the same spot in the vector
  (if we already have 2 shader files present, we would add swamp.vert as the
  third element in vertShaders, and swamp.frag as the third in fragShaders). After
- doing this, you should be able to set the programID using the
- GameInstance::getProgramID(int index) method to grab the programID for your
+ doing this, you should be able to set the programId using the
+ GameInstance::getProgramID(int index) method to grab the programId for your
  gameObject. If the shader is in index 2, we would call getProgramID(2) to get
- the appropriate programID. For textures, we specify a path to an image that
+ the appropriate programId. For textures, we specify a path to an image that
  will be opened for a given texture, and specify the textures to use as a
  texture pattern (where each number in the vector corresponds to the index of
  the texture to use).
@@ -28,17 +35,17 @@
 // Global Variables, should eventually be moved to a config file
 vector<string> soundList = {
     "src/resources/sfx/music/endlessNight.wav"
-}; // A list of gameSounds to load
+};  // A list of gameSounds to load
 vector<string> fragShaders = {
     "src/main/shaders/standardFragment.frag",
     "src/main/shaders/coll.frag",
     "src/main/shaders/text.frag"
-}; // Contains collider renderer and basic object renderer.
+};  // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
     "src/main/shaders/standardVertex.vert",
     "src/main/shaders/coll.vert",
     "src/main/shaders/text.vert"
-}; // Contains collider renderer and basic object renderer.
+};  // Contains collider renderer and basic object renderer.
 vector<string> texturePathStage = {
     "src/resources/images/skintexture.jpg"
 };
@@ -49,9 +56,9 @@ vector<string> texturePath = {
     "src/resources/images/shirttexture.jpg"
 };
 
-GameObjectText *fps_counter;
-GameObjectText *collDebugText;
-GameObject *wolfRef, *playerRef; // Used for collision testing
+TextObject *fps_counter;
+TextObject *collDebugText;
+GameObject *wolfRef, *playerRef;  // Used for collision testing
 
 int setup(GameInstance *currentGame, configData* config);
 int runtime(GameInstance *currentGame);
@@ -62,7 +69,7 @@ int main(int argc, char **argv) {
     GameInstance currentGame;
     configData config;
     // Run setup, if fail exit gracefully
-    if (setup(&currentGame, &config)){
+    if (setup(&currentGame, &config)) {
         exit(1);
     }
     errorNum = runtime(&currentGame);
@@ -76,7 +83,7 @@ int main(int argc, char **argv) {
 
  (int) setup returns 0 on success.
 */
-int setup(GameInstance *currentGame, configData* config){
+int setup(GameInstance *currentGame, configData* config) {
     int flag = loadConfig(config, "src/resources/config.txt");
     gameInstanceArgs args;
     args.soundList = soundList;
@@ -96,7 +103,7 @@ int setup(GameInstance *currentGame, configData* config){
 
 /*
  (int) runtime takes a (GameInstance *) gamein to create the current scene in.
- This function creates all of the GameObjects and GameCameras in the current
+ This function creates all of the GameObjects and CameraObjects in the current
  scene and creates a seperate thread for handling user input. All of the setup
  done in the runtime function is for demonstration purposes for now. The final
  studious engine product will source scene information from a .yaml file
@@ -117,18 +124,22 @@ int runtime(GameInstance *currentGame) {
         3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f };
     gameObject[2] = currentGame->createCamera(camInfo);
 
+    /// @todo Make loading textures for objects a little more user friendly
+    // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
     vector<GLint> texturePattern = {0, 1, 2, 3};
-    vector<GLint> texturePatternStage = {0};
+    vector<GLint> texturePatternStage = {0, 0, 0, 0};
 
     cout << "Creating Map.\n";
-    // Create args for ModelImport constructor for map
-    importObjInfo mapInfo = { "src/resources/models/map2.obj", texturePathStage,
-        texturePatternStage, currentGame->getProgramID(0) };
 
-    auto importedMapObj = ModelImport(mapInfo);
-    auto mapPoly = importedMapObj.getPolygon();
+    auto importedMapObj = ModelImport("src/resources/models/map2.obj",
+        texturePathStage,
+        texturePatternStage,
+        currentGame->getProgramID(0));
 
-    //Create a gameObjectInfo struct for creating a game object for the map
+    auto mapPoly = importedMapObj.createPolygonFromFile();
+
+    // Create a gameObjectInfo struct for creating a game object for the map
+    /// @todo mapPoly can be a reference I think
     gameObjectInfo map = { mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
         gameObject[2], "map" };
@@ -137,12 +148,13 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Player\n";
 
-    // Import the player object
-    importObjInfo player = { "src/resources/models/Dracula.obj", texturePath, texturePattern,
-        currentGame->getProgramID(0) };
+    auto importedPlayerObj = ModelImport(
+        "src/resources/models/Dracula.obj",
+        texturePath,
+        texturePattern,
+        currentGame->getProgramID(0));
 
-    auto importedPlayerObj = ModelImport(player);
-    auto playerPoly = importedPlayerObj.getPolygon();
+    auto playerPoly = importedPlayerObj.createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
     gameObjectInfo playerObj = { playerPoly, vec3(0.0f, 0.0f, -1.0f),
@@ -154,12 +166,14 @@ int runtime(GameInstance *currentGame) {
     playerRef = dracs;
 
     cout << "Creating wolf\n";
-    // Import the wold object
-    importObjInfo wolf = { "src/resources/models/wolf.obj", texturePath, texturePattern,
-        currentGame->getProgramID(0) };
 
-    auto importedWolfObj = ModelImport(wolf);
-    auto wolfPoly = importedWolfObj.getPolygon();
+    auto importedWolfObj = ModelImport("src/resources/models/wolf.obj",
+        texturePath,
+        texturePattern,
+        currentGame->getProgramID(0));
+
+    auto wolfPoly = importedWolfObj.createPolygonFromFile();
+
     // Ready the gameObjectInfo for the wolf object
     gameObjectInfo wolfObj = { wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
@@ -175,8 +189,8 @@ int runtime(GameInstance *currentGame) {
     textObjectInfo textInfo = { "Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
-    GameObjectText *textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 25.0f, 0.0f));
+    TextObject *textObj = currentGame->getText(gameObject[4]);
+    textObj->setPosition(vec3(25.0f, 25.0f, 0.0f));
     textInfo = { "FPS: ", "src/resources/fonts/AovelSans.ttf",
         currentGame->getProgramID(2) };
     // Re-using gameObject 4 for no particular reason
@@ -184,28 +198,28 @@ int runtime(GameInstance *currentGame) {
         currentGame->getProgramID(2) };
     gameObject[4] = currentGame->createText(textInfo);
     textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 300.0f, 0.0f));
+    textObj->setPosition(vec3(25.0f, 300.0f, 0.0f));
     collDebugText = textObj;
     collDebugText->setMessage("Contact: False");
     collDebugText->setScale(0.7f);
 
     gameObject[4] = currentGame->createText(textInfo);
     textObj = currentGame->getText(gameObject[4]);
-    textObj->setPos(vec3(25.0f, 670.0f, 0.0f));
+    textObj->setPosition(vec3(25.0f, 670.0f, 0.0f));
     fps_counter = textObj;
     fps_counter->setMessage("FPS: 0");
     fps_counter->setScale(0.7f);
 
-    GameCamera *currentCamera = currentGame->getCamera(gameObject[2]);
+    CameraObject *currentCamera = currentGame->getCamera(gameObject[2]);
     currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);
     currentGameObject->setRotation(vec3(0, 0, 0));
     currentGameObject = currentGame->getGameObject(gameObject[3]);
     currentGameObject = currentGame->getGameObject(gameObject[1]);
-    cout << "currentGameObject tag is " << currentGameObject->getColliderTag()
+    cout << "currentGameObject tag is " << currentGameObject->getObjectName()
         << '\n';
 
-    currentGameObject->setPos(vec3(-0.005f, 0.01f, 0.0f));
+    currentGameObject->setPosition(vec3(-0.005f, 0.01f, 0.0f));
     currentGameObject->setRotation(vec3(0.0f, 180.0f, 0.0f));
     currentGameObject->setScale(0.0062f);
 
@@ -225,7 +239,6 @@ int runtime(GameInstance *currentGame) {
     cout << "Running cleanup\n";
     currentGame->cleanup();
     return 0;
-
 }
 
 /*
@@ -242,7 +255,7 @@ int mainLoop(gameInfo* gamein) {
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     double deltaTime;
-    short error = 0;
+    int error = 0;
     vector<double> times;
     while (running) {
         currentGame->lockScene();
@@ -257,9 +270,9 @@ int mainLoop(gameInfo* gamein) {
         }
         currentGame->unlockScene();
         end = SDL_GetPerformanceCounter();
-        deltaTime = (double)(end - begin) / (SDL_GetPerformanceFrequency());
+        deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
-        if (SHOW_FPS) { // use sampleSize to find average FPS
+        if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;
             if (currentTime > sampleTime) {
@@ -270,7 +283,7 @@ int mainLoop(gameInfo* gamein) {
                 sum /= times.size();
                 times.clear();
                 cout << "FPS: " << 1.0 / sum << '\n';
-                fps_counter->setMessage("FPS: " + to_string(int(1.0 / sum)));
+                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
         collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
@@ -281,7 +294,7 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
-        usleep(2000); // Sleep for 2ms
+        usleep(2000);  // Sleep for 2ms
     }
     return 0;
 }
