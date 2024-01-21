@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <Polygon.hpp>
+#define DEFAULT_VECTOR_SIZE 256
 
 using std::ifstream;
 
@@ -24,19 +25,21 @@ using std::ifstream;
 class ModelImport {
  public:
       explicit ModelImport(string, vector<string>, vector<GLint>, GLuint);
-      Polygon *createPolygonFromFile();
-      int processLine(string, int, Polygon *, bool);
-      Polygon *buildObject(int objectId, bool oglConfigure);
-      void configureOpenGl(Polygon *, int);
+      Polygon createPolygonFromFile();
+      inline Polygon getPolygon() { return polygon_; }
+      int processLine(string, int);
+      int buildObject(int objectId);
+      void configureOpenGl(Polygon &, int);
       ~ModelImport();
  private:
-      string modelPath;
-      vector<string> texturePath;
-      vector<GLint> texturePattern;
-      int textureCount;  // Size of the texturePath vector
-      GLuint programId;
-      vector<GLfloat> vertexFrame;  // Unique vertex points
-      vector<GLfloat> normalFrame;  // Unique normal points
-      vector<GLfloat> textureFrame;  // Unique texture points
-      vector<GLint> commands;  // Commands in obj file to build buffers
+      string modelPath_;
+      vector<string> texturePath_;
+      vector<GLint> texturePattern_;
+      int textureCount_;  // Size of the texturePath vector
+      GLuint programId_;
+      vector<GLfloat> vertexFrame_;  // Unique vertex points
+      vector<GLfloat> normalFrame_;  // Unique normal points
+      vector<GLfloat> textureFrame_;  // Unique texture points
+      vector<GLint> commands_;  // Commands in obj file to build buffers
+      Polygon polygon_;
 };

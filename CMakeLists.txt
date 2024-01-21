@@ -23,7 +23,6 @@ endif (APPLE)
 
 include_directories(
   src/main/utilities/headers
-  src/main/utilities/test/headers
   src/main/common/headers
   src/main/engine/headers
   src/main/example/headers
@@ -56,11 +55,31 @@ add_executable(${PROJECT_NAME}
   src/main/engine/src/physics.cpp
   src/main/misc/src/config.cpp
 )
-add_executable(
-  gtest_ModelImportTests
+add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
+)
+
+add_executable(gtest_PolygonTests
+  src/main/utilities/test/src/PolygonTests.cpp
+  src/main/utilities/src/Polygon.cpp
+)
+
+target_include_directories(gtest_ModelImportTests
+  PRIVATE src/main/utilities/test/headers
+)
+
+target_include_directories(gtest_PolygonTests
+  PRIVATE src/main/utilities/test/headers  
+)
+
+target_compile_definitions(gtest_ModelImportTests
+  PRIVATE OGL_API_DISABLED=1
+)
+
+target_compile_definitions(gtest_PolygonTests
+  PRIVATE OGL_API_DISABLED=1
 )
 
 # Project include dirs
@@ -86,6 +105,12 @@ target_include_directories(gtest_ModelImportTests PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(gtest_ModelImportTests PUBLIC ${FREETYPE_INCLUDE_DIRS})
 #target_include_directories(gtest_ModelImportTests PUBLIC ${SDL2_NET_INCLUDE_DIRS})
 
+target_include_directories(gtest_PolygonTests PUBLIC ${SDL2_INCLUDE_DIRS})
+target_include_directories(gtest_PolygonTests PUBLIC ${GLEW_INCLUDE_DIRS})
+target_include_directories(gtest_PolygonTests PUBLIC ${OPENGL_INCLUDE_DIR})
+target_include_directories(gtest_PolygonTests PUBLIC ${FREETYPE_INCLUDE_DIRS})
+#target_include_directories(gtest_PolygonTests PUBLIC ${SDL2_NET_INCLUDE_DIRS})
+
 target_link_libraries(gtest_ModelImportTests SDL2::Main)
 target_link_libraries(gtest_ModelImportTests SDL2::Mixer)
 target_link_libraries(gtest_ModelImportTests SDL2::Image)
@@ -95,11 +120,26 @@ target_link_libraries(gtest_ModelImportTests ${GLEW_LIBRARIES})
 target_link_libraries(gtest_ModelImportTests Threads::Threads)
 target_link_libraries(gtest_ModelImportTests ${FREETYPE_LIBRARIES})
 
+target_link_libraries(gtest_PolygonTests SDL2::Main)
+target_link_libraries(gtest_PolygonTests SDL2::Mixer)
+target_link_libraries(gtest_PolygonTests SDL2::Image)
+#target_link_libraries(gtest_PolygonTests SDL2::Net)
+target_link_libraries(gtest_PolygonTests ${OPENGL_LIBRARIES})
+target_link_libraries(gtest_PolygonTests ${GLEW_LIBRARIES})
+target_link_libraries(gtest_PolygonTests Threads::Threads)
+target_link_libraries(gtest_PolygonTests ${FREETYPE_LIBRARIES})
+
 target_link_libraries(
   gtest_ModelImportTests
   GTest::gtest_main
 )
 
+target_link_libraries(
+  gtest_PolygonTests
+  GTest::gtest_main
+)
+
+gtest_discover_tests(gtest_PolygonTests)
 gtest_discover_tests(gtest_ModelImportTests)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}")

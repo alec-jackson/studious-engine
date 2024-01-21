@@ -258,6 +258,7 @@ int mainLoop(gameInfo* gamein) {
     int error = 0;
     vector<double> times;
     while (running) {
+        /// @todo Move these calls to a separate thread...
         currentGame->lockScene();
         begin = SDL_GetPerformanceCounter();
         running = currentGame->isWindowOpen();
@@ -269,6 +270,15 @@ int mainLoop(gameInfo* gamein) {
             return error;
         }
         currentGame->unlockScene();
+        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
+        string collMessage;
+        if (collision == 1) {
+            collMessage = "Contact: True";
+        } else {
+            collMessage = "Contact: False";
+        }
+        collDebugText->setMessage(collMessage);
+        usleep(2000);  // Sleep for 2ms
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
@@ -283,18 +293,9 @@ int mainLoop(gameInfo* gamein) {
                 sum /= times.size();
                 times.clear();
                 cout << "FPS: " << 1.0 / sum << '\n';
-                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
+                                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
-        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
-        string collMessage;
-        if (collision == 1) {
-            collMessage = "Contact: True";
-        } else {
-            collMessage = "Contact: False";
-        }
-        collDebugText->setMessage(collMessage);
-        usleep(2000);  // Sleep for 2ms
     }
     return 0;
 }

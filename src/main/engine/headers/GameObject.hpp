@@ -39,7 +39,7 @@ class GameObject: public SceneObject {
 
         // Special Getters
         Polygon *getModel();  /// @todo: This should return a reference
-        colliderInfo getCollider();
+        colliderInfo &getCollider();
         GLfloat getColliderVertices(vector<GLfloat> vertices, int axis, bool (*test)(float a, float b));
 
         // Other methods
@@ -49,7 +49,7 @@ class GameObject: public SceneObject {
         void render() override;
 
  private:
-        Polygon *model;  // Change this to a proper class at some point
+        Polygon model;  // Change this to a proper class at some point
 
         int cameraId;  /// @todo: Why is this managed in GameObject?
         unsigned int VAO;  /// @todo: Why do we have this?

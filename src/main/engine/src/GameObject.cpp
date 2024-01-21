@@ -13,15 +13,14 @@
 
 GameObject::GameObject(gameObjectInfo objectInfo):
     SceneObject(objectInfo.position, objectInfo.rotation, objectInfo.objectName, objectInfo.scale,
-    objectInfo.characterModel->programId), model { objectInfo.characterModel }, cameraId { objectInfo.camera } {
-    collider.collider = nullptr;  // Default to not having a collider
+    objectInfo.characterModel.programId), model { objectInfo.characterModel }, cameraId { objectInfo.camera } {
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
     viewMode = PERSPECTIVE;
     // Populate the hasTexture vector with texture info
-    for (int i = 0; i < model->numberOfObjects; i++) {
-        if (model->textureCoordsId[i] == UINT_MAX) {
+    for (int i = 0; i < model.numberOfObjects; i++) {
+        if (model.textureCoordsId[i] == UINT_MAX) {
             hasTexture.push_back(0);  // No texture found for obj i
         } else {
             hasTexture.push_back(1);  // Texture found for obj i
@@ -52,7 +51,7 @@ GameObject::~GameObject() {
     deleteTextures();
 }
 
-colliderInfo GameObject::getCollider(void) {
+colliderInfo &GameObject::getCollider(void) {
     // Update center position with model matrix then return
     collider.center = translateMatrix * scaleMatrix * rotateMatrix * collider.originalCenter;
     vec4 minOffset = translateMatrix * scaleMatrix * rotateMatrix * collider.minPoints;
@@ -74,7 +73,7 @@ colliderInfo GameObject::getCollider(void) {
 */
 void GameObject::render() {
     // Draw each shape individually
-    for (int i = 0; i < model->numberOfObjects; i++) {
+    for (int i = 0; i < model.numberOfObjects; i++) {
         glUseProgram(programId);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         // Update our model transformation matrices
@@ -95,12 +94,12 @@ void GameObject::render() {
         glUniform1i(hasTextureId, hasTexture[i]);
         if (hasTexture[i]) {
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, model->textureId[i]);
-            glUniform1i(model->textureUniformId, 0);
+            glBindTexture(GL_TEXTURE_2D, model.textureId[i]);
+            glUniform1i(model.textureUniformId, 0);
         }
         // Actually start drawing polygons :)
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, model->shapeBufferId[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, model.shapeBufferId[i]);
         glVertexAttribPointer(
                               0,            // attribute 0. No particular reason for 0, but must match
                                             // the layout in the shader.
@@ -110,11 +109,11 @@ void GameObject::render() {
                               0,            // stride
                               0);           // array buffer offset
         glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, model->normalBufferId[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, model.normalBufferId[i]);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
         if (hasTexture[i]) {
             glEnableVertexAttribArray(1);
-            glBindBuffer(GL_ARRAY_BUFFER, model->textureCoordsId[i]);
+            glBindBuffer(GL_ARRAY_BUFFER, model.textureCoordsId[i]);
             glVertexAttribPointer(
                                   1,
                                   2,
@@ -122,23 +121,23 @@ void GameObject::render() {
                                   GL_FALSE,
                                   0,
                                   0);
-            glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i] * 3);
+            glDrawArrays(GL_TRIANGLES, 0, model.pointCount[i] * 3);
             glDisableVertexAttribArray(1);
         } else {
-            glDrawArrays(GL_TRIANGLES, 0, model->pointCount[i] * 3);
+            glDrawArrays(GL_TRIANGLES, 0, model.pointCount[i] * 3);
         }
         glDisableVertexAttribArray(2);
         glDisableVertexAttribArray(0);
     }
-    if (collider.collider != NULL) {
+    if (collider.collider.numberOfObjects > 0) {
         // After drawing the gameobject, draw the collider
-        glUseProgram(collider.collider->programId);  // grab the programId from the object
+        glUseProgram(collider.collider.programId);  // grab the programId from the object
         glDisable(GL_CULL_FACE);  // Just do it
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
         glUniformMatrix4fv(mvpId, 1, GL_FALSE, &MVP[0][0]);
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, collider.collider->shapeBufferId[0]);
+        glBindBuffer(GL_ARRAY_BUFFER, collider.collider.shapeBufferId[0]);
         glVertexAttribPointer(
                               0,                  // attribute 0. No particular reason for 0, but must match
                                                   // the layout in the shader.
@@ -147,7 +146,7 @@ void GameObject::render() {
                               GL_FALSE,           // normalized?
                               0,                  // stride
                               0);            // array buffer offset
-        glDrawArrays(GL_TRIANGLES, 0, collider.collider->pointCount[0] * 3);
+        glDrawArrays(GL_TRIANGLES, 0, collider.collider.pointCount[0] * 3);
         glDisableVertexAttribArray(0);
     }
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -155,7 +154,7 @@ void GameObject::render() {
 
 void GameObject::deleteTextures() {
     cout << "GameObject::deleteTextures" << endl;
-    for (int i = 0; i < model->numberOfObjects; i++) {
+    for (int i = 0; i < model.numberOfObjects; i++) {
         if (hasTexture[i]) {
             glDeleteTextures(1, &textureId);
             hasTexture[i] = false;
@@ -183,17 +182,11 @@ int GameObject::createCollider(int shaderId) {
     cout << "Building collider for " << objectName << endl;
     GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
     GLfloat max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
-    if (model == NULL) {
-        cerr <<
-            "Error: Cannot create collider because GameObject model is missing"
-            << endl;
-        return -1;
-    }
     // Set MVP ID for collider object
     mvpId = glGetUniformLocation(shaderId, "MVP");
     vector<vector<GLfloat>>::iterator it;
     // Go through objects and get absolute min/max points
-    for (it = model->vertices.begin(); it != model->vertices.end(); ++it) {
+    for (it = model.vertices.begin(); it != model.vertices.end(); ++it) {
         for (int i = 0; i < 3; i++) {
             // Calculate min
             tempMin[i] = getColliderVertices((*it), i, [](float a, float b) { return a < b; });
@@ -253,11 +246,11 @@ int GameObject::createCollider(int shaderId) {
         min[0], min[1], max[2]
     };
     auto pointCount = colliderVertices.size();
-    collider.collider = new Polygon(pointCount, shaderId, colliderVertices);
-    glGenBuffers(1, &(collider.collider->shapeBufferId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, collider.collider->shapeBufferId[0]);
+    collider.collider = Polygon(pointCount, shaderId, colliderVertices);
+    glGenBuffers(1, &(collider.collider.shapeBufferId[0]));
+    glBindBuffer(GL_ARRAY_BUFFER, collider.collider.shapeBufferId[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * pointCount,
-        &(collider.collider->vertices[0][0]), GL_STATIC_DRAW);
+        &(collider.collider.vertices[0][0]), GL_STATIC_DRAW);
     // Set the correct center points
     for (int i = 0; i < 3; i++) {
         collider.center[i] = max[i] - ((abs(max[i] - min[i])) / 2);

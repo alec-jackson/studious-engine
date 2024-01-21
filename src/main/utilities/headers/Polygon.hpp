@@ -17,8 +17,9 @@ class Polygon {
     Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
         vector<GLfloat> normals);
     Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices);
-    Polygon();  // Default constructor for merging
-    Polygon* merge(Polygon*);
+    Polygon();
+    void merge(Polygon&);
+    ~Polygon();
 
     vector<GLuint> shapeBufferId;  // used for vertex buffer
     vector<GLuint> textureCoordsId;  // used for texture coordinate buffer

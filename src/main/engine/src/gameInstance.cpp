@@ -405,17 +405,17 @@ GLdouble GameInstance::getDeltaTime() {
  currently colliding, 2 if the two objects are about to collide, or 0 if there
  is no collision. Otherwise, -1 is returned.
 */
+/// @todo Update documentation here and convert pointers to references
 int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     vec3 moving) {
-    colliderInfo coll1, coll2;
     int matching = 0;  // Number of axis that have collided
     if (object1 == NULL || object2 == NULL) {
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";
         return -1;
     }
 
-    coll1 = object1->getCollider();
-    coll2 = object2->getCollider();
+    auto &coll1 = object1->getCollider();
+    auto &coll2 = object2->getCollider();
 
     // First check if the two objects are currently colliding
     for (int i = 0; i < 3; i++) {
