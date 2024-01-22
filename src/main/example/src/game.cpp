@@ -11,6 +11,7 @@
  * 
  */
 #include <game.hpp>
+#include <OpenGlGfxController.hpp>
 
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
@@ -59,6 +60,7 @@ vector<string> texturePath = {
 TextObject *fps_counter;
 TextObject *collDebugText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
+OpenGlGfxController gfxController = OpenGlGfxController();
 
 int setup(GameInstance *currentGame, configData* config);
 int runtime(GameInstance *currentGame);
@@ -134,7 +136,8 @@ int runtime(GameInstance *currentGame) {
     auto importedMapObj = ModelImport("src/resources/models/map2.obj",
         texturePathStage,
         texturePatternStage,
-        currentGame->getProgramID(0));
+        currentGame->getProgramID(0),
+        gfxController);
 
     auto mapPoly = importedMapObj.createPolygonFromFile();
 
@@ -152,7 +155,8 @@ int runtime(GameInstance *currentGame) {
         "src/resources/models/Dracula.obj",
         texturePath,
         texturePattern,
-        currentGame->getProgramID(0));
+        currentGame->getProgramID(0),
+        gfxController);
 
     auto playerPoly = importedPlayerObj.createPolygonFromFile();
 
@@ -170,7 +174,8 @@ int runtime(GameInstance *currentGame) {
     auto importedWolfObj = ModelImport("src/resources/models/wolf.obj",
         texturePath,
         texturePattern,
-        currentGame->getProgramID(0));
+        currentGame->getProgramID(0),
+        gfxController);
 
     auto wolfPoly = importedWolfObj.createPolygonFromFile();
 

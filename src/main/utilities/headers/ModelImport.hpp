@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <Polygon.hpp>
+#include <GfxController.hpp>
 #define DEFAULT_VECTOR_SIZE 256
 
 using std::ifstream;
@@ -24,7 +25,7 @@ using std::ifstream;
 */
 class ModelImport {
  public:
-      explicit ModelImport(string, vector<string>, vector<GLint>, GLuint);
+      explicit ModelImport(string, vector<string>, vector<GLint>, GLuint, GfxController &);
       Polygon createPolygonFromFile();
       inline Polygon getPolygon() { return polygon_; }
       int processLine(string, int);
@@ -42,4 +43,5 @@ class ModelImport {
       vector<GLfloat> textureFrame_;  // Unique texture points
       vector<GLint> commands_;  // Commands in obj file to build buffers
       Polygon polygon_;
+      GfxController &gfxController_;
 };

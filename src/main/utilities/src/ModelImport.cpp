@@ -11,9 +11,10 @@
 
 #include <ModelImport.hpp>
 
-ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId) :
+ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId,
+    GfxController &gfxController) :
     modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
-    programId_ { programId } {
+    programId_ { programId }, gfxController_ { gfxController } {
     cout << "ModelImport::ModelImport" << endl;
 }
 
@@ -165,16 +166,8 @@ int ModelImport::buildObject(int objectId) {
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
 void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
-    glGenBuffers(1, &(polygon.shapeBufferId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon.shapeBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon.pointCount[0] * 9,
-                 &(polygon.vertices[0][0]), GL_STATIC_DRAW);
-    glGenBuffers(1, &(polygon.normalBufferId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon.normalBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon.pointCount[0] * 9,
-                 &(polygon.normalCoords[0][0]), GL_STATIC_DRAW);
+    gfxController_.generateVertexBuffer(polygon);
+    gfxController_.generateNormalBuffer(polygon);
     // Specific case where the current object does not get a texture
     if (!textureCount_ || texturePattern_[objectId] >= textureCount_ ||
         texturePattern_[objectId] == -1) {
@@ -185,28 +178,8 @@ void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
         cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
-    glGenTextures(1, &(polygon.textureId[0]));
-    glBindTexture(GL_TEXTURE_2D, polygon.textureId[0]);
-    if (texture->format->Amask) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h,
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
-    } else {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture->w, texture->h, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, texture->pixels);
-    }
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_NEAREST_MIPMAP_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    gfxController_.generateTextureBuffer(polygon, texture);
     SDL_FreeSurface(texture);
-    // glGenerateMipmap(GL_TEXTURE_2D);
-    glGenBuffers(1, &(polygon.textureCoordsId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon.textureCoordsId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon.pointCount[0] * 6,
-                 &(polygon.textureCoords[0][0]), GL_STATIC_DRAW);
 }
 
 /**

@@ -53,12 +53,15 @@ add_executable(${PROJECT_NAME}
   src/main/engine/src/CameraObject.cpp
   src/main/engine/src/inputMonitor.cpp
   src/main/engine/src/physics.cpp
+  src/main/engine/src/DummyGfxController.cpp
+  src/main/engine/src/OpenGlGfxController.cpp
   src/main/misc/src/config.cpp
 )
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
+  src/main/engine/src/DummyGfxController.cpp
 )
 
 add_executable(gtest_PolygonTests

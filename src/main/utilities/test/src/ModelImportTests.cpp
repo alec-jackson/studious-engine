@@ -12,6 +12,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ModelImportTests.hpp>
+#include <DummyGfxController.hpp>
 
 using std::cout;
 using std::endl;
@@ -20,7 +21,8 @@ using std::endl;
 class ModelImportTest: public ::testing::Test {
  protected:
     void SetUp() override {
-        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0);
+        auto dummyController = DummyGfxController();
+        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0, dummyController);
     }
     vector<string> texturePathStage;
     vector<GLint> texturePatternStage;
