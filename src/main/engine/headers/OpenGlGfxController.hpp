@@ -16,7 +16,13 @@
 
 class OpenGlGfxController : public GfxController {
  public:
-    GfxResult generateVertexBuffer(Polygon &);
-    GfxResult generateNormalBuffer(Polygon &);
-    GfxResult generateTextureBuffer(Polygon &, SDL_Surface *);
+    GfxResult<GLint> generateVertexBuffer(Polygon &);
+    GfxResult<GLint> generateNormalBuffer(Polygon &);
+    GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *);
+    GfxResult<GLint> getShaderVariable(GLint, const char *) const;
+    GfxResult<GLint> cleanupPrograms();
+    GfxResult<GLuint> getProgramId(uint);
+    GfxResult<GLuint> loadShaders(string, string);
+ private:
+   vector<GLuint> programIdList_;
 };

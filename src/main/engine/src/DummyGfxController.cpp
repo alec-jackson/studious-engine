@@ -10,17 +10,37 @@
  */
 #include <DummyGfxController.hpp>
 
-GfxResult DummyGfxController::generateVertexBuffer(Polygon &polygon) {
+GfxResult<GLint> DummyGfxController::generateVertexBuffer(Polygon &polygon) {
     cout << "GfxController::generateVertexBuffer" << endl;
-    return GfxResult::OK;
+    return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult DummyGfxController::generateNormalBuffer(Polygon &polygon) {
+GfxResult<GLint> DummyGfxController::generateNormalBuffer(Polygon &polygon) {
     cout << "GfxController::generateNormalBuffer" << endl;
-    return GfxResult::OK;
+    return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult DummyGfxController::generateTextureBuffer(Polygon &polygon, SDL_Surface *texture) {
+GfxResult<GLint> DummyGfxController::generateTextureBuffer(Polygon &polygon, SDL_Surface *texture) {
     cout << "GfxController::generateTextureBuffer" << endl;
-    return GfxResult::OK;
+    return GfxResult<GLint>(GfxApiResult::OK, 0);
+}
+
+GfxResult<GLint> DummyGfxController::getShaderVariable(GLint, const char *) const {
+    cout << "GfxController::getShaderVariable" << endl;
+    return GfxResult<GLint>(GfxApiResult::OK, 0);
+}
+
+GfxResult<GLint> DummyGfxController::cleanupPrograms() {
+    cout << "GfxController::cleanupPrograms" << endl;
+    return GfxResult<GLint>(GfxApiResult::OK, 0);
+}
+
+GfxResult<GLuint> DummyGfxController::getProgramId(uint index) {
+    cout << "GfxController::getProgramId" << endl;
+    return GfxResult<GLuint>(GfxApiResult::OK, 0);
+}
+
+GfxResult<GLuint> DummyGfxController::loadShaders(string vertexPath, string fragmentPath) {
+    cout << "GfxController::loadShaders" << endl;
+    return GfxResult<GLuint>(GfxApiResult::OK, 0);
 }

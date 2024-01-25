@@ -14,7 +14,7 @@
 /// @todo: Finish this code - lots of hard-coded values
 /// @todo: Either use super() or restructure class inheritance - refactor this constructor
 TextObject::TextObject(textObjectInfo info): SceneObject(vec3(300.0f, 300.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f),
-    info.objectName, 1.0f, info.programId), message(info.message), fontPath(info.fontPath) {
+    info.objectName, 1.0f, info.programId, info.gfxController), message(info.message), fontPath(info.fontPath) {
     mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
     cout << "Initializing text with message " << message << endl;
 

@@ -57,4 +57,5 @@ typedef struct gameObjectInfo {
     GLfloat scale;
     int camera;
     string objectName;
+    GfxController &gfxController;
 } gameObjectInfo;

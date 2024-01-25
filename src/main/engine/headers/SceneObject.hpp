@@ -12,9 +12,11 @@
 class SceneObject {
  public:
         // Constructors
-        inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, GLfloat scale, GLuint programId):
-              position(position), rotation(rotation), objectName(objectName), scale(scale), programId(programId) {}
-        inline SceneObject() {}
+        inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, GLfloat scale, GLuint programId,
+              const GfxController &gfxController):
+              position(position), rotation(rotation), objectName(objectName), scale(scale), programId(programId),
+              gfxController_ { gfxController } {}
+        inline explicit SceneObject(const GfxController &gfxController): gfxController_ { gfxController } {}
         // Setter methods
         inline void setVpMatrix(mat4 vpMatrix) { this->vpMatrix = vpMatrix; }
         inline void setPosition(vec3 position) { this->position = position; }
@@ -42,4 +44,6 @@ class SceneObject {
         string objectName;
         GLfloat scale;
         GLuint programId;
+
+        const GfxController &gfxController_;
 };

@@ -31,4 +31,5 @@ typedef struct cameraInfo {
     GameObject *objTarget;
     vec3 offset;
     GLfloat viewCameraAngle, viewAspectRatio, viewNearClipping, viewFarClipping;
+    GfxController &gfxController;
 } cameraInfo;

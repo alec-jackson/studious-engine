@@ -27,6 +27,7 @@ void GameInstance::startGameInstance(gameInstanceArgs args) {
     sfxNames = args.soundList;
     width = args.windowWidth;
     height = args.windowHeight;
+    gfxController_ = args.gfxController;
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;
@@ -68,22 +69,6 @@ vec3 GameInstance::getDirectionalLight() {
  */
 const Uint8 *GameInstance::getKeystate() {
     return keystate;
-}
-
-/*
- (GLuint) getProgramID returns the programId associated with the given
- (int) index.
-
- On success, function returns associated programId. On failure,
- UINT_MAX is returned and an error is written to stderr.
-*/
-GLuint GameInstance::getProgramID(uint index) {
-    if (index >= programId.size()) {
-        cerr << "Error: Requested programId is not in available range [0, "
-        << programId.size() - 1 << "]\n";
-        return UINT_MAX;
-    }
-    return programId[index];
 }
 
 /*
@@ -151,10 +136,7 @@ void GameInstance::cleanup() {
     for (git = gameObjects.begin(); git != gameObjects.end(); ++git) {
         destroyGameObject((*git));
     }
-    vector<GLuint>::iterator it;
-    for (it = programId.begin(); it != programId.end(); ++it) {
-        glDeleteProgram(*it);
-    }
+    gfxController_->cleanupPrograms();
     glDeleteVertexArrays(1, &vertexArrayID);
     Mix_CloseAudio();
     SDL_DestroyWindow(window);
@@ -550,7 +532,7 @@ void GameInstance::initApplication(vector<string> vertexPath, vector<string> fra
     glGenVertexArrays(1, &vertexArrayID);
     glBindVertexArray(vertexArrayID);
     for (uint i = 0; i < vertexPath.size(); i++) {
-        programId.push_back(loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str()));
+        gfxController_->loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str());
     }
 }
 

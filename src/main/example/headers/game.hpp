@@ -10,7 +10,6 @@
  */
 
 #pragma once
-#include <shaderLoader.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
 #include <gameInstance.hpp>

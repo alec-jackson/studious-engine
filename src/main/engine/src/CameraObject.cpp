@@ -11,7 +11,7 @@
 
 #include <CameraObject.hpp>
 
-CameraObject::CameraObject(cameraInfo camInfo): SceneObject(), aspectRatio(camInfo.viewAspectRatio),
+CameraObject::CameraObject(cameraInfo camInfo): SceneObject(camInfo.gfxController), aspectRatio(camInfo.viewAspectRatio),
     nearClipping(camInfo.viewNearClipping), farClipping(camInfo.viewFarClipping), offset(camInfo.offset),
     target(camInfo.objTarget), cameraAngle(camInfo.viewCameraAngle) {}
 

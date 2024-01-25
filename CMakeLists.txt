@@ -45,7 +45,6 @@ find_package(GTest CONFIG REQUIRED)
 add_executable(${PROJECT_NAME}
   src/main/example/src/game.cpp
   src/main/utilities/src/ModelImport.cpp
-  src/main/utilities/src/shaderLoader.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/src/gameInstance.cpp
   src/main/engine/src/GameObject.cpp

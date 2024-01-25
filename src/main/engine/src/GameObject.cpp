@@ -13,7 +13,7 @@
 
 GameObject::GameObject(gameObjectInfo objectInfo):
     SceneObject(objectInfo.position, objectInfo.rotation, objectInfo.objectName, objectInfo.scale,
-    objectInfo.characterModel.programId), model { objectInfo.characterModel }, cameraId { objectInfo.camera } {
+    objectInfo.characterModel.programId, objectInfo.gfxController), model { objectInfo.characterModel }, cameraId { objectInfo.camera } {
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
@@ -33,14 +33,14 @@ GameObject::GameObject(gameObjectInfo objectInfo):
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
     // Grab IDs for shared variables between app and program (shader)
-    rotateId = glGetUniformLocation(programId, "rotate");
-    scaleId = glGetUniformLocation(programId, "scale");
-    translateId = glGetUniformLocation(programId, "move");
-    vpId = glGetUniformLocation(programId, "VP");
-    hasTextureId = glGetUniformLocation(programId, "hasTexture");
-    directionalLightId = glGetUniformLocation(programId, "directionalLight");
-    luminanceId = glGetUniformLocation(programId, "luminance");
-    rollOffId = glGetUniformLocation(programId, "rollOff");
+    rotateId = gfxController_.getShaderVariable(programId, "rotate").get();
+    scaleId = gfxController_.getShaderVariable(programId, "scale").get();
+    translateId = gfxController_.getShaderVariable(programId, "move").get();
+    vpId = gfxController_.getShaderVariable(programId, "VP").get();
+    hasTextureId = gfxController_.getShaderVariable(programId, "hasTexture").get();
+    directionalLightId = gfxController_.getShaderVariable(programId, "directionalLight").get();
+    luminanceId = gfxController_.getShaderVariable(programId, "luminance").get();
+    rollOffId = gfxController_.getShaderVariable(programId, "rollOff").get();
     mvpId = -1;
     vpMatrix = mat4(1.0f);  // Default VP matrix to identity matrix
 }

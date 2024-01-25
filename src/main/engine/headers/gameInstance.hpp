@@ -15,7 +15,6 @@
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
-#include <shaderLoader.hpp>
 #include <CameraObject.hpp>
 #include <TextObject.hpp>
 
@@ -44,12 +43,14 @@ typedef struct controllerReadout {
  * vector<string> fragmentShaders - Contains paths to fragment shaders to be
      used in the current GameInstance.
 */
+/// @todo This is bunk and will be refactored eventually...
 typedef struct gameInstanceArgs {
     int windowWidth;
     int windowHeight;
     vector<string> soundList;
     vector<string> vertexShaders;
     vector<string> fragmentShaders;
+    GfxController *gfxController;
 } gameInstanceArgs;
 
 /*
@@ -73,7 +74,6 @@ class GameInstance {
     vector<GameObject *> gameObjects;
     vector<CameraObject *> gameCameras;
     vector<TextObject *> gameTexts;
-    vector<GLuint> programId;
     GLuint vertexArrayID;
     GLdouble deltaTime;
     SDL_GameController *gameControllers[2];
@@ -82,6 +82,7 @@ class GameInstance {
     GLfloat luminance;
     int width, height;
     mutex sceneLock;
+    GfxController *gfxController_;
 
     void initWindow(int width, int height);
     void initAudio();
@@ -97,7 +98,6 @@ class GameInstance {
     int getHeight();
     vec3 getDirectionalLight();
     const Uint8 *getKeystate();
-    GLuint getProgramID(uint index);
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
     void playSound(int soundIndex, int loop);

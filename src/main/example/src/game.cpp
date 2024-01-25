@@ -91,6 +91,7 @@ int setup(GameInstance *currentGame, configData* config) {
     args.soundList = soundList;
     args.vertexShaders = vertShaders;
     args.fragmentShaders = fragShaders;
+    args.gfxController = &gfxController;
     if (!flag) {
         args.windowWidth = config->resX;
         args.windowHeight = config->resY;
@@ -123,7 +124,7 @@ int runtime(GameInstance *currentGame) {
     // Configure a new createCameraInfo struct to pass to createCamera
     // See cameraInfo struct for documentation
     cameraInfo camInfo = { NULL, vec3(5.140022f, 1.349999f, 2.309998f),
-        3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f };
+        3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f, gfxController };
     gameObject[2] = currentGame->createCamera(camInfo);
 
     /// @todo Make loading textures for objects a little more user friendly
@@ -136,7 +137,7 @@ int runtime(GameInstance *currentGame) {
     auto importedMapObj = ModelImport("src/resources/models/map2.obj",
         texturePathStage,
         texturePatternStage,
-        currentGame->getProgramID(0),
+        gfxController.getProgramId(0).get(),
         gfxController);
 
     auto mapPoly = importedMapObj.createPolygonFromFile();
@@ -145,7 +146,7 @@ int runtime(GameInstance *currentGame) {
     /// @todo mapPoly can be a reference I think
     gameObjectInfo map = { mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
-        gameObject[2], "map" };
+        gameObject[2], "map", gfxController };
 
     gameObject[0] = currentGame->createGameObject(map);
 
@@ -155,18 +156,18 @@ int runtime(GameInstance *currentGame) {
         "src/resources/models/Dracula.obj",
         texturePath,
         texturePattern,
-        currentGame->getProgramID(0),
+        gfxController.getProgramId(0).get(),
         gfxController);
 
     auto playerPoly = importedPlayerObj.createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
     gameObjectInfo playerObj = { playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player" };
+        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player", gfxController };
 
     gameObject[1] = currentGame->createGameObject(playerObj);
     GameObject *dracs = currentGame->getGameObject(gameObject[1]);
-    dracs->createCollider(currentGame->getProgramID(1));
+    dracs->createCollider(gfxController.getProgramId(1).get());
     playerRef = dracs;
 
     cout << "Creating wolf\n";
@@ -174,7 +175,7 @@ int runtime(GameInstance *currentGame) {
     auto importedWolfObj = ModelImport("src/resources/models/wolf.obj",
         texturePath,
         texturePattern,
-        currentGame->getProgramID(0),
+        gfxController.getProgramId(0).get(),
         gfxController);
 
     auto wolfPoly = importedWolfObj.createPolygonFromFile();
@@ -182,33 +183,33 @@ int runtime(GameInstance *currentGame) {
     // Ready the gameObjectInfo for the wolf object
     gameObjectInfo wolfObj = { wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
-        gameObject[2], "NPC"};
+        gameObject[2], "NPC", gfxController };
 
     gameObject[3] = currentGame->createGameObject(wolfObj);
 
     GameObject *wolfObject = currentGame->getGameObject(gameObject[3]);
-    wolfObject->createCollider(currentGame->getProgramID(1));
+    wolfObject->createCollider(gfxController.getProgramId(1).get());
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
     textObjectInfo textInfo = { "Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
-        currentGame->getProgramID(2) };
+        gfxController.getProgramId(2).get(), "studious-text", gfxController };
     gameObject[4] = currentGame->createText(textInfo);
     TextObject *textObj = currentGame->getText(gameObject[4]);
     textObj->setPosition(vec3(25.0f, 25.0f, 0.0f));
-    textInfo = { "FPS: ", "src/resources/fonts/AovelSans.ttf",
-        currentGame->getProgramID(2) };
+    textObjectInfo textInfo2 = { "FPS: ", "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(), "FPS Text", gfxController };
     // Re-using gameObject 4 for no particular reason
-    textInfo = { "Contact", "src/resources/fonts/AovelSans.ttf",
-        currentGame->getProgramID(2) };
-    gameObject[4] = currentGame->createText(textInfo);
+    textObjectInfo textInfo3 = { "Contact", "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(), "Contact Text", gfxController };
+    gameObject[4] = currentGame->createText(textInfo3);
     textObj = currentGame->getText(gameObject[4]);
     textObj->setPosition(vec3(25.0f, 300.0f, 0.0f));
     collDebugText = textObj;
     collDebugText->setMessage("Contact: False");
     collDebugText->setScale(0.7f);
 
-    gameObject[4] = currentGame->createText(textInfo);
+    gameObject[4] = currentGame->createText(textInfo3);
     textObj = currentGame->getText(gameObject[4]);
     textObj->setPosition(vec3(25.0f, 670.0f, 0.0f));
     fps_counter = textObj;

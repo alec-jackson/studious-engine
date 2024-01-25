@@ -12,7 +12,12 @@
 #include <GfxController.hpp>
 
 class DummyGfxController : public GfxController {
-    GfxResult generateVertexBuffer(Polygon &);
-    GfxResult generateNormalBuffer(Polygon &);
-    GfxResult generateTextureBuffer(Polygon &, SDL_Surface *);
+ public:
+    GfxResult<GLint> generateVertexBuffer(Polygon &);
+    GfxResult<GLint> generateNormalBuffer(Polygon &);
+    GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *);
+    GfxResult<GLint> getShaderVariable(GLint, const char *) const;
+    GfxResult<GLint> cleanupPrograms();
+    GfxResult<GLuint> getProgramId(uint);
+    GfxResult<GLuint> loadShaders(string, string);
 };
