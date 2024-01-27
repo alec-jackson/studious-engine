@@ -31,11 +31,13 @@ class GfxResult {
 
 class GfxController {
  public:
+    virtual GfxResult<GLint> init() = 0;
     virtual GfxResult<GLint> generateVertexBuffer(Polygon &) = 0;
     virtual GfxResult<GLint> generateNormalBuffer(Polygon &) = 0;
     virtual GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *) = 0;
     virtual GfxResult<GLint> getShaderVariable(GLint, const char *) const = 0;
-    virtual GfxResult<GLint> cleanupPrograms() = 0;
+    virtual GfxResult<GLint> cleanup() = 0;
     virtual GfxResult<GLuint> getProgramId(uint) = 0;
     virtual GfxResult<GLuint> loadShaders(string, string) = 0;
+    virtual void update() = 0;
 };

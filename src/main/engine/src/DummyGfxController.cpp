@@ -30,8 +30,8 @@ GfxResult<GLint> DummyGfxController::getShaderVariable(GLint, const char *) cons
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLint> DummyGfxController::cleanupPrograms() {
-    cout << "GfxController::cleanupPrograms" << endl;
+GfxResult<GLint> DummyGfxController::cleanup() {
+    cout << "GfxController::cleanup" << endl;
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
@@ -43,4 +43,13 @@ GfxResult<GLuint> DummyGfxController::getProgramId(uint index) {
 GfxResult<GLuint> DummyGfxController::loadShaders(string vertexPath, string fragmentPath) {
     cout << "GfxController::loadShaders" << endl;
     return GfxResult<GLuint>(GfxApiResult::OK, 0);
+}
+
+void DummyGfxController::update() {
+    cout << "GfxController::update" << endl;
+}
+
+GfxResult<GLint> DummyGfxController::init() {
+    cout << "GfxController::init" << endl;
+    return GfxResult<GLint>(GfxApiResult::OK, 0);
 }

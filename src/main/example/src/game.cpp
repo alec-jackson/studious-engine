@@ -268,7 +268,6 @@ int mainLoop(gameInfo* gamein) {
         currentGame->lockScene();
         begin = SDL_GetPerformanceCounter();
         running = currentGame->isWindowOpen();
-        currentGame->updateOGL();
         error = currentGame->updateCameras();
         error |= currentGame->updateObjects();
         error |= currentGame->updateWindow();

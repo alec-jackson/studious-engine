@@ -62,12 +62,13 @@ GfxResult<GLint> OpenGlGfxController::generateTextureBuffer(Polygon &polygon, SD
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLint> OpenGlGfxController::cleanupPrograms() {
+GfxResult<GLint> OpenGlGfxController::cleanup() {
     auto deletedPrograms = 0;
     for (auto it = programIdList_.begin(); it != programIdList_.end(); ++it) {
         glDeleteProgram(*it);
         deletedPrograms++;
     }
+    glDeleteVertexArrays(1, &vertexArrayId_);
     return GfxResult<GLint>(GfxApiResult::OK, deletedPrograms);
 }
 
@@ -155,4 +156,28 @@ GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLint programId, const c
     auto result = GfxResult<GLint>(GfxApiResult::FAILURE, varId);
     if (varId == -1) result = GfxResult<GLint>(GfxApiResult::OK, varId);
     return result;
+}
+
+void OpenGlGfxController::updateOpenGl() {
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glCullFace(GL_BACK);
+    glDepthFunc(GL_LESS);
+    glClearColor(0.0f, 0.0f, 0.0, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void OpenGlGfxController::update() {
+    glBindVertexArray(vertexArrayId_);
+    updateOpenGl();
+}
+
+GfxResult<GLint> OpenGlGfxController::init() {
+    cout << "OpenGlGfxController::init" << endl;
+    glGenVertexArrays(1, &vertexArrayId_);
+    glBindVertexArray(vertexArrayId_);
+    return GfxResult<GLint>(GfxApiResult::OK, 0);
 }

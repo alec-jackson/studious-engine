@@ -10,19 +10,25 @@
  */
 
 #pragma once
+#include <vector>
+#include <string>
 #include <GfxController.hpp>
 #include <Polygon.hpp>
 #include <common.hpp>
 
 class OpenGlGfxController : public GfxController {
  public:
+    GfxResult<GLint> init();
     GfxResult<GLint> generateVertexBuffer(Polygon &);
     GfxResult<GLint> generateNormalBuffer(Polygon &);
     GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *);
     GfxResult<GLint> getShaderVariable(GLint, const char *) const;
-    GfxResult<GLint> cleanupPrograms();
+    GfxResult<GLint> cleanup();
     GfxResult<GLuint> getProgramId(uint);
     GfxResult<GLuint> loadShaders(string, string);
+    void update();
+    void updateOpenGl();
  private:
-   vector<GLuint> programIdList_;
+    vector<GLuint> programIdList_;
+    GLuint vertexArrayId_;
 };

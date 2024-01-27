@@ -136,8 +136,7 @@ void GameInstance::cleanup() {
     for (git = gameObjects.begin(); git != gameObjects.end(); ++git) {
         destroyGameObject((*git));
     }
-    gfxController_->cleanupPrograms();
-    glDeleteVertexArrays(1, &vertexArrayID);
+    gfxController_->cleanup();
     Mix_CloseAudio();
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -177,24 +176,6 @@ bool GameInstance::isWindowOpen() {
 }
 
 /*
- (void) updateOGL clears the current OpenGL drawing on the SDL window. This
- function should be called after every frame.
-
- (void) updateOGL does not return any value.
-*/
-void GameInstance::updateOGL() {
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glCullFace(GL_BACK);
-    glDepthFunc(GL_LESS);
-    glClearColor(0.0f, 0.0f, 0.0, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-/*
  (int) updateCameras loops through all of the cameras present in the current
  game scene and updates their position matrices.
 
@@ -231,8 +212,8 @@ int GameInstance::updateObjects() {
         cerr << "Error: No active GameObjects in the current scene!\n";
         return -1;
     }
+    gfxController_->update();
     /// @todo: Polymorphism! Only need one structure for these game objects
-    glBindVertexArray(vertexArrayID);
     std::vector<GameObject *>::iterator it;
     for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {
         (*it)->setDirectionalLight(directionalLight);
@@ -529,8 +510,7 @@ void GameInstance::initController() {
 */
 void GameInstance::initApplication(vector<string> vertexPath, vector<string> fragmentPath) {
     // Compile each of our shaders and assign them their own programId number
-    glGenVertexArrays(1, &vertexArrayID);
-    glBindVertexArray(vertexArrayID);
+    gfxController_->init();
     for (uint i = 0; i < vertexPath.size(); i++) {
         gfxController_->loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str());
     }

@@ -74,7 +74,6 @@ class GameInstance {
     vector<GameObject *> gameObjects;
     vector<CameraObject *> gameCameras;
     vector<TextObject *> gameTexts;
-    GLuint vertexArrayID;
     GLdouble deltaTime;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
