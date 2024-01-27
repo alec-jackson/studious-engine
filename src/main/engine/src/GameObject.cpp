@@ -13,7 +13,8 @@
 
 GameObject::GameObject(gameObjectInfo objectInfo):
     SceneObject(objectInfo.position, objectInfo.rotation, objectInfo.objectName, objectInfo.scale,
-    objectInfo.characterModel.programId, objectInfo.gfxController), model { objectInfo.characterModel }, cameraId { objectInfo.camera } {
+    objectInfo.characterModel.programId, objectInfo.gfxController), model { objectInfo.characterModel },
+    cameraId { objectInfo.camera } {
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
@@ -72,6 +73,7 @@ colliderInfo &GameObject::getCollider(void) {
  (void) drawShape does not return any values.
 */
 void GameObject::render() {
+    // Send GameObject to render method
     // Draw each shape individually
     for (int i = 0; i < model.numberOfObjects; i++) {
         glUseProgram(programId);
