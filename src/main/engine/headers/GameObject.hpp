@@ -54,7 +54,7 @@ class GameObject: public SceneObject {
         int cameraId;  /// @todo: Why is this managed in GameObject?
         unsigned int VAO;  /// @todo: Why do we have this?
 
-        GLuint rotateId, scaleId, translateId, vpId, textureId, textCoordsId,
+        GLuint vpId, modelId, textureId, textCoordsId,
             hasTextureId, directionalLightId, luminanceId, rollOffId,
             mvpId, collider_shaderId;  /// @todo: Organize these into another class
 

@@ -181,3 +181,8 @@ GfxResult<GLint> OpenGlGfxController::init() {
     glBindVertexArray(vertexArrayId_);
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
+
+GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
+    glUseProgram(programId);
+    return GfxResult<GLuint>(GfxApiResult::OK, 0);
+}

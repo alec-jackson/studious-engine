@@ -53,3 +53,8 @@ GfxResult<GLint> DummyGfxController::init() {
     cout << "GfxController::init" << endl;
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
+
+GfxResult<GLuint> DummyGfxController::setProgram(GLuint programId) {
+    cout << "GfxController::setProgram" << endl;
+    return GfxResult<GLuint>(GfxApiResult::OK, 0);
+}

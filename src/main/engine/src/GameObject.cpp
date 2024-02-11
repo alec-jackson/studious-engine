@@ -34,9 +34,7 @@ GameObject::GameObject(gameObjectInfo objectInfo):
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
     // Grab IDs for shared variables between app and program (shader)
-    rotateId = gfxController_.getShaderVariable(programId, "rotate").get();
-    scaleId = gfxController_.getShaderVariable(programId, "scale").get();
-    translateId = gfxController_.getShaderVariable(programId, "move").get();
+    modelId = gfxController_.getShaderVariable(programId, "model").get();
     vpId = gfxController_.getShaderVariable(programId, "VP").get();
     hasTextureId = gfxController_.getShaderVariable(programId, "hasTexture").get();
     directionalLightId = gfxController_.getShaderVariable(programId, "directionalLight").get();
@@ -84,15 +82,15 @@ void GameObject::render() {
                 vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
                 vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
                 vec3(0, 0, 1));
+
         scaleMatrix = glm::scale(vec3(scale, scale, scale));
+        auto modelMatrix = translateMatrix * rotateMatrix * scaleMatrix;
         // Send our shared variables over to our program (shader)
         glUniform1f(luminanceId, luminance);
         glUniform1f(rollOffId, rollOff);
         glUniform3fv(directionalLightId, 1, &directionalLight[0]);
         glUniformMatrix4fv(vpId, 1, GL_FALSE, &vpMatrix[0][0]);
-        glUniformMatrix4fv(translateId, 1, GL_FALSE, &translateMatrix[0][0]);
-        glUniformMatrix4fv(scaleId, 1, GL_FALSE, &scaleMatrix[0][0]);
-        glUniformMatrix4fv(rotateId, 1, GL_FALSE, &rotateMatrix[0][0]);
+        glUniformMatrix4fv(modelId, 1, GL_FALSE, &modelMatrix[0][0]);
         glUniform1i(hasTextureId, hasTexture[i]);
         if (hasTexture[i]) {
             glActiveTexture(GL_TEXTURE0);

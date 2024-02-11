@@ -21,6 +21,7 @@ class DummyGfxController : public GfxController {
     GfxResult<GLint> getShaderVariable(GLint, const char *) const;
     GfxResult<GLint> cleanup();
     GfxResult<GLuint> getProgramId(uint);
+    GfxResult<GLuint> setProgram(GLuint);
     GfxResult<GLuint> loadShaders(string, string);
     void update();
 };
