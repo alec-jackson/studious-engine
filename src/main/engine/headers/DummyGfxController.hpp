@@ -26,5 +26,8 @@ class DummyGfxController : public GfxController {
     GfxResult<GLuint> sendFloat(GLuint variableId, GLfloat data) const;
     GfxResult<GLuint> sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const;
     GfxResult<GLuint> polygonRenderMode(RenderMode mode) const;
+    GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const;
+    GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) const;
+    GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) const;
     void update();
 };

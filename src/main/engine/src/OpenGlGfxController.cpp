@@ -216,3 +216,23 @@ GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) const 
     }
     return result;
 }
+
+GfxResult<GLuint> OpenGlGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const {
+    glUniformMatrix4fv(variableId, count, GL_FALSE, data);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::sendInteger(GLuint variableId, GLint data) const {
+    glUniform1i(variableId, data);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samplerId) const {
+    // Use texture unit zero - nothing fancy
+    glActiveTexture(GL_TEXTURE0);
+    // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
+    sendInteger(samplerId, 0);
+    return GFX_OK(GLuint);
+}

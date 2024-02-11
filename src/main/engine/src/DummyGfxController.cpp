@@ -76,3 +76,21 @@ GfxResult<GLuint> DummyGfxController::polygonRenderMode(RenderMode mode) const {
     printf("GfxController::polygonRenderMode: mode=[%d]", mode);
     return GFX_OK(GLuint);
 }
+
+GfxResult<GLuint> DummyGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const {
+    printf("GfxController::sendFloatMatrix: variableId=[%u], count=[%d], data=[%p]\n",
+        variableId,
+        count,
+        data);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::sendInteger(GLuint variableId, GLint data) const {
+    printf("GfxController::sendInteger: variableId=[%u], data=[%d]", variableId, data);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId, GLuint samplerId) const {
+    printf("GfxController::bindTexture: textureId=[%u], samplerId=[%u]", textureId, samplerId);
+    return GFX_OK(GLuint);
+}

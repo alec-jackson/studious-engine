@@ -88,14 +88,12 @@ void GameObject::render() {
         // Send our shared variables over to our program (shader)
         gfxController_.sendFloat(luminanceId, luminance);
         gfxController_.sendFloat(rollOffId, rollOff);
-        gfxController_.sendFloatVector(directionalLightId, 1, &directionalLight[0]);
-        glUniformMatrix4fv(vpId, 1, GL_FALSE, &vpMatrix[0][0]);
-        glUniformMatrix4fv(modelId, 1, GL_FALSE, &modelMatrix[0][0]);
-        glUniform1i(hasTextureId, hasTexture[i]);
+        gfxController_.sendFloatVector(directionalLightId, 1, glm::value_ptr(directionalLight));
+        gfxController_.sendFloatMatrix(vpId, 1, glm::value_ptr(vpMatrix));
+        gfxController_.sendFloatMatrix(modelId, 1, glm::value_ptr(modelMatrix));
+        gfxController_.sendInteger(hasTextureId, hasTexture[i]);
         if (hasTexture[i]) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, model.textureId[i]);
-            glUniform1i(model.textureUniformId, 0);
+            gfxController_.bindTexture(model.textureId[i], model.textureUniformId);
         }
         // Actually start drawing polygons :)
         glEnableVertexAttribArray(0);
@@ -136,7 +134,7 @@ void GameObject::render() {
         glDisable(GL_CULL_FACE);  // Just do it
         gfxController_.polygonRenderMode(RenderMode::LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
-        glUniformMatrix4fv(mvpId, 1, GL_FALSE, &MVP[0][0]);
+        gfxController_.sendFloatMatrix(mvpId, 1, glm::value_ptr(MVP));
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, collider.collider.shapeBufferId[0]);
         glVertexAttribPointer(

@@ -53,5 +53,8 @@ class GfxController {
     virtual GfxResult<GLuint> sendFloat(GLuint variableId, GLfloat data) const = 0;
     virtual GfxResult<GLuint> sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const = 0;
     virtual GfxResult<GLuint> polygonRenderMode(RenderMode mode) const = 0;
+    virtual GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const = 0;
+    virtual GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) const = 0;
+    virtual GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) const = 0;
     virtual void update() = 0;
 };
