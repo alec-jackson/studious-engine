@@ -19,11 +19,11 @@ const vec3 kd = 0.7*vec3(.5, 0.5, 0.5);
 void main() {
   vec3 lightPosition = directionalLight;
 
-  vec4 Normal = normalize(model * vec4(normals, 0.0));
+  vec4 normal = normalize(model * vec4(normals, 0.0));
   const vec3 LightIntensity = vec3(20);
 
   float distance = length(lightPosition - vertexPosition_modelspace);
-  float intensity = dot(Normal, normalize(vec4(lightPosition, 0.0) - vec4(vertexPosition_modelspace, 1.0)));
+  float intensity = dot(normal, normalize(vec4(lightPosition, 0.0) - vec4(vertexPosition_modelspace, 1.0)));
   gl_Position = VP * model * vec4(vertexPosition_modelspace, 1);
 
   f_texcoord = texcoord;

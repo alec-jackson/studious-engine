@@ -88,6 +88,7 @@ void TextObject::render() {
     vec3 color = vec3(1.0f);
     int x = this->position.x, y = this->position.y;
     glUseProgram(this->programId);
+    gfxController_.polygonRenderMode(RenderMode::FILL);
     glUniform3f(glGetUniformLocation(this->programId, "textColor"),
         color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);

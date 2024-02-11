@@ -10,11 +10,21 @@
  */
 #pragma once
 #include <string>
+#include <vector>
 #include <Polygon.hpp>
+
+#define GFX_OK(gType) GfxResult<gType>(GfxApiResult::OK, 0);
+#define GFX_FAILURE(gType) GfxResult<gType>(GfxApiResult::FAILURE, -1);
 
 enum GfxApiResult {
     OK,
     FAILURE
+};
+
+enum RenderMode {
+    POINT,
+    LINE,
+    FILL
 };
 
 template <typename T>
@@ -38,7 +48,10 @@ class GfxController {
     virtual GfxResult<GLint> getShaderVariable(GLint, const char *) const = 0;
     virtual GfxResult<GLint> cleanup() = 0;
     virtual GfxResult<GLuint> getProgramId(uint) = 0;
-    virtual GfxResult<GLuint> setProgram(GLuint) = 0;
+    virtual GfxResult<GLuint> setProgram(GLuint) const = 0;
     virtual GfxResult<GLuint> loadShaders(string, string) = 0;
+    virtual GfxResult<GLuint> sendFloat(GLuint variableId, GLfloat data) const = 0;
+    virtual GfxResult<GLuint> sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const = 0;
+    virtual GfxResult<GLuint> polygonRenderMode(RenderMode mode) const = 0;
     virtual void update() = 0;
 };

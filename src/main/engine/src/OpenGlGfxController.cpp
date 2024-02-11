@@ -182,7 +182,37 @@ GfxResult<GLint> OpenGlGfxController::init() {
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
+GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) const {
     glUseProgram(programId);
     return GfxResult<GLuint>(GfxApiResult::OK, 0);
+}
+
+GfxResult<GLuint> OpenGlGfxController::sendFloat(GLuint variableId, GLfloat data) const {
+    glUniform1f(variableId, data);
+    return GfxResult<GLuint>(GfxApiResult::OK, 0);
+}
+
+GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const {
+    glUniform3fv(variableId, count, data);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) const {
+    auto result = GFX_OK(GLuint);
+    switch (mode) {
+        case RenderMode::POINT:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+            break;
+        case RenderMode::LINE:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            break;
+        case RenderMode::FILL:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            break;
+        default:
+            fprintf(stderr, "OpenGlGfxController::polygonRenderMode: Unsupported render mode %d", mode);
+            result = GFX_FAILURE(GLuint);
+            break;
+    }
+    return result;
 }

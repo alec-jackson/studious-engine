@@ -74,8 +74,8 @@ void GameObject::render() {
     // Send GameObject to render method
     // Draw each shape individually
     for (int i = 0; i < model.numberOfObjects; i++) {
-        glUseProgram(programId);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        gfxController_.setProgram(programId);
+        gfxController_.polygonRenderMode(RenderMode::FILL);
         // Update our model transformation matrices
         translateMatrix = glm::translate(mat4(1.0f), position);
         rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
@@ -86,9 +86,9 @@ void GameObject::render() {
         scaleMatrix = glm::scale(vec3(scale, scale, scale));
         auto modelMatrix = translateMatrix * rotateMatrix * scaleMatrix;
         // Send our shared variables over to our program (shader)
-        glUniform1f(luminanceId, luminance);
-        glUniform1f(rollOffId, rollOff);
-        glUniform3fv(directionalLightId, 1, &directionalLight[0]);
+        gfxController_.sendFloat(luminanceId, luminance);
+        gfxController_.sendFloat(rollOffId, rollOff);
+        gfxController_.sendFloatVector(directionalLightId, 1, &directionalLight[0]);
         glUniformMatrix4fv(vpId, 1, GL_FALSE, &vpMatrix[0][0]);
         glUniformMatrix4fv(modelId, 1, GL_FALSE, &modelMatrix[0][0]);
         glUniform1i(hasTextureId, hasTexture[i]);
@@ -129,11 +129,12 @@ void GameObject::render() {
         glDisableVertexAttribArray(2);
         glDisableVertexAttribArray(0);
     }
+    /// @todo Move collider code to a separate collider SceneObject
     if (collider.collider.numberOfObjects > 0) {
         // After drawing the gameobject, draw the collider
         glUseProgram(collider.collider.programId);  // grab the programId from the object
         glDisable(GL_CULL_FACE);  // Just do it
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        gfxController_.polygonRenderMode(RenderMode::LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
         glUniformMatrix4fv(mvpId, 1, GL_FALSE, &MVP[0][0]);
         glEnableVertexAttribArray(0);
@@ -149,7 +150,6 @@ void GameObject::render() {
         glDrawArrays(GL_TRIANGLES, 0, collider.collider.pointCount[0] * 3);
         glDisableVertexAttribArray(0);
     }
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void GameObject::deleteTextures() {

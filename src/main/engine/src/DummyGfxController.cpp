@@ -54,7 +54,25 @@ GfxResult<GLint> DummyGfxController::init() {
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLuint> DummyGfxController::setProgram(GLuint programId) {
+GfxResult<GLuint> DummyGfxController::setProgram(GLuint programId) const {
     cout << "GfxController::setProgram" << endl;
     return GfxResult<GLuint>(GfxApiResult::OK, 0);
+}
+
+GfxResult<GLuint> DummyGfxController::sendFloat(GLuint variableId, GLfloat data) const {
+    printf("GfxController::sendFloat: variableId=[%u], data=[%f]", variableId, data);
+    return GfxResult<GLuint>(GfxApiResult::OK, 0);
+}
+
+GfxResult<GLuint> DummyGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const {
+    printf("GfxController::sendFloatVector: variableId=[%u], count=[%d], data=[%p]\n",
+        variableId,
+        count,
+        data);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::polygonRenderMode(RenderMode mode) const {
+    printf("GfxController::polygonRenderMode: mode=[%d]", mode);
+    return GFX_OK(GLuint);
 }

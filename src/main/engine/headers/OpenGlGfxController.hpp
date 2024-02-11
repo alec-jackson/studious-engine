@@ -25,8 +25,11 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLint> getShaderVariable(GLint, const char *) const;
     GfxResult<GLint> cleanup();
     GfxResult<GLuint> getProgramId(uint);
-    GfxResult<GLuint> setProgram(GLuint programId);
+    GfxResult<GLuint> setProgram(GLuint programId) const;
     GfxResult<GLuint> loadShaders(string, string);
+    GfxResult<GLuint> sendFloat(GLuint variableId, GLfloat data) const;
+    GfxResult<GLuint> sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const;
+    GfxResult<GLuint> polygonRenderMode(RenderMode mode) const;
     void update();
     void updateOpenGl();
  private:
