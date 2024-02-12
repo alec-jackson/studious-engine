@@ -18,7 +18,7 @@ class DummyGfxController : public GfxController {
     GfxResult<GLint> generateVertexBuffer(Polygon &);
     GfxResult<GLint> generateNormalBuffer(Polygon &);
     GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *);
-    GfxResult<GLint> getShaderVariable(GLint, const char *) const;
+    GfxResult<GLint> getShaderVariable(GLuint, const char *) const;
     GfxResult<GLint> cleanup();
     GfxResult<GLuint> getProgramId(uint);
     GfxResult<GLuint> setProgram(GLuint) const;
@@ -29,5 +29,6 @@ class DummyGfxController : public GfxController {
     GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const;
     GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) const;
     GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) const;
+    GfxResult<GLuint> render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) const;
     void update();
 };

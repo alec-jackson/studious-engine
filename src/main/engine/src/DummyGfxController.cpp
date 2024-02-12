@@ -25,7 +25,7 @@ GfxResult<GLint> DummyGfxController::generateTextureBuffer(Polygon &polygon, SDL
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLint> DummyGfxController::getShaderVariable(GLint, const char *) const {
+GfxResult<GLint> DummyGfxController::getShaderVariable(GLuint, const char *) const {
     cout << "GfxController::getShaderVariable" << endl;
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
@@ -92,5 +92,11 @@ GfxResult<GLuint> DummyGfxController::sendInteger(GLuint variableId, GLint data)
 
 GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId, GLuint samplerId) const {
     printf("GfxController::bindTexture: textureId=[%u], samplerId=[%u]", textureId, samplerId);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) const {
+    printf("GfxController::bindTexture: vId=[%u], tId=[%u], nId=[%u], vertexCount=[%u]",
+        vId, tId, nId, vertexCount);
     return GFX_OK(GLuint);
 }

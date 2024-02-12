@@ -151,7 +151,7 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
     return GfxResult<GLuint>(GfxApiResult::OK, programId);
 }
 
-GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLint programId, const char *variableName) const {
+GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLuint programId, const char *variableName) const {
     auto varId = glGetUniformLocation(programId, variableName);
     auto result = GfxResult<GLint>(GfxApiResult::FAILURE, varId);
     if (varId == -1) result = GfxResult<GLint>(GfxApiResult::OK, varId);
@@ -234,5 +234,32 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samp
     glBindTexture(GL_TEXTURE_2D, textureId);
     // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
     sendInteger(samplerId, 0);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) const {
+    // If textureId is UINT_MAX, NO TEXTURE PRESENT
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, vId);
+    glVertexAttribPointer(
+                            0,            // attribute 0. No particular reason for 0, but must match
+                                          // the layout (location) in the shader.
+                            3,            // size
+                            GL_FLOAT,     // type
+                            GL_FALSE,     // normalized?
+                            0,            // stride
+                            0);           // array buffer offset
+    glBindBuffer(GL_ARRAY_BUFFER, nId);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    if (tId != UINT_MAX) {
+        glBindBuffer(GL_ARRAY_BUFFER, tId);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    }
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(0);
     return GFX_OK(GLuint);
 }

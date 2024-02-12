@@ -93,39 +93,12 @@ void GameObject::render() {
         gfxController_.sendFloatMatrix(modelId, 1, glm::value_ptr(modelMatrix));
         gfxController_.sendInteger(hasTextureId, hasTexture[i]);
         if (hasTexture[i]) {
+            // Bind texture to sampler for polygon rendering below
             gfxController_.bindTexture(model.textureId[i], model.textureUniformId);
         }
         // Actually start drawing polygons :)
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, model.shapeBufferId[i]);
-        glVertexAttribPointer(
-                              0,            // attribute 0. No particular reason for 0, but must match
-                                            // the layout in the shader.
-                              3,            // size
-                              GL_FLOAT,     // type
-                              GL_FALSE,     // normalized?
-                              0,            // stride
-                              0);           // array buffer offset
-        glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, model.normalBufferId[i]);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        if (hasTexture[i]) {
-            glEnableVertexAttribArray(1);
-            glBindBuffer(GL_ARRAY_BUFFER, model.textureCoordsId[i]);
-            glVertexAttribPointer(
-                                  1,
-                                  2,
-                                  GL_FLOAT,
-                                  GL_FALSE,
-                                  0,
-                                  0);
-            glDrawArrays(GL_TRIANGLES, 0, model.pointCount[i] * 3);
-            glDisableVertexAttribArray(1);
-        } else {
-            glDrawArrays(GL_TRIANGLES, 0, model.pointCount[i] * 3);
-        }
-        glDisableVertexAttribArray(2);
-        glDisableVertexAttribArray(0);
+        gfxController_.render(model.shapeBufferId[i], model.textureCoordsId[i], model.normalBufferId[i],
+        model.pointCount[i] * 3);
     }
     /// @todo Move collider code to a separate collider SceneObject
     if (collider.collider.numberOfObjects > 0) {

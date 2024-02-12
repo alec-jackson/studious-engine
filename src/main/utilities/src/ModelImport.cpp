@@ -40,7 +40,7 @@ Polygon ModelImport::createPolygonFromFile() {
     }
     // Create the final object in the polygon
     buildObject(currentObject - 1);
-    polygon_.textureUniformId = glGetUniformLocation(programId_, "mytexture");
+    polygon_.textureUniformId = gfxController_.getShaderVariable(programId_, "mytexture").get();
     polygon_.programId = this->programId_;
     return polygon_;
 }

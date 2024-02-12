@@ -45,7 +45,7 @@ class GfxController {
     virtual GfxResult<GLint> generateVertexBuffer(Polygon &) = 0;
     virtual GfxResult<GLint> generateNormalBuffer(Polygon &) = 0;
     virtual GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *) = 0;
-    virtual GfxResult<GLint> getShaderVariable(GLint, const char *) const = 0;
+    virtual GfxResult<GLint> getShaderVariable(GLuint, const char *) const = 0;
     virtual GfxResult<GLint> cleanup() = 0;
     virtual GfxResult<GLuint> getProgramId(uint) = 0;
     virtual GfxResult<GLuint> setProgram(GLuint) const = 0;
@@ -56,5 +56,6 @@ class GfxController {
     virtual GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const = 0;
     virtual GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) const = 0;
     virtual GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) const = 0;
+    virtual GfxResult<GLuint> render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) const = 0;
     virtual void update() = 0;
 };
