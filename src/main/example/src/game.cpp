@@ -134,7 +134,7 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
 
-    auto importedMapObj = ModelImport("src/resources/models/map2.obj",
+    auto importedMapObj = ModelImport("src/resources/models/map3.obj",
         texturePathStage,
         texturePatternStage,
         gfxController.getProgramId(0).get(),

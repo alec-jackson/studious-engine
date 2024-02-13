@@ -34,7 +34,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     GLfloat speed = 0.001f, rotateSpeed = 1.0f, scaleSpeed = 0.0002f,
         offsetSpeed = 0.1f, currentScale = character->getScale(),
         currentLuminance = 1.0f;
-    vec3 cameraOffset = vec3(5.140022f, 1.349999f, 2.309998f), angles = vec3(0),
+    vec3 cameraOffset = vec3(7.140022f, 1.349999f, 2.309998f), angles = vec3(0),
         pos = vec3(0);
     float fallspeed = 0;
     bool trackMouse = true;
@@ -59,6 +59,13 @@ void rotateShape(void *gameInfoStruct, void *target) {
     Sint16 controllerRightStateX = 0;
     Uint8 buttonCheckA = 0;
     while (!(*currentGameInfo->isDone)) {
+        // Calculate the X-Z angle between the camera and target
+        // Assume that the target is the origin
+        auto charPos = character->getPosition();
+        auto cameraPos = currentGameInfo->gameCamera->getOffset();
+        auto cameraDiffPos = cameraPos - charPos;
+        // y over x
+        float angle = angleOfPoint(cameraPos, charPos);
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         if (hasActiveController) {
             controllerLeftStateY = SDL_GameControllerGetAxis(gameController1,
@@ -216,9 +223,10 @@ void rotateShape(void *gameInfoStruct, void *target) {
         if (currentGame->getKeystate()[SDL_SCANCODE_Y]) {
             angles[2] += rotateSpeed;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_A] || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
-            double xSpeed = sin((angles[1] - 180) * (PI / 180));
-            double ySpeed = cos((angles[1] - 180) * (PI / 180));
+        if (currentGame->getKeystate()[SDL_SCANCODE_S] || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
+            angles[1] = -1.0f * angle - 90.0f;
+            double xSpeed = sin((angles[1]) * (PI / 180));
+            double ySpeed = cos((angles[1]) * (PI / 180));
 
             double multiplier = 1;
             if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
@@ -228,7 +236,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_D] || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
+        if (currentGame->getKeystate()[SDL_SCANCODE_W] || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
+            angles[1] = -1.0f * angle + 90.0f;
             double xSpeed = sin(angles[1] * (PI / 180));
             double ySpeed = cos(angles[1] * (PI / 180));
             double multiplier = 1;
@@ -249,9 +258,10 @@ void rotateShape(void *gameInfoStruct, void *target) {
         if (currentGame->getKeystate()[SDL_SCANCODE_Q]) {
             pos[1] -= speed;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_W] || controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
-            double xSpeed = sin((angles[1] + 90) * (PI / 180));
-            double ySpeed = cos((angles[1] + 90) * (PI / 180));
+        if (currentGame->getKeystate()[SDL_SCANCODE_A] || controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
+            angles[1] = -1.0f * angle + 180.0f;
+            double xSpeed = sin((angles[1]) * (PI / 180));
+            double ySpeed = cos((angles[1]) * (PI / 180));
 
             double multiplier = 1;
             if (controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
@@ -261,9 +271,10 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_S] || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
-            double xSpeed = sin((angles[1] - 90) * (PI / 180));
-            double ySpeed = cos((angles[1] - 90) * (PI / 180));
+        if (currentGame->getKeystate()[SDL_SCANCODE_D] || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
+            angles[1] = -1.0f * angle;
+            double xSpeed = sin((angles[1]) * (PI / 180));
+            double ySpeed = cos((angles[1]) * (PI / 180));
 
             double multiplier = 1;
             if (controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
@@ -329,4 +340,24 @@ vector<double> cameraDistance(vec3 offset) {
     distance[0] = offset[1] * offset[1] + offset[2] * offset[2];
     distance[1] = offset[1] * offset[1] + offset[0] * offset[0];
     return distance;
+}
+
+double convertNegToDeg(double degree) {
+    if (degree >= 0.0f) return degree;
+    return 360 + degree;
+}
+
+// Calculates the angle between two points in degrees
+double angleOfPoint(vec3 p1, vec3 p2) {
+    auto diffPoint = p2 - p1;
+    double angle = atan(diffPoint[2] / diffPoint[0]) * (180.0f / PI);
+    if (diffPoint[0] == 0 && diffPoint[2] == 0) {
+        return 0.0f;
+    }
+    if (diffPoint[0] < 0) {
+        return angle + 180.0f;
+    } else if (diffPoint[0] > 0 && diffPoint[2] < 0) {
+        return convertNegToDeg(angle);
+    }
+    return convertNegToDeg(angle);
 }

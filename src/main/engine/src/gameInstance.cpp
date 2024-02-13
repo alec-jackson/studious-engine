@@ -33,7 +33,7 @@ void GameInstance::startGameInstance(gameInstanceArgs args) {
     controllersConnected = 0;
     initWindow(width, height);
     initAudio();
-    playSound(0, 1);
+    //playSound(0, 1);
     initController();
     initApplication(args.vertexShaders, args.fragmentShaders);
     keystate = SDL_GetKeyboardState(NULL);

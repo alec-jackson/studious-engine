@@ -25,8 +25,8 @@ void CameraObject::render() {
         cerr << "Error: Unable to update camera! Camera target is NULL!\n";
         throw std::runtime_error("Camera target is NULL");
     }
-    // Create critical section here to prevent race conditions
-    mat4 viewMatrix = lookAt(target->getPosition(offset), target->getPosition(),
+    /// @todo Add field to modify target offset
+    mat4 viewMatrix = lookAt(target->getPosition(offset), target->getPosition(vec3(0.0f, 0.01f, 0.0f)),
         vec3(0, 1, 0));
     mat4 projectionMatrix = perspective(radians(cameraAngle), aspectRatio,
         nearClipping, farClipping);
