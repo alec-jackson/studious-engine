@@ -64,6 +64,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
         auto charPos = character->getPosition();
         auto cameraPos = currentGameInfo->gameCamera->getOffset();
         auto cameraDiffPos = cameraPos - charPos;
+        double multiplier = 0.3f;
         // y over x
         float angle = angleOfPoint(cameraPos, charPos);
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
@@ -228,7 +229,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
             double xSpeed = sin((angles[1]) * (PI / 180));
             double ySpeed = cos((angles[1]) * (PI / 180));
 
-            double multiplier = 1;
             if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateX * -1)) / 32767;
             }
@@ -240,7 +240,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
             angles[1] = -1.0f * angle + 90.0f;
             double xSpeed = sin(angles[1] * (PI / 180));
             double ySpeed = cos(angles[1] * (PI / 180));
-            double multiplier = 1;
             if (controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateX)) / 32767;
             }
@@ -263,7 +262,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
             double xSpeed = sin((angles[1]) * (PI / 180));
             double ySpeed = cos((angles[1]) * (PI / 180));
 
-            double multiplier = 1;
             if (controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateY * -1)) / 32767;
             }
@@ -276,7 +274,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
             double xSpeed = sin((angles[1]) * (PI / 180));
             double ySpeed = cos((angles[1]) * (PI / 180));
 
-            double multiplier = 1;
             if (controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
                 multiplier = static_cast<float>(controllerLeftStateY) / 32767;
             }
@@ -343,21 +340,12 @@ vector<double> cameraDistance(vec3 offset) {
 }
 
 double convertNegToDeg(double degree) {
-    if (degree >= 0.0f) return degree;
-    return 360 + degree;
+    return degree >= 0.0f ? degree : degree + 360.0f;
 }
 
 // Calculates the angle between two points in degrees
 double angleOfPoint(vec3 p1, vec3 p2) {
     auto diffPoint = p2 - p1;
-    double angle = atan(diffPoint[2] / diffPoint[0]) * (180.0f / PI);
-    if (diffPoint[0] == 0 && diffPoint[2] == 0) {
-        return 0.0f;
-    }
-    if (diffPoint[0] < 0) {
-        return angle + 180.0f;
-    } else if (diffPoint[0] > 0 && diffPoint[2] < 0) {
-        return convertNegToDeg(angle);
-    }
+    double angle = atan2(diffPoint[2], diffPoint[0]) * (180.0f / PI);
     return convertNegToDeg(angle);
 }

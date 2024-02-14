@@ -52,8 +52,8 @@ GameObject::~GameObject() {
 
 colliderInfo &GameObject::getCollider(void) {
     // Update center position with model matrix then return
-    collider.center = translateMatrix * scaleMatrix * rotateMatrix * collider.originalCenter;
-    vec4 minOffset = translateMatrix * scaleMatrix * rotateMatrix * collider.minPoints;
+    collider.center = translateMatrix * scaleMatrix * collider.originalCenter;
+    vec4 minOffset = translateMatrix * scaleMatrix * collider.minPoints;
     // Use rescaled edge points to calculate offset on the fly!
     for (int i = 0; i < 4; i++) {
         collider.offset[i] = collider.center[i] - minOffset[i];
@@ -106,7 +106,7 @@ void GameObject::render() {
         glUseProgram(collider.collider.programId);  // grab the programId from the object
         glDisable(GL_CULL_FACE);  // Just do it
         gfxController_.polygonRenderMode(RenderMode::LINE);
-        mat4 MVP = vpMatrix * translateMatrix * scaleMatrix * rotateMatrix;
+        mat4 MVP = vpMatrix * translateMatrix * scaleMatrix;
         gfxController_.sendFloatMatrix(mvpId, 1, glm::value_ptr(MVP));
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, collider.collider.shapeBufferId[0]);

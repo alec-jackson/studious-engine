@@ -209,19 +209,11 @@ double convertNegToDeg(double degree) {
 // Calculates the angle between two points in degrees
 double angleOfPoint(vec3 p1, vec3 p2) {
     auto diffPoint = p2 - p1;
-    double angle = atan(diffPoint[2] / diffPoint[0]) * (180.0f / PI);
-    if (diffPoint[0] == 0 && diffPoint[2] == 0) {
-        return 0.0f;
-    }
-    if (diffPoint[0] < 0) {
-        return angle + 180.0f;
-    } else if (diffPoint[0] > 0 && diffPoint[2] < 0) {
-        return convertNegToDeg(angle);
-    }
+    double angle = atan2(diffPoint[2], diffPoint[0]) * (180.0f / PI);
     return convertNegToDeg(angle);
 }
 
-TEST(InputMonitor, WhenPointCalculate_ThenAnglesCorrect) {
+TEST(InputMonitor, WhenPointCalculate60_ThenAnglesCorrect) {
     auto noneVec = vec3(0.0f, 0.0f, 0.0f);
     auto targetVec = vec3(0.5f, 0.0f, (sqrt(3.0f) / 2.0f));
     auto angle = angleOfPoint(noneVec, targetVec);
@@ -235,21 +227,21 @@ TEST(InputMonitor, WhenPointCalculate90_ThenAnglesCorrect) {
     ASSERT_FLOAT_EQ(angle, 90.0f);
 }
 
-TEST(InputMonitor, WhenPointCalculate1_ThenAnglesCorrect) {
+TEST(InputMonitor, WhenPointCalculate120_ThenAnglesCorrect) {
     auto noneVec = vec3(0.0f, 0.0f, 0.0f);
     auto targetVec = vec3(-0.5f, 0.0f, (sqrt(3.0f) / 2.0f));
     auto angle = angleOfPoint(noneVec, targetVec);
     ASSERT_FLOAT_EQ(angle, 120.0f);
 }
 
-TEST(InputMonitor, WhenPointCalculate2_ThenAnglesCorrect) {
+TEST(InputMonitor, WhenPointCalculate180_ThenAnglesCorrect) {
     auto noneVec = vec3(0.0f, 0.0f, 0.0f);
     auto targetVec = vec3(-1.0f, 0.0f, 0.0f);
     auto angle = angleOfPoint(noneVec, targetVec);
     ASSERT_FLOAT_EQ(angle, 180.0f);
 }
 
-TEST(InputMonitor, WhenPointCalculate3_ThenAnglesCorrect) {
+TEST(InputMonitor, WhenPointCalculate240_ThenAnglesCorrect) {
     auto noneVec = vec3(0.0f, 0.0f, 0.0f);
     auto targetVec = vec3(-0.5f, 0.0f, -1.0f * (sqrt(3.0f) / 2.0f));
     auto angle = angleOfPoint(noneVec, targetVec);
@@ -263,21 +255,21 @@ TEST(InputMonitor, WhenPointCalculate270_ThenAnglesCorrect) {
     ASSERT_FLOAT_EQ(angle, 270.0f);
 }
 
-TEST(InputMonitor, WhenPointCalculate4_ThenAnglesCorrect) {
+TEST(InputMonitor, WhenPointCalculate300_ThenAnglesCorrect) {
     auto noneVec = vec3(0.0f, 0.0f, 0.0f);
     auto targetVec = vec3(0.5f, 0.0f, -1.0f * (sqrt(3.0f) / 2.0f));
     auto angle = angleOfPoint(noneVec, targetVec);
     ASSERT_FLOAT_EQ(angle, 300.0f);
 }
 
-TEST(InputMonitor, WhenPointCalculate5_ThenAnglesCorrect) {
+TEST(InputMonitor, WhenPointCalculateZero_ThenAnglesCorrect) {
     auto noneVec = vec3(0.0f, 0.0f, 0.0f);
     auto targetVec = vec3(0.0f, 0.0f, 0.0f);
     auto angle = angleOfPoint(noneVec, targetVec);
     ASSERT_FLOAT_EQ(angle, 0.0f);
 }
 
-TEST(InputMonitor, WhenPointCalculate6_ThenAnglesCorrect) {
+TEST(InputMonitor, WhenPointCalculate0_ThenAnglesCorrect) {
     auto noneVec = vec3(0.0f, 0.0f, 0.0f);
     auto targetVec = vec3(1.0f, 0.0f, 0.0f);
     auto angle = angleOfPoint(noneVec, targetVec);
