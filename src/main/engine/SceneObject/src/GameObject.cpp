@@ -34,12 +34,12 @@ GameObject::GameObject(gameObjectInfo objectInfo):
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
     // Grab IDs for shared variables between app and program (shader)
-    modelId = gfxController_.getShaderVariable(programId, "model").get();
-    vpId = gfxController_.getShaderVariable(programId, "VP").get();
-    hasTextureId = gfxController_.getShaderVariable(programId, "hasTexture").get();
-    directionalLightId = gfxController_.getShaderVariable(programId, "directionalLight").get();
-    luminanceId = gfxController_.getShaderVariable(programId, "luminance").get();
-    rollOffId = gfxController_.getShaderVariable(programId, "rollOff").get();
+    modelId = gfxController_->getShaderVariable(programId, "model").get();
+    vpId = gfxController_->getShaderVariable(programId, "VP").get();
+    hasTextureId = gfxController_->getShaderVariable(programId, "hasTexture").get();
+    directionalLightId = gfxController_->getShaderVariable(programId, "directionalLight").get();
+    luminanceId = gfxController_->getShaderVariable(programId, "luminance").get();
+    rollOffId = gfxController_->getShaderVariable(programId, "rollOff").get();
     mvpId = -1;
     vpMatrix = mat4(1.0f);  // Default VP matrix to identity matrix
 }
@@ -74,8 +74,8 @@ void GameObject::render() {
     // Send GameObject to render method
     // Draw each shape individually
     for (int i = 0; i < model.numberOfObjects; i++) {
-        gfxController_.setProgram(programId);
-        gfxController_.polygonRenderMode(RenderMode::FILL);
+        gfxController_->setProgram(programId);
+        gfxController_->polygonRenderMode(RenderMode::FILL);
         // Update our model transformation matrices
         translateMatrix = glm::translate(mat4(1.0f), position);
         rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
@@ -86,18 +86,18 @@ void GameObject::render() {
         scaleMatrix = glm::scale(vec3(scale, scale, scale));
         auto modelMatrix = translateMatrix * rotateMatrix * scaleMatrix;
         // Send our shared variables over to our program (shader)
-        gfxController_.sendFloat(luminanceId, luminance);
-        gfxController_.sendFloat(rollOffId, rollOff);
-        gfxController_.sendFloatVector(directionalLightId, 1, glm::value_ptr(directionalLight));
-        gfxController_.sendFloatMatrix(vpId, 1, glm::value_ptr(vpMatrix));
-        gfxController_.sendFloatMatrix(modelId, 1, glm::value_ptr(modelMatrix));
-        gfxController_.sendInteger(hasTextureId, hasTexture[i]);
+        gfxController_->sendFloat(luminanceId, luminance);
+        gfxController_->sendFloat(rollOffId, rollOff);
+        gfxController_->sendFloatVector(directionalLightId, 1, glm::value_ptr(directionalLight));
+        gfxController_->sendFloatMatrix(vpId, 1, glm::value_ptr(vpMatrix));
+        gfxController_->sendFloatMatrix(modelId, 1, glm::value_ptr(modelMatrix));
+        gfxController_->sendInteger(hasTextureId, hasTexture[i]);
         if (hasTexture[i]) {
             // Bind texture to sampler for polygon rendering below
-            gfxController_.bindTexture(model.textureId[i], model.textureUniformId);
+            gfxController_->bindTexture(model.textureId[i], model.textureUniformId);
         }
         // Actually start drawing polygons :)
-        gfxController_.render(model.shapeBufferId[i], model.textureCoordsId[i], model.normalBufferId[i],
+        gfxController_->render(model.shapeBufferId[i], model.textureCoordsId[i], model.normalBufferId[i],
         model.pointCount[i] * 3);
     }
     /// @todo Move collider code to a separate collider SceneObject
@@ -105,9 +105,9 @@ void GameObject::render() {
         // After drawing the gameobject, draw the collider
         glUseProgram(collider.collider.programId);  // grab the programId from the object
         glDisable(GL_CULL_FACE);  // Just do it
-        gfxController_.polygonRenderMode(RenderMode::LINE);
+        gfxController_->polygonRenderMode(RenderMode::LINE);
         mat4 MVP = vpMatrix * translateMatrix * scaleMatrix;
-        gfxController_.sendFloatMatrix(mvpId, 1, glm::value_ptr(MVP));
+        gfxController_->sendFloatMatrix(mvpId, 1, glm::value_ptr(MVP));
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, collider.collider.shapeBufferId[0]);
         glVertexAttribPointer(

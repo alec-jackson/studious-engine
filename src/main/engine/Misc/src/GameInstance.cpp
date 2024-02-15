@@ -9,7 +9,7 @@
  * 
  */
 
-#include <gameInstance.hpp>
+#include <GameInstance.hpp>
 
 /*
  (void) startGameInstance uses the passed struct (gameInstanceArgs) args to
@@ -23,19 +23,21 @@
 
  (void) startGameInstance does not return any value.
  */
-void GameInstance::startGameInstance(gameInstanceArgs args) {
-    sfxNames = args.soundList;
-    width = args.windowWidth;
-    height = args.windowHeight;
-    gfxController_ = args.gfxController;
+GameInstance::GameInstance(vector<string> soundList, vector<string> vertShaders,
+        vector<string> fragShaders, GfxController *gfxController, int width, int height)
+        : gfxController_ { gfxController }, soundList_ { soundList }, vertShaders_ { vertShaders },
+        fragShaders_ { fragShaders }, width_ { width }, height_ { height } {
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;
-    initWindow(width, height);
+}
+
+void GameInstance::startGame() {
+    initWindow(width_, height_);
     initAudio();
-    //playSound(0, 1);
+    // playSound(0, 1);
     initController();
-    initApplication(args.vertexShaders, args.fragmentShaders);
+    initApplication(vertShaders_, fragShaders_);
     keystate = SDL_GetKeyboardState(NULL);
 }
 
@@ -44,7 +46,7 @@ void GameInstance::startGameInstance(gameInstanceArgs args) {
  GameInstance.
  */
 int GameInstance::getWidth() {
-    return width;
+    return width_;
 }
 
 /*
@@ -52,7 +54,7 @@ int GameInstance::getWidth() {
  GameInstance.
  */
 int GameInstance::getHeight() {
-    return height;
+    return height_;
 }
 
 /*
@@ -281,9 +283,11 @@ int GameInstance::createGameObject(gameObjectInfo objectInfo) {
  (int) createCamera returns the ID of the created CameraObject on success. On
  failure, the CameraObject is not created and -1 is returned.
 */
-int GameInstance::createCamera(cameraInfo camInfo) {
+int GameInstance::createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
+              GLfloat nearClipping, GLfloat farClipping) {
     cout << "Creating CameraObject " << gameCameras.size() << "\n";
-    CameraObject *gameCamera = new CameraObject(camInfo);
+    auto gameCamera = new CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping,
+        gfxController_);
     gameCameras.push_back(gameCamera);
     return gameCameras.size() - 1;
 }
@@ -443,7 +447,7 @@ void GameInstance::initWindow(int width, int height) {
 }
 
 /*
- (void) initAudio uses the pathnames provided in the sfxNames vector to
+ (void) initAudio uses the pathnames provided in the soundList_ vector to
  initialize the audio inside of SDL mixer. In the case of an error during the
  initialization process, initAudio will call exit() with an error code of -1.
 
@@ -464,10 +468,10 @@ void GameInstance::initAudio() {
     }
     vector<string>::iterator it;
     int i = 0;
-    for (it = sfxNames.begin(); it != sfxNames.end(); ++it) {
+    for (it = soundList_.begin(); it != soundList_.end(); ++it) {
         sound.push_back(Mix_LoadWAV((*it).c_str()));
         if (sound[i++] == NULL) {
-            cerr << "Error: Unable to load wave file: " << sfxNames[i] << '\n';
+            cerr << "Error: Unable to load wave file: " << soundList_[i] << '\n';
         }
     }
 }

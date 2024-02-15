@@ -1,5 +1,5 @@
 /**
- * @file gameInstance.hpp
+ * @file GameInstance.hpp
  * @author Christian Galvez, Alec Jackson
  * @brief GameInstance class contains a current scene to render GameObjects in
  * @version 0.1
@@ -31,29 +31,6 @@ typedef struct controllerReadout {
 } controllerReadout;
 
 /*
- gameInstanceArgs contains all of the arguments needed for the startGameInstance
- method inside the GameInstance class. The following struct members are used
- in the following manner:
- * int windowWidth - Defines the width of the window in pixels
- * int windowHeight - Defines the height of the window in pixels
- * vector<string> soundList - Contains paths to sound effects to be used in the
-     current GameInstance.
- * vector<string> vertexShaders - Contains paths to vertex shaders to be used in
-     the current GameInstance.
- * vector<string> fragmentShaders - Contains paths to fragment shaders to be
-     used in the current GameInstance.
-*/
-/// @todo This is bunk and will be refactored eventually...
-typedef struct gameInstanceArgs {
-    int windowWidth;
-    int windowHeight;
-    vector<string> soundList;
-    vector<string> vertexShaders;
-    vector<string> fragmentShaders;
-    GfxController *gfxController;
-} gameInstanceArgs;
-
-/*
  The GameInstance class is the class that holds all of the information about the
  current game scene. Methods inside of this class are used to operate on
  most of the objects contained within the game scene. This class contains the
@@ -64,7 +41,6 @@ typedef struct gameInstanceArgs {
 class GameInstance {
  private:
     const Uint8 *keystate;
-    vector<string> sfxNames;
     int audioID, controllersConnected;
     SDL_Window *window;
     SDL_Renderer *renderer;
@@ -74,12 +50,17 @@ class GameInstance {
     vector<GameObject *> gameObjects;
     vector<CameraObject *> gameCameras;
     vector<TextObject *> gameTexts;
+    vector<string> soundList_;
+    vector<string> fragShaders_;
+    vector<string> vertShaders_;
+    vector<string> texturePathStage_;
+    vector<string> texturePath_;
     GLdouble deltaTime;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
     vec3 directionalLight;
     GLfloat luminance;
-    int width, height;
+    int width_, height_;
     mutex sceneLock;
     GfxController *gfxController_;
 
@@ -89,9 +70,12 @@ class GameInstance {
     void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
 
  public:
-    void startGameInstance(gameInstanceArgs args);
+    GameInstance(vector<string> soundList, vector<string> vertShaders,
+        vector<string> fragShaders, GfxController *gfxController, int width, int height);
+    void startGame();
     int createGameObject(gameObjectInfo objectInfo);
-    int createCamera(cameraInfo camInfo);
+    int createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
+              GLfloat nearClipping, GLfloat farClipping);
     int createText(textObjectInfo info);
     int getWidth();
     int getHeight();

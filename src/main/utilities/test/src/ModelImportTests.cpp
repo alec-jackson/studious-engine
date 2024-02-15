@@ -23,7 +23,7 @@ class ModelImportTest: public ::testing::Test {
  protected:
     void SetUp() override {
         auto dummyController = DummyGfxController();
-        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0, dummyController);
+        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0, &dummyController);
     }
     vector<string> texturePathStage;
     vector<GLint> texturePatternStage;

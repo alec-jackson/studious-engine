@@ -12,7 +12,7 @@
 #include <ModelImport.hpp>
 
 ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId,
-    GfxController &gfxController) :
+    GfxController *gfxController) :
     modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
     programId_ { programId }, gfxController_ { gfxController } {
     cout << "ModelImport::ModelImport" << endl;
@@ -40,7 +40,7 @@ Polygon ModelImport::createPolygonFromFile() {
     }
     // Create the final object in the polygon
     buildObject(currentObject - 1);
-    polygon_.textureUniformId = gfxController_.getShaderVariable(programId_, "mytexture").get();
+    polygon_.textureUniformId = gfxController_->getShaderVariable(programId_, "mytexture").get();
     polygon_.programId = this->programId_;
     return polygon_;
 }
@@ -166,8 +166,8 @@ int ModelImport::buildObject(int objectId) {
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
 void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
-    gfxController_.generateVertexBuffer(polygon);
-    gfxController_.generateNormalBuffer(polygon);
+    gfxController_->generateVertexBuffer(polygon);
+    gfxController_->generateNormalBuffer(polygon);
     // Specific case where the current object does not get a texture
     if (!textureCount_ || texturePattern_[objectId] >= textureCount_ ||
         texturePattern_[objectId] == -1) {
@@ -178,7 +178,7 @@ void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
         cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
-    gfxController_.generateTextureBuffer(polygon, texture);
+    gfxController_->generateTextureBuffer(polygon, texture);
     SDL_FreeSurface(texture);
 }
 

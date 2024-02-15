@@ -151,7 +151,7 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
     return GfxResult<GLuint>(GfxApiResult::OK, programId);
 }
 
-GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLuint programId, const char *variableName) const {
+GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLuint programId, const char *variableName) {
     auto varId = glGetUniformLocation(programId, variableName);
     auto result = GfxResult<GLint>(GfxApiResult::FAILURE, varId);
     if (varId == -1) result = GfxResult<GLint>(GfxApiResult::OK, varId);
@@ -182,22 +182,22 @@ GfxResult<GLint> OpenGlGfxController::init() {
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) const {
+GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
     glUseProgram(programId);
     return GfxResult<GLuint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLuint> OpenGlGfxController::sendFloat(GLuint variableId, GLfloat data) const {
+GfxResult<GLuint> OpenGlGfxController::sendFloat(GLuint variableId, GLfloat data) {
     glUniform1f(variableId, data);
     return GfxResult<GLuint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const {
+GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) {
     glUniform3fv(variableId, count, data);
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) const {
+GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
     auto result = GFX_OK(GLuint);
     switch (mode) {
         case RenderMode::POINT:
@@ -217,17 +217,17 @@ GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) const 
     return result;
 }
 
-GfxResult<GLuint> OpenGlGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const {
+GfxResult<GLuint> OpenGlGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) {
     glUniformMatrix4fv(variableId, count, GL_FALSE, data);
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::sendInteger(GLuint variableId, GLint data) const {
+GfxResult<GLuint> OpenGlGfxController::sendInteger(GLuint variableId, GLint data) {
     glUniform1i(variableId, data);
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samplerId) const {
+GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samplerId) {
     // Use texture unit zero - nothing fancy
     glActiveTexture(GL_TEXTURE0);
     // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
@@ -237,7 +237,7 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samp
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) const {
+GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) {
     // If textureId is UINT_MAX, NO TEXTURE PRESENT
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);

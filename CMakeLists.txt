@@ -24,7 +24,9 @@ endif (APPLE)
 include_directories(
   src/main/utilities/headers
   src/main/common/headers
-  src/main/engine/headers
+  src/main/engine/GfxController/headers
+  src/main/engine/Misc/headers
+  src/main/engine/SceneObject/headers
   src/main/example/headers
   src/main/misc/headers
 )
@@ -46,21 +48,21 @@ add_executable(${PROJECT_NAME}
   src/main/example/src/game.cpp
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
-  src/main/engine/src/gameInstance.cpp
-  src/main/engine/src/GameObject.cpp
-  src/main/engine/src/TextObject.cpp
-  src/main/engine/src/CameraObject.cpp
-  src/main/engine/src/inputMonitor.cpp
-  src/main/engine/src/physics.cpp
-  src/main/engine/src/DummyGfxController.cpp
-  src/main/engine/src/OpenGlGfxController.cpp
+  src/main/engine/Misc/src/GameInstance.cpp
+  src/main/engine/SceneObject/src/GameObject.cpp
+  src/main/engine/SceneObject/src/TextObject.cpp
+  src/main/engine/SceneObject/src/CameraObject.cpp
+  src/main/engine/Misc/src/inputMonitor.cpp
+  src/main/engine/Misc/src/physics.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
+  src/main/engine/GfxController/src/OpenGlGfxController.cpp
   src/main/misc/src/config.cpp
 )
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
-  src/main/engine/src/DummyGfxController.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
 )
 
 add_executable(gtest_PolygonTests

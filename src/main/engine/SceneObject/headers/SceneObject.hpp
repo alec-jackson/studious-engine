@@ -13,10 +13,10 @@ class SceneObject {
  public:
         // Constructors
         inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, GLfloat scale, GLuint programId,
-              const GfxController &gfxController):
+              GfxController *gfxController):
               position(position), rotation(rotation), objectName(objectName), scale(scale), programId(programId),
               gfxController_ { gfxController } {}
-        inline explicit SceneObject(const GfxController &gfxController): gfxController_ { gfxController } {}
+        inline explicit SceneObject(GfxController *gfxController): gfxController_ { gfxController } {}
         // Setter methods
         inline void setVpMatrix(mat4 vpMatrix) { this->vpMatrix = vpMatrix; }
         inline void setPosition(vec3 position) { this->position = position; }
@@ -24,11 +24,11 @@ class SceneObject {
         inline void setScale(GLfloat scale) { this->scale = scale ; }
 
         // Getter methods
-        inline mat4 getVpMatrix() { return this->vpMatrix; }
-        inline vec3 getPosition() { return this->position; }
-        inline vec3 getPosition(vec3 offset) { return this->position + offset; }
-        inline vec3 getRotation() { return this->rotation; }
-        inline string getObjectName() { return this->objectName; }
+        inline mat4 getVpMatrix() const { return this->vpMatrix; }
+        inline vec3 getPosition() const { return this->position; }
+        inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
+        inline vec3 getRotation() const { return this->rotation; }
+        inline string getObjectName() const { return this->objectName; }
 
         virtual void render() = 0;
 
@@ -45,5 +45,5 @@ class SceneObject {
         GLfloat scale;
         GLuint programId;
 
-        const GfxController &gfxController_;
+       GfxController *gfxController_;
 };

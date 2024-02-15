@@ -68,40 +68,20 @@ int mainLoop(gameInfo *gamein);
 
 int main(int argc, char **argv) {
     int errorNum;
-    GameInstance currentGame;
     configData config;
-    // Run setup, if fail exit gracefully
-    if (setup(&currentGame, &config)) {
-        exit(1);
+    int flag = loadConfig(&config, "src/resources/config.txt");
+    int width, height;
+    if (flag) {
+        width = config.resX;
+        height = config.resY;
+    } else {
+        width = 1280;
+        height = 720;
     }
+    GameInstance currentGame(soundList, vertShaders, fragShaders, &gfxController, width, height);
+    currentGame.startGame();
     errorNum = runtime(&currentGame);
     return errorNum;
-}
-
-/*
- (int) setup takes a (GameInstance *) currentGame instance to use for the game
- scene, and (configData *) config data used for configuring window properties.
- (int) setup configures the resolution of the SDL window.
-
- (int) setup returns 0 on success.
-*/
-int setup(GameInstance *currentGame, configData* config) {
-    int flag = loadConfig(config, "src/resources/config.txt");
-    gameInstanceArgs args;
-    args.soundList = soundList;
-    args.vertexShaders = vertShaders;
-    args.fragmentShaders = fragShaders;
-    args.gfxController = &gfxController;
-    if (!flag) {
-        args.windowWidth = config->resX;
-        args.windowHeight = config->resY;
-        currentGame -> startGameInstance(args);
-    } else {
-        args.windowWidth = 1280;
-        args.windowHeight = 720;
-        currentGame->startGameInstance(args);
-    }
-    return 0;
 }
 
 /*
@@ -121,11 +101,6 @@ int runtime(GameInstance *currentGame) {
     bool isDone = false;
     cout << "Creating camera.\n";
     vector<int> gameObject(5);
-    // Configure a new createCameraInfo struct to pass to createCamera
-    // See cameraInfo struct for documentation
-    cameraInfo camInfo = { NULL, vec3(5.140022f, 1.349999f, 2.309998f),
-        3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f, gfxController };
-    gameObject[2] = currentGame->createCamera(camInfo);
 
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
@@ -138,7 +113,7 @@ int runtime(GameInstance *currentGame) {
         texturePathStage,
         texturePatternStage,
         gfxController.getProgramId(0).get(),
-        gfxController);
+        &gfxController);
 
     auto mapPoly = importedMapObj.createPolygonFromFile();
 
@@ -146,7 +121,7 @@ int runtime(GameInstance *currentGame) {
     /// @todo mapPoly can be a reference I think
     gameObjectInfo map = { mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
-        gameObject[2], "map", gfxController };
+        gameObject[2], "map", &gfxController };
 
     gameObject[0] = currentGame->createGameObject(map);
 
@@ -157,13 +132,13 @@ int runtime(GameInstance *currentGame) {
         texturePath,
         texturePattern,
         gfxController.getProgramId(0).get(),
-        gfxController);
+        &gfxController);
 
     auto playerPoly = importedPlayerObj.createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
     gameObjectInfo playerObj = { playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player", gfxController };
+        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player", &gfxController };
 
     gameObject[1] = currentGame->createGameObject(playerObj);
     GameObject *dracs = currentGame->getGameObject(gameObject[1]);
@@ -176,14 +151,14 @@ int runtime(GameInstance *currentGame) {
         texturePath,
         texturePattern,
         gfxController.getProgramId(0).get(),
-        gfxController);
+        &gfxController);
 
     auto wolfPoly = importedWolfObj.createPolygonFromFile();
 
     // Ready the gameObjectInfo for the wolf object
     gameObjectInfo wolfObj = { wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
-        gameObject[2], "NPC", gfxController };
+        gameObject[2], "NPC", &gfxController };
 
     gameObject[3] = currentGame->createGameObject(wolfObj);
 
@@ -193,15 +168,15 @@ int runtime(GameInstance *currentGame) {
 
     // Configure some in-game text objects
     textObjectInfo textInfo = { "Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "studious-text", gfxController };
+        gfxController.getProgramId(2).get(), "studious-text", &gfxController };
     gameObject[4] = currentGame->createText(textInfo);
     TextObject *textObj = currentGame->getText(gameObject[4]);
     textObj->setPosition(vec3(25.0f, 25.0f, 0.0f));
     textObjectInfo textInfo2 = { "FPS: ", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "FPS Text", gfxController };
+        gfxController.getProgramId(2).get(), "FPS Text", &gfxController };
     // Re-using gameObject 4 for no particular reason
     textObjectInfo textInfo3 = { "Contact", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "Contact Text", gfxController };
+        gfxController.getProgramId(2).get(), "Contact Text", &gfxController };
     gameObject[4] = currentGame->createText(textInfo3);
     textObj = currentGame->getText(gameObject[4]);
     textObj->setPosition(vec3(25.0f, 300.0f, 0.0f));
@@ -216,8 +191,9 @@ int runtime(GameInstance *currentGame) {
     fps_counter->setMessage("FPS: 0");
     fps_counter->setScale(0.7f);
 
+    gameObject[2] = currentGame->createCamera(currentGame->getGameObject(gameObject[1]),
+        vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
     CameraObject *currentCamera = currentGame->getCamera(gameObject[2]);
-    currentCamera->setTarget(currentGame->getGameObject(gameObject[1]));
     GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);
     currentGameObject->setRotation(vec3(0, 0, 0));
     currentGameObject = currentGame->getGameObject(gameObject[3]);

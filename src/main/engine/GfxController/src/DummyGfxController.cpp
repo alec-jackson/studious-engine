@@ -25,7 +25,7 @@ GfxResult<GLint> DummyGfxController::generateTextureBuffer(Polygon &polygon, SDL
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLint> DummyGfxController::getShaderVariable(GLuint, const char *) const {
+GfxResult<GLint> DummyGfxController::getShaderVariable(GLuint, const char *) {
     cout << "GfxController::getShaderVariable" << endl;
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
@@ -54,17 +54,17 @@ GfxResult<GLint> DummyGfxController::init() {
     return GfxResult<GLint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLuint> DummyGfxController::setProgram(GLuint programId) const {
+GfxResult<GLuint> DummyGfxController::setProgram(GLuint programId) {
     cout << "GfxController::setProgram" << endl;
     return GfxResult<GLuint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLuint> DummyGfxController::sendFloat(GLuint variableId, GLfloat data) const {
+GfxResult<GLuint> DummyGfxController::sendFloat(GLuint variableId, GLfloat data) {
     printf("GfxController::sendFloat: variableId=[%u], data=[%f]", variableId, data);
     return GfxResult<GLuint>(GfxApiResult::OK, 0);
 }
 
-GfxResult<GLuint> DummyGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const {
+GfxResult<GLuint> DummyGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) {
     printf("GfxController::sendFloatVector: variableId=[%u], count=[%d], data=[%p]\n",
         variableId,
         count,
@@ -72,12 +72,12 @@ GfxResult<GLuint> DummyGfxController::sendFloatVector(GLuint variableId, GLsizei
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::polygonRenderMode(RenderMode mode) const {
+GfxResult<GLuint> DummyGfxController::polygonRenderMode(RenderMode mode) {
     printf("GfxController::polygonRenderMode: mode=[%d]", mode);
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const {
+GfxResult<GLuint> DummyGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) {
     printf("GfxController::sendFloatMatrix: variableId=[%u], count=[%d], data=[%p]\n",
         variableId,
         count,
@@ -85,17 +85,17 @@ GfxResult<GLuint> DummyGfxController::sendFloatMatrix(GLuint variableId, GLsizei
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::sendInteger(GLuint variableId, GLint data) const {
+GfxResult<GLuint> DummyGfxController::sendInteger(GLuint variableId, GLint data) {
     printf("GfxController::sendInteger: variableId=[%u], data=[%d]", variableId, data);
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId, GLuint samplerId) const {
+GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId, GLuint samplerId) {
     printf("GfxController::bindTexture: textureId=[%u], samplerId=[%u]", textureId, samplerId);
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) const {
+GfxResult<GLuint> DummyGfxController::render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) {
     printf("GfxController::bindTexture: vId=[%u], tId=[%u], nId=[%u], vertexCount=[%u]",
         vId, tId, nId, vertexCount);
     return GFX_OK(GLuint);

@@ -12,7 +12,7 @@
 #pragma once
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
-#include <gameInstance.hpp>
+#include <GameInstance.hpp>
 #include <config.hpp>
 #include <inputMonitor.hpp>
 #include <physics.hpp>

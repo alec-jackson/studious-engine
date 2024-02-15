@@ -22,18 +22,18 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLint> generateVertexBuffer(Polygon &);
     GfxResult<GLint> generateNormalBuffer(Polygon &);
     GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *);
-    GfxResult<GLint> getShaderVariable(GLuint, const char *) const;
+    GfxResult<GLint> getShaderVariable(GLuint, const char *);
     GfxResult<GLint> cleanup();
     GfxResult<GLuint> getProgramId(uint);
-    GfxResult<GLuint> setProgram(GLuint programId) const;
+    GfxResult<GLuint> setProgram(GLuint programId);
     GfxResult<GLuint> loadShaders(string, string);
-    GfxResult<GLuint> sendFloat(GLuint variableId, GLfloat data) const;
-    GfxResult<GLuint> sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) const;
-    GfxResult<GLuint> polygonRenderMode(RenderMode mode) const;
-    GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) const;
-    GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) const;
-    GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) const;
-    GfxResult<GLuint> render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) const;
+    GfxResult<GLuint> sendFloat(GLuint variableId, GLfloat data);
+    GfxResult<GLuint> sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data);
+    GfxResult<GLuint> polygonRenderMode(RenderMode mode);
+    GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data);
+    GfxResult<GLuint> sendInteger(GLuint variableId, GLint data);
+    GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId);
+    GfxResult<GLuint> render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount);
     void update();
     void updateOpenGl();
  private:
