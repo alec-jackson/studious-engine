@@ -117,13 +117,8 @@ int runtime(GameInstance *currentGame) {
 
     auto mapPoly = importedMapObj.createPolygonFromFile();
 
-    // Create a gameObjectInfo struct for creating a game object for the map
-    /// @todo mapPoly can be a reference I think
-    gameObjectInfo map = { mapPoly,
-        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f,
-        gameObject[2], "map", &gfxController };
-
-    gameObject[0] = currentGame->createGameObject(map);
+    gameObject[0] = currentGame->createGameObject(&mapPoly,
+        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, gameObject[2], "map");
 
     cout << "Creating Player\n";
 
@@ -137,10 +132,8 @@ int runtime(GameInstance *currentGame) {
     auto playerPoly = importedPlayerObj.createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
-    gameObjectInfo playerObj = { playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player", &gfxController };
-
-    gameObject[1] = currentGame->createGameObject(playerObj);
+    gameObject[1] = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
+        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player");
     GameObject *dracs = currentGame->getGameObject(gameObject[1]);
     dracs->createCollider(gfxController.getProgramId(1).get());
     playerRef = dracs;
@@ -155,12 +148,9 @@ int runtime(GameInstance *currentGame) {
 
     auto wolfPoly = importedWolfObj.createPolygonFromFile();
 
-    // Ready the gameObjectInfo for the wolf object
-    gameObjectInfo wolfObj = { wolfPoly,
+    gameObject[3] = currentGame->createGameObject(&wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
-        gameObject[2], "NPC", &gfxController };
-
-    gameObject[3] = currentGame->createGameObject(wolfObj);
+        gameObject[2], "NPC");
 
     GameObject *wolfObject = currentGame->getGameObject(gameObject[3]);
     wolfObject->createCollider(gfxController.getProgramId(1).get());

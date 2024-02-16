@@ -11,24 +11,24 @@
 
 #include <GameObject.hpp>
 
-GameObject::GameObject(gameObjectInfo objectInfo):
-    SceneObject(objectInfo.position, objectInfo.rotation, objectInfo.objectName, objectInfo.scale,
-    objectInfo.characterModel.programId, objectInfo.gfxController), model { objectInfo.characterModel },
-    cameraId { objectInfo.camera } {
+GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale, int camera,
+    string objectName, GfxController *gfxController):
+    SceneObject(position, rotation, objectName, scale, characterModel->programId, gfxController),
+    model { characterModel }, cameraId { camera } {
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
     viewMode = PERSPECTIVE;
     // Populate the hasTexture vector with texture info
-    for (int i = 0; i < model.numberOfObjects; i++) {
-        if (model.textureCoordsId[i] == UINT_MAX) {
+    for (int i = 0; i < model->numberOfObjects; i++) {
+        if (model->textureCoordsId[i] == UINT_MAX) {
             hasTexture.push_back(0);  // No texture found for obj i
         } else {
             hasTexture.push_back(1);  // Texture found for obj i
         }
     }
     scaleMatrix = glm::scale(vec3(scale, scale, scale));
-    translateMatrix = glm::translate(mat4(1.0f), objectInfo.position);
+    translateMatrix = glm::translate(mat4(1.0f), position);
     rotateMatrix = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
@@ -73,7 +73,7 @@ colliderInfo &GameObject::getCollider(void) {
 void GameObject::render() {
     // Send GameObject to render method
     // Draw each shape individually
-    for (int i = 0; i < model.numberOfObjects; i++) {
+    for (int i = 0; i < model->numberOfObjects; i++) {
         gfxController_->setProgram(programId);
         gfxController_->polygonRenderMode(RenderMode::FILL);
         // Update our model transformation matrices
@@ -94,11 +94,11 @@ void GameObject::render() {
         gfxController_->sendInteger(hasTextureId, hasTexture[i]);
         if (hasTexture[i]) {
             // Bind texture to sampler for polygon rendering below
-            gfxController_->bindTexture(model.textureId[i], model.textureUniformId);
+            gfxController_->bindTexture(model->textureId[i], model->textureUniformId);
         }
         // Actually start drawing polygons :)
-        gfxController_->render(model.shapeBufferId[i], model.textureCoordsId[i], model.normalBufferId[i],
-        model.pointCount[i] * 3);
+        gfxController_->render(model->shapeBufferId[i], model->textureCoordsId[i], model->normalBufferId[i],
+        model->pointCount[i] * 3);
     }
     /// @todo Move collider code to a separate collider SceneObject
     if (collider.collider.numberOfObjects > 0) {
@@ -125,7 +125,7 @@ void GameObject::render() {
 
 void GameObject::deleteTextures() {
     cout << "GameObject::deleteTextures" << endl;
-    for (int i = 0; i < model.numberOfObjects; i++) {
+    for (int i = 0; i < model->numberOfObjects; i++) {
         if (hasTexture[i]) {
             glDeleteTextures(1, &textureId);
             hasTexture[i] = false;
@@ -157,7 +157,7 @@ int GameObject::createCollider(int shaderId) {
     mvpId = glGetUniformLocation(shaderId, "MVP");
     vector<vector<GLfloat>>::iterator it;
     // Go through objects and get absolute min/max points
-    for (it = model.vertices.begin(); it != model.vertices.end(); ++it) {
+    for (it = model->vertices.begin(); it != model->vertices.end(); ++it) {
         for (int i = 0; i < 3; i++) {
             // Calculate min
             tempMin[i] = getColliderVertices((*it), i, [](float a, float b) { return a < b; });

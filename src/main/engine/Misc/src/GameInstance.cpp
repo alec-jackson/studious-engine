@@ -268,9 +268,11 @@ int GameInstance::setDeltaTime(GLdouble time) {
  of the current GameInstance on success. On failure, -1 is returned and the
  GameObject is not created.
 */
-int GameInstance::createGameObject(gameObjectInfo objectInfo) {
+int GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale, int camera,
+    string objectName) {
     cout << "Creating GameObject " << gameObjects.size() << "\n";
-    GameObject *gameObject = new GameObject(objectInfo);
+    GameObject *gameObject = new GameObject(characterModel, position, rotation, scale, camera, objectName,
+        gfxController_);
     gameObjects.push_back(gameObject);
     return gameObjects.size() - 1;
 }

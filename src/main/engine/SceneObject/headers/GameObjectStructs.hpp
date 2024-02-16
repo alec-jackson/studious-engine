@@ -32,30 +32,3 @@ typedef struct colliderInfo {
     Polygon collider;
 } colliderInfo;
 
-/**
- * @brief Used to construct new GameObject instances.
- * @param characterModel(polygon*) Pointer to a polygon struct containing
- *    information about an imported model using the modelImport functions.
- * @param colliderObject(polygon*) Pointer to a polygon struct containing
- *    information about an collider object imported using the modelImport
- *    functions.
- * @param pos(vec3) A 3D vector containing the default position in local space of
- *    the GameObject being created.
- * @param rot(vec3) A 3D vector describing the XYZ rotation to initially apply to
- *    the GameObject upon creation.
- * @param scale(GLfloat) A scalar value that describes the uniform scale to apply
- * to the GameObject upon creation.
- * @param camera(int) Specifies the ID number of the camera in the current
- *    GameInstance to use that the created GameObject will use to get the VP
- *    transformation matrix from (stuff like camera angle and FOV).
- * @param collisionTagName(string) The tag name that the created GameObject will use
- *    when handling collision in the current GameInstance.
-*/
-typedef struct gameObjectInfo {
-    Polygon &characterModel;
-    vec3 position, rotation;
-    GLfloat scale;
-    int camera;
-    string objectName;
-    GfxController *gfxController;
-} gameObjectInfo;

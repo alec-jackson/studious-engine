@@ -73,7 +73,8 @@ class GameInstance {
     GameInstance(vector<string> soundList, vector<string> vertShaders,
         vector<string> fragShaders, GfxController *gfxController, int width, int height);
     void startGame();
-    int createGameObject(gameObjectInfo objectInfo);
+    int createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale, int camera,
+        string objectName);
     int createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
               GLfloat nearClipping, GLfloat farClipping);
     int createText(textObjectInfo info);

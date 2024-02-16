@@ -19,7 +19,8 @@
 class GameObject: public SceneObject {
  public:
         // Constructurs
-        explicit GameObject(gameObjectInfo objectInfo);
+        explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale, int camera,
+              string objectName, GfxController *gfxController);
         ~GameObject();
 
         // Setters
@@ -49,7 +50,7 @@ class GameObject: public SceneObject {
         void render() override;
 
  private:
-        Polygon model;  // Change this to a proper class at some point
+        Polygon *model;  // Change this to a proper class at some point
 
         int cameraId;  /// @todo: Why is this managed in GameObject?
         unsigned int VAO;  /// @todo: Why do we have this?
