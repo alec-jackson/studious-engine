@@ -1,18 +1,16 @@
 /**
- * @file GameObjectStructs.hpp
- * @author your name (you@domain.com)
- * @brief Structs used to instantiate GameObjects and colliders are defined here
+ * @file ColliderObject.cpp
+ * @author Christian Galvez
+ * @brief 
  * @version 0.1
- * @date 2023-07-28
+ * @date 2024-02-15
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2024
  * 
  */
-#pragma once
-#include <string>
-/// @todo - Change naming from [...]Structs to [...]Misc
+#include <ColliderObject.hpp>
 
-/**
+/** @todo Update - this is the old struct info
  * @brief Stores info about a GameObject's internal collider object.
  * @param offset(vec4) The distance between the center of the collider and its edges
  *    on the X, Y and Z axis.
@@ -26,9 +24,8 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-typedef struct colliderInfo {
-    vec4 offset, minPoints;
-    vec4 center, originalCenter;
-    Polygon collider;
-} colliderInfo;
+ColliderObject::ColliderObject(vec4 offset, vec4 minPoints, vec4 center, vec4 originalCenter,
+    Polygon *poly, GfxController *gfxController) : SceneObject(gfxController), offset_ { offset },
+    minPoints_ { minPoints }, center_ { center }, originalCenter_ { originalCenter }, poly_ { poly } {}
+
 
