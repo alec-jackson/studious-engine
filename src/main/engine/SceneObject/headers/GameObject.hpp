@@ -14,7 +14,7 @@
 #include <vector>
 #include <ModelImport.hpp>
 #include <SceneObject.hpp>
-#include <GameObjectStructs.hpp>
+#include <ColliderObject.hpp>
 
 class GameObject: public SceneObject {
  public:
@@ -39,13 +39,13 @@ class GameObject: public SceneObject {
         inline int getCameraId() { return this->cameraId; }
 
         // Special Getters
-        Polygon *getModel();  /// @todo: This should return a reference
-        colliderInfo &getCollider();
+        inline Polygon *getModel() { return model; }
+        ColliderObject *getCollider();
         GLfloat getColliderVertices(vector<GLfloat> vertices, int axis, bool (*test)(float a, float b));
 
         // Other methods
         void deleteTextures();  /// @todo: DEPRECATED - Use destructor for this now...
-        int createCollider(int programId);
+        void createCollider(int programId);
 
         void render() override;
 
@@ -57,7 +57,7 @@ class GameObject: public SceneObject {
 
         GLuint vpId, modelId, textureId, textCoordsId,
             hasTextureId, directionalLightId, luminanceId, rollOffId,
-            mvpId, collider_shaderId;  /// @todo: Organize these into another class
+            collider_shaderId;  /// @todo: Organize these into another class
 
         GLint textureCoordId;
 
@@ -68,6 +68,6 @@ class GameObject: public SceneObject {
         vec3 directionalLight;
         vec3 velocity;
 
-        ViewMode viewMode;
-        colliderInfo collider;  /// @todo: Refactor colliderInfo/create collider class
+        ViewMode viewMode;  /// @todo Add this to GameCamera refactor
+        ColliderObject *collider_ = nullptr;
 };

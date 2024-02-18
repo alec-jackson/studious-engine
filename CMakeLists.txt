@@ -52,6 +52,7 @@ add_executable(${PROJECT_NAME}
   src/main/engine/SceneObject/src/GameObject.cpp
   src/main/engine/SceneObject/src/TextObject.cpp
   src/main/engine/SceneObject/src/CameraObject.cpp
+  src/main/engine/SceneObject/src/ColliderObject.cpp
   src/main/engine/Misc/src/inputMonitor.cpp
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
@@ -67,6 +68,7 @@ add_executable(gtest_ModelImportTests
 
 add_executable(gtest_PolygonTests
   src/main/utilities/test/src/PolygonTests.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/utilities/src/Polygon.cpp
 )
 
@@ -75,7 +77,7 @@ target_include_directories(gtest_ModelImportTests
 )
 
 target_include_directories(gtest_PolygonTests
-  PRIVATE src/main/utilities/test/headers  
+  PRIVATE src/main/utilities/test/headers
 )
 
 target_compile_definitions(gtest_ModelImportTests

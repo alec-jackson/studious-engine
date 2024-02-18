@@ -27,5 +27,5 @@ void CameraObject::render() {
         vec3(0, 1, 0));
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
-    vpMatrix = projectionMatrix * viewMatrix;
+    vpMatrix_ = projectionMatrix * viewMatrix;
 }

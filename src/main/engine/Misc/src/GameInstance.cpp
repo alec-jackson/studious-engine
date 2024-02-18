@@ -221,7 +221,7 @@ int GameInstance::updateObjects() {
         (*it)->setDirectionalLight(directionalLight);
         (*it)->setLuminance(luminance);
         // Send the new VP matrix to the current gameObject being drawn.
-        (*it)->setVpMatrix(getCamera((*it)->getCameraId())->getVpMatrix());
+        (*it)->setVpMatrix(getCamera((*it)->getCameraId())->vpMatrix());
         (*it)->render();
     }
     // If there is any active texts in the scene, render them
@@ -377,36 +377,7 @@ GLdouble GameInstance::getDeltaTime() {
 /// @todo Update documentation here and convert pointers to references
 int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     vec3 moving) {
-    int matching = 0;  // Number of axis that have collided
-    if (object1 == NULL || object2 == NULL) {
-        cerr << "Error: Cannot get collision for NULL GameObjects!\n";
-        return -1;
-    }
-
-    auto &coll1 = object1->getCollider();
-    auto &coll2 = object2->getCollider();
-
-    // First check if the two objects are currently colliding
-    for (int i = 0; i < 3; i++) {
-        float delta = abs(coll2.center[i] - coll1.center[i]);
-        float range = coll1.offset[i] + coll2.offset[i];
-        if (range >= delta) {
-            matching++;
-        }
-    }
-    // Return if the objects are currently colliding
-    if (matching == 3) return 1;
-    matching = 0;
-    for (int i = 0; i < 3; i++) {
-        float delta = abs(coll2.center[i] - coll1.center[i] + moving[i]);
-        float range = coll1.offset[i] + coll2.offset[i];
-        if (range >= delta) {
-            matching++;
-        }
-    }
-    // Return if the objects are about to collide
-    if (matching == 3) return 2;
-    return 0;
+    return object1->getCollider()->getCollision(object2->getCollider(), moving);
 }
 
 /*
