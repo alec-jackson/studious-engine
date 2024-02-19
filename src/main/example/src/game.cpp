@@ -157,24 +157,21 @@ int runtime(GameInstance *currentGame) {
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
-    textObjectInfo textInfo = { "Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "studious-text", &gfxController };
-    gameObject[4] = currentGame->createText(textInfo);
+    gameObject[4] = currentGame->createText("Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(), "studious-text");
     TextObject *textObj = currentGame->getText(gameObject[4]);
     textObj->setPosition(vec3(25.0f, 25.0f, 0.0f));
-    textObjectInfo textInfo2 = { "FPS: ", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "FPS Text", &gfxController };
     // Re-using gameObject 4 for no particular reason
-    textObjectInfo textInfo3 = { "Contact", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "Contact Text", &gfxController };
-    gameObject[4] = currentGame->createText(textInfo3);
+    gameObject[4] = currentGame->createText("Contact", "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(), "Contact Text");
     textObj = currentGame->getText(gameObject[4]);
     textObj->setPosition(vec3(25.0f, 300.0f, 0.0f));
     collDebugText = textObj;
     collDebugText->setMessage("Contact: False");
     collDebugText->setScale(0.7f);
 
-    gameObject[4] = currentGame->createText(textInfo3);
+    gameObject[4] = currentGame->createText("Contact", "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(), "Contact Text");
     textObj = currentGame->getText(gameObject[4]);
     textObj->setPosition(vec3(25.0f, 670.0f, 0.0f));
     fps_counter = textObj;

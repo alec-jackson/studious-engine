@@ -12,9 +12,9 @@
 #include <TextObject.hpp>
 
 /// @todo: Finish this code - lots of hard-coded values
-/// @todo: Either use super() or restructure class inheritance - refactor this constructor
-TextObject::TextObject(textObjectInfo info): SceneObject(vec3(300.0f, 300.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f),
-    info.objectName, 1.0f, info.programId, info.gfxController), message(info.message), fontPath(info.fontPath) {
+TextObject::TextObject(string message, string fontPath, GLuint programId, string objectName,
+              GfxController *gfxController): SceneObject(vec3(300.0f, 300.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f),
+    objectName, 1.0f, programId, gfxController), message_  { message }, fontPath_ { fontPath } {
     mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
     cout << "Initializing text with message " << message << endl;
 
@@ -27,7 +27,7 @@ TextObject::TextObject(textObjectInfo info): SceneObject(vec3(300.0f, 300.0f, 0.
         throw std::runtime_error("Failed to initialize FreeType Library");
     }
     FT_Face face;
-    if (FT_New_Face(ft, fontPath.c_str(), 0, &face)) {
+    if (FT_New_Face(ft, fontPath_.c_str(), 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
         throw std::runtime_error("Failed to load font");
     } else {
@@ -94,7 +94,7 @@ void TextObject::render() {
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
     std::string::const_iterator c;
-    for (c = message.begin(); c != message.end(); c++) {
+    for (c = message_.begin(); c != message_.end(); c++) {
         Character ch = characters[*c];
         float xpos = x + ch.Bearing.x * scale;
         float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;

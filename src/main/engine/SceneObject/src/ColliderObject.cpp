@@ -72,7 +72,6 @@ int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
 }
 
 void ColliderObject::render() {
-    printf("ColliderObject::render: Entry\n");
     if (poly_->numberOfObjects > 0) {
         // After drawing the gameobject, draw the collider
         glUseProgram(poly_->programId);  // grab the programId from the object

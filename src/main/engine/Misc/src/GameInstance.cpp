@@ -301,9 +301,9 @@ int GameInstance::createCamera(GameObject *target, vec3 offset, GLfloat cameraAn
  (int) createText returns the index of the created TextObject in the current
  GameInstance.
 */
-int GameInstance::createText(textObjectInfo info) {
+int GameInstance::createText(string message, string fontPath, GLuint programId, string objectName) {
     cout << "Creating Gametext " << gameTexts.size() << "\n";
-    TextObject *text = new TextObject(info);
+    TextObject *text = new TextObject(message, fontPath, programId, objectName, gfxController_);
     gameTexts.push_back(text);
     return gameTexts.size() - 1;
 }
