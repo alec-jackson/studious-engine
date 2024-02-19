@@ -62,7 +62,6 @@ TextObject *collDebugText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
 OpenGlGfxController gfxController = OpenGlGfxController();
 
-int setup(GameInstance *currentGame, configData* config);
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
 
