@@ -120,3 +120,7 @@ void TextObject::render() {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+void TextObject::update() {
+    render();
+}

@@ -21,7 +21,8 @@ class ColliderObject : public SceneObject {
     ColliderObject(Polygon *target, int programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
         const mat4 &vpMatrix, GfxController *gfxController);
     void updateCollider();
-    void render();
+    void render() override;
+    void update() override;
     void createCollider(int programId);
     int getCollision(ColliderObject *object, vec3 moving);
     GLfloat getColliderVertices(vector<GLfloat> vertices, int axis, bool (*test)(float a, float b));

@@ -215,13 +215,14 @@ int GameInstance::updateObjects() {
         return -1;
     }
     gfxController_->update();
+
+    for (auto it = gameCameras.begin(); it != gameCameras.end(); ++it) {
+        (*it)->update();
+    }
     /// @todo: Polymorphism! Only need one structure for these game objects
     std::vector<GameObject *>::iterator it;
     for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {
-        (*it)->setDirectionalLight(directionalLight);
-        (*it)->setLuminance(luminance);
         // Send the new VP matrix to the current gameObject being drawn.
-        (*it)->setVpMatrix(getCamera((*it)->getCameraId())->vpMatrix());
         (*it)->render();
     }
     // If there is any active texts in the scene, render them
@@ -256,56 +257,31 @@ int GameInstance::setDeltaTime(GLdouble time) {
     return 0;
 }
 
-/*
- (int) createGameObject takes some (gameObjectInfo) objectInfo and constructs a
- new GameObject into the scene using information in the objectInfo struct. The
- new GameObject that is created is allocated in the heap, so it will need a
- delete statement in the cleanup function. When a new GameObject is created, it
- is put into the (vector<GameObject>) gameObjects vector and rendered in the
- updateObjects method.
-
- (int) createGameObject returns the index of the newly created GameObject inside
- of the current GameInstance on success. On failure, -1 is returned and the
- GameObject is not created.
-*/
-int GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale, int camera,
+GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
     string objectName) {
     cout << "Creating GameObject " << gameObjects.size() << "\n";
-    GameObject *gameObject = new GameObject(characterModel, position, rotation, scale, camera, objectName,
+    GameObject *gameObject = new GameObject(characterModel, position, rotation, scale, objectName,
         gfxController_);
+    gameObject->setDirectionalLight(directionalLight);
+    gameObject->setLuminance(luminance);
     gameObjects.push_back(gameObject);
-    return gameObjects.size() - 1;
+    return gameObject;
 }
 
-/*
- (int) createCamera takes some (cameraInfo) camInfo describing settings to use
- for a new camera, and creates a new camera in a similar manner to how standard
- GameObjects are created (see notes above for details on GameObject creation).
-
- (int) createCamera returns the ID of the created CameraObject on success. On
- failure, the CameraObject is not created and -1 is returned.
-*/
-int GameInstance::createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
+CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
               GLfloat nearClipping, GLfloat farClipping) {
     cout << "Creating CameraObject " << gameCameras.size() << "\n";
     auto gameCamera = new CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping,
         gfxController_);
     gameCameras.push_back(gameCamera);
-    return gameCameras.size() - 1;
+    return gameCamera;
 }
 
-/*
- (int) createText takes an (textObjectInfo) info argument and creates a new
- TextObject GameObject inside of the current GameInstance.
-
- (int) createText returns the index of the created TextObject in the current
- GameInstance.
-*/
-int GameInstance::createText(string message, string fontPath, GLuint programId, string objectName) {
+TextObject *GameInstance::createText(string message, string fontPath, GLuint programId, string objectName) {
     cout << "Creating Gametext " << gameTexts.size() << "\n";
-    TextObject *text = new TextObject(message, fontPath, programId, objectName, gfxController_);
+    auto text = new TextObject(message, fontPath, programId, objectName, gfxController_);
     gameTexts.push_back(text);
-    return gameTexts.size() - 1;
+    return text;
 }
 
 /*

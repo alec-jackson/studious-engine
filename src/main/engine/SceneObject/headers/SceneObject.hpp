@@ -36,6 +36,7 @@ class SceneObject {
     inline string getObjectName() const { return this->objectName; }
 
     virtual void render() = 0;
+    virtual void update() = 0;
 
  protected:
     mat4 translateMatrix_;

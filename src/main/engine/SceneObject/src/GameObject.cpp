@@ -11,10 +11,21 @@
 
 #include <GameObject.hpp>
 
-GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale, int camera,
+/**
+ * @brief GameObject constructor
+ * 
+ * @param characterModel Underlying Polygon object for rendering this GameObject
+ * @param position Starting position of the GameObject
+ * @param rotation Starting rotation of the GameObject
+ * @param scale Starting scale of the GameObject
+ * @param camera Camera used to render the GameObject
+ * @param objectName Friendly name for the object used to identify it in the scene
+ * @param gfxController Graphics controller for rendering the game scene
+ */
+GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
     string objectName, GfxController *gfxController):
     SceneObject(position, rotation, objectName, scale, characterModel->programId, gfxController),
-    model { characterModel }, cameraId { camera } {
+    model { characterModel } {
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
@@ -43,6 +54,9 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GL
     vpMatrix_ = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
+/**
+ * @brief GameObject destructor
+ */
 GameObject::~GameObject() {
     /// @todo: Run cleanup methods here
     cout << "Destroying gameobject" << objectName << endl;
@@ -51,26 +65,35 @@ GameObject::~GameObject() {
     deleteTextures();
 }
 
+/**
+ * @brief Updates and returns the GameObject's collider
+ * 
+ * @return ColliderObject* for the GameObject
+ */
 ColliderObject *GameObject::getCollider(void) {
     // Update collider before returning it
     collider_->updateCollider();
     return collider_;
 }
 
+/**
+ * @brief Creates a collider for this game object
+ * 
+ * @param programId Program used to render the collider (collider shaders)
+ */
 void GameObject::createCollider(int programId) {
     collider_ = new ColliderObject(this->getModel(), programId, translateMatrix_, scaleMatrix_, vpMatrix_,
         gfxController_);
 }
 
-/// @todo Update and doxygenize this method
-/* 
- (void) drawShape draws the current GameObject inside of the scene. This is the
- method that interacts with OpenGL the most (just to let you know). Method
- walks through all of the objects inside of the current model and renders them
- one by one in the for loop below.
+void GameObject::update() {
+    render();
+}
 
- (void) drawShape does not return any values.
-*/
+/**
+ * @brief Steps through all objects in the model and renders them one at a time. A single Polygon can have several
+ * models connected to it, which can have their own textures, etc.
+ */
 void GameObject::render() {
     // Send GameObject to render method
     // Draw each shape individually

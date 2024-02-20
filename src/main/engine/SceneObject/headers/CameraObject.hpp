@@ -10,8 +10,8 @@
  */
 
 #pragma once
+#include <vector>
 #include <common.hpp>
-#include <ModelImport.hpp> // Might not be needed
 #include <GameObject.hpp>
 
 class CameraObject : public SceneObject {
@@ -32,10 +32,13 @@ class CameraObject : public SceneObject {
 
     // Camera Specific Methods
     void render() override;
+    void update() override;
+    void addSceneObject(SceneObject *gameObject);
+    void removeSceneObject(SceneObject *gameObject);
 
  private:
     GameObject *target_;
-
+    vector<SceneObject *> sceneObjects_;
     vec3 offset_;
 
     GLfloat aspectRatio_;

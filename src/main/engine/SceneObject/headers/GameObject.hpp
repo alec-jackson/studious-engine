@@ -19,7 +19,7 @@
 class GameObject: public SceneObject {
  public:
         // Constructurs
-        explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale, int camera,
+        explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
               string objectName, GfxController *gfxController);
         ~GameObject();
 
@@ -36,7 +36,6 @@ class GameObject: public SceneObject {
         inline vec3 getDirectionalLight() { return this->directionalLight; }
         inline GLfloat getLuminance() { return this->luminance; }
         inline GLuint getProgramId() { return this->programId; }
-        inline int getCameraId() { return this->cameraId; }
 
         // Special Getters
         inline Polygon *getModel() { return model; }
@@ -48,11 +47,11 @@ class GameObject: public SceneObject {
         void createCollider(int programId);
 
         void render() override;
+        void update() override;
 
  private:
         Polygon *model;  // Change this to a proper class at some point
 
-        int cameraId;  /// @todo: Why is this managed in GameObject?
         unsigned int VAO;  /// @todo: Why do we have this?
 
         GLuint vpId, modelId, textureId, textCoordsId,

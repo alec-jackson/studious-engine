@@ -10,6 +10,7 @@
  */
 
 #include <CameraObject.hpp>
+#include <algorithm>
 
 CameraObject::CameraObject(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
     GLfloat nearClipping, GLfloat farClipping, GfxController *gfxController) : SceneObject(gfxController),
@@ -28,4 +29,19 @@ void CameraObject::render() {
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
     vpMatrix_ = projectionMatrix * viewMatrix;
+}
+
+void CameraObject::update() {
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        // Send the VP matrix for the camera to its gameobjects
+        (*it)->setVpMatrix(vpMatrix_);
+    }
+}
+
+void CameraObject::addSceneObject(SceneObject *sceneObject) {
+    sceneObjects_.push_back(sceneObject);
+}
+
+void CameraObject::removeSceneObject(SceneObject *gameObject) {
+    sceneObjects_.erase(remove(sceneObjects_.begin(), sceneObjects_.end(), gameObject), sceneObjects_.end());
 }

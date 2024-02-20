@@ -43,6 +43,7 @@ class TextObject: public SceneObject {
 
         // Render method
         void render();
+        void update();
  private:
         string message_;
         string fontPath_;

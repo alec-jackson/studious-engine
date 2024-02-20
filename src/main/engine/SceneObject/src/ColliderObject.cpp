@@ -71,6 +71,10 @@ int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
     return 0;
 }
 
+void ColliderObject::update() {
+    render();
+}
+
 void ColliderObject::render() {
     if (poly_->numberOfObjects > 0) {
         // After drawing the gameobject, draw the collider

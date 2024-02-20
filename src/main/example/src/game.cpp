@@ -99,7 +99,6 @@ int runtime(GameInstance *currentGame) {
     struct gameInfo currentGameInfo;
     bool isDone = false;
     cout << "Creating camera.\n";
-    vector<int> gameObject(5);
 
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
@@ -108,88 +107,90 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
 
-    auto importedMapObj = ModelImport("src/resources/models/map3.obj",
+    auto mapPoly = ModelImport("src/resources/models/map3.obj",
         texturePathStage,
         texturePatternStage,
         gfxController.getProgramId(0).get(),
-        &gfxController);
+        &gfxController)
+        .createPolygonFromFile();
 
-    auto mapPoly = importedMapObj.createPolygonFromFile();
-
-    gameObject[0] = currentGame->createGameObject(&mapPoly,
-        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, gameObject[2], "map");
+    auto mapObject = currentGame->createGameObject(&mapPoly,
+        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
 
     cout << "Creating Player\n";
 
-    auto importedPlayerObj = ModelImport(
+    auto playerPoly = ModelImport(
         "src/resources/models/Dracula.obj",
         texturePath,
         texturePattern,
         gfxController.getProgramId(0).get(),
-        &gfxController);
-
-    auto playerPoly = importedPlayerObj.createPolygonFromFile();
+        &gfxController)
+        .createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
-    gameObject[1] = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, gameObject[2], "player");
-    GameObject *dracs = currentGame->getGameObject(gameObject[1]);
-    dracs->createCollider(gfxController.getProgramId(1).get());
-    playerRef = dracs;
+    playerRef = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
+        vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
+    playerRef->createCollider(gfxController.getProgramId(1).get());
 
     cout << "Creating wolf\n";
 
-    auto importedWolfObj = ModelImport("src/resources/models/wolf.obj",
+    auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
         texturePath,
         texturePattern,
         gfxController.getProgramId(0).get(),
-        &gfxController);
+        &gfxController)
+        .createPolygonFromFile();
 
-    auto wolfPoly = importedWolfObj.createPolygonFromFile();
+    auto wolfObject = currentGame->createGameObject(&wolfPoly,
+        vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
 
-    gameObject[3] = currentGame->createGameObject(&wolfPoly,
-        vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f,
-        gameObject[2], "NPC");
-
-    GameObject *wolfObject = currentGame->getGameObject(gameObject[3]);
     wolfObject->createCollider(gfxController.getProgramId(1).get());
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
-    gameObject[4] = currentGame->createText("Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
+    auto engineText = currentGame->createText("Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
         gfxController.getProgramId(2).get(), "studious-text");
-    TextObject *textObj = currentGame->getText(gameObject[4]);
-    textObj->setPosition(vec3(25.0f, 25.0f, 0.0f));
+    engineText->setPosition(vec3(25.0f, 25.0f, 0.0f));
     // Re-using gameObject 4 for no particular reason
-    gameObject[4] = currentGame->createText("Contact", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "Contact Text");
-    textObj = currentGame->getText(gameObject[4]);
-    textObj->setPosition(vec3(25.0f, 300.0f, 0.0f));
-    collDebugText = textObj;
+    auto contactText = currentGame->createText("Contact", "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(), "contact-text");
+    contactText->setPosition(vec3(25.0f, 300.0f, 0.0f));
+    collDebugText = contactText;
     collDebugText->setMessage("Contact: False");
     collDebugText->setScale(0.7f);
 
-    gameObject[4] = currentGame->createText("Contact", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "Contact Text");
-    textObj = currentGame->getText(gameObject[4]);
-    textObj->setPosition(vec3(25.0f, 670.0f, 0.0f));
-    fps_counter = textObj;
+    auto fpsText = currentGame->createText("FPS", "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(), "fps-text");
+    fpsText->setPosition(vec3(25.0f, 670.0f, 0.0f));
+    fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
     fps_counter->setScale(0.7f);
 
-    gameObject[2] = currentGame->createCamera(currentGame->getGameObject(gameObject[1]),
+    auto currentCamera = currentGame->createCamera(playerRef,
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
-    CameraObject *currentCamera = currentGame->getCamera(gameObject[2]);
-    GameObject *currentGameObject = currentGame->getGameObject(gameObject[1]);
-    currentGameObject->setRotation(vec3(0, 0, 0));
-    currentGameObject = currentGame->getGameObject(gameObject[3]);
-    currentGameObject = currentGame->getGameObject(gameObject[1]);
-    cout << "currentGameObject tag is " << currentGameObject->getObjectName()
+    playerRef->setRotation(vec3(0, 0, 0));
+    cout << "currentGameObject tag is " << playerRef->getObjectName()
         << '\n';
 
-    currentGameObject->setPosition(vec3(-0.005f, 0.01f, 0.0f));
-    currentGameObject->setRotation(vec3(0.0f, 180.0f, 0.0f));
-    currentGameObject->setScale(0.0062f);
+    playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
+    playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
+    playerRef->setScale(0.0062f);
+
+    // Add objects to camera
+    vector<SceneObject *> targets = {
+        mapObject,
+        playerRef,
+        wolfObject,
+        engineText,
+        contactText,
+        fpsText
+    };
+
+    // Add all objects to active camera
+    for (auto it = targets.begin(); it != targets.end(); ++it) {
+        cout << "Adding to camera: " << (*it)->getObjectName() << endl;
+        currentCamera->addSceneObject(*it);
+    }
 
     currentGameInfo.isDone = &isDone;
     currentGameInfo.gameCamera = currentCamera;
@@ -200,7 +201,7 @@ int runtime(GameInstance *currentGame) {
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
-    thread rotThread(rotateShape, &currentGameInfo, currentGameObject);
+    thread rotThread(rotateShape, &currentGameInfo, playerRef);
     mainLoop(&currentGameInfo);
     isDone = true;
     rotThread.join();
