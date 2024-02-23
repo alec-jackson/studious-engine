@@ -148,7 +148,7 @@ int runtime(GameInstance *currentGame) {
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
-    auto engineText = currentGame->createText("Studious Engine 2021", "src/resources/fonts/AovelSans.ttf",
+    auto engineText = currentGame->createText("Studious Engine 2024", "src/resources/fonts/AovelSans.ttf",
         gfxController.getProgramId(2).get(), "studious-text");
     engineText->setPosition(vec3(25.0f, 25.0f, 0.0f));
     // Re-using gameObject 4 for no particular reason
