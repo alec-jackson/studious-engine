@@ -22,6 +22,7 @@
 #include <mutex>  //NOLINT
 #include <fstream>
 #include <map>
+#include <chrono> //NOLINT
 #ifndef _WIN32  // Don't use unistd.h on windows
 #include <unistd.h>
 #else
@@ -37,7 +38,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <chrono>
 
 using glm::ivec2;
 using glm::vec3;

@@ -129,6 +129,5 @@ void TextObject::render() {
 }
 
 void TextObject::update() {
-    //gfxController_->update();
     render();
 }

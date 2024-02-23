@@ -87,8 +87,7 @@ TEST(PolygonConstructor, WhenConstructedWithData_ThenPolygonHasExpectedData) {
     EXPECT_EQ(expectedNumberOfObjects, polygon.numberOfObjects);
 }
 
-TEST(PolygonMerge, WhenTwoPolygonsMerged_ThenPolygonDataMergedOk)
-{
+TEST(PolygonMerge, WhenTwoPolygonsMerged_ThenPolygonDataMergedOk) {
     // Preparation
     auto expectedProgramId = 1;
     auto expectedNumberOfObjects = 2;

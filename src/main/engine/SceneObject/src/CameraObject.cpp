@@ -45,7 +45,8 @@ void CameraObject::update() {
                 (*it)->setVpMatrix(vpMatrixOrthographic_);
                 break;
             default:
-                printf("CameraObject::update: Ignoring object [%s] type [%d]\n", (*it)->getObjectName().c_str(), (*it)->type());
+                printf("CameraObject::update: Ignoring object [%s] type [%d]\n", (*it)->getObjectName().c_str(),
+                    (*it)->type());
                 break;
         }
         // Send the VP matrix for the camera to its gameobjects

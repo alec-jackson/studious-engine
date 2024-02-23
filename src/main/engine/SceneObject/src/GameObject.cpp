@@ -87,8 +87,6 @@ void GameObject::createCollider(int programId) {
 }
 
 void GameObject::update() {
-    // Update the gfx controller before rendering
-    //gfxController_->update();
     render();
 }
 

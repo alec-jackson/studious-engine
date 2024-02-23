@@ -29,6 +29,7 @@ class ColliderObject : public SceneObject {
     inline vec4 center() { return center_; }
     inline vec4 offset() { return offset_; }
     ~ColliderObject();
+
  private:
     vec4 offset_;
     vec4 minPoints_;
