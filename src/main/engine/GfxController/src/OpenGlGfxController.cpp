@@ -166,7 +166,7 @@ void OpenGlGfxController::updateOpenGl() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glCullFace(GL_BACK);
     glDepthFunc(GL_LESS);
-    glClearColor(0.0f, 0.0f, 0.0, 1.0f);
+    glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -201,7 +201,7 @@ GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
     auto result = GFX_OK(GLuint);
     switch (mode) {
         case RenderMode::POINT:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+            glPolygonMode(GL_FRONT, GL_POINT);
             break;
         case RenderMode::LINE:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -239,6 +239,8 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samp
 
 GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) {
     // If textureId is UINT_MAX, NO TEXTURE PRESENT
+    // Bind the VAO
+    glBindVertexArray(vertexArrayId_);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
@@ -261,5 +263,6 @@ GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId
     glDisableVertexAttribArray(2);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
+    glBindVertexArray(0);
     return GFX_OK(GLuint);
 }

@@ -19,7 +19,7 @@
 class ColliderObject : public SceneObject {
  public:
     ColliderObject(Polygon *target, int programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
-        const mat4 &vpMatrix, GfxController *gfxController);
+        const mat4 &vpMatrix, ObjectType type, GfxController *gfxController);
     void updateCollider();
     void render() override;
     void update() override;
@@ -40,5 +40,6 @@ class ColliderObject : public SceneObject {
     const mat4 &translateMatrix_;
     const mat4 &scaleMatrix_;
     const mat4 &vpMatrix_;
+    GLuint vao = 0;
     GLuint mvpId_;
 };

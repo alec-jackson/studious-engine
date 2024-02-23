@@ -47,9 +47,7 @@ class GameInstance {
     SDL_Surface* screenSurface;
     SDL_Event event;
     vector<Mix_Chunk *> sound;
-    vector<GameObject *> gameObjects;
-    vector<CameraObject *> gameCameras;
-    vector<TextObject *> gameTexts;
+    vector<SceneObject *> sceneObjects_;
     vector<string> soundList_;
     vector<string> fragShaders_;
     vector<string> vertShaders_;
@@ -61,7 +59,7 @@ class GameInstance {
     vec3 directionalLight;
     GLfloat luminance;
     int width_, height_;
-    mutex sceneLock;
+    mutex sceneLock_;
     GfxController *gfxController_;
 
     void initWindow(int width, int height);
@@ -87,18 +85,14 @@ class GameInstance {
     void playSound(int soundIndex, int loop);
     void changeWindowMode(int mode);
     void cleanup();
-    int destroyGameObject(GameObject *object);
-    GameObject *getGameObject(uint gameObjectID);
-    CameraObject *getCamera(uint gameCameraID);
-    TextObject *getText(uint gameTextID);
+    int destroySceneObject(SceneObject *object);
+    SceneObject *getSceneObject(string objectName);
     GLdouble getDeltaTime();
     int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
     int setDeltaTime(GLdouble time);
     void setLuminance(GLfloat luminanceValue);
     void basicCollision(GameInstance* gameInstance);
     bool isWindowOpen();
-    void updateOGL();
-    int updateCameras();
     int updateObjects();
     int updateWindow();
     int lockScene();

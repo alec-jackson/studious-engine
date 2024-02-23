@@ -32,8 +32,8 @@ class TextObject: public SceneObject {
  public:
         // Constructors
         explicit TextObject(string message, string fontPath, GLuint programId, string objectName,
-              GfxController *gfxController);
-        ~TextObject();
+              ObjectType type, GfxController *gfxController);
+        ~TextObject() override;
 
         // Setters
         inline void setMessage(string message) { this->message_ = message; }
@@ -42,8 +42,8 @@ class TextObject: public SceneObject {
         inline string getMessage() { return this->message_; }
 
         // Render method
-        void render();
-        void update();
+        void render() override;
+        void update() override;
  private:
         string message_;
         string fontPath_;
@@ -51,5 +51,4 @@ class TextObject: public SceneObject {
         unsigned int VAO, VBO;  /// @todo: Where are these being used? Protected at a level above?
         unsigned int textureUniformId;  /// @todo: Investigate whether this can be protected  at a level above
         map<GLchar, Character> characters;
-        ViewMode viewMode;
 };

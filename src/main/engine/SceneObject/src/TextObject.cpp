@@ -12,9 +12,9 @@
 #include <TextObject.hpp>
 
 /// @todo: Finish this code - lots of hard-coded values
-TextObject::TextObject(string message, string fontPath, GLuint programId, string objectName,
+TextObject::TextObject(string message, string fontPath, GLuint programId, string objectName, ObjectType type,
               GfxController *gfxController): SceneObject(vec3(300.0f, 300.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f),
-    objectName, 1.0f, programId, gfxController), message_  { message }, fontPath_ { fontPath } {
+    objectName, 1.0f, programId, type, gfxController), message_  { message }, fontPath_ { fontPath } {
     mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
     cout << "Initializing text with message " << message << endl;
 
@@ -76,7 +76,10 @@ TextObject::TextObject(string message, string fontPath, GLuint programId, string
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    this->viewMode = ORTHOGRAPHIC;
+    auto error = glGetError();
+    if (error != 0) {
+        fprintf(stderr, "TextObject::constructor: Error %d\n", error);
+    }
 }
 
 /// @todo Do something useful here
@@ -119,8 +122,13 @@ void TextObject::render() {
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+    auto error = glGetError();
+    if (error != 0) {
+        fprintf(stderr, "TextObject::render: Error %d\n", error);
+    }
 }
 
 void TextObject::update() {
+    //gfxController_->update();
     render();
 }

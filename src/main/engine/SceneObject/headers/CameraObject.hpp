@@ -18,8 +18,8 @@ class CameraObject : public SceneObject {
  public:
     // Constructors
     explicit CameraObject(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
-    GLfloat nearClipping, GLfloat farClipping, GfxController *gfxController);
-    ~CameraObject();
+    GLfloat nearClipping, GLfloat farClipping, ObjectType type, GfxController *gfxController);
+    ~CameraObject() override;
 
     // Setters
     inline void setOffset(vec3 offset) { offset_ = offset; }
@@ -40,6 +40,8 @@ class CameraObject : public SceneObject {
     GameObject *target_;
     vector<SceneObject *> sceneObjects_;
     vec3 offset_;
+    mat4 vpMatrixPerspective_;
+    mat4 vpMatrixOrthographic_;
 
     GLfloat aspectRatio_;
     GLfloat nearClipping_;

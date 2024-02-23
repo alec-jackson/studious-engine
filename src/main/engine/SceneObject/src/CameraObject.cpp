@@ -13,9 +13,9 @@
 #include <algorithm>
 
 CameraObject::CameraObject(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
-    GLfloat nearClipping, GLfloat farClipping, GfxController *gfxController) : SceneObject(gfxController),
-    target_ { target }, offset_ { offset }, cameraAngle_ { cameraAngle }, aspectRatio_ { aspectRatio },
-    nearClipping_ { nearClipping }, farClipping_ { farClipping } {}
+    GLfloat nearClipping, GLfloat farClipping, ObjectType type, GfxController *gfxController) :
+    SceneObject(type, gfxController), target_ { target }, offset_ { offset }, cameraAngle_ { cameraAngle },
+    aspectRatio_ { aspectRatio }, nearClipping_ { nearClipping }, farClipping_ { farClipping } {}
 
 /// @todo: Figure out what the destructor should do
 CameraObject::~CameraObject() {
@@ -26,15 +26,29 @@ void CameraObject::render() {
     /// @todo Add field to modify target offset
     mat4 viewMatrix = lookAt(target_->getPosition(offset_), target_->getPosition(vec3(0.0f, 0.01f, 0.0f)),
         vec3(0, 1, 0));
+    mat4 orthographicMatrix = ortho(0.0f, 800.0f, 0.0f, 600.0f, nearClipping_, farClipping_);
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
-    vpMatrix_ = projectionMatrix * viewMatrix;
+    vpMatrixPerspective_ = projectionMatrix * viewMatrix;
+    vpMatrixOrthographic_ = orthographicMatrix * viewMatrix;
 }
 
 void CameraObject::update() {
+    render();
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        // Check if the object is ORTHO or PERSPECTIVE
+        switch ((*it)->type()) {
+            case GAME_OBJECT:
+                (*it)->setVpMatrix(vpMatrixPerspective_);
+                break;
+            case TEXT_OBJECT:
+                (*it)->setVpMatrix(vpMatrixOrthographic_);
+                break;
+            default:
+                printf("CameraObject::update: Ignoring object [%s] type [%d]\n", (*it)->getObjectName().c_str(), (*it)->type());
+                break;
+        }
         // Send the VP matrix for the camera to its gameobjects
-        (*it)->setVpMatrix(vpMatrix_);
     }
 }
 

@@ -228,16 +228,13 @@ int mainLoop(gameInfo* gamein) {
     vector<double> times;
     while (running) {
         /// @todo Move these calls to a separate thread...
-        currentGame->lockScene();
         begin = SDL_GetPerformanceCounter();
         running = currentGame->isWindowOpen();
-        error = currentGame->updateCameras();
-        error |= currentGame->updateObjects();
+        error = currentGame->updateObjects();
         error |= currentGame->updateWindow();
         if (error) {
             return error;
         }
-        currentGame->unlockScene();
         collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
         string collMessage;
         if (collision == 1) {

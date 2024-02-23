@@ -23,13 +23,12 @@
  * @param gfxController Graphics controller for rendering the game scene
  */
 GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
-    string objectName, GfxController *gfxController):
-    SceneObject(position, rotation, objectName, scale, characterModel->programId, gfxController),
+    string objectName, ObjectType type, GfxController *gfxController):
+    SceneObject(position, rotation, objectName, scale, characterModel->programId, type, gfxController),
     model { characterModel } {
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
-    viewMode = PERSPECTIVE;
     // Populate the hasTexture vector with texture info
     for (int i = 0; i < model->numberOfObjects; i++) {
         if (model->textureCoordsId[i] == UINT_MAX) {
@@ -82,11 +81,14 @@ ColliderObject *GameObject::getCollider(void) {
  * @param programId Program used to render the collider (collider shaders)
  */
 void GameObject::createCollider(int programId) {
+    printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
     collider_ = new ColliderObject(this->getModel(), programId, translateMatrix_, scaleMatrix_, vpMatrix_,
-        gfxController_);
+        ObjectType::GAME_OBJECT, gfxController_);
 }
 
 void GameObject::update() {
+    // Update the gfx controller before rendering
+    //gfxController_->update();
     render();
 }
 
@@ -125,7 +127,7 @@ void GameObject::render() {
         model->pointCount[i] * 3);
     }
     if (collider_ != nullptr) collider_->render();
-}
+    }
 
 void GameObject::deleteTextures() {
     cout << "GameObject::deleteTextures" << endl;
@@ -134,5 +136,9 @@ void GameObject::deleteTextures() {
             glDeleteTextures(1, &textureId);
             hasTexture[i] = false;
         }
+    }
+    auto error = glGetError();
+    if (error != 0) {
+        fprintf(stderr, "GameObject::deleteTextures: Error %d\n", error);
     }
 }

@@ -118,7 +118,7 @@ int ModelImport::processLine(string charBuffer, int currentObject) {
  * @todo Double check the doxygen comments in here
  */
 int ModelImport::buildObject(int objectId) {
-    cout << "Building GameObject " << objectId << endl;
+    cout << "Building Polygon obj index " << objectId << endl;
     auto triCount = commands_.size() / 9;
     vector<GLfloat> vertexVbo;
     vector<GLfloat> textureVbo;

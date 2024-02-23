@@ -11,14 +11,23 @@
 #include <common.hpp>
 #include <GfxController.hpp>
 
+enum ObjectType {
+    UNDEFINED,
+    TEXT_OBJECT,
+    CAMERA_OBJECT,
+    GAME_OBJECT
+};
+
 class SceneObject {
  public:
     // Constructors
     inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, GLfloat scale, GLuint programId,
-            GfxController *gfxController):
+        ObjectType type, GfxController *gfxController):
             position(position), rotation(rotation), objectName(objectName), scale(scale), programId(programId),
-            gfxController_ { gfxController } {}
-    inline explicit SceneObject(GfxController *gfxController): gfxController_ { gfxController } {}
+            type_ { type }, gfxController_ { gfxController } {}
+    inline explicit SceneObject(ObjectType type, GfxController *gfxController): type_ { type },
+        gfxController_ { gfxController } {}
+    virtual ~SceneObject() = default;
     // Setter methods
     inline void setVpMatrix(mat4 vpMatrix) { vpMatrix_ = vpMatrix; }
     inline void setPosition(vec3 position) { this->position = position; }
@@ -34,7 +43,9 @@ class SceneObject {
     inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
     inline vec3 getRotation() const { return this->rotation; }
     inline string getObjectName() const { return this->objectName; }
+    inline ObjectType type() const { return type_; }
 
+    // Interface methods
     virtual void render() = 0;
     virtual void update() = 0;
 
@@ -50,6 +61,7 @@ class SceneObject {
     string objectName;
     GLfloat scale;
     GLuint programId;
+    ObjectType type_;
 
     GfxController *gfxController_;
 };

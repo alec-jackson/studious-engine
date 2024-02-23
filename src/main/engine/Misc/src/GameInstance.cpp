@@ -131,12 +131,13 @@ void GameInstance::changeWindowMode(int mode) {
  (void) cleanup does not return any value.
 */
 void GameInstance::cleanup() {
+    printf("GameInstance::cleanup: Entry\n");
     for (int i = 0; i < controllersConnected; i++) {
         // SDL_GameControllerClose(gameControllers[i]);
     }
-    vector<GameObject *>::iterator git;
-    for (git = gameObjects.begin(); git != gameObjects.end(); ++git) {
-        destroyGameObject((*git));
+    // Cleanup scene objects
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        destroySceneObject(*it);
     }
     gfxController_->cleanup();
     Mix_CloseAudio();
@@ -151,7 +152,7 @@ void GameInstance::cleanup() {
  On success, 0 is returned and the memory used by that GameObject is freed. On
  failure, -1 is returned and an error is printed to stderr.
  */
-int GameInstance::destroyGameObject(GameObject *object) {
+int GameInstance::destroySceneObject(SceneObject *object) {
     if (object == NULL) {
         cerr << "Error: Cannot destroy empty GameObject!\n";
         return -1;
@@ -178,26 +179,6 @@ bool GameInstance::isWindowOpen() {
 }
 
 /*
- (int) updateCameras loops through all of the cameras present in the current
- game scene and updates their position matrices.
-
- On success, 0 is returned and the cameras in the game scene are updated. On
- failure, -1 is returned and the cameras in the game scene are not updated.
-*/
-int GameInstance::updateCameras() {
-    if (gameCameras.empty()) {
-        // cerr << "Error: No cameras found in active scene!\n";
-        return -1;
-    }
-    vector<CameraObject *>::iterator it;
-    // Update the VP matrix for each camera
-    for (it = gameCameras.begin(); it != gameCameras.end(); ++it) {
-        (*it)->render();
-    }
-    return 0;
-}
-
-/*
  (int) updateObjects updates properties for all of the active GameObjects in the
  current scene. Things that are updated include:
  * Directional light position for lighting
@@ -210,25 +191,22 @@ int GameInstance::updateCameras() {
  -1 is returned and nothing is rendered.
 */
 int GameInstance::updateObjects() {
-    if (gameObjects.empty()) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
+    if (sceneObjects_.empty()) {
         cerr << "Error: No active GameObjects in the current scene!\n";
         return -1;
     }
     gfxController_->update();
-
-    for (auto it = gameCameras.begin(); it != gameCameras.end(); ++it) {
+    // Update cameras first
+    vector<SceneObject *> deferredUpdates;
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        if ((*it)->type() == ObjectType::CAMERA_OBJECT) (*it)->update();
+        else
+            deferredUpdates.push_back(*it);
+    }
+    // Update all other updates after
+    for (auto it = deferredUpdates.begin(); it != deferredUpdates.end(); ++it) {
         (*it)->update();
-    }
-    /// @todo: Polymorphism! Only need one structure for these game objects
-    std::vector<GameObject *>::iterator it;
-    for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {
-        // Send the new VP matrix to the current gameObject being drawn.
-        (*it)->render();
-    }
-    // If there is any active texts in the scene, render them
-    std::vector<TextObject *>::iterator text_it;
-    for (text_it = gameTexts.begin(); text_it != gameTexts.end(); ++text_it) {
-        (*text_it)->render();
     }
     return 0;
 }
@@ -259,71 +237,37 @@ int GameInstance::setDeltaTime(GLdouble time) {
 
 GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
     string objectName) {
-    cout << "Creating GameObject " << gameObjects.size() << "\n";
-    GameObject *gameObject = new GameObject(characterModel, position, rotation, scale, objectName,
+    printf("GameInstance::createGameObject: Creating GameObject %lu\n", sceneObjects_.size());
+    auto gameObject = new GameObject(characterModel, position, rotation, scale, objectName, ObjectType::GAME_OBJECT,
         gfxController_);
     gameObject->setDirectionalLight(directionalLight);
     gameObject->setLuminance(luminance);
-    gameObjects.push_back(gameObject);
+    sceneObjects_.push_back(gameObject);
     return gameObject;
 }
 
 CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
               GLfloat nearClipping, GLfloat farClipping) {
-    cout << "Creating CameraObject " << gameCameras.size() << "\n";
+    printf("GameInstance::createCamera: Creating CameraObject %lu\n", sceneObjects_.size());
     auto gameCamera = new CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping,
-        gfxController_);
-    gameCameras.push_back(gameCamera);
+        ObjectType::CAMERA_OBJECT, gfxController_);
+    sceneObjects_.push_back(gameCamera);
     return gameCamera;
 }
 
 TextObject *GameInstance::createText(string message, string fontPath, GLuint programId, string objectName) {
-    cout << "Creating Gametext " << gameTexts.size() << "\n";
-    auto text = new TextObject(message, fontPath, programId, objectName, gfxController_);
-    gameTexts.push_back(text);
+    printf("GameInstance::createText: Creating TextObject %lu\n", sceneObjects_.size());
+    auto text = new TextObject(message, fontPath, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
+    sceneObjects_.push_back(text);
     return text;
 }
 
-/*
- (GameObject *) getGameObject returns the GameObject pointer for the GameObject
- located at the index gameObjectID inside of the (vector<GameObject *>)
- gameObjects vector on success. On failure, NULL is returned and an error is
- printed to stderr.
- */
-GameObject *GameInstance::getGameObject(uint gameObjectID) {
-    if (!gameObjects.size() || gameObjects.size() < gameObjectID) {
-        cerr << "Error: getGameObject index out of bounds!\n";
-        return NULL;
+SceneObject *GameInstance::getSceneObject(string objectName) {
+    SceneObject *result = nullptr;
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        if ((*it)->getObjectName().compare(objectName) == 0) result = (*it);
     }
-    return gameObjects[gameObjectID];
-}
-
-/*
- (CameraObject *) getCameraObject returns the CameraObject pointer for the CameraObject
- located at the index gameCameraID inside of the (vector<CameraObject *>)
- gameCameras vector on success. On failure, NULL is returned and an error is
- printed to stderr.
-*/
-CameraObject *GameInstance::getCamera(uint gameCameraID) {
-    if (!gameCameras.size() || gameCameras.size() < gameCameraID) {
-        cerr << "Error: getCamera index out of bounds!\n";
-        return NULL;
-    }
-    return gameCameras[gameCameraID];
-}
-
-/*
- (TextObject *) getText returns the TextObject pointer for the
- TextObject located at the index gameTextID inside of the
- (vector<TextObject *>) gameTexts vector on success. On failure, NULL is
- returned and an error is printed to stderr.
-*/
-TextObject *GameInstance::getText(uint gameTextID) {
-    if (!gameTexts.size() || gameTexts.size() < gameTextID) {
-        cerr << "Error: getText index out of bounds!\n";
-        return NULL;
-    }
-    return gameTexts[gameTextID];
+    return result;
 }
 
 /*
@@ -480,11 +424,11 @@ void GameInstance::basicCollision(GameInstance *gameInstance) {
 }
 
 int GameInstance::lockScene() {
-    sceneLock.lock();
+    sceneLock_.lock();
     return 0;
 }
 
 int GameInstance::unlockScene() {
-    sceneLock.unlock();
+    sceneLock_.unlock();
     return 0;
 }

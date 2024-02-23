@@ -20,18 +20,16 @@ class GameObject: public SceneObject {
  public:
         // Constructurs
         explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
-              string objectName, GfxController *gfxController);
-        ~GameObject();
+              string objectName, ObjectType type, GfxController *gfxController);
+        ~GameObject() override;
 
         // Setters
-        inline void setViewMode(ViewMode viewMode) { this->viewMode = viewMode; }
         inline void setScale(GLfloat scale) { this->scale = scale; }
         inline void setDirectionalLight(vec3 directionalLight) { this->directionalLight = directionalLight; }
         inline void setLuminance(GLfloat luminance) { this->luminance = luminance; }
         inline void setProgramId(GLuint programId) { this->programId = programId; }
 
         // Getters
-        inline ViewMode getViewMode() { return this->viewMode; }
         inline GLfloat getScale() { return this->scale; }
         inline vec3 getDirectionalLight() { return this->directionalLight; }
         inline GLfloat getLuminance() { return this->luminance; }
@@ -67,6 +65,5 @@ class GameObject: public SceneObject {
         vec3 directionalLight;
         vec3 velocity;
 
-        ViewMode viewMode;  /// @todo Add this to GameCamera refactor
         ColliderObject *collider_ = nullptr;
 };
