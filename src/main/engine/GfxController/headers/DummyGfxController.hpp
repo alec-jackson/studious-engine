@@ -30,5 +30,6 @@ class DummyGfxController : public GfxController {
     GfxResult<GLuint> sendInteger(GLuint variableId, GLint data);
     GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId);
     GfxResult<GLuint> render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount);
+    GfxResult<GLuint> bindVao(GLuint vao);
     void update();
 };

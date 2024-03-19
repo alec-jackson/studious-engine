@@ -61,6 +61,7 @@ class SceneObject {
     string objectName;
     GLfloat scale;
     GLuint programId;
+    GLuint vao_;
     ObjectType type_;
 
     GfxController *gfxController_;

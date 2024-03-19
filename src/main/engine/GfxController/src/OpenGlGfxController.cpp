@@ -20,7 +20,7 @@ GfxResult<GLint> OpenGlGfxController::generateVertexBuffer(Polygon &polygon) {
                  sizeof(GLfloat) * polygon.pointCount[0] * 9,
                  &(polygon.vertices[0][0]), GL_STATIC_DRAW);
     /// @todo? Error check
-    return GfxResult<GLint>(GfxApiResult::OK, 0);
+    return GFX_OK(GLint);
 }
 
 GfxResult<GLint> OpenGlGfxController::generateNormalBuffer(Polygon &polygon) {
@@ -30,7 +30,7 @@ GfxResult<GLint> OpenGlGfxController::generateNormalBuffer(Polygon &polygon) {
     glBufferData(GL_ARRAY_BUFFER,
                  sizeof(GLfloat) * polygon.pointCount[0] * 9,
                  &(polygon.normalCoords[0][0]), GL_STATIC_DRAW);
-    return GfxResult<GLint>(GfxApiResult::OK, 0);
+    return GFX_OK(GLint);
 }
 
 GfxResult<GLint> OpenGlGfxController::generateTextureBuffer(Polygon &polygon, SDL_Surface *texture) {
@@ -59,7 +59,7 @@ GfxResult<GLint> OpenGlGfxController::generateTextureBuffer(Polygon &polygon, SD
                  sizeof(GLfloat) * polygon.pointCount[0] * 6,
                  &(polygon.textureCoords[0][0]), GL_STATIC_DRAW);
 
-    return GfxResult<GLint>(GfxApiResult::OK, 0);
+    return GFX_OK(GLint);
 }
 
 GfxResult<GLint> OpenGlGfxController::cleanup() {
@@ -179,17 +179,17 @@ GfxResult<GLint> OpenGlGfxController::init() {
     cout << "OpenGlGfxController::init" << endl;
     glGenVertexArrays(1, &vertexArrayId_);
     glBindVertexArray(vertexArrayId_);
-    return GfxResult<GLint>(GfxApiResult::OK, 0);
+    return GFX_OK(GLint);
 }
 
 GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
     glUseProgram(programId);
-    return GfxResult<GLuint>(GfxApiResult::OK, 0);
+    return GFX_OK(GLuint);
 }
 
 GfxResult<GLuint> OpenGlGfxController::sendFloat(GLuint variableId, GLfloat data) {
     glUniform1f(variableId, data);
-    return GfxResult<GLuint>(GfxApiResult::OK, 0);
+    return GFX_OK(GLuint);
 }
 
 GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) {
@@ -264,5 +264,10 @@ GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
     glBindVertexArray(0);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::bindVao(GLuint vao) {
+    glBindVertexArray(vao);
     return GFX_OK(GLuint);
 }

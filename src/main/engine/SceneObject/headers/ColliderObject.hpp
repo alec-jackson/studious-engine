@@ -41,6 +41,5 @@ class ColliderObject : public SceneObject {
     const mat4 &translateMatrix_;
     const mat4 &scaleMatrix_;
     const mat4 &vpMatrix_;
-    GLuint vao = 0;
     GLuint mvpId_;
 };

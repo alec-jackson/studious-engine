@@ -76,37 +76,17 @@ void ColliderObject::update() {
 }
 
 void ColliderObject::render() {
-    GLint vaoId = 255;
-    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vaoId);
-    auto error = glGetError();
-    if (error != 0) {
-        fprintf(stderr, "Collider::render0: Error %d\n", error);
-    }
     if (poly_->numberOfObjects > 0) {
-        // After drawing the gameobject, draw the collider
-        // Set the VAO
+        gfxController_->setProgram(poly_->programId); 
         glUseProgram(poly_->programId);  // grab the programId from the object
         gfxController_->polygonRenderMode(RenderMode::LINE);
-        error = glGetError();
-        if (error != 0) {
-            fprintf(stderr, "Collider::render1: Error %d\n", error);
-        }
         glDisable(GL_CULL_FACE);  // Just do it
-        error = glGetError();
-        if (error != 0) {
-            fprintf(stderr, "Collider::render2: Error %d\n", error);
-        }
         mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         glBindVertexArray(vao);
         glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vaoId);
         glEnableVertexAttribArray(0);
-        error = glGetError();
-        if (error != 0) {
-            fprintf(stderr, "Collider::render3: Error %d\n", error);
-        }
         glBindBuffer(GL_ARRAY_BUFFER, poly_->shapeBufferId[0]);
-        error = glGetError();
         if (error != 0) {
             fprintf(stderr, "Collider::render4: Error %d\n", error);
         }
