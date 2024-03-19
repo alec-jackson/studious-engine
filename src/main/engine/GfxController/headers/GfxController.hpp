@@ -58,5 +58,6 @@ class GfxController {
     virtual GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) = 0;
     virtual GfxResult<GLuint> render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) = 0;
     virtual GfxResult<GLuint> bindVao(GLuint vao) = 0;
+    virtual GfxResult<GLuint> setCapability(int capabilityId, bool enabled) = 0;
     virtual void update() = 0;
 };

@@ -77,19 +77,14 @@ void ColliderObject::update() {
 
 void ColliderObject::render() {
     if (poly_->numberOfObjects > 0) {
-        gfxController_->setProgram(poly_->programId); 
-        glUseProgram(poly_->programId);  // grab the programId from the object
+        gfxController_->setProgram(poly_->programId);
         gfxController_->polygonRenderMode(RenderMode::LINE);
-        glDisable(GL_CULL_FACE);  // Just do it
+        //glDisable(GL_CULL_FACE);  // Makes sure none of the wireframe is culled
         mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
-        glBindVertexArray(vao);
-        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vaoId);
+        gfxController_->bindVao(vao_);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, poly_->shapeBufferId[0]);
-        if (error != 0) {
-            fprintf(stderr, "Collider::render4: Error %d\n", error);
-        }
         glVertexAttribPointer(
                               0,                  // attribute 0. No particular reason for 0, but must match
                                                   // the layout in the shader.
@@ -98,27 +93,15 @@ void ColliderObject::render() {
                               GL_FALSE,           // normalized?
                               0,                  // stride
                               0);            // array buffer offset
-        error = glGetError();
-        if (error != 0) {
-            fprintf(stderr, "Collider::render5: Error %d\n", error);
-        }
         glDrawArrays(GL_TRIANGLES, 0, poly_->pointCount[0] * 3);
-        error = glGetError();
-        if (error != 0) {
-            fprintf(stderr, "Collider::render6: Error %d\n", error);
-        }
         glDisableVertexAttribArray(0);
-        error = glGetError();
-        if (error != 0) {
-            fprintf(stderr, "Collider::render7: Error %d\n", error);
-        }
-        glBindVertexArray(0);
+        gfxController_->bindVao(0);
     }
 }
 
 void ColliderObject::createCollider(int programId) {
     // Initialize VAO
-    glGenVertexArrays(1, &vao);
+    glGenVertexArrays(1, &vao_);
     cout << "Building collider for " << objectName << endl;
     GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
     GLfloat max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
@@ -188,7 +171,7 @@ void ColliderObject::createCollider(int programId) {
     auto pointCount = colliderVertices.size();
     poly_ = new Polygon(pointCount, programId, colliderVertices);
     glGenBuffers(1, &(poly_->shapeBufferId[0]));
-    glBindVertexArray(vao);
+    gfxController_->bindVao(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, poly_->shapeBufferId[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * pointCount,
         &(poly_->vertices[0][0]), GL_STATIC_DRAW);
@@ -202,7 +185,7 @@ void ColliderObject::createCollider(int programId) {
                               0,                  // stride
                               0);            // array buffer offset
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    gfxController_->bindVao(0);
     // Set the correct center points
     for (int i = 0; i < 3; i++) {
         center_[i] = max[i] - ((abs(max[i] - min[i])) / 2);
@@ -214,10 +197,6 @@ void ColliderObject::createCollider(int programId) {
         minPoints_[i] = min[i];
     }
     minPoints_[3] = 1;  // SET W!!!
-    auto error = glGetError();
-    if (error != 0) {
-        fprintf(stderr, "Collider::createCollider: Error %d\n", error);
-    }
 }
 
 ColliderObject::~ColliderObject() {

@@ -35,6 +35,7 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId);
     GfxResult<GLuint> render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount);
     GfxResult<GLuint> bindVao(GLuint vao);
+    GfxResult<GLuint> setCapability(int capabilityId, bool enabled);
     void update();
     void updateOpenGl();
  private:

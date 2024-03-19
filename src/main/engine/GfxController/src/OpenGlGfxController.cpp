@@ -182,8 +182,20 @@ GfxResult<GLint> OpenGlGfxController::init() {
     return GFX_OK(GLint);
 }
 
+/**
+ * @brief Sets the current program (shader) in the OpenGL context.
+ * 
+ * @param programId created by OpenGL for a set of shaders (program).
+ * @return GfxResult<GLuint> OK if successful, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
     glUseProgram(programId);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        fprintf(stderr, "OpenGlGfxController::setProgram: Error: %d", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
@@ -267,7 +279,42 @@ GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Binds a VAO object in the current OpenGL context
+ * @note The name of this method will most likely change other GFX backends are added.
+ * 
+ * @param vao VAO ID to bind
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::bindVao(GLuint vao) {
     glBindVertexArray(vao);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        /// @todo When a logger is added, add OpenGL error log debugging
+        fprintf(stderr, "OpenGlGfxController::bindVao: Error: %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
+}
+
+/**
+ * @brief Enables/Disables an OpenGL capability in the current context.
+ * 
+ *        Usage: setFeature(GL_CULL_FACE, true)
+ * 
+ * will enable the GL_CULL_FACE capability.
+ * 
+ * @param capabilityId ID of the capability to toggle on/off.
+ * @param enabled Whether or not to enable/disable the capability
+ * @return GfxResult<GLuint> 
+ */
+GfxResult<GLuint> setCapability(int capabilityId, bool enabled) {
+    auto toggle = [enabled](GLenum capability) {
+        enabled ? glEnable(capability) : glDisable(capability);
+    };
+
+    switch (capabilityId) {
+        
+    }
 }
