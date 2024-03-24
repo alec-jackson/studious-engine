@@ -12,6 +12,9 @@
 if [ ! -d build ]; then
     mkdir build
 fi
+if [ "$1" = "-clean" ] || [ "$2" = "-clean" ] && [ ! -d build ]; then
+    rm -rdf build
+fi
 cd build
 # If -d flag is present, build in debug mode
 if [ "$1" = "-d" ] || [ "$2" = "-d" ]; then

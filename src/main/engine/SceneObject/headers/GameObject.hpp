@@ -14,49 +14,47 @@
 #include <vector>
 #include <ModelImport.hpp>
 #include <SceneObject.hpp>
-#include <GameObjectStructs.hpp>
+#include <ColliderObject.hpp>
 
 class GameObject: public SceneObject {
  public:
         // Constructurs
-        explicit GameObject(gameObjectInfo objectInfo);
-        ~GameObject();
+        explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
+              string objectName, ObjectType type, GfxController *gfxController);
+        ~GameObject() override;
 
         // Setters
-        inline void setViewMode(ViewMode viewMode) { this->viewMode = viewMode; }
         inline void setScale(GLfloat scale) { this->scale = scale; }
         inline void setDirectionalLight(vec3 directionalLight) { this->directionalLight = directionalLight; }
         inline void setLuminance(GLfloat luminance) { this->luminance = luminance; }
         inline void setProgramId(GLuint programId) { this->programId = programId; }
 
         // Getters
-        inline ViewMode getViewMode() { return this->viewMode; }
         inline GLfloat getScale() { return this->scale; }
         inline vec3 getDirectionalLight() { return this->directionalLight; }
         inline GLfloat getLuminance() { return this->luminance; }
         inline GLuint getProgramId() { return this->programId; }
-        inline int getCameraId() { return this->cameraId; }
 
         // Special Getters
-        Polygon *getModel();  /// @todo: This should return a reference
-        colliderInfo getCollider();
+        inline Polygon *getModel() { return model; }
+        ColliderObject *getCollider();
         GLfloat getColliderVertices(vector<GLfloat> vertices, int axis, bool (*test)(float a, float b));
 
         // Other methods
         void deleteTextures();  /// @todo: DEPRECATED - Use destructor for this now...
-        int createCollider(int programId);
+        void createCollider(int programId);
 
         void render() override;
+        void update() override;
 
  private:
         Polygon *model;  // Change this to a proper class at some point
 
-        int cameraId;  /// @todo: Why is this managed in GameObject?
         unsigned int VAO;  /// @todo: Why do we have this?
 
-        GLuint rotateId, scaleId, translateId, vpId, textureId, textCoordsId,
+        GLuint vpId, modelId, textureId, textCoordsId,
             hasTextureId, directionalLightId, luminanceId, rollOffId,
-            mvpId, collider_shaderId;  /// @todo: Organize these into another class
+            collider_shaderId;  /// @todo: Organize these into another class
 
         GLint textureCoordId;
 
@@ -67,6 +65,5 @@ class GameObject: public SceneObject {
         vec3 directionalLight;
         vec3 velocity;
 
-        ViewMode viewMode;
-        colliderInfo collider;  /// @todo: Refactor colliderInfo/create collider class
+        ColliderObject *collider_ = nullptr;
 };

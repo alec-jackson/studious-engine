@@ -12,10 +12,9 @@
 #include <TextObject.hpp>
 
 /// @todo: Finish this code - lots of hard-coded values
-/// @todo: Either use super() or restructure class inheritance - refactor this constructor
-TextObject::TextObject(textObjectInfo info): SceneObject(vec3(300.0f, 300.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f),
-    info.objectName, 1.0f, info.programId), message(info.message), fontPath(info.fontPath) {
-
+TextObject::TextObject(string message, string fontPath, GLuint programId, string objectName, ObjectType type,
+              GfxController *gfxController): SceneObject(vec3(300.0f, 300.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f),
+    objectName, 1.0f, programId, type, gfxController), message_  { message }, fontPath_ { fontPath } {
     mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
     cout << "Initializing text with message " << message << endl;
 
@@ -28,7 +27,7 @@ TextObject::TextObject(textObjectInfo info): SceneObject(vec3(300.0f, 300.0f, 0.
         throw std::runtime_error("Failed to initialize FreeType Library");
     }
     FT_Face face;
-    if (FT_New_Face(ft, fontPath.c_str(), 0, &face)) {
+    if (FT_New_Face(ft, fontPath_.c_str(), 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
         throw std::runtime_error("Failed to load font");
     } else {
@@ -77,7 +76,10 @@ TextObject::TextObject(textObjectInfo info): SceneObject(vec3(300.0f, 300.0f, 0.
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    this->viewMode = ORTHOGRAPHIC;
+    auto error = glGetError();
+    if (error != 0) {
+        fprintf(stderr, "TextObject::constructor: Error %d\n", error);
+    }
 }
 
 /// @todo Do something useful here
@@ -89,12 +91,13 @@ void TextObject::render() {
     vec3 color = vec3(1.0f);
     int x = this->position.x, y = this->position.y;
     glUseProgram(this->programId);
+    gfxController_->polygonRenderMode(RenderMode::FILL);
     glUniform3f(glGetUniformLocation(this->programId, "textColor"),
         color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
     std::string::const_iterator c;
-    for (c = message.begin(); c != message.end(); c++) {
+    for (c = message_.begin(); c != message_.end(); c++) {
         Character ch = characters[*c];
         float xpos = x + ch.Bearing.x * scale;
         float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
@@ -119,4 +122,12 @@ void TextObject::render() {
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+    auto error = glGetError();
+    if (error != 0) {
+        fprintf(stderr, "TextObject::render: Error %d\n", error);
+    }
+}
+
+void TextObject::update() {
+    render();
 }
