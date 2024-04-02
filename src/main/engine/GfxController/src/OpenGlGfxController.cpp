@@ -11,14 +11,37 @@
 
 #include <OpenGlGfxController.hpp>
 
-/// @todo Add proper error checking to OpenGL calls
 GfxResult<GLint> OpenGlGfxController::generateVertexBuffer(Polygon &polygon) {
     cout << "OpenGlGfxController::generateVertexBuffer" << endl;
-    glGenBuffers(1, &(polygon.shapeBufferId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon.shapeBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon.pointCount[0] * 9,
-                 &(polygon.vertices[0][0]), GL_STATIC_DRAW);
+    auto generateTriangle = [](Polygon &poly) {
+        glGenBuffers(1, &(poly.shapeBufferId[0]));
+        glBindBuffer(GL_ARRAY_BUFFER, poly.shapeBufferId[0]);
+        glBufferData(GL_ARRAY_BUFFER,
+            sizeof(GLfloat) * poly.pointCount[0] * 3 * 3,
+            &(poly.vertices[0][0]), GL_STATIC_DRAW);
+    };
+    auto generateQuad = [](Polygon &poly) {
+        glGenBuffers(1, &(poly.shapeBufferId[0]));
+        glBindBuffer(GL_ARRAY_BUFFER, poly.shapeBufferId[0]);
+        glBufferData(GL_ARRAY_BUFFER,
+            sizeof(GLfloat) * poly.pointCount[0] * 4 * 3,
+            &(poly.vertices[0][0]), GL_DYNAMIC_DRAW);
+    };
+
+    switch (polygon.renderMode_) {
+        case TRIANGLE:
+            generateTriangle(polygon);
+            break;
+        case QUAD:
+            generateQuad(polygon);
+            break;
+        default:
+            fprintf(stderr, "OpenGlGfxController::generateVertexBuffer: Unknown render mode %d",
+                polygon.renderMode_);
+            return GFX_FAILURE(GLint);
+            break;
+    }
+
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::generateVertexBuffer: Error: %d", error);
@@ -338,6 +361,7 @@ GfxResult<GLuint> OpenGlGfxController::initVao(GLuint *vao) {
 
 GfxResult<GLuint> OpenGlGfxController::deleteTextures(GLuint *tId) {
     glDeleteTextures(1, tId);
+    return GFX_OK(GLuint);
 }
 
 /// @todo Refactor this to work with the generateTextureBuffer method

@@ -155,7 +155,7 @@ void ColliderObject::createCollider(GLuint programId) {
         min[0], min[1], max[2]
     };
     auto pointCount = colliderVertices.size();
-    poly_ = new Polygon(pointCount, programId, colliderVertices);
+    poly_ = new Polygon(pointCount, programId, colliderVertices, PolyRenderMode::TRIANGLE);
     gfxController_->generateVertexBuffer(*poly_);
     // Set the correct center points
     for (int i = 0; i < 3; i++) {

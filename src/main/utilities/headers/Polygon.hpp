@@ -12,11 +12,16 @@
 #include <vector>
 #include <common.hpp>
 
+enum PolyRenderMode {
+    TRIANGLE,
+    QUAD
+};
+
 class Polygon {
  public:
     Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
         vector<GLfloat> normals);
-    Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices);
+    Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices, PolyRenderMode renderMode);
     Polygon();
     void merge(Polygon&);
     ~Polygon();
@@ -32,4 +37,5 @@ class Polygon {
     vector<GLint> pointCount;  // no. of distinct points in shape
     GLint numberOfObjects;  // Contains the number of objects in the model
     GLuint programId;  // Used for storing programId of object's shader
+    const PolyRenderMode renderMode_;
 };

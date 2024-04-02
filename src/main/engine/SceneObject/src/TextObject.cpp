@@ -57,8 +57,12 @@ TextObject::TextObject(string message, string fontPath, GLuint programId, string
     gfxController_->initVao(&VAO);
     glGenBuffers(1, &VBO);
     gfxController_->bindVao(VAO);
+    auto polyCount = sizeof(float) * 6 * 4;
+    //poly_ = new Polygon(polyCount, programId, colliderVertices);
+    //gfxController_->generateVertexBuffer(poly_);
+    // Text is actually rendered in quads...
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_STATIC_DRAW);
     /// @todo Check if enable vertex attrib array only needs to be run once ever
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
@@ -84,8 +88,7 @@ void TextObject::render() {
         color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
-    std::string::const_iterator c;
-    for (c = message_.begin(); c != message_.end(); c++) {
+    for (auto c = message_.begin(); c != message_.end(); c++) {
         Character ch = characters[*c];
         float xpos = x + ch.Bearing.x * scale;
         float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;

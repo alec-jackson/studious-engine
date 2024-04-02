@@ -48,6 +48,7 @@ class TextObject: public SceneObject {
         string message_;
         string fontPath_;
         int fontSize;
+        Polygon *poly_;
         unsigned int VAO, VBO;  /// @todo: Where are these being used? Protected at a level above?
         unsigned int textureUniformId;  /// @todo: Investigate whether this can be protected  at a level above
         map<GLchar, Character> characters;
