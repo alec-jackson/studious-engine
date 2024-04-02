@@ -333,10 +333,6 @@ void GameInstance::initWindow(int width, int height) {
         cerr << "Error: Failed to create SDL window!\n";
         return;
     }
-    if (glewInit() != GLEW_OK) {
-        cerr << "Error: Failed to initialize GLEW!\n";
-        return;
-    }
 }
 
 /*

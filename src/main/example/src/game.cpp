@@ -243,7 +243,6 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
-        usleep(2000);  // Sleep for 2ms
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);

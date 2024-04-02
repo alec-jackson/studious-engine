@@ -26,6 +26,8 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GL
     string objectName, ObjectType type, GfxController *gfxController):
     SceneObject(position, rotation, objectName, scale, characterModel->programId, type, gfxController),
     model { characterModel } {
+
+    gfxController_->initVao(&vao_);
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
@@ -121,22 +123,18 @@ void GameObject::render() {
             gfxController_->bindTexture(model->textureId[i], model->textureUniformId);
         }
         // Actually start drawing polygons :)
-        gfxController_->render(model->shapeBufferId[i], model->textureCoordsId[i], model->normalBufferId[i],
+        gfxController_->render(vao_, model->shapeBufferId[i], model->textureCoordsId[i], model->normalBufferId[i],
         model->pointCount[i] * 3);
     }
-    if (collider_ != nullptr) collider_->render();
+    if (collider_ != nullptr) collider_->update();
     }
 
 void GameObject::deleteTextures() {
     cout << "GameObject::deleteTextures" << endl;
     for (int i = 0; i < model->numberOfObjects; i++) {
         if (hasTexture[i]) {
-            glDeleteTextures(1, &textureId);
+            gfxController_->deleteTextures(&textureId);
             hasTexture[i] = false;
         }
-    }
-    auto error = glGetError();
-    if (error != 0) {
-        fprintf(stderr, "GameObject::deleteTextures: Error %d\n", error);
     }
 }

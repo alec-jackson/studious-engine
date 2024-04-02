@@ -24,13 +24,12 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(Polygon *target, int programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
+ColliderObject::ColliderObject(Polygon *target, GLuint programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
     const mat4 &vpMatrix, ObjectType type, GfxController *gfxController) : SceneObject(type, gfxController),
     target_ { target }, translateMatrix_ { translateMatrix }, scaleMatrix_ { scaleMatrix }, vpMatrix_ { vpMatrix } {
     createCollider(programId);
 }
 
-/// @todo Just throw this into the render loop
 void ColliderObject::updateCollider() {
     // Update center position with model matrix
     center_ = translateMatrix_ * scaleMatrix_ * originalCenter_;
@@ -79,37 +78,24 @@ void ColliderObject::render() {
     if (poly_->numberOfObjects > 0) {
         gfxController_->setProgram(poly_->programId);
         gfxController_->polygonRenderMode(RenderMode::LINE);
-        //glDisable(GL_CULL_FACE);  // Makes sure none of the wireframe is culled
+        gfxController_->setCapability(GL_CULL_FACE, false);
         mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
-        gfxController_->bindVao(vao_);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, poly_->shapeBufferId[0]);
-        glVertexAttribPointer(
-                              0,                  // attribute 0. No particular reason for 0, but must match
-                                                  // the layout in the shader.
-                              3,                  // size
-                              GL_FLOAT,           // type
-                              GL_FALSE,           // normalized?
-                              0,                  // stride
-                              0);            // array buffer offset
-        glDrawArrays(GL_TRIANGLES, 0, poly_->pointCount[0] * 3);
-        glDisableVertexAttribArray(0);
-        gfxController_->bindVao(0);
+        // Don't need to bind vao -> Should happen in render loop
+        gfxController_->render(vao_, poly_->shapeBufferId[0], UINT_MAX, UINT_MAX, poly_->shapeBufferId[0] * 3);
     }
 }
 
-void ColliderObject::createCollider(int programId) {
+void ColliderObject::createCollider(GLuint programId) {
     // Initialize VAO
-    glGenVertexArrays(1, &vao_);
+    gfxController_->initVao(&vao_);
     cout << "Building collider for " << objectName << endl;
     GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
     GLfloat max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
     // Set MVP ID for collider object
-    mvpId_ = glGetUniformLocation(programId, "MVP");
-    vector<vector<GLfloat>>::iterator it;
+    mvpId_ = gfxController_->getShaderVariable(programId, "MVP").get();
     // Go through objects and get absolute min/max points
-    for (it = target_->vertices.begin(); it != target_->vertices.end(); ++it) {
+    for (auto it = target_->vertices.begin(); it != target_->vertices.end(); ++it) {
         for (int i = 0; i < 3; i++) {
             // Calculate min
             tempMin[i] = getColliderVertices((*it), i, [](float a, float b) { return a < b; });
@@ -170,22 +156,7 @@ void ColliderObject::createCollider(int programId) {
     };
     auto pointCount = colliderVertices.size();
     poly_ = new Polygon(pointCount, programId, colliderVertices);
-    glGenBuffers(1, &(poly_->shapeBufferId[0]));
-    gfxController_->bindVao(vao_);
-    glBindBuffer(GL_ARRAY_BUFFER, poly_->shapeBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * pointCount,
-        &(poly_->vertices[0][0]), GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(
-                              0,                  // attribute 0. No particular reason for 0, but must match
-                                                  // the layout in the shader.
-                              3,                  // size
-                              GL_FLOAT,           // type
-                              GL_FALSE,           // normalized?
-                              0,                  // stride
-                              0);            // array buffer offset
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    gfxController_->bindVao(0);
+    gfxController_->generateVertexBuffer(*poly_);
     // Set the correct center points
     for (int i = 0; i < 3; i++) {
         center_[i] = max[i] - ((abs(max[i] - min[i])) / 2);

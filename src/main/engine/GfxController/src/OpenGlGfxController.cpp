@@ -19,7 +19,11 @@ GfxResult<GLint> OpenGlGfxController::generateVertexBuffer(Polygon &polygon) {
     glBufferData(GL_ARRAY_BUFFER,
                  sizeof(GLfloat) * polygon.pointCount[0] * 9,
                  &(polygon.vertices[0][0]), GL_STATIC_DRAW);
-    /// @todo? Error check
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::generateVertexBuffer: Error: %d", error);
+        return GFX_FAILURE(GLint);
+    }
     return GFX_OK(GLint);
 }
 
@@ -68,7 +72,7 @@ GfxResult<GLint> OpenGlGfxController::cleanup() {
         glDeleteProgram(*it);
         deletedPrograms++;
     }
-    glDeleteVertexArrays(1, &vertexArrayId_);
+    // glDeleteVertexArrays(1, &vertexArrayId_);
     return GfxResult<GLint>(GfxApiResult::OK, deletedPrograms);
 }
 
@@ -171,14 +175,17 @@ void OpenGlGfxController::updateOpenGl() {
 }
 
 void OpenGlGfxController::update() {
-    glBindVertexArray(vertexArrayId_);
     updateOpenGl();
 }
 
 GfxResult<GLint> OpenGlGfxController::init() {
     cout << "OpenGlGfxController::init" << endl;
-    glGenVertexArrays(1, &vertexArrayId_);
-    glBindVertexArray(vertexArrayId_);
+    if (glewInit() != GLEW_OK) {
+        cerr << "Error: Failed to initialize GLEW!\n";
+        return GFX_FAILURE(GLint);
+    }
+    // Set pixel storage alignment mode for font loading
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     return GFX_OK(GLint);
 }
 
@@ -193,7 +200,7 @@ GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
     auto error = glGetError();
     if (error != GL_NO_ERROR)
     {
-        fprintf(stderr, "OpenGlGfxController::setProgram: Error: %d", error);
+        fprintf(stderr, "OpenGlGfxController::setProgram: Error: %d\n", error);
         return GFX_FAILURE(GLuint);
     }
     return GFX_OK(GLuint);
@@ -245,37 +252,48 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samp
     // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
     glBindTexture(GL_TEXTURE_2D, textureId);
     // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
-    sendInteger(samplerId, 0);
+    if (samplerId != UINT_MAX) sendInteger(samplerId, 0);
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) {
-    // If textureId is UINT_MAX, NO TEXTURE PRESENT
-    // Bind the VAO
-    glBindVertexArray(vertexArrayId_);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, vId);
-    glVertexAttribPointer(
-                            0,            // attribute 0. No particular reason for 0, but must match
-                                          // the layout (location) in the shader.
-                            3,            // size
-                            GL_FLOAT,     // type
-                            GL_FALSE,     // normalized?
-                            0,            // stride
-                            0);           // array buffer offset
-    glBindBuffer(GL_ARRAY_BUFFER, nId);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+GfxResult<GLuint> OpenGlGfxController::render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) {
+    // Check which attributes are enabled (aka NOT UINT_MAX)
+    glBindVertexArray(vao);
+    // Configure attrib 0 for vertex data if present (should probably always be present...)
+    if (vId != UINT_MAX) glEnableVertexAttribArray(0);
+    if (vId != UINT_MAX) {
+        glBindBuffer(GL_ARRAY_BUFFER, vId);
+        glVertexAttribPointer(
+            0,            // attribute 0. No particular reason for 0, but must match
+                            // the layout (location) in the shader.
+            3,            // size
+            GL_FLOAT,     // type
+            GL_FALSE,     // normalized?
+            0,            // stride
+            0);           // array buffer offset
+    }
+    // Configure attrib 1 for texture data if present
+    if (tId != UINT_MAX) glEnableVertexAttribArray(1);
     if (tId != UINT_MAX) {
         glBindBuffer(GL_ARRAY_BUFFER, tId);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    }
+    // Configure attrib 2 for normal data if present
+    if (nId != UINT_MAX) glEnableVertexAttribArray(2);
+    if (nId != UINT_MAX) {
+        glBindBuffer(GL_ARRAY_BUFFER, nId);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
     }
     glDrawArrays(GL_TRIANGLES, 0, vertexCount);
     glDisableVertexAttribArray(2);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
     glBindVertexArray(0);
+    // Check if any errors occurred during rendering
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::render: Error: %d", error);
+    }
     return GFX_OK(GLuint);
 }
 
@@ -289,8 +307,7 @@ GfxResult<GLuint> OpenGlGfxController::render(GLuint vId, GLuint tId, GLuint nId
 GfxResult<GLuint> OpenGlGfxController::bindVao(GLuint vao) {
     glBindVertexArray(vao);
     auto error = glGetError();
-    if (error != GL_NO_ERROR)
-    {
+    if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
         fprintf(stderr, "OpenGlGfxController::bindVao: Error: %d\n", error);
         return GFX_FAILURE(GLuint);
@@ -309,12 +326,38 @@ GfxResult<GLuint> OpenGlGfxController::bindVao(GLuint vao) {
  * @param enabled Whether or not to enable/disable the capability
  * @return GfxResult<GLuint> 
  */
-GfxResult<GLuint> setCapability(int capabilityId, bool enabled) {
-    auto toggle = [enabled](GLenum capability) {
-        enabled ? glEnable(capability) : glDisable(capability);
-    };
+GfxResult<GLuint> OpenGlGfxController::setCapability(int capabilityId, bool enabled) {
+    enabled ? glEnable(capabilityId) : glDisable(capabilityId);
+    return GFX_OK(GLuint);
+}
 
-    switch (capabilityId) {
-        
-    }
+GfxResult<GLuint> OpenGlGfxController::initVao(GLuint *vao) {
+    glGenVertexArrays(1, vao);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::deleteTextures(GLuint *tId) {
+    glDeleteTextures(1, tId);
+}
+
+/// @todo Refactor this to work with the generateTextureBuffer method
+GfxResult<GLuint> OpenGlGfxController::generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) {
+    GLuint textureId;
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RED,
+                width,
+                rows,
+                0,
+                GL_RED,
+                GL_UNSIGNED_BYTE,
+                buffer);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    return GfxResult<GLuint>(GfxApiResult::OK, textureId);
 }

@@ -18,12 +18,12 @@
 
 class ColliderObject : public SceneObject {
  public:
-    ColliderObject(Polygon *target, int programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
+    ColliderObject(Polygon *target, GLuint programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
         const mat4 &vpMatrix, ObjectType type, GfxController *gfxController);
     void updateCollider();
     void render() override;
     void update() override;
-    void createCollider(int programId);
+    void createCollider(GLuint programId);
     int getCollision(ColliderObject *object, vec3 moving);
     GLfloat getColliderVertices(vector<GLfloat> vertices, int axis, bool (*test)(float a, float b));
     inline vec4 center() { return center_; }
@@ -41,5 +41,5 @@ class ColliderObject : public SceneObject {
     const mat4 &translateMatrix_;
     const mat4 &scaleMatrix_;
     const mat4 &vpMatrix_;
-    GLuint mvpId_;
+    GLint mvpId_;
 };

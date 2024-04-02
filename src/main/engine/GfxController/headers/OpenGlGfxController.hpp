@@ -22,6 +22,7 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLint> generateVertexBuffer(Polygon &);
     GfxResult<GLint> generateNormalBuffer(Polygon &);
     GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *);
+    GfxResult<GLuint> generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer);
     GfxResult<GLint> getShaderVariable(GLuint, const char *);
     GfxResult<GLint> cleanup();
     GfxResult<GLuint> getProgramId(uint);
@@ -33,12 +34,14 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data);
     GfxResult<GLuint> sendInteger(GLuint variableId, GLint data);
     GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId);
-    GfxResult<GLuint> render(GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount);
+    GfxResult<GLuint> render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount);
+    GfxResult<GLuint> initVao(GLuint *vao);
     GfxResult<GLuint> bindVao(GLuint vao);
     GfxResult<GLuint> setCapability(int capabilityId, bool enabled);
+    GfxResult<GLuint> deleteTextures(GLuint *tId);
     void update();
     void updateOpenGl();
+
  private:
     vector<GLuint> programIdList_;
-    GLuint vertexArrayId_;
 };
