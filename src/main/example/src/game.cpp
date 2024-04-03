@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 */
 int runtime(GameInstance *currentGame) {
     cout << "Building game scene!\n";
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_FALSE);
     struct gameInfo currentGameInfo;
     bool isDone = false;
     cout << "Creating camera.\n";

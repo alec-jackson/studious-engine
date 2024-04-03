@@ -95,9 +95,9 @@ GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId, GLuint sampl
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) {
-    printf("GfxController::bindTexture: vao=[%u], vId=[%u], tId=[%u], nId=[%u], vertexCount=[%u]",
-        vao, vId, tId, nId, vertexCount);
+GfxResult<GLuint> DummyGfxController::render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount, GLuint dimension) {
+    printf("GfxController::bindTexture: vao=[%u], vId=[%u], tId=[%u], nId=[%u], vertexCount=[%u], dimension=[%u]",
+        vao, vId, tId, nId, vertexCount, dimension);
     return GFX_OK(GLuint);
 }
 
@@ -107,23 +107,28 @@ GfxResult<GLuint> DummyGfxController::bindVao(GLuint vao) {
 }
 
 GfxResult<GLuint> DummyGfxController::setCapability(int capabilityId, bool enabled) {
-    printf("GfxController::setCapability: CAPABILITY: %d, enabled: %d",
+    printf("GfxController::setCapability: CAPABILITY: %d, enabled: %d\n",
         capabilityId, enabled);
     return GFX_OK(GLuint);
 }
 
 GfxResult<GLuint> DummyGfxController::initVao(GLuint *vao) {
-    printf("GfxController::initVao: vao %p", vao);
+    printf("GfxController::initVao: vao %p\n", vao);
     return GFX_OK(GLuint);
 }
 
 GfxResult<GLuint> DummyGfxController::deleteTextures(GLuint *tId) {
-    printf("GfxController::initVao: tId %p", tId);
+    printf("GfxController::initVao: tId %p\n", tId);
     return GFX_OK(GLuint);
 }
 
 GfxResult<GLuint> DummyGfxController::generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) {
-    printf("GfxController::generateFontTextures: width %d, rows %d, buffer %p",
+    printf("GfxController::generateFontTextures: width %d, rows %d, buffer %p\n",
         width, rows, buffer);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::updateBufferData(vector<GLfloat> &vertices, GLuint vbo) {
+    printf("GfxController::updateBufferData\n");
     return GFX_OK(GLuint);
 }

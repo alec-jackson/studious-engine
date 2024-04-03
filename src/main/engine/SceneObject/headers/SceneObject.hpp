@@ -25,8 +25,8 @@ class SceneObject {
         ObjectType type, GfxController *gfxController):
             position(position), rotation(rotation), objectName(objectName), scale(scale), programId(programId),
             type_ { type }, gfxController_ { gfxController } {}
-    inline explicit SceneObject(ObjectType type, GfxController *gfxController): type_ { type },
-        gfxController_ { gfxController } {}
+    inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController): type_ { type },
+        objectName { objectName }, gfxController_ { gfxController } {}
     virtual ~SceneObject() = default;
     // Setter methods
     inline void setVpMatrix(mat4 vpMatrix) { vpMatrix_ = vpMatrix; }
@@ -58,7 +58,7 @@ class SceneObject {
     vec3 position;
     vec3 rotation;
 
-    string objectName;
+    const string objectName;
     GLfloat scale;
     GLuint programId;
     GLuint vao_;

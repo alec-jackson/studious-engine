@@ -249,8 +249,9 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
 CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
               GLfloat nearClipping, GLfloat farClipping) {
     printf("GameInstance::createCamera: Creating CameraObject %lu\n", sceneObjects_.size());
+    auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
     auto gameCamera = new CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping,
-        ObjectType::CAMERA_OBJECT, gfxController_);
+        ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
     sceneObjects_.push_back(gameCamera);
     return gameCamera;
 }

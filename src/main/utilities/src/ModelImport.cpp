@@ -166,6 +166,12 @@ int ModelImport::buildObject(int objectId) {
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
 void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
+
+    /// @todo @mustfix This doesn't work... We need to generate the VBO data from the GameObject layer...
+    /// Need to rework this... again :(
+    /// Rationale - VAO will hold VBO configuration data (see TextObject). This should prevent the need to constantly copy data
+    /// to the GPU for static objects. This will not only make things substantially faster, but will make it easier to work with
+    /// OpenGL, because that's how it's supposed to be done...
     gfxController_->generateVertexBuffer(polygon);
     gfxController_->generateNormalBuffer(polygon);
     // Specific case where the current object does not get a texture

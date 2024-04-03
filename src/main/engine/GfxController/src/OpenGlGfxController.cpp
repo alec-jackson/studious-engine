@@ -13,34 +13,12 @@
 
 GfxResult<GLint> OpenGlGfxController::generateVertexBuffer(Polygon &polygon) {
     cout << "OpenGlGfxController::generateVertexBuffer" << endl;
-    auto generateTriangle = [](Polygon &poly) {
-        glGenBuffers(1, &(poly.shapeBufferId[0]));
-        glBindBuffer(GL_ARRAY_BUFFER, poly.shapeBufferId[0]);
-        glBufferData(GL_ARRAY_BUFFER,
-            sizeof(GLfloat) * poly.pointCount[0] * 3 * 3,
-            &(poly.vertices[0][0]), GL_STATIC_DRAW);
-    };
-    auto generateQuad = [](Polygon &poly) {
-        glGenBuffers(1, &(poly.shapeBufferId[0]));
-        glBindBuffer(GL_ARRAY_BUFFER, poly.shapeBufferId[0]);
-        glBufferData(GL_ARRAY_BUFFER,
-            sizeof(GLfloat) * poly.pointCount[0] * 4 * 3,
-            &(poly.vertices[0][0]), GL_DYNAMIC_DRAW);
-    };
-
-    switch (polygon.renderMode_) {
-        case TRIANGLE:
-            generateTriangle(polygon);
-            break;
-        case QUAD:
-            generateQuad(polygon);
-            break;
-        default:
-            fprintf(stderr, "OpenGlGfxController::generateVertexBuffer: Unknown render mode %d",
-                polygon.renderMode_);
-            return GFX_FAILURE(GLint);
-            break;
-    }
+    glGenBuffers(1, &(polygon.shapeBufferId[0]));
+    glBindBuffer(GL_ARRAY_BUFFER, polygon.shapeBufferId[0]);
+    glBufferData(GL_ARRAY_BUFFER,
+        sizeof(GLfloat) * polygon.pointCount[0] * 3 * polygon.dimension_,
+        polygon.vertices.empty() ? nullptr : &(polygon.vertices[0][0]),
+        GL_STATIC_DRAW);
 
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -279,7 +257,7 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samp
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) {
+GfxResult<GLuint> OpenGlGfxController::render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount, GLuint dimension) {
     // Check which attributes are enabled (aka NOT UINT_MAX)
     glBindVertexArray(vao);
     // Configure attrib 0 for vertex data if present (should probably always be present...)
@@ -287,13 +265,12 @@ GfxResult<GLuint> OpenGlGfxController::render(GLuint vao, GLuint vId, GLuint tId
     if (vId != UINT_MAX) {
         glBindBuffer(GL_ARRAY_BUFFER, vId);
         glVertexAttribPointer(
-            0,            // attribute 0. No particular reason for 0, but must match
-                            // the layout (location) in the shader.
-            3,            // size
-            GL_FLOAT,     // type
-            GL_FALSE,     // normalized?
-            0,            // stride
-            0);           // array buffer offset
+            0,                          // layout in shader
+            dimension,                  // size
+            GL_FLOAT,                   // type
+            GL_FALSE,                   // normalized?
+            dimension * sizeof(GLfloat),// stride
+            0);                         // array buffer offset
     }
     // Configure attrib 1 for texture data if present
     if (tId != UINT_MAX) glEnableVertexAttribArray(1);
@@ -308,14 +285,16 @@ GfxResult<GLuint> OpenGlGfxController::render(GLuint vao, GLuint vId, GLuint tId
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
     }
     glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-    glDisableVertexAttribArray(2);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(0);
+    if (nId != UINT_MAX) glDisableVertexAttribArray(2);
+    if (tId != UINT_MAX) glDisableVertexAttribArray(1);
+    if (vId != UINT_MAX) glDisableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     // Check if any errors occurred during rendering
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::render: Error: %d", error);
+        return GFX_FAILURE(GLuint);
     }
     return GFX_OK(GLuint);
 }
@@ -384,4 +363,12 @@ GfxResult<GLuint> OpenGlGfxController::generateFontTextures(GLuint width, GLuint
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     return GfxResult<GLuint>(GfxApiResult::OK, textureId);
+}
+
+GfxResult<GLuint> OpenGlGfxController::updateBufferData(vector<GLfloat> &vertices, GLuint vbo) {
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * vertices.size(), &vertices[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    return GFX_OK(GLuint);
 }

@@ -54,24 +54,16 @@ TextObject::TextObject(string message, string fontPath, GLuint programId, string
     }
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
-    gfxController_->initVao(&VAO);
-    glGenBuffers(1, &VBO);
-    gfxController_->bindVao(VAO);
-    auto polyCount = sizeof(float) * 6 * 4;
-    //poly_ = new Polygon(polyCount, programId, colliderVertices);
-    //gfxController_->generateVertexBuffer(poly_);
-    // Text is actually rendered in quads...
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_STATIC_DRAW);
+    gfxController_->initVao(&vao_);
+    gfxController_->bindVao(vao_);
+    auto polyCount = 6;
+    poly_ = new Polygon(polyCount, programId, vector<GLfloat>(), 4);
+    gfxController_->generateVertexBuffer(*poly_);
     /// @todo Check if enable vertex attrib array only needs to be run once ever
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     gfxController_->bindVao(0);
-    auto error = glGetError();
-    if (error != 0) {
-        fprintf(stderr, "TextObject::constructor: Error %d\n", error);
-    }
 }
 
 /// @todo Do something useful here
@@ -82,41 +74,47 @@ void TextObject::render() {
     glClear(GL_DEPTH_BUFFER_BIT);
     vec3 color = vec3(1.0f);
     int x = this->position.x, y = this->position.y;
-    glUseProgram(this->programId);
+    gfxController_->setProgram(programId);
     gfxController_->polygonRenderMode(RenderMode::FILL);
+
     glUniform3f(glGetUniformLocation(this->programId, "textColor"),
         color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(VAO);
+    glBindVertexArray(vao_);
     for (auto c = message_.begin(); c != message_.end(); c++) {
         Character ch = characters[*c];
-        float xpos = x + ch.Bearing.x * scale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-        float w = ch.Size.x * scale;
-        float h = ch.Size.y * scale;
+        GLfloat xpos = x + ch.Bearing.x * scale;
+        GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+        GLfloat w = ch.Size.x * scale;
+        GLfloat h = ch.Size.y * scale;
         // update VBO for each character
-        float vertices[6][4] = {
-            { xpos,     ypos + h,   0.0f, 0.0f },
-            { xpos,     ypos,       0.0f, 1.0f },
-            { xpos + w, ypos,       1.0f, 1.0f },
+        vector<GLfloat> vertices = {
+            xpos,     ypos + h,   0.0f, 0.0f,
+            xpos,     ypos,       0.0f, 1.0f,
+            xpos + w, ypos,       1.0f, 1.0f,
 
-            { xpos,     ypos + h,   0.0f, 0.0f },
-            { xpos + w, ypos,       1.0f, 1.0f },
-            { xpos + w, ypos + h,   1.0f, 0.0f }
+            xpos,     ypos + h,   0.0f, 0.0f,
+            xpos + w, ypos,       1.0f, 1.0f,
+            xpos + w, ypos + h,   1.0f, 0.0f
         };
-        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // Update polygon data for each character
+        // Set the current texture
+        gfxController_->bindTexture(ch.TextureID, UINT_MAX);
+        gfxController_->updateBufferData(vertices, poly_->shapeBufferId[0]);
+        //assert(gfxController_->render(vao_, poly_->shapeBufferId[0], UINT_MAX, UINT_MAX, poly_->pointCount[0]).isOk());
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        /**
+         * Note for future me:
+         * 
+         * The render loop isn't working because it needs to constantly bind the VBO data to the VAO object for every object render...
+         * This isn't necessary for static objects, and causes performance degredation. The glBindBuffer call(s) shouldn't happen from
+         * the GfxController render loop, the VBO data should be tied to the VAO inside of the GameObject being rendered. This change is
+         * REQUIRED to move forward, as it may cause major performance issues on embedded systems (intended target).
+         */
         x += (ch.Advance >> 6) * scale;
     }
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    auto error = glGetError();
-    if (error != 0) {
-        fprintf(stderr, "TextObject::render: Error %d\n", error);
-    }
+    gfxController_->bindVao(0);
+    gfxController_->bindTexture(0, UINT_MAX);
 }
 
 void TextObject::update() {

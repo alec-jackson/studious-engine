@@ -12,16 +12,11 @@
 #include <vector>
 #include <common.hpp>
 
-enum PolyRenderMode {
-    TRIANGLE,
-    QUAD
-};
-
 class Polygon {
  public:
-    Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
-        vector<GLfloat> normals);
-    Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices, PolyRenderMode renderMode);
+    Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
+        vector<GLfloat> normals, GLuint dimension = 3);
+    Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices, GLuint dimension = 3);
     Polygon();
     void merge(Polygon&);
     ~Polygon();
@@ -34,8 +29,8 @@ class Polygon {
     vector<vector<GLfloat>> textureCoords;  // 2D vector for texture coord data
     vector<vector<GLfloat>> normalCoords;  // 2D vector for normal coord data
     GLint textureUniformId;  // ID for finding texture sampler in OpenGL table
-    vector<GLint> pointCount;  // no. of distinct points in shape
+    vector<GLuint> pointCount;  // no. of distinct points in shape
     GLint numberOfObjects;  // Contains the number of objects in the model
     GLuint programId;  // Used for storing programId of object's shader
-    const PolyRenderMode renderMode_;
+    const GLuint dimension_;  // Number of floats used to represent a single vertex
 };

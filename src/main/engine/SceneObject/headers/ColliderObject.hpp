@@ -19,7 +19,7 @@
 class ColliderObject : public SceneObject {
  public:
     ColliderObject(Polygon *target, GLuint programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
-        const mat4 &vpMatrix, ObjectType type, GfxController *gfxController);
+        const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController);
     void updateCollider();
     void render() override;
     void update() override;

@@ -57,10 +57,11 @@ class GfxController {
     virtual GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) = 0;
     virtual GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) = 0;
     virtual GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) = 0;
-    virtual GfxResult<GLuint> render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount) = 0;
+    virtual GfxResult<GLuint> render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount, GLuint dimension = 3) = 0;
     virtual GfxResult<GLuint> initVao(GLuint *vao) = 0;
     virtual GfxResult<GLuint> bindVao(GLuint vao) = 0;
     virtual GfxResult<GLuint> setCapability(int capabilityId, bool enabled) = 0;
     virtual GfxResult<GLuint> deleteTextures(GLuint *tId) = 0;
+    virtual GfxResult<GLuint> updateBufferData(vector<GLfloat> &vertices, GLuint vbo) = 0;
     virtual void update() = 0;
 };

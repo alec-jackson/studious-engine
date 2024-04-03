@@ -25,7 +25,7 @@
  *    GameObject it is attached to.
  */
 ColliderObject::ColliderObject(Polygon *target, GLuint programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
-    const mat4 &vpMatrix, ObjectType type, GfxController *gfxController) : SceneObject(type, gfxController),
+    const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController) : SceneObject(type, objectName, gfxController),
     target_ { target }, translateMatrix_ { translateMatrix }, scaleMatrix_ { scaleMatrix }, vpMatrix_ { vpMatrix } {
     createCollider(programId);
 }
@@ -82,7 +82,7 @@ void ColliderObject::render() {
         mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         // Don't need to bind vao -> Should happen in render loop
-        gfxController_->render(vao_, poly_->shapeBufferId[0], UINT_MAX, UINT_MAX, poly_->shapeBufferId[0] * 3);
+        gfxController_->render(vao_, poly_->shapeBufferId[0], UINT_MAX, UINT_MAX, poly_->pointCount[0]);
     }
 }
 
@@ -154,8 +154,8 @@ void ColliderObject::createCollider(GLuint programId) {
         max[0], min[1], min[2],
         min[0], min[1], max[2]
     };
-    auto pointCount = colliderVertices.size();
-    poly_ = new Polygon(pointCount, programId, colliderVertices, PolyRenderMode::TRIANGLE);
+    auto pointCount = colliderVertices.size() / 3;
+    poly_ = new Polygon(pointCount, programId, colliderVertices);
     gfxController_->generateVertexBuffer(*poly_);
     // Set the correct center points
     for (int i = 0; i < 3; i++) {

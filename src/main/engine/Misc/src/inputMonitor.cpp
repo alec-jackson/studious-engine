@@ -37,7 +37,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     vec3 cameraOffset = vec3(7.140022f, 1.349999f, 2.309998f), angles = vec3(0),
         pos = vec3(0);
     float fallspeed = 0;
-    bool trackMouse = true;
+    bool trackMouse = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
     if (numJoySticks < 1) {
@@ -300,6 +300,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (currentGame->getKeystate()[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
         }
+        /// @todo Input is VERY primitive right now... The sleep will make this action feel sluggish,
+        /// but it prevents key spamming
         if (currentGame->getKeystate()[SDL_SCANCODE_U]) {
             if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
                 SDL_SetRelativeMouseMode(SDL_TRUE);

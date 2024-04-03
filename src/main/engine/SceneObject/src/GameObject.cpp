@@ -84,8 +84,9 @@ ColliderObject *GameObject::getCollider(void) {
  */
 void GameObject::createCollider(int programId) {
     printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
+    auto colliderName = objectName + "-Collider";
     collider_ = new ColliderObject(this->getModel(), programId, translateMatrix_, scaleMatrix_, vpMatrix_,
-        ObjectType::GAME_OBJECT, gfxController_);
+        ObjectType::GAME_OBJECT, colliderName, gfxController_);
 }
 
 void GameObject::update() {
