@@ -30,7 +30,7 @@ GfxResult<GLuint> OpenGlGfxController::bindBuffer(GLuint bufferId) {
         fprintf(stderr, "OpenGlGfxController::bindBuffer: Error %d\n", error);
         return GFX_FAILURE(GLuint);
     }
-    return GFX_OK(GLint);
+    return GFX_OK(GLuint);
 }
 
 GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
@@ -44,24 +44,13 @@ GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint height, void *data) {
+GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint height, bool alpha, void *data) {
     printf("OpenGlGfxController::sendTextureData: width %u, height %u, data %p\n",
         width, height, data);
-    
-}
-
-GfxResult<GLint> OpenGlGfxController::generateTextureBuffer(Polygon &polygon, SDL_Surface *texture) {
-    cout << "OpenGlGfxController::generateTextureBuffer" << endl;
-    if (texture == nullptr) return GfxResult<GLint>(GfxApiResult::FAILURE, -1);
-    glGenTextures(1, &(polygon.textureId[0]));
-    glBindTexture(GL_TEXTURE_2D, polygon.textureId[0]);
-    if (texture->format->Amask) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h,
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
-    } else {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture->w, texture->h, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, texture->pixels);
-    }
+    if (alpha) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    else glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
+        0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                     GL_NEAREST_MIPMAP_LINEAR);
@@ -69,17 +58,34 @@ GfxResult<GLint> OpenGlGfxController::generateTextureBuffer(Polygon &polygon, SD
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // glGenerateMipmap(GL_TEXTURE_2D);
-    glGenBuffers(1, &(polygon.textureCoordsId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon.textureCoordsId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon.pointCount[0] * 6,
-                 &(polygon.textureCoords[0][0]), GL_STATIC_DRAW);
-
-    return GFX_OK(GLint);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::sendTextureData: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
+    return GFX_OK(GLuint);
 }
 
+GfxResult<GLuint> OpenGlGfxController::generateMipMap() {
+    glGenerateMipmap(GL_TEXTURE_2D);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::generateMipMap: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
+    return GFX_OK(GLuint);
+}
 
+GfxResult<GLuint> OpenGlGfxController::generateTexture(GLuint *textureId) {
+    glGenTextures(1, textureId);
+
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::generateTexture: Error: %d\n", error );
+        return GFX_FAILURE(GLuint);
+    }
+    return GFX_OK(GLuint);
+}
 
 GfxResult<GLint> OpenGlGfxController::cleanup() {
     auto deletedPrograms = 0;
@@ -357,7 +363,6 @@ GfxResult<GLuint> OpenGlGfxController::deleteTextures(GLuint *tId) {
     return GFX_OK(GLuint);
 }
 
-/// @todo Refactor this to work with the generateTextureBuffer method
 GfxResult<GLuint> OpenGlGfxController::generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) {
     GLuint textureId;
     glGenTextures(1, &textureId);
@@ -385,4 +390,50 @@ GfxResult<GLuint> OpenGlGfxController::updateBufferData(vector<GLfloat> &vertice
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
+    // Convert Studious GFX enums to OpenGL enums
+    auto glParam = 0;
+    auto glVal = 0;
+    switch (param) {
+        case WRAP_MODE_S:
+            glParam = GL_TEXTURE_WRAP_S;
+            break;
+        case WRAP_MODE_T:
+            glParam = GL_TEXTURE_WRAP_T;
+            break;
+        case MINIFICATION_FILTER:
+            glParam = GL_TEXTURE_MIN_FILTER;
+            break;
+        case MAGNIFICATION_FILTER:
+            glParam = GL_TEXTURE_MAG_FILTER;
+            break;
+        case MIPMAP_LEVEL:
+            glParam = GL_TEXTURE_MAX_LEVEL;
+            break;
+        default:
+            printf("OpenGlGfxController::setTexParam: Unknown parameter option for OpenGL: %d\n",
+                static_cast<int>(param));
+            return GFX_FAILURE(GLuint);
+    }
+    switch (val) {
+        case CLAMP_TO_EDGE:
+            glVal = GL_CLAMP_TO_EDGE;
+            break;
+        case GFX_LINEAR:
+            glVal = GL_LINEAR;
+            break;
+        case NEAREST_MIPMAP:
+            glVal = GL_NEAREST_MIPMAP_LINEAR;
+            break;
+        case NEAREST_NEIGHBOR:
+            glVal = GL_NEAREST;
+            break;
+        default:
+            printf("OpenGlGfxController::setTexParam: Custom value for OpenGL: %d\n",
+                static_cast<int>(param));
+            glVal = val;
+    }
+    glTexParameteri(GL_TEXTURE_2D, glParam, glVal);
 }

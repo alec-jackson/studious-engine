@@ -56,9 +56,9 @@ TextObject::TextObject(string message, string fontPath, GLuint programId, string
     FT_Done_FreeType(ft);
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
-    auto polyCount = 6;
-    poly_ = new Polygon(polyCount, programId, vector<GLfloat>(), 4);
-    gfxController_->generateVertexBuffer(*poly_);
+    gfxController_->generateBuffer(&VBO);
+    gfxController_->bindBuffer(VBO);
+    gfxController_->sendBufferData(sizeof(GLfloat) * 6 * 4, nullptr);
     /// @todo Check if enable vertex attrib array only needs to be run once ever
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
@@ -100,8 +100,7 @@ void TextObject::render() {
         // Update polygon data for each character
         // Set the current texture
         gfxController_->bindTexture(ch.TextureID, UINT_MAX);
-        gfxController_->updateBufferData(vertices, poly_->shapeBufferId[0]);
-        //assert(gfxController_->render(vao_, poly_->shapeBufferId[0], UINT_MAX, UINT_MAX, poly_->pointCount[0]).isOk());
+        gfxController_->updateBufferData(vertices, VBO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         /**
          * Note for future me:

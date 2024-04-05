@@ -19,9 +19,11 @@
 class OpenGlGfxController : public GfxController {
  public:
     GfxResult<GLint> init();
-    GfxResult<GLint> generateVertexBuffer(Polygon &);
-    GfxResult<GLint> generateNormalBuffer(Polygon &);
-    GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *);
+    GfxResult<GLuint> generateBuffer(GLuint *bufferId);
+    GfxResult<GLuint> generateTexture(GLuint *textureId);
+    GfxResult<GLuint> bindBuffer(GLuint bufferId);
+    GfxResult<GLuint> sendBufferData(size_t size, void *data);
+    GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, bool alpha, void *data);
     GfxResult<GLuint> generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer);
     GfxResult<GLint> getShaderVariable(GLuint, const char *);
     GfxResult<GLint> cleanup();
@@ -40,6 +42,8 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLuint> setCapability(int capabilityId, bool enabled);
     GfxResult<GLuint> deleteTextures(GLuint *tId);
     GfxResult<GLuint> updateBufferData(vector<GLfloat> &vertices, GLuint vbo);
+    GfxResult<GLuint> setTexParam(TexParam param, TexVal val);
+    GfxResult<GLuint> generateMipMap();
     void update();
     void updateOpenGl();
 

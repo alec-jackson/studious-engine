@@ -27,6 +27,21 @@ enum RenderMode {
     FILL
 };
 
+enum TexParam {
+    WRAP_MODE_S,
+    WRAP_MODE_T,
+    MINIFICATION_FILTER,
+    MAGNIFICATION_FILTER,
+    MIPMAP_LEVEL
+};
+
+enum TexVal {
+    CLAMP_TO_EDGE,
+    GFX_LINEAR,
+    NEAREST_MIPMAP,
+    NEAREST_NEIGHBOR
+};
+
 template <typename T>
 class GfxResult {
  public:
@@ -43,13 +58,13 @@ class GfxController {
  public:
     virtual GfxResult<GLint> init() = 0;
     virtual GfxResult<GLuint> generateBuffer(GLuint *bufferId) = 0;
+    virtual GfxResult<GLuint> generateTexture(GLuint *textureId) = 0;
     virtual GfxResult<GLuint> bindBuffer(GLuint bufferId) = 0;
     virtual GfxResult<GLuint> sendBufferData(size_t size, void *data) = 0;
-    virtual GfxResult<GLuint> generateTextureBuffer(GLuint textureId) = 0;
-    virtual GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, void *data) = 0;
-    virtual GfxResult<GLuint> generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) = 0;
-    virtual GfxResult<GLint> getShaderVariable(GLuint, const char *) = 0;
-    virtual GfxResult<GLint> cleanup() = 0;
+    virtual GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, bool alpha, void *data) = 0;
+    virtual GfxResult<GLuint> generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) = 0; // Convenience
+    virtual GfxResult<GLint>  getShaderVariable(GLuint, const char *) = 0;
+    virtual GfxResult<GLint>  cleanup() = 0;
     virtual GfxResult<GLuint> getProgramId(uint) = 0;
     virtual GfxResult<GLuint> setProgram(GLuint) = 0;
     virtual GfxResult<GLuint> loadShaders(string, string) = 0;
@@ -65,5 +80,7 @@ class GfxController {
     virtual GfxResult<GLuint> setCapability(int capabilityId, bool enabled) = 0;
     virtual GfxResult<GLuint> deleteTextures(GLuint *tId) = 0;
     virtual GfxResult<GLuint> updateBufferData(vector<GLfloat> &vertices, GLuint vbo) = 0;
+    virtual GfxResult<GLuint> setTexParam(TexParam param, TexVal val) = 0;
+    virtual GfxResult<GLuint> generateMipMap() = 0;
     virtual void update() = 0;
 };

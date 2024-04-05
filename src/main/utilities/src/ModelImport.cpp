@@ -172,8 +172,14 @@ void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
     /// Rationale - VAO will hold VBO configuration data (see TextObject). This should prevent the need to constantly copy data
     /// to the GPU for static objects. This will not only make things substantially faster, but will make it easier to work with
     /// OpenGL, because that's how it's supposed to be done...
-    gfxController_->generateVertexBuffer(polygon);
-    gfxController_->generateNormalBuffer(polygon);
+    // Generate vertex buffer
+    gfxController_->generateBuffer(&polygon.shapeBufferId[0]);
+    gfxController_->bindBuffer(polygon.shapeBufferId[0]);
+    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 9, &polygon.vertices[0][0]);
+    // Generate normal buffer
+    gfxController_->generateBuffer(&polygon.normalBufferId[0]);
+    gfxController_->bindBuffer(polygon.normalBufferId[0]);
+    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 9, &polygon.normalCoords[0][0]);
     // Specific case where the current object does not get a texture
     if (!textureCount_ || texturePattern_[objectId] >= textureCount_ ||
         texturePattern_[objectId] == -1) {
@@ -184,7 +190,19 @@ void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
         cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
-    gfxController_->generateTextureBuffer(polygon, texture);
+    // Send texture image to OpenGL
+    gfxController_->generateTexture(&polygon.textureId[0]);
+    gfxController_->bindTexture(polygon.textureId[0], UINT_MAX);
+    gfxController_->sendTextureData(texture->w, texture->h, texture->format->Amask, texture->pixels);
+    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal::NEAREST_NEIGHBOR);
+    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal::NEAREST_MIPMAP);
+    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, static_cast<TexVal>(10));
+
+    // Send texture coords to OpenGL
+    gfxController_->generateBuffer(&polygon.textureCoordsId[0]);
+    gfxController_->bindBuffer(polygon.textureCoordsId[0]);
+    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 6, &polygon.textureCoords[0][0]);
+
     SDL_FreeSurface(texture);
 }
 

@@ -12,7 +12,7 @@
 #include <string>
 #include <GfxController.hpp>
 
-class DummyGfxController : public GfxController {
+class DummyGfxController {
  public:
     GfxResult<GLint> init();
     GfxResult<GLint> generateVertexBuffer(Polygon &);

@@ -15,8 +15,8 @@
 class Polygon {
  public:
     Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
-        vector<GLfloat> normals, GLuint dimension = 3);
-    Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices, GLuint dimension = 3);
+        vector<GLfloat> normals);
+    Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices);
     Polygon();
     void merge(Polygon&);
     ~Polygon();
@@ -32,5 +32,4 @@ class Polygon {
     vector<GLuint> pointCount;  // no. of distinct points in shape
     GLint numberOfObjects;  // Contains the number of objects in the model
     GLuint programId;  // Used for storing programId of object's shader
-    const GLuint dimension_;  // Number of floats used to represent a single vertex
 };
