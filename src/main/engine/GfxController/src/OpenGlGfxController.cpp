@@ -11,31 +11,43 @@
 
 #include <OpenGlGfxController.hpp>
 
-GfxResult<GLint> OpenGlGfxController::generateVertexBuffer(Polygon &polygon) {
-    cout << "OpenGlGfxController::generateVertexBuffer" << endl;
-    glGenBuffers(1, &(polygon.shapeBufferId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon.shapeBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * polygon.pointCount[0] * 3 * polygon.dimension_,
-        polygon.vertices.empty() ? nullptr : &(polygon.vertices[0][0]),
-        GL_STATIC_DRAW);
-
+GfxResult<GLuint> OpenGlGfxController::generateBuffer(GLuint *bufferId) {
+    printf("OpenGlGfxController::generateBuffer: bufferId %p\n", bufferId);
+    glGenBuffers(1, bufferId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
-        fprintf(stderr, "OpenGlGfxController::generateVertexBuffer: Error: %d", error);
-        return GFX_FAILURE(GLint);
+        fprintf(stderr, "OpenGlGfxController::generateBuffer: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::bindBuffer(GLuint bufferId) {
+    printf("OpenGlGfxController::bindBuffer: bufferId %u\n", bufferId);
+    glBindBuffer(GL_ARRAY_BUFFER, bufferId);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::bindBuffer: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
     }
     return GFX_OK(GLint);
 }
 
-GfxResult<GLint> OpenGlGfxController::generateNormalBuffer(Polygon &polygon) {
-    cout << "OpenGlGfxController::generateNormalBuffer" << endl;
-    glGenBuffers(1, &(polygon.normalBufferId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon.normalBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon.pointCount[0] * 9,
-                 &(polygon.normalCoords[0][0]), GL_STATIC_DRAW);
-    return GFX_OK(GLint);
+GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
+    printf("OpenGlGfxController::sendBufferData: size %lu data %p\n", size, data);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::sendBufferData: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint height, void *data) {
+    printf("OpenGlGfxController::sendTextureData: width %u, height %u, data %p\n",
+        width, height, data);
+    
 }
 
 GfxResult<GLint> OpenGlGfxController::generateTextureBuffer(Polygon &polygon, SDL_Surface *texture) {
@@ -66,6 +78,8 @@ GfxResult<GLint> OpenGlGfxController::generateTextureBuffer(Polygon &polygon, SD
 
     return GFX_OK(GLint);
 }
+
+
 
 GfxResult<GLint> OpenGlGfxController::cleanup() {
     auto deletedPrograms = 0;

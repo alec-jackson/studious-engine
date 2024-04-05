@@ -42,9 +42,11 @@ class GfxResult {
 class GfxController {
  public:
     virtual GfxResult<GLint> init() = 0;
-    virtual GfxResult<GLint> generateVertexBuffer(Polygon &) = 0;
-    virtual GfxResult<GLint> generateNormalBuffer(Polygon &) = 0;
-    virtual GfxResult<GLint> generateTextureBuffer(Polygon &, SDL_Surface *) = 0;
+    virtual GfxResult<GLuint> generateBuffer(GLuint *bufferId) = 0;
+    virtual GfxResult<GLuint> bindBuffer(GLuint bufferId) = 0;
+    virtual GfxResult<GLuint> sendBufferData(size_t size, void *data) = 0;
+    virtual GfxResult<GLuint> generateTextureBuffer(GLuint textureId) = 0;
+    virtual GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, void *data) = 0;
     virtual GfxResult<GLuint> generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) = 0;
     virtual GfxResult<GLint> getShaderVariable(GLuint, const char *) = 0;
     virtual GfxResult<GLint> cleanup() = 0;
@@ -57,7 +59,7 @@ class GfxController {
     virtual GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) = 0;
     virtual GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) = 0;
     virtual GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) = 0;
-    virtual GfxResult<GLuint> render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount, GLuint dimension = 3) = 0;
+    virtual GfxResult<GLuint> render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount, GLuint dimension = 3) = 0; // Convenience
     virtual GfxResult<GLuint> initVao(GLuint *vao) = 0;
     virtual GfxResult<GLuint> bindVao(GLuint vao) = 0;
     virtual GfxResult<GLuint> setCapability(int capabilityId, bool enabled) = 0;
