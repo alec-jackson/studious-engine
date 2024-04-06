@@ -11,6 +11,7 @@
 
 #pragma once
 #include <vector>
+#include <string>
 #include <common.hpp>
 #include <GameObject.hpp>
 
@@ -18,7 +19,7 @@ class CameraObject : public SceneObject {
  public:
     // Constructors
     explicit CameraObject(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
-      GLfloat nearClipping, GLfloat farClipping, ObjectType type, string objectName, GfxController *gfxController);
+        GLfloat nearClipping, GLfloat farClipping, ObjectType type, string objectName, GfxController *gfxController);
     ~CameraObject() override;
 
     // Setters

@@ -11,6 +11,7 @@
 
 #pragma once
 #include <vector>
+#include <string>
 #include <Polygon.hpp>
 #include <SceneObject.hpp>
 #include <GfxController.hpp>
@@ -43,3 +44,4 @@ class ColliderObject : public SceneObject {
     const mat4 &vpMatrix_;
     GLint mvpId_;
 };
+

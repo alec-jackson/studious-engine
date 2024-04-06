@@ -11,6 +11,12 @@
 
 #include <OpenGlGfxController.hpp>
 
+/**
+ * @brief Generates a buffer in the OpenGL context
+ * 
+ * @param bufferId unsigned int to store new buffer ID created in OpenGL context
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::generateBuffer(GLuint *bufferId) {
     printf("OpenGlGfxController::generateBuffer: bufferId %p\n", bufferId);
     glGenBuffers(1, bufferId);
@@ -22,6 +28,12 @@ GfxResult<GLuint> OpenGlGfxController::generateBuffer(GLuint *bufferId) {
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Binds a buffer to the current OpenGL context
+ * 
+ * @param bufferId ID of buffer to bind (needs to be generated first via generateBuffer)
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::bindBuffer(GLuint bufferId) {
     glBindBuffer(GL_ARRAY_BUFFER, bufferId);
     auto error = glGetError();
@@ -32,6 +44,14 @@ GfxResult<GLuint> OpenGlGfxController::bindBuffer(GLuint bufferId) {
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Sends data to the currently bound buffer in the OpenGL context. This transfers data from the application
+ * side (c++ studious) to the GPU side (OpenGL in this case).
+ * 
+ * @param size Size of the data array
+ * @param data The data array write to the OpenGL buffer
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
     printf("OpenGlGfxController::sendBufferData: size %lu data %p\n", size, data);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
@@ -43,6 +63,15 @@ GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Copies texture data to the currently bound texture buffer.
+ * 
+ * @param width of the texture to send
+ * @param height of the texture to send
+ * @param format of the texture
+ * @param data pixel data to send to the GPU
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint height, TexFormat format, void *data) {
     printf("OpenGlGfxController::sendTextureData: width %u, height %u, data %p\n",
         width, height, data);
@@ -55,14 +84,13 @@ GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint heig
             texFormat = GL_RGB;
             break;
         case BITMAP:
-            texFormat = GL_RED; // Just need a single color
+            texFormat = GL_RED;  // Just need a single color
             break;
         default:
             fprintf(stderr, "OpenGlGfxController::sendTextureData: Unknown texture format %d\n", format);
             return GFX_FAILURE(GLuint);
     }
     glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, data);
-    
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::sendTextureData: Error %d\n", error);
@@ -71,6 +99,11 @@ GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint heig
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Generates mipmaps for the currently bound texture
+ * 
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::generateMipMap() {
     glGenerateMipmap(GL_TEXTURE_2D);
     auto error = glGetError();
@@ -81,17 +114,28 @@ GfxResult<GLuint> OpenGlGfxController::generateMipMap() {
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Generates a new texture and writes the new texture ID to the textureId variable passed in.
+ * 
+ * @param textureId assigned to newly created texture in OpenGL context.
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::generateTexture(GLuint *textureId) {
     glGenTextures(1, textureId);
 
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
-        fprintf(stderr, "OpenGlGfxController::generateTexture: Error: %d\n", error );
+        fprintf(stderr, "OpenGlGfxController::generateTexture: Error: %d\n", error);
         return GFX_FAILURE(GLuint);
     }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Cleans up OpenGL artifacts. Currently a WIP.
+ * 
+ * @return GfxResult<GLint> OK result containing the number of deleted programs.
+ */
 GfxResult<GLint> OpenGlGfxController::cleanup() {
     auto deletedPrograms = 0;
     for (auto it = programIdList_.begin(); it != programIdList_.end(); ++it) {
@@ -102,6 +146,12 @@ GfxResult<GLint> OpenGlGfxController::cleanup() {
     return GfxResult<GLint>(GfxApiResult::OK, deletedPrograms);
 }
 
+/**
+ * @brief Gets a programId for a specific index in the programIdList.
+ * 
+ * @param index in the programId list
+ * @return GfxResult<GLuint> OK with returned program ID when successful; FAILURE otherwise.
+ */
 GfxResult<GLuint> OpenGlGfxController::getProgramId(uint index) {
     // Boundary check index
     if (index > programIdList_.size()) {
@@ -110,6 +160,13 @@ GfxResult<GLuint> OpenGlGfxController::getProgramId(uint index) {
     return GfxResult<GLuint>(GfxApiResult::OK, programIdList_[index]);
 }
 
+/**
+ * @brief Compiles shaders and adds them to the programId list for this GfxController.
+ * 
+ * @param vertexShader Path to the vertexShader to compile on the system
+ * @param fragmentShader Path to the fragmentShader to compile on the system
+ * @return GfxResult<GLuint> OK with the newly created programId; FAILURE otherwise.
+ */
 GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string fragmentShader) {
     GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -181,6 +238,13 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
     return GfxResult<GLuint>(GfxApiResult::OK, programId);
 }
 
+/**
+ * @brief Gets the location of a variable in a shader
+ * 
+ * @param programId program to search for variable inside of.
+ * @param variableName name of variable to find in shader.
+ * @return GfxResult<GLint> OK with variableId; FAILURE otherwise.
+ */
 GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLuint programId, const char *variableName) {
     auto varId = glGetUniformLocation(programId, variableName);
     auto result = GfxResult<GLint>(GfxApiResult::FAILURE, varId);
@@ -188,6 +252,11 @@ GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLuint programId, const 
     return result;
 }
 
+/**
+ * @brief Has a list of OpenGL specific commands that update once per frame. This is not part of the GfxController
+ * interface.
+ * 
+ */
 void OpenGlGfxController::updateOpenGl() {
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
@@ -200,10 +269,19 @@ void OpenGlGfxController::updateOpenGl() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+/**
+ * @brief Runs through any updates.
+ * 
+ */
 void OpenGlGfxController::update() {
     updateOpenGl();
 }
 
+/**
+ * @brief Initialize the OpenGL context.
+ * 
+ * @return GfxResult<GLint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLint> OpenGlGfxController::init() {
     cout << "OpenGlGfxController::init" << endl;
     if (glewInit() != GLEW_OK) {
@@ -224,19 +302,33 @@ GfxResult<GLint> OpenGlGfxController::init() {
 GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
     glUseProgram(programId);
     auto error = glGetError();
-    if (error != GL_NO_ERROR)
-    {
+    if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::setProgram: Error: %d\n", error);
         return GFX_FAILURE(GLuint);
     }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Sends a float to a corresponding variable inside of a program (shader)
+ * 
+ * @param variableId of the variable inside of the program to send data to
+ * @param data to write to variable
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::sendFloat(GLuint variableId, GLfloat data) {
     glUniform1f(variableId, data);
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Sends a 3D vector of floats to a shader variable
+ * 
+ * @param variableId variableId to write data to
+ * @param count I honestly don't remember lol
+ * @param data 
+ * @return GfxResult<GLuint> 
+ */
 GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) {
     glUniform3fv(variableId, count, data);
     return GFX_OK(GLuint);
@@ -326,7 +418,7 @@ GfxResult<GLuint> OpenGlGfxController::deleteTextures(GLuint *tId) {
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::updateBufferData(vector<GLfloat> &vertices, GLuint vbo) {
+GfxResult<GLuint> OpenGlGfxController::updateBufferData(const vector<GLfloat> &vertices, GLuint vbo) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * vertices.size(), &vertices[0]);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

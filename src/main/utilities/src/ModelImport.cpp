@@ -166,12 +166,6 @@ int ModelImport::buildObject(int objectId) {
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
 void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
-
-    /// @todo @mustfix This doesn't work... We need to generate the VBO data from the GameObject layer...
-    /// Need to rework this... again :(
-    /// Rationale - VAO will hold VBO configuration data (see TextObject). This should prevent the need to constantly copy data
-    /// to the GPU for static objects. This will not only make things substantially faster, but will make it easier to work with
-    /// OpenGL, because that's how it's supposed to be done...
     // Generate vertex buffer
     gfxController_->generateBuffer(&polygon.shapeBufferId[0]);
     gfxController_->bindBuffer(polygon.shapeBufferId[0]);
@@ -196,8 +190,8 @@ void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
     gfxController_->generateTexture(&polygon.textureId[0]);
     gfxController_->bindTexture(polygon.textureId[0], UINT_MAX);
     gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
-    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexValType::NEAREST_NEIGHBOR);
-    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexValType::NEAREST_MIPMAP);
+    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
+    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
     gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
     gfxController_->generateMipMap();
 

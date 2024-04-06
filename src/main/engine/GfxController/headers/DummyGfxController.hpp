@@ -10,6 +10,7 @@
  */
 #pragma once
 #include <string>
+#include <vector>
 #include <GfxController.hpp>
 
 class DummyGfxController : public GfxController {
@@ -35,7 +36,7 @@ class DummyGfxController : public GfxController {
     GfxResult<GLuint> bindVao(GLuint vao);
     GfxResult<GLuint> setCapability(int capabilityId, bool enabled);
     GfxResult<GLuint> deleteTextures(GLuint *tId);
-    GfxResult<GLuint> updateBufferData(vector<GLfloat> &vertices, GLuint vbo);
+    GfxResult<GLuint> updateBufferData(const vector<GLfloat> &vertices, GLuint vbo);
     GfxResult<GLuint> setTexParam(TexParam param, TexVal val);
     GfxResult<GLuint> generateMipMap();
     GfxResult<GLuint> enableVertexAttArray(GLuint layout, size_t size);

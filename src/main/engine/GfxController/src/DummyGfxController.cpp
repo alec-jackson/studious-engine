@@ -127,7 +127,7 @@ GfxResult<GLuint> DummyGfxController::deleteTextures(GLuint *tId) {
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::updateBufferData(vector<GLfloat> &vertices, GLuint vbo) {
+GfxResult<GLuint> DummyGfxController::updateBufferData(const vector<GLfloat> &vertices, GLuint vbo) {
     printf("GfxController::updateBufferData\n");
     return GFX_OK(GLuint);
 }

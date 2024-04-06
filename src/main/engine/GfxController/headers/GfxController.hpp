@@ -50,12 +50,12 @@ enum TexValType {
 };
 
 class TexVal {
-public:
-    inline TexVal(TexValType type) : type_ { type } {}
+ public:
+    explicit inline TexVal(TexValType type) : type_ { type } {}
     explicit inline TexVal(GLint data) : type_ { TexValType::CUSTOM }, data_ { data } {}
     inline TexValType type() { return type_; }
     inline GLint data() { return data_; }
-private:
+ private:
     TexValType type_;
     GLint data_;
 };
@@ -95,7 +95,7 @@ class GfxController {
     virtual GfxResult<GLuint> bindVao(GLuint vao) = 0;
     virtual GfxResult<GLuint> setCapability(int capabilityId, bool enabled) = 0;
     virtual GfxResult<GLuint> deleteTextures(GLuint *tId) = 0;
-    virtual GfxResult<GLuint> updateBufferData(vector<GLfloat> &vertices, GLuint vbo) = 0;
+    virtual GfxResult<GLuint> updateBufferData(const vector<GLfloat> &vertices, GLuint vbo) = 0;
     virtual GfxResult<GLuint> setTexParam(TexParam param, TexVal val) = 0;
     virtual GfxResult<GLuint> generateMipMap() = 0;
     virtual GfxResult<GLuint> enableVertexAttArray(GLuint layout, size_t size) = 0;

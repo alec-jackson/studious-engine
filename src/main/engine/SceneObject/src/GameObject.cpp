@@ -26,7 +26,6 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GL
     string objectName, ObjectType type, GfxController *gfxController):
     SceneObject(position, rotation, objectName, scale, characterModel->programId, type, gfxController),
     model { characterModel } {
-
     gfxController_->initVao(&vao_);
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
@@ -132,7 +131,7 @@ void GameObject::render() {
         if (model->textureCoordsId[i] != UINT_MAX) {
             gfxController_->bindBuffer(model->textureCoordsId[i]);
             gfxController_->enableVertexAttArray(1, 2);
-        } 
+        }
         if (model->normalBufferId[i] != UINT_MAX) {
             gfxController_->bindBuffer(model->normalBufferId[i]);
             gfxController_->enableVertexAttArray(2, 3);

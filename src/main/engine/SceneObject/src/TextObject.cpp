@@ -40,12 +40,16 @@ TextObject::TextObject(string message, string fontPath, GLuint programId, string
             GLuint textureId;
             gfxController_->generateTexture(&textureId);
             gfxController_->bindTexture(textureId, UINT_MAX);
-            gfxController_->sendTextureData(face->glyph->bitmap.width, face->glyph->bitmap.rows, TexFormat::BITMAP, face->glyph->bitmap.buffer);
+            gfxController_->sendTextureData(
+                face->glyph->bitmap.width,
+                face->glyph->bitmap.rows,
+                TexFormat::BITMAP,
+                face->glyph->bitmap.buffer);
 
-            gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexValType::CLAMP_TO_EDGE);
-            gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexValType::CLAMP_TO_EDGE);
-            gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexValType::GFX_LINEAR);
-            gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexValType::GFX_LINEAR);
+            gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
+            gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
+            gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR));
+            gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR));
 
             Character character = {
                 textureId,

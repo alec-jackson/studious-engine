@@ -25,8 +25,9 @@
  *    GameObject it is attached to.
  */
 ColliderObject::ColliderObject(Polygon *target, GLuint programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
-    const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController) : SceneObject(type, objectName, gfxController),
-    target_ { target }, translateMatrix_ { translateMatrix }, scaleMatrix_ { scaleMatrix }, vpMatrix_ { vpMatrix } {
+    const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
+    SceneObject(type, objectName, gfxController), target_ { target }, translateMatrix_ { translateMatrix },
+    scaleMatrix_ { scaleMatrix }, vpMatrix_ { vpMatrix } {
     createCollider(programId);
 }
 
