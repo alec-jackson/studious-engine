@@ -194,9 +194,10 @@ void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
     gfxController_->generateTexture(&polygon.textureId[0]);
     gfxController_->bindTexture(polygon.textureId[0], UINT_MAX);
     gfxController_->sendTextureData(texture->w, texture->h, texture->format->Amask, texture->pixels);
-    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal::NEAREST_NEIGHBOR);
-    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal::NEAREST_MIPMAP);
-    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, static_cast<TexVal>(10));
+    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexValType::NEAREST_NEIGHBOR);
+    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexValType::NEAREST_MIPMAP);
+    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
+    gfxController_->generateMipMap();
 
     // Send texture coords to OpenGL
     gfxController_->generateBuffer(&polygon.textureCoordsId[0]);

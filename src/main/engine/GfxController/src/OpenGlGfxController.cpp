@@ -51,13 +51,7 @@ GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint heig
         0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     else glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
         0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_NEAREST_MIPMAP_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
+    
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::sendTextureData: Error %d\n", error);
@@ -394,8 +388,9 @@ GfxResult<GLuint> OpenGlGfxController::updateBufferData(vector<GLfloat> &vertice
 
 GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
     // Convert Studious GFX enums to OpenGL enums
-    auto glParam = 0;
-    auto glVal = 0;
+    printf("OpenGlGfxController::setTexParam: param %d val %d\n", param, val);
+    GLenum glParam = GL_NONE;
+    GLint glVal = 0;
     switch (param) {
         case WRAP_MODE_S:
             glParam = GL_TEXTURE_WRAP_S;
@@ -417,7 +412,7 @@ GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
                 static_cast<int>(param));
             return GFX_FAILURE(GLuint);
     }
-    switch (val) {
+    switch (val.type()) {
         case CLAMP_TO_EDGE:
             glVal = GL_CLAMP_TO_EDGE;
             break;
@@ -430,10 +425,14 @@ GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
         case NEAREST_NEIGHBOR:
             glVal = GL_NEAREST;
             break;
+        case CUSTOM:
+            glVal = val.data();
+            break;
         default:
-            printf("OpenGlGfxController::setTexParam: Custom value for OpenGL: %d\n",
+            printf("OpenGlGfxController::setTexParam: Unknown parameter option for OpenGL: %d\n",
                 static_cast<int>(param));
-            glVal = val;
+            break;
     }
     glTexParameteri(GL_TEXTURE_2D, glParam, glVal);
+    return GFX_OK(GLuint);
 }

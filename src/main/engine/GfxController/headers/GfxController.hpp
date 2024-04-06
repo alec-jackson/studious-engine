@@ -35,11 +35,23 @@ enum TexParam {
     MIPMAP_LEVEL
 };
 
-enum TexVal {
+enum TexValType {
     CLAMP_TO_EDGE,
     GFX_LINEAR,
     NEAREST_MIPMAP,
-    NEAREST_NEIGHBOR
+    NEAREST_NEIGHBOR,
+    CUSTOM
+};
+
+class TexVal {
+public:
+    inline TexVal(TexValType type) : type_ { type } {}
+    explicit inline TexVal(GLint data) : type_ { TexValType::CUSTOM }, data_ { data } {}
+    inline TexValType type() { return type_; }
+    inline GLint data() { return data_; }
+private:
+    TexValType type_;
+    GLint data_;
 };
 
 template <typename T>
