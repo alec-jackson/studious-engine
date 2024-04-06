@@ -152,9 +152,7 @@ int ModelImport::buildObject(int objectId) {
     }
     auto newPolygon = Polygon(triCount, this->programId_, vertexVbo, textureVbo, normalVbo);
     /// @todo Run configureOpenGL once when all objects are created - figure out deal with destructor
-    #ifndef OGL_API_DISABLED  // Disable OpenGL API calls for unit tests
     configureOpenGl(newPolygon, objectId);
-    #endif
     polygon_.merge(newPolygon);
     return 0;
 }

@@ -80,14 +80,6 @@ target_include_directories(gtest_PolygonTests
   PRIVATE src/main/utilities/test/headers
 )
 
-target_compile_definitions(gtest_ModelImportTests
-  PRIVATE OGL_API_DISABLED=1
-)
-
-target_compile_definitions(gtest_PolygonTests
-  PRIVATE OGL_API_DISABLED=1
-)
-
 # Project include dirs
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
