@@ -190,10 +190,12 @@ void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
         cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
+
+    auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
     // Send texture image to OpenGL
     gfxController_->generateTexture(&polygon.textureId[0]);
     gfxController_->bindTexture(polygon.textureId[0], UINT_MAX);
-    gfxController_->sendTextureData(texture->w, texture->h, texture->format->Amask, texture->pixels);
+    gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
     gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexValType::NEAREST_NEIGHBOR);
     gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexValType::NEAREST_MIPMAP);
     gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));

@@ -44,13 +44,25 @@ GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint height, bool alpha, void *data) {
+GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint height, TexFormat format, void *data) {
     printf("OpenGlGfxController::sendTextureData: width %u, height %u, data %p\n",
         width, height, data);
-    if (alpha) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-        0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    else glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
-        0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    auto texFormat = GL_RGB;
+    switch (format) {
+        case RGBA:
+            texFormat = GL_RGBA;
+            break;
+        case RGB:
+            texFormat = GL_RGB;
+            break;
+        case BITMAP:
+            texFormat = GL_RED; // Just need a single color
+            break;
+        default:
+            fprintf(stderr, "OpenGlGfxController::sendTextureData: Unknown texture format %d\n", format);
+            return GFX_FAILURE(GLuint);
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, data);
     
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -357,27 +369,6 @@ GfxResult<GLuint> OpenGlGfxController::deleteTextures(GLuint *tId) {
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) {
-    GLuint textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    glTexImage2D(
-                GL_TEXTURE_2D,
-                0,
-                GL_RED,
-                width,
-                rows,
-                0,
-                GL_RED,
-                GL_UNSIGNED_BYTE,
-                buffer);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    return GfxResult<GLuint>(GfxApiResult::OK, textureId);
-}
-
 GfxResult<GLuint> OpenGlGfxController::updateBufferData(vector<GLfloat> &vertices, GLuint vbo) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * vertices.size(), &vertices[0]);
@@ -389,8 +380,8 @@ GfxResult<GLuint> OpenGlGfxController::updateBufferData(vector<GLfloat> &vertice
 GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
     // Convert Studious GFX enums to OpenGL enums
     printf("OpenGlGfxController::setTexParam: param %d val %d\n", param, val);
-    GLenum glParam = GL_NONE;
-    GLint glVal = 0;
+    auto glParam = 0;
+    auto glVal = 0;
     switch (param) {
         case WRAP_MODE_S:
             glParam = GL_TEXTURE_WRAP_S;

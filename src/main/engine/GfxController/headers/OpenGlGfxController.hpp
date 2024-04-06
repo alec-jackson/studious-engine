@@ -23,8 +23,7 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLuint> generateTexture(GLuint *textureId);
     GfxResult<GLuint> bindBuffer(GLuint bufferId);
     GfxResult<GLuint> sendBufferData(size_t size, void *data);
-    GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, bool alpha, void *data);
-    GfxResult<GLuint> generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer);
+    GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, TexFormat format, void *data);
     GfxResult<GLint> getShaderVariable(GLuint, const char *);
     GfxResult<GLint> cleanup();
     GfxResult<GLuint> getProgramId(uint);

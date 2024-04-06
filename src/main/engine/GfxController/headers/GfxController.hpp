@@ -27,6 +27,12 @@ enum RenderMode {
     FILL
 };
 
+enum TexFormat {
+    RGBA,
+    RGB,
+    BITMAP
+};
+
 enum TexParam {
     WRAP_MODE_S,
     WRAP_MODE_T,
@@ -73,8 +79,7 @@ class GfxController {
     virtual GfxResult<GLuint> generateTexture(GLuint *textureId) = 0;
     virtual GfxResult<GLuint> bindBuffer(GLuint bufferId) = 0;
     virtual GfxResult<GLuint> sendBufferData(size_t size, void *data) = 0;
-    virtual GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, bool alpha, void *data) = 0;
-    virtual GfxResult<GLuint> generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) = 0; // Convenience
+    virtual GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, TexFormat format, void *data) = 0;
     virtual GfxResult<GLint>  getShaderVariable(GLuint, const char *) = 0;
     virtual GfxResult<GLint>  cleanup() = 0;
     virtual GfxResult<GLuint> getProgramId(uint) = 0;
