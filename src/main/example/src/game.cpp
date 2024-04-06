@@ -59,6 +59,7 @@ vector<string> texturePath = {
 
 TextObject *fps_counter;
 TextObject *collDebugText;
+TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
 OpenGlGfxController gfxController = OpenGlGfxController();
 
@@ -154,7 +155,12 @@ int runtime(GameInstance *currentGame) {
     // Re-using gameObject 4 for no particular reason
     auto contactText = currentGame->createText("Contact", "src/resources/fonts/AovelSans.ttf",
         gfxController.getProgramId(2).get(), "contact-text");
+    pressUText = currentGame->createText(
+        "Press 'U' to attach/detatch mouse", "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(), "contact-text");
     contactText->setPosition(vec3(25.0f, 300.0f, 0.0f));
+    pressUText->setPosition(vec3(800.0f, 670.0f, 0.0f));
+    pressUText->setScale(0.7f);
     collDebugText = contactText;
     collDebugText->setMessage("Contact: False");
     collDebugText->setScale(0.7f);
