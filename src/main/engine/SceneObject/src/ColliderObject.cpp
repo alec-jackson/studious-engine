@@ -82,7 +82,12 @@ void ColliderObject::render() {
         mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         // Don't need to bind vao -> Should happen in render loop
-        gfxController_->render(vao_, poly_->shapeBufferId[0], UINT_MAX, UINT_MAX, poly_->pointCount[0]);
+        gfxController_->bindVao(vao_);
+        // Enable vertex data
+        gfxController_->bindBuffer(poly_->shapeBufferId[0]);
+        gfxController_->enableVertexAttArray(0, 3);
+        gfxController_->drawTriangles(poly_->pointCount[0]);
+        gfxController_->disableVertexAttArray(0);
     }
 }
 

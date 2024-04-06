@@ -35,7 +35,6 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data);
     GfxResult<GLuint> sendInteger(GLuint variableId, GLint data);
     GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId);
-    GfxResult<GLuint> render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount, GLuint dimension);
     GfxResult<GLuint> initVao(GLuint *vao);
     GfxResult<GLuint> bindVao(GLuint vao);
     GfxResult<GLuint> setCapability(int capabilityId, bool enabled);
@@ -43,6 +42,9 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLuint> updateBufferData(vector<GLfloat> &vertices, GLuint vbo);
     GfxResult<GLuint> setTexParam(TexParam param, TexVal val);
     GfxResult<GLuint> generateMipMap();
+    GfxResult<GLuint> enableVertexAttArray(GLuint layout, size_t size);
+    GfxResult<GLuint> disableVertexAttArray(GLuint layout);
+    GfxResult<GLuint> drawTriangles(GLuint size);
     void update();
     void updateOpenGl();
 

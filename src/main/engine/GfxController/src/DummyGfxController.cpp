@@ -10,19 +10,30 @@
  */
 #include <DummyGfxController.hpp>
 
-GfxResult<GLint> DummyGfxController::generateVertexBuffer(Polygon &polygon) {
-    cout << "GfxController::generateVertexBuffer" << endl;
-    return GFX_OK(GLint);
+GfxResult<GLuint> DummyGfxController::generateBuffer(GLuint *bufferId) {
+    printf("GfxController::generateBuffer %p\n", bufferId);
+    return GFX_OK(GLuint);
 }
 
-GfxResult<GLint> DummyGfxController::generateNormalBuffer(Polygon &polygon) {
-    cout << "GfxController::generateNormalBuffer" << endl;
-    return GFX_OK(GLint);
+GfxResult<GLuint> DummyGfxController::generateTexture(GLuint *textureId) {
+    printf("GfxController::generateTexture %p\n", textureId);
+    return GFX_OK(GLuint);
 }
 
-GfxResult<GLint> DummyGfxController::generateTextureBuffer(Polygon &polygon, SDL_Surface *texture) {
-    cout << "GfxController::generateTextureBuffer" << endl;
-    return GFX_OK(GLint);
+GfxResult<GLuint> DummyGfxController::bindBuffer(GLuint bufferId) {
+    printf("GfxController::bindBuffer %d\n", bufferId);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::sendBufferData(size_t size, void *data) {
+    printf("GfxController::sendBufferData: size %ld, data %p\n", size, data);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::sendTextureData(GLuint width, GLuint height, TexFormat format, void *data) {
+    printf("GfxController::sendTextureData: width %u, height %u, format %d, data %p\n",
+        width, height, format, data);
+    return GFX_OK(GLuint);
 }
 
 GfxResult<GLint> DummyGfxController::getShaderVariable(GLuint, const char *) {
@@ -95,12 +106,6 @@ GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId, GLuint sampl
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount, GLuint dimension) {
-    printf("GfxController::bindTexture: vao=[%u], vId=[%u], tId=[%u], nId=[%u], vertexCount=[%u], dimension=[%u]",
-        vao, vId, tId, nId, vertexCount, dimension);
-    return GFX_OK(GLuint);
-}
-
 GfxResult<GLuint> DummyGfxController::bindVao(GLuint vao) {
     printf("GfxController::bindVao: VAO ID %d\n", vao);
     return GFX_OK(GLuint);
@@ -122,13 +127,37 @@ GfxResult<GLuint> DummyGfxController::deleteTextures(GLuint *tId) {
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::generateFontTextures(GLuint width, GLuint rows, unsigned char *buffer) {
-    printf("GfxController::generateFontTextures: width %d, rows %d, buffer %p\n",
-        width, rows, buffer);
-    return GFX_OK(GLuint);
-}
-
 GfxResult<GLuint> DummyGfxController::updateBufferData(vector<GLfloat> &vertices, GLuint vbo) {
     printf("GfxController::updateBufferData\n");
     return GFX_OK(GLuint);
 }
+
+GfxResult<GLuint> DummyGfxController::setTexParam(TexParam param, TexVal val) {
+    printf("GfxController::setTexParam: param %d, val %d\n",
+        param, val.type());
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::generateMipMap() {
+    printf("GfxController::generateMipMap\n");
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::enableVertexAttArray(GLuint layout, size_t size) {
+    printf("GfxController::enableVertexAttArray: layout %d, size %ld\n",
+        layout, size);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::disableVertexAttArray(GLuint layout) {
+    printf("GfxController::disableVertexAttArray: layout %d\n",
+        layout);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> DummyGfxController::drawTriangles(GLuint size) {
+    printf("GfxController::drawTriangles: size %d\n",
+        size);
+    return GFX_OK(GLuint);
+}
+

@@ -124,8 +124,23 @@ void GameObject::render() {
             gfxController_->bindTexture(model->textureId[i], model->textureUniformId);
         }
         // Actually start drawing polygons :)
-        gfxController_->render(vao_, model->shapeBufferId[i], model->textureCoordsId[i], model->normalBufferId[i],
-        model->pointCount[i] * 3);
+        gfxController_->bindVao(vao_);
+        // Enable vertex data
+        gfxController_->bindBuffer(model->shapeBufferId[i]);
+        gfxController_->enableVertexAttArray(0, 3);
+        // Enable texture data if available
+        if (model->textureCoordsId[i] != UINT_MAX) {
+            gfxController_->bindBuffer(model->textureCoordsId[i]);
+            gfxController_->enableVertexAttArray(1, 2);
+        } 
+        if (model->normalBufferId[i] != UINT_MAX) {
+            gfxController_->bindBuffer(model->normalBufferId[i]);
+            gfxController_->enableVertexAttArray(2, 3);
+        }
+        gfxController_->drawTriangles(model->pointCount[i] * 3);
+        // Unbind vertex attribute arrays (temporary)
+        if (model->textureCoordsId[i] != UINT_MAX) gfxController_->disableVertexAttArray(1);
+        if (model->normalBufferId[i] != UINT_MAX) gfxController_->disableVertexAttArray(2);
     }
     if (collider_ != nullptr) collider_->update();
     }

@@ -23,7 +23,6 @@ GfxResult<GLuint> OpenGlGfxController::generateBuffer(GLuint *bufferId) {
 }
 
 GfxResult<GLuint> OpenGlGfxController::bindBuffer(GLuint bufferId) {
-    printf("OpenGlGfxController::bindBuffer: bufferId %u\n", bufferId);
     glBindBuffer(GL_ARRAY_BUFFER, bufferId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -283,48 +282,6 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samp
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::render(GLuint vao, GLuint vId, GLuint tId, GLuint nId, GLuint vertexCount, GLuint dimension) {
-    // Check which attributes are enabled (aka NOT UINT_MAX)
-    glBindVertexArray(vao);
-    // Configure attrib 0 for vertex data if present (should probably always be present...)
-    if (vId != UINT_MAX) glEnableVertexAttribArray(0);
-    if (vId != UINT_MAX) {
-        glBindBuffer(GL_ARRAY_BUFFER, vId);
-        glVertexAttribPointer(
-            0,                          // layout in shader
-            dimension,                  // size
-            GL_FLOAT,                   // type
-            GL_FALSE,                   // normalized?
-            dimension * sizeof(GLfloat),// stride
-            0);                         // array buffer offset
-    }
-    // Configure attrib 1 for texture data if present
-    if (tId != UINT_MAX) glEnableVertexAttribArray(1);
-    if (tId != UINT_MAX) {
-        glBindBuffer(GL_ARRAY_BUFFER, tId);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    }
-    // Configure attrib 2 for normal data if present
-    if (nId != UINT_MAX) glEnableVertexAttribArray(2);
-    if (nId != UINT_MAX) {
-        glBindBuffer(GL_ARRAY_BUFFER, nId);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    }
-    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-    if (nId != UINT_MAX) glDisableVertexAttribArray(2);
-    if (tId != UINT_MAX) glDisableVertexAttribArray(1);
-    if (vId != UINT_MAX) glDisableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    // Check if any errors occurred during rendering
-    auto error = glGetError();
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "OpenGlGfxController::render: Error: %d", error);
-        return GFX_FAILURE(GLuint);
-    }
-    return GFX_OK(GLuint);
-}
-
 /**
  * @brief Binds a VAO object in the current OpenGL context
  * @note The name of this method will most likely change other GFX backends are added.
@@ -425,5 +382,27 @@ GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
             break;
     }
     glTexParameteri(GL_TEXTURE_2D, glParam, glVal);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::enableVertexAttArray(GLuint layout, size_t size) {
+    glEnableVertexAttribArray(layout);
+    glVertexAttribPointer(
+        layout,                     // layout in shader
+        size,                       // size
+        GL_FLOAT,                   // type
+        GL_FALSE,                   // normalized?
+        size * sizeof(GLfloat),     // stride
+        0);                         // array buffer offset
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::disableVertexAttArray(GLuint layout) {
+    glDisableVertexAttribArray(layout);
+    return GFX_OK(GLuint);
+}
+
+GfxResult<GLuint> OpenGlGfxController::drawTriangles(GLuint size) {
+    glDrawArrays(GL_TRIANGLES, 0, size);
     return GFX_OK(GLuint);
 }
