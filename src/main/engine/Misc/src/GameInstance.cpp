@@ -35,7 +35,8 @@ GameInstance::GameInstance(vector<string> soundList, vector<string> vertShaders,
 void GameInstance::startGame() {
     initWindow(width_, height_);
     initAudio();
-    // playSound(0, 1);
+    // Comment out playSound to disable music
+    playSound(0, 1);
     initController();
     initApplication(vertShaders_, fragShaders_);
     keystate = SDL_GetKeyboardState(NULL);
