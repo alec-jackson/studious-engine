@@ -68,10 +68,8 @@ TextObject::TextObject(string message, string fontPath, GLuint programId, string
     gfxController_->generateBuffer(&VBO);
     gfxController_->bindBuffer(VBO);
     gfxController_->sendBufferData(sizeof(GLfloat) * 6 * 4, nullptr);
-    /// @todo Check if enable vertex attrib array only needs to be run once ever
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gfxController_->enableVertexAttArray(0, 4);
+    gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
 }
 
@@ -80,16 +78,14 @@ TextObject::~TextObject() {
 }
 
 void TextObject::render() {
-    glClear(GL_DEPTH_BUFFER_BIT);
+    gfxController_->clear(GfxClearMode::DEPTH);
     vec3 color = vec3(1.0f);
     int x = this->position.x, y = this->position.y;
     gfxController_->setProgram(programId);
     gfxController_->polygonRenderMode(RenderMode::FILL);
-
-    glUniform3f(glGetUniformLocation(this->programId, "textColor"),
-        color.x, color.y, color.z);
-    glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(vao_);
+    auto textColorId = gfxController_->getShaderVariable(programId, "textColor").get();
+    gfxController_->sendFloatVector(textColorId, 1, &color[0]);
+    gfxController_->bindVao(vao_);
     for (auto c = message_.begin(); c != message_.end(); c++) {
         Character ch = characters[*c];
         GLfloat xpos = x + ch.Bearing.x * scale;
@@ -110,15 +106,7 @@ void TextObject::render() {
         // Set the current texture
         gfxController_->bindTexture(ch.TextureID);
         gfxController_->updateBufferData(vertices, VBO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        /**
-         * Note for future me:
-         * 
-         * The render loop isn't working because it needs to constantly bind the VBO data to the VAO object for every object render...
-         * This isn't necessary for static objects, and causes performance degredation. The glBindBuffer call(s) shouldn't happen from
-         * the GfxController render loop, the VBO data should be tied to the VAO inside of the GameObject being rendered. This change is
-         * REQUIRED to move forward, as it may cause major performance issues on embedded systems (intended target).
-         */
+        gfxController_->drawTriangles(6);
         x += (ch.Advance >> 6) * scale;
     }
     gfxController_->bindVao(0);

@@ -161,3 +161,8 @@ GfxResult<GLuint> DummyGfxController::drawTriangles(GLuint size) {
     return GFX_OK(GLuint);
 }
 
+void DummyGfxController::clear(GfxClearMode clearMode) {
+    printf("GfxController::clear: clearMode %d\n",
+        clearMode);
+}
+

@@ -45,6 +45,7 @@ class OpenGlGfxController : public GfxController {
     GfxResult<GLuint> enableVertexAttArray(GLuint layout, size_t size);
     GfxResult<GLuint> disableVertexAttArray(GLuint layout);
     GfxResult<GLuint> drawTriangles(GLuint size);
+    void clear(GfxClearMode clearMode);
     void update();
     void updateOpenGl();
 

@@ -616,3 +616,25 @@ GfxResult<GLuint> OpenGlGfxController::drawTriangles(GLuint size) {
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Clears buffers in the OpenGL context. Common uses are COLOR buffers (framebuffer) or
+ * DEPTH buffers.
+ * 
+ * @param clearMode what should be cleared @see GfxClearMode
+ */
+void OpenGlGfxController::clear(GfxClearMode clearMode) {
+    auto clearVal = 0;
+    switch (clearMode) {
+        case COLOR:
+            clearVal = GL_COLOR_BUFFER_BIT;
+            break;
+        case DEPTH:
+            clearVal = GL_DEPTH_BUFFER_BIT;
+            break;
+        default:
+            printf("OpenGlGfxController::clear: Unknown clearMode %d\n", clearMode);
+            return;
+    }
+    glClear(clearVal);
+}
+

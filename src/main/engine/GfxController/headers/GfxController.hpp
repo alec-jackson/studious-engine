@@ -64,6 +64,11 @@ enum GfxCapability {
     CULL_FACE
 };
 
+enum GfxClearMode {
+    DEPTH,
+    COLOR
+};
+
 template <typename T>
 class GfxResult {
  public:
@@ -105,5 +110,6 @@ class GfxController {
     virtual GfxResult<GLuint> enableVertexAttArray(GLuint layout, size_t size) = 0;
     virtual GfxResult<GLuint> disableVertexAttArray(GLuint layout) = 0;
     virtual GfxResult<GLuint> drawTriangles(GLuint size) = 0;
+    virtual void clear(GfxClearMode clearMode) = 0;
     virtual void update() = 0;
 };
