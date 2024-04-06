@@ -31,10 +31,10 @@ class DummyGfxController : public GfxController {
     GfxResult<GLuint> polygonRenderMode(RenderMode mode);
     GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data);
     GfxResult<GLuint> sendInteger(GLuint variableId, GLint data);
-    GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId);
+    GfxResult<GLuint> bindTexture(GLuint textureId);
     GfxResult<GLuint> initVao(GLuint *vao);
     GfxResult<GLuint> bindVao(GLuint vao);
-    GfxResult<GLuint> setCapability(int capabilityId, bool enabled);
+    GfxResult<GLuint> setCapability(GfxCapability capabilityId, bool enabled);
     GfxResult<GLuint> deleteTextures(GLuint *tId);
     GfxResult<GLuint> updateBufferData(const vector<GLfloat> &vertices, GLuint vbo);
     GfxResult<GLuint> setTexParam(TexParam param, TexVal val);

@@ -120,7 +120,9 @@ void GameObject::render() {
         gfxController_->sendInteger(hasTextureId, hasTexture[i]);
         if (hasTexture[i]) {
             // Bind texture to sampler for polygon rendering below
-            gfxController_->bindTexture(model->textureId[i], model->textureUniformId);
+            gfxController_->bindTexture(model->textureId[i]);
+            // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
+            gfxController_->sendInteger(model->textureUniformId, 0);
         }
         // Actually start drawing polygons :)
         gfxController_->bindVao(vao_);

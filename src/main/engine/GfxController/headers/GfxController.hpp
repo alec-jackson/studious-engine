@@ -60,6 +60,10 @@ class TexVal {
     GLint data_;
 };
 
+enum GfxCapability {
+    CULL_FACE
+};
+
 template <typename T>
 class GfxResult {
  public:
@@ -90,10 +94,10 @@ class GfxController {
     virtual GfxResult<GLuint> polygonRenderMode(RenderMode mode) = 0;
     virtual GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) = 0;
     virtual GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) = 0;
-    virtual GfxResult<GLuint> bindTexture(GLuint textureId, GLuint samplerId) = 0;
+    virtual GfxResult<GLuint> bindTexture(GLuint textureId) = 0;
     virtual GfxResult<GLuint> initVao(GLuint *vao) = 0;
     virtual GfxResult<GLuint> bindVao(GLuint vao) = 0;
-    virtual GfxResult<GLuint> setCapability(int capabilityId, bool enabled) = 0;
+    virtual GfxResult<GLuint> setCapability(GfxCapability capabilityId, bool enabled) = 0;
     virtual GfxResult<GLuint> deleteTextures(GLuint *tId) = 0;
     virtual GfxResult<GLuint> updateBufferData(const vector<GLfloat> &vertices, GLuint vbo) = 0;
     virtual GfxResult<GLuint> setTexParam(TexParam param, TexVal val) = 0;

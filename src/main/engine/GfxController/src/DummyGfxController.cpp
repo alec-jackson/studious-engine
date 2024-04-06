@@ -101,8 +101,8 @@ GfxResult<GLuint> DummyGfxController::sendInteger(GLuint variableId, GLint data)
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId, GLuint samplerId) {
-    printf("GfxController::bindTexture: textureId=[%u], samplerId=[%u]", textureId, samplerId);
+GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId) {
+    printf("GfxController::bindTexture: textureId=[%u]", textureId);
     return GFX_OK(GLuint);
 }
 
@@ -111,7 +111,7 @@ GfxResult<GLuint> DummyGfxController::bindVao(GLuint vao) {
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> DummyGfxController::setCapability(int capabilityId, bool enabled) {
+GfxResult<GLuint> DummyGfxController::setCapability(GfxCapability capabilityId, bool enabled) {
     printf("GfxController::setCapability: CAPABILITY: %d, enabled: %d\n",
         capabilityId, enabled);
     return GFX_OK(GLuint);

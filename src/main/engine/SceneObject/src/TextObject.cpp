@@ -39,7 +39,7 @@ TextObject::TextObject(string message, string fontPath, GLuint programId, string
             }
             GLuint textureId;
             gfxController_->generateTexture(&textureId);
-            gfxController_->bindTexture(textureId, UINT_MAX);
+            gfxController_->bindTexture(textureId);
             gfxController_->sendTextureData(
                 face->glyph->bitmap.width,
                 face->glyph->bitmap.rows,
@@ -59,7 +59,7 @@ TextObject::TextObject(string message, string fontPath, GLuint programId, string
             };
             characters.insert(std::pair<char, Character>(c, character));
         }
-        gfxController_->bindTexture(0, UINT_MAX);
+        gfxController_->bindTexture(0);
     }
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
@@ -108,7 +108,7 @@ void TextObject::render() {
         };
         // Update polygon data for each character
         // Set the current texture
-        gfxController_->bindTexture(ch.TextureID, UINT_MAX);
+        gfxController_->bindTexture(ch.TextureID);
         gfxController_->updateBufferData(vertices, VBO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         /**
@@ -122,7 +122,7 @@ void TextObject::render() {
         x += (ch.Advance >> 6) * scale;
     }
     gfxController_->bindVao(0);
-    gfxController_->bindTexture(0, UINT_MAX);
+    gfxController_->bindTexture(0);
 }
 
 void TextObject::update() {

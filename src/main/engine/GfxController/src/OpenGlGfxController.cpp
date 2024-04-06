@@ -73,8 +73,6 @@ GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
  * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
  */
 GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint height, TexFormat format, void *data) {
-    printf("OpenGlGfxController::sendTextureData: width %u, height %u, data %p\n",
-        width, height, data);
     auto texFormat = GL_RGB;
     switch (format) {
         case RGBA:
@@ -325,15 +323,22 @@ GfxResult<GLuint> OpenGlGfxController::sendFloat(GLuint variableId, GLfloat data
  * @brief Sends a 3D vector of floats to a shader variable
  * 
  * @param variableId variableId to write data to
- * @param count I honestly don't remember lol
- * @param data 
- * @return GfxResult<GLuint> 
+ * @param count Number of float vectors to send
+ * @param data Raw data to send to GPU
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
  */
 GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) {
     glUniform3fv(variableId, count, data);
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Sets the rendering mode for triangles.
+ * @see RenderMode enum for rendering options.
+ * 
+ * @param mode method for rendering triangles.
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
     auto result = GFX_OK(GLuint);
     switch (mode) {
@@ -354,23 +359,42 @@ GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
     return result;
 }
 
+/**
+ * @brief Sends a 4x4 matrix of floats to the GPU memory for a variable in the current program.
+ * 
+ * @param variableId Variable to write data to
+ * @param count Number of matrices to write - generally just one
+ * @param data Raw data to send over to program variable.
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) {
     glUniformMatrix4fv(variableId, count, GL_FALSE, data);
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Sends an integer to the GPU memory for a variable in the current program.
+ * 
+ * @param variableId Variable identifier in the current program
+ * @param data Raw data to copy to GPU
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
 GfxResult<GLuint> OpenGlGfxController::sendInteger(GLuint variableId, GLint data) {
     glUniform1i(variableId, data);
     return GFX_OK(GLuint);
 }
 
-GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId, GLuint samplerId) {
+/**
+ * @brief Binds a texture to the current OpenGL context.
+ * 
+ * @param textureId ID of texture to bind.
+ * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ */
+GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId) {
     // Use texture unit zero - nothing fancy
     glActiveTexture(GL_TEXTURE0);
     // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
     glBindTexture(GL_TEXTURE_2D, textureId);
-    // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
-    if (samplerId != UINT_MAX) sendInteger(samplerId, 0);
     return GFX_OK(GLuint);
 }
 
@@ -401,34 +425,88 @@ GfxResult<GLuint> OpenGlGfxController::bindVao(GLuint vao) {
  * 
  * @param capabilityId ID of the capability to toggle on/off.
  * @param enabled Whether or not to enable/disable the capability
- * @return GfxResult<GLuint> 
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::setCapability(int capabilityId, bool enabled) {
+GfxResult<GLuint> OpenGlGfxController::setCapability(GfxCapability capability, bool enabled) {
+    auto capabilityId = 0;
+    switch (capability) {
+        case CULL_FACE:
+            capabilityId = GL_CULL_FACE;
+            break;
+        default:
+            printf("OpenGlGfxController::setCapability: Unknown capability %d\n",
+                static_cast<int>(capability));
+            return GFX_FAILURE(GLuint);
+    }
     enabled ? glEnable(capabilityId) : glDisable(capabilityId);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::setCapability: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Initializes a VAO object
+ * 
+ * @param vao to initialize
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::initVao(GLuint *vao) {
     glGenVertexArrays(1, vao);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::initVao: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Deletes textures from the OpenGL context.
+ * 
+ * @param tId texture ID to delete in the OpenGL context.
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::deleteTextures(GLuint *tId) {
     glDeleteTextures(1, tId);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::deleteTextures: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Updates a VBO buffer with a set of vertices
+ * 
+ * @param vertices Vector of vertex data to copy to VBO object
+ * @param vbo identifier for the buffer to write data into
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::updateBufferData(const vector<GLfloat> &vertices, GLuint vbo) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * vertices.size(), &vertices[0]);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::updateBufferData: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Sets a texture parameter for the texture currently bound in the OpenGL context
+ * 
+ * @param param parameter to update @see TexParam in GfxController
+ * @param val value to set for the given parameter
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
     // Convert Studious GFX enums to OpenGL enums
-    printf("OpenGlGfxController::setTexParam: param %d val %d\n", param, val);
     auto glParam = 0;
     auto glVal = 0;
     switch (param) {
@@ -474,9 +552,21 @@ GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
             break;
     }
     glTexParameteri(GL_TEXTURE_2D, glParam, glVal);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::setTexParam: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Enables a vertex attribute array and configures the vertex attribute pointer
+ * 
+ * @param layout The layout set in the OpenGL shader
+ * @param size The per-object size. A 3D vertex would have a size of 3, because each point is made of 3 floats
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::enableVertexAttArray(GLuint layout, size_t size) {
     glEnableVertexAttribArray(layout);
     glVertexAttribPointer(
@@ -486,15 +576,43 @@ GfxResult<GLuint> OpenGlGfxController::enableVertexAttArray(GLuint layout, size_
         GL_FALSE,                   // normalized?
         size * sizeof(GLfloat),     // stride
         0);                         // array buffer offset
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::enableVertexAttArray: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Disables a vertex attribute array in the OpenGL context.
+ * 
+ * @param layout The layout of the vertex attribute array to disable in the current program.
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::disableVertexAttArray(GLuint layout) {
     glDisableVertexAttribArray(layout);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::disableVertexAttArray: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
+/**
+ * @brief Draws triangles using currently bound textures/buffers.
+ * 
+ * @param size The number of vertices to render
+ * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ */
 GfxResult<GLuint> OpenGlGfxController::drawTriangles(GLuint size) {
     glDrawArrays(GL_TRIANGLES, 0, size);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::drawTriangles: Error %d\n", error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
+

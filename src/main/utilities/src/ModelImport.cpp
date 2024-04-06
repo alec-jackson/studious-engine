@@ -188,7 +188,7 @@ void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
     auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
     // Send texture image to OpenGL
     gfxController_->generateTexture(&polygon.textureId[0]);
-    gfxController_->bindTexture(polygon.textureId[0], UINT_MAX);
+    gfxController_->bindTexture(polygon.textureId[0]);
     gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
     gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
     gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));

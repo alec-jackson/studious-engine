@@ -79,7 +79,7 @@ void ColliderObject::render() {
     if (poly_->numberOfObjects > 0) {
         gfxController_->setProgram(poly_->programId);
         gfxController_->polygonRenderMode(RenderMode::LINE);
-        gfxController_->setCapability(GL_CULL_FACE, false);
+        gfxController_->setCapability(GfxCapability::CULL_FACE, false);
         mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         // Don't need to bind vao -> Should happen in render loop
