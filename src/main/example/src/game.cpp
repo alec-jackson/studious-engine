@@ -156,7 +156,7 @@ int runtime(GameInstance *currentGame) {
     auto contactText = currentGame->createText("Contact", "src/resources/fonts/AovelSans.ttf",
         gfxController.getProgramId(2).get(), "contact-text");
     pressUText = currentGame->createText(
-        "Press 'U' to attach/detatch mouse", "src/resources/fonts/AovelSans.ttf",
+        "Press 'U' to attach/detach mouse", "src/resources/fonts/AovelSans.ttf",
         gfxController.getProgramId(2).get(), "contact-text");
     contactText->setPosition(vec3(25.0f, 300.0f, 0.0f));
     pressUText->setPosition(vec3(800.0f, 670.0f, 0.0f));
