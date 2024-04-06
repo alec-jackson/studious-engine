@@ -257,7 +257,7 @@ int mainLoop(gameInfo* gamein) {
                 sum /= times.size();
                 times.clear();
                 cout << "FPS: " << 1.0 / sum << '\n';
-                                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
+                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
     }
