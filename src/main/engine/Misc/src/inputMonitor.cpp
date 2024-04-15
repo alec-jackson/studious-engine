@@ -34,10 +34,10 @@ void rotateShape(void *gameInfoStruct, void *target) {
     GLfloat speed = 0.001f, rotateSpeed = 1.0f, scaleSpeed = 0.0002f,
         offsetSpeed = 0.1f, currentScale = character->getScale(),
         currentLuminance = 1.0f;
-    vec3 cameraOffset = vec3(5.140022f, 1.349999f, 2.309998f), angles = vec3(0),
+    vec3 cameraOffset = vec3(7.140022f, 1.349999f, 2.309998f), angles = vec3(0),
         pos = vec3(0);
     float fallspeed = 0;
-    bool trackMouse = true;
+    bool trackMouse = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
     if (numJoySticks < 1) {
@@ -59,6 +59,14 @@ void rotateShape(void *gameInfoStruct, void *target) {
     Sint16 controllerRightStateX = 0;
     Uint8 buttonCheckA = 0;
     while (!(*currentGameInfo->isDone)) {
+        // Calculate the X-Z angle between the camera and target
+        // Assume that the target is the origin
+        auto charPos = character->getPosition();
+        auto cameraPos = currentGameInfo->gameCamera->getOffset();
+        auto cameraDiffPos = cameraPos - charPos;
+        double multiplier = 0.3f;
+        // y over x
+        float angle = angleOfPoint(cameraPos, charPos);
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         if (hasActiveController) {
             controllerLeftStateY = SDL_GameControllerGetAxis(gameController1,
@@ -216,11 +224,11 @@ void rotateShape(void *gameInfoStruct, void *target) {
         if (currentGame->getKeystate()[SDL_SCANCODE_Y]) {
             angles[2] += rotateSpeed;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_A] || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
-            double xSpeed = sin((angles[1] - 180) * (PI / 180));
-            double ySpeed = cos((angles[1] - 180) * (PI / 180));
+        if (currentGame->getKeystate()[SDL_SCANCODE_S] || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
+            angles[1] = -1.0f * angle - 90.0f;
+            double xSpeed = sin((angles[1]) * (PI / 180));
+            double ySpeed = cos((angles[1]) * (PI / 180));
 
-            double multiplier = 1;
             if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateX * -1)) / 32767;
             }
@@ -228,10 +236,10 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_D] || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
+        if (currentGame->getKeystate()[SDL_SCANCODE_W] || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
+            angles[1] = -1.0f * angle + 90.0f;
             double xSpeed = sin(angles[1] * (PI / 180));
             double ySpeed = cos(angles[1] * (PI / 180));
-            double multiplier = 1;
             if (controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateX)) / 32767;
             }
@@ -249,11 +257,11 @@ void rotateShape(void *gameInfoStruct, void *target) {
         if (currentGame->getKeystate()[SDL_SCANCODE_Q]) {
             pos[1] -= speed;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_W] || controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
-            double xSpeed = sin((angles[1] + 90) * (PI / 180));
-            double ySpeed = cos((angles[1] + 90) * (PI / 180));
+        if (currentGame->getKeystate()[SDL_SCANCODE_A] || controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
+            angles[1] = -1.0f * angle + 180.0f;
+            double xSpeed = sin((angles[1]) * (PI / 180));
+            double ySpeed = cos((angles[1]) * (PI / 180));
 
-            double multiplier = 1;
             if (controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateY * -1)) / 32767;
             }
@@ -261,11 +269,11 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[0] += (xSpeed / 300) * multiplier;
             pos[2] += (ySpeed / 300) * multiplier;
         }
-        if (currentGame->getKeystate()[SDL_SCANCODE_S] || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
-            double xSpeed = sin((angles[1] - 90) * (PI / 180));
-            double ySpeed = cos((angles[1] - 90) * (PI / 180));
+        if (currentGame->getKeystate()[SDL_SCANCODE_D] || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
+            angles[1] = -1.0f * angle;
+            double xSpeed = sin((angles[1]) * (PI / 180));
+            double ySpeed = cos((angles[1]) * (PI / 180));
 
-            double multiplier = 1;
             if (controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
                 multiplier = static_cast<float>(controllerLeftStateY) / 32767;
             }
@@ -292,6 +300,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (currentGame->getKeystate()[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
         }
+        /// @todo Input is VERY primitive right now... The sleep will make this action feel sluggish,
+        /// but it prevents key spamming
         if (currentGame->getKeystate()[SDL_SCANCODE_U]) {
             if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
                 SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -329,4 +339,15 @@ vector<double> cameraDistance(vec3 offset) {
     distance[0] = offset[1] * offset[1] + offset[2] * offset[2];
     distance[1] = offset[1] * offset[1] + offset[0] * offset[0];
     return distance;
+}
+
+double convertNegToDeg(double degree) {
+    return degree >= 0.0f ? degree : degree + 360.0f;
+}
+
+// Calculates the angle between two points in degrees
+double angleOfPoint(vec3 p1, vec3 p2) {
+    auto diffPoint = p2 - p1;
+    double angle = atan2(diffPoint[2], diffPoint[0]) * (180.0f / PI);
+    return convertNegToDeg(angle);
 }

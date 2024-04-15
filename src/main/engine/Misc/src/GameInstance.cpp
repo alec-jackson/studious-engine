@@ -9,7 +9,7 @@
  * 
  */
 
-#include <gameInstance.hpp>
+#include <GameInstance.hpp>
 
 /*
  (void) startGameInstance uses the passed struct (gameInstanceArgs) args to
@@ -23,18 +23,22 @@
 
  (void) startGameInstance does not return any value.
  */
-void GameInstance::startGameInstance(gameInstanceArgs args) {
-    sfxNames = args.soundList;
-    width = args.windowWidth;
-    height = args.windowHeight;
+GameInstance::GameInstance(vector<string> soundList, vector<string> vertShaders,
+        vector<string> fragShaders, GfxController *gfxController, int width, int height)
+        : gfxController_ { gfxController }, soundList_ { soundList }, vertShaders_ { vertShaders },
+        fragShaders_ { fragShaders }, width_ { width }, height_ { height } {
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;
-    initWindow(width, height);
+}
+
+void GameInstance::startGame() {
+    initWindow(width_, height_);
     initAudio();
+    // Comment out playSound to disable music
     playSound(0, 1);
     initController();
-    initApplication(args.vertexShaders, args.fragmentShaders);
+    initApplication(vertShaders_, fragShaders_);
     keystate = SDL_GetKeyboardState(NULL);
 }
 
@@ -43,7 +47,7 @@ void GameInstance::startGameInstance(gameInstanceArgs args) {
  GameInstance.
  */
 int GameInstance::getWidth() {
-    return width;
+    return width_;
 }
 
 /*
@@ -51,7 +55,7 @@ int GameInstance::getWidth() {
  GameInstance.
  */
 int GameInstance::getHeight() {
-    return height;
+    return height_;
 }
 
 /*
@@ -68,22 +72,6 @@ vec3 GameInstance::getDirectionalLight() {
  */
 const Uint8 *GameInstance::getKeystate() {
     return keystate;
-}
-
-/*
- (GLuint) getProgramID returns the programId associated with the given
- (int) index.
-
- On success, function returns associated programId. On failure,
- UINT_MAX is returned and an error is written to stderr.
-*/
-GLuint GameInstance::getProgramID(uint index) {
-    if (index >= programId.size()) {
-        cerr << "Error: Requested programId is not in available range [0, "
-        << programId.size() - 1 << "]\n";
-        return UINT_MAX;
-    }
-    return programId[index];
 }
 
 /*
@@ -144,18 +132,15 @@ void GameInstance::changeWindowMode(int mode) {
  (void) cleanup does not return any value.
 */
 void GameInstance::cleanup() {
+    printf("GameInstance::cleanup: Entry\n");
     for (int i = 0; i < controllersConnected; i++) {
         // SDL_GameControllerClose(gameControllers[i]);
     }
-    vector<GameObject *>::iterator git;
-    for (git = gameObjects.begin(); git != gameObjects.end(); ++git) {
-        destroyGameObject((*git));
+    // Cleanup scene objects
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        destroySceneObject(*it);
     }
-    vector<GLuint>::iterator it;
-    for (it = programId.begin(); it != programId.end(); ++it) {
-        glDeleteProgram(*it);
-    }
-    glDeleteVertexArrays(1, &vertexArrayID);
+    gfxController_->cleanup();
     Mix_CloseAudio();
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -168,7 +153,7 @@ void GameInstance::cleanup() {
  On success, 0 is returned and the memory used by that GameObject is freed. On
  failure, -1 is returned and an error is printed to stderr.
  */
-int GameInstance::destroyGameObject(GameObject *object) {
+int GameInstance::destroySceneObject(SceneObject *object) {
     if (object == NULL) {
         cerr << "Error: Cannot destroy empty GameObject!\n";
         return -1;
@@ -195,44 +180,6 @@ bool GameInstance::isWindowOpen() {
 }
 
 /*
- (void) updateOGL clears the current OpenGL drawing on the SDL window. This
- function should be called after every frame.
-
- (void) updateOGL does not return any value.
-*/
-void GameInstance::updateOGL() {
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glCullFace(GL_BACK);
-    glDepthFunc(GL_LESS);
-    glClearColor(0.0f, 0.0f, 0.0, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-/*
- (int) updateCameras loops through all of the cameras present in the current
- game scene and updates their position matrices.
-
- On success, 0 is returned and the cameras in the game scene are updated. On
- failure, -1 is returned and the cameras in the game scene are not updated.
-*/
-int GameInstance::updateCameras() {
-    if (gameCameras.empty()) {
-        // cerr << "Error: No cameras found in active scene!\n";
-        return -1;
-    }
-    vector<CameraObject *>::iterator it;
-    // Update the VP matrix for each camera
-    for (it = gameCameras.begin(); it != gameCameras.end(); ++it) {
-        (*it)->render();
-    }
-    return 0;
-}
-
-/*
  (int) updateObjects updates properties for all of the active GameObjects in the
  current scene. Things that are updated include:
  * Directional light position for lighting
@@ -245,24 +192,22 @@ int GameInstance::updateCameras() {
  -1 is returned and nothing is rendered.
 */
 int GameInstance::updateObjects() {
-    if (gameObjects.empty()) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
+    if (sceneObjects_.empty()) {
         cerr << "Error: No active GameObjects in the current scene!\n";
         return -1;
     }
-    /// @todo: Polymorphism! Only need one structure for these game objects
-    glBindVertexArray(vertexArrayID);
-    std::vector<GameObject *>::iterator it;
-    for (it = gameObjects.begin(); it != gameObjects.end(); ++it) {
-        (*it)->setDirectionalLight(directionalLight);
-        (*it)->setLuminance(luminance);
-        // Send the new VP matrix to the current gameObject being drawn.
-        (*it)->setVpMatrix(getCamera((*it)->getCameraId())->getVpMatrix());
-        (*it)->render();
+    gfxController_->update();
+    // Update cameras first
+    vector<SceneObject *> deferredUpdates;
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        if ((*it)->type() == ObjectType::CAMERA_OBJECT) (*it)->update();
+        else
+            deferredUpdates.push_back(*it);
     }
-    // If there is any active texts in the scene, render them
-    std::vector<TextObject *>::iterator text_it;
-    for (text_it = gameTexts.begin(); text_it != gameTexts.end(); ++text_it) {
-        (*text_it)->render();
+    // Update all other updates after
+    for (auto it = deferredUpdates.begin(); it != deferredUpdates.end(); ++it) {
+        (*it)->update();
     }
     return 0;
 }
@@ -291,94 +236,40 @@ int GameInstance::setDeltaTime(GLdouble time) {
     return 0;
 }
 
-/*
- (int) createGameObject takes some (gameObjectInfo) objectInfo and constructs a
- new GameObject into the scene using information in the objectInfo struct. The
- new GameObject that is created is allocated in the heap, so it will need a
- delete statement in the cleanup function. When a new GameObject is created, it
- is put into the (vector<GameObject>) gameObjects vector and rendered in the
- updateObjects method.
-
- (int) createGameObject returns the index of the newly created GameObject inside
- of the current GameInstance on success. On failure, -1 is returned and the
- GameObject is not created.
-*/
-int GameInstance::createGameObject(gameObjectInfo objectInfo) {
-    cout << "Creating GameObject " << gameObjects.size() << "\n";
-    GameObject *gameObject = new GameObject(objectInfo);
-    gameObjects.push_back(gameObject);
-    return gameObjects.size() - 1;
+GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
+    string objectName) {
+    printf("GameInstance::createGameObject: Creating GameObject %lu\n", sceneObjects_.size());
+    auto gameObject = new GameObject(characterModel, position, rotation, scale, objectName, ObjectType::GAME_OBJECT,
+        gfxController_);
+    gameObject->setDirectionalLight(directionalLight);
+    gameObject->setLuminance(luminance);
+    sceneObjects_.push_back(gameObject);
+    return gameObject;
 }
 
-/*
- (int) createCamera takes some (cameraInfo) camInfo describing settings to use
- for a new camera, and creates a new camera in a similar manner to how standard
- GameObjects are created (see notes above for details on GameObject creation).
-
- (int) createCamera returns the ID of the created CameraObject on success. On
- failure, the CameraObject is not created and -1 is returned.
-*/
-int GameInstance::createCamera(cameraInfo camInfo) {
-    cout << "Creating CameraObject " << gameCameras.size() << "\n";
-    CameraObject *gameCamera = new CameraObject(camInfo);
-    gameCameras.push_back(gameCamera);
-    return gameCameras.size() - 1;
+CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
+              GLfloat nearClipping, GLfloat farClipping) {
+    printf("GameInstance::createCamera: Creating CameraObject %lu\n", sceneObjects_.size());
+    auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
+    auto gameCamera = new CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping,
+        ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
+    sceneObjects_.push_back(gameCamera);
+    return gameCamera;
 }
 
-/*
- (int) createText takes an (textObjectInfo) info argument and creates a new
- TextObject GameObject inside of the current GameInstance.
-
- (int) createText returns the index of the created TextObject in the current
- GameInstance.
-*/
-int GameInstance::createText(textObjectInfo info) {
-    cout << "Creating Gametext " << gameTexts.size() << "\n";
-    TextObject *text = new TextObject(info);
-    gameTexts.push_back(text);
-    return gameTexts.size() - 1;
+TextObject *GameInstance::createText(string message, string fontPath, GLuint programId, string objectName) {
+    printf("GameInstance::createText: Creating TextObject %lu\n", sceneObjects_.size());
+    auto text = new TextObject(message, fontPath, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
+    sceneObjects_.push_back(text);
+    return text;
 }
 
-/*
- (GameObject *) getGameObject returns the GameObject pointer for the GameObject
- located at the index gameObjectID inside of the (vector<GameObject *>)
- gameObjects vector on success. On failure, NULL is returned and an error is
- printed to stderr.
- */
-GameObject *GameInstance::getGameObject(uint gameObjectID) {
-    if (!gameObjects.size() || gameObjects.size() < gameObjectID) {
-        cerr << "Error: getGameObject index out of bounds!\n";
-        return NULL;
+SceneObject *GameInstance::getSceneObject(string objectName) {
+    SceneObject *result = nullptr;
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        if ((*it)->getObjectName().compare(objectName) == 0) result = (*it);
     }
-    return gameObjects[gameObjectID];
-}
-
-/*
- (CameraObject *) getCameraObject returns the CameraObject pointer for the CameraObject
- located at the index gameCameraID inside of the (vector<CameraObject *>)
- gameCameras vector on success. On failure, NULL is returned and an error is
- printed to stderr.
-*/
-CameraObject *GameInstance::getCamera(uint gameCameraID) {
-    if (!gameCameras.size() || gameCameras.size() < gameCameraID) {
-        cerr << "Error: getCamera index out of bounds!\n";
-        return NULL;
-    }
-    return gameCameras[gameCameraID];
-}
-
-/*
- (TextObject *) getText returns the TextObject pointer for the
- TextObject located at the index gameTextID inside of the
- (vector<TextObject *>) gameTexts vector on success. On failure, NULL is
- returned and an error is printed to stderr.
-*/
-TextObject *GameInstance::getText(uint gameTextID) {
-    if (!gameTexts.size() || gameTexts.size() < gameTextID) {
-        cerr << "Error: getText index out of bounds!\n";
-        return NULL;
-    }
-    return gameTexts[gameTextID];
+    return result;
 }
 
 /*
@@ -405,39 +296,10 @@ GLdouble GameInstance::getDeltaTime() {
  currently colliding, 2 if the two objects are about to collide, or 0 if there
  is no collision. Otherwise, -1 is returned.
 */
+/// @todo Update documentation here and convert pointers to references
 int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     vec3 moving) {
-    colliderInfo coll1, coll2;
-    int matching = 0;  // Number of axis that have collided
-    if (object1 == NULL || object2 == NULL) {
-        cerr << "Error: Cannot get collision for NULL GameObjects!\n";
-        return -1;
-    }
-
-    coll1 = object1->getCollider();
-    coll2 = object2->getCollider();
-
-    // First check if the two objects are currently colliding
-    for (int i = 0; i < 3; i++) {
-        float delta = abs(coll2.center[i] - coll1.center[i]);
-        float range = coll1.offset[i] + coll2.offset[i];
-        if (range >= delta) {
-            matching++;
-        }
-    }
-    // Return if the objects are currently colliding
-    if (matching == 3) return 1;
-    matching = 0;
-    for (int i = 0; i < 3; i++) {
-        float delta = abs(coll2.center[i] - coll1.center[i] + moving[i]);
-        float range = coll1.offset[i] + coll2.offset[i];
-        if (range >= delta) {
-            matching++;
-        }
-    }
-    // Return if the objects are about to collide
-    if (matching == 3) return 2;
-    return 0;
+    return object1->getCollider()->getCollision(object2->getCollider(), moving);
 }
 
 /*
@@ -473,14 +335,10 @@ void GameInstance::initWindow(int width, int height) {
         cerr << "Error: Failed to create SDL window!\n";
         return;
     }
-    if (glewInit() != GLEW_OK) {
-        cerr << "Error: Failed to initialize GLEW!\n";
-        return;
-    }
 }
 
 /*
- (void) initAudio uses the pathnames provided in the sfxNames vector to
+ (void) initAudio uses the pathnames provided in the soundList_ vector to
  initialize the audio inside of SDL mixer. In the case of an error during the
  initialization process, initAudio will call exit() with an error code of -1.
 
@@ -501,10 +359,10 @@ void GameInstance::initAudio() {
     }
     vector<string>::iterator it;
     int i = 0;
-    for (it = sfxNames.begin(); it != sfxNames.end(); ++it) {
+    for (it = soundList_.begin(); it != soundList_.end(); ++it) {
         sound.push_back(Mix_LoadWAV((*it).c_str()));
         if (sound[i++] == NULL) {
-            cerr << "Error: Unable to load wave file: " << sfxNames[i] << '\n';
+            cerr << "Error: Unable to load wave file: " << soundList_[i] << '\n';
         }
     }
 }
@@ -547,10 +405,9 @@ void GameInstance::initController() {
 */
 void GameInstance::initApplication(vector<string> vertexPath, vector<string> fragmentPath) {
     // Compile each of our shaders and assign them their own programId number
-    glGenVertexArrays(1, &vertexArrayID);
-    glBindVertexArray(vertexArrayID);
+    gfxController_->init();
     for (uint i = 0; i < vertexPath.size(); i++) {
-        programId.push_back(loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str()));
+        gfxController_->loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str());
     }
 }
 
@@ -565,11 +422,11 @@ void GameInstance::basicCollision(GameInstance *gameInstance) {
 }
 
 int GameInstance::lockScene() {
-    sceneLock.lock();
+    sceneLock_.lock();
     return 0;
 }
 
 int GameInstance::unlockScene() {
-    sceneLock.unlock();
+    sceneLock_.unlock();
     return 0;
 }

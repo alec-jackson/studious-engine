@@ -11,34 +11,49 @@
 
 #include <ModelImport.hpp>
 
-ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId) :
-    modelPath { modelPath }, texturePath { texturePath }, texturePattern { texturePattern }, programId { programId } {
+ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId,
+    GfxController *gfxController) :
+    modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
+    programId_ { programId }, gfxController_ { gfxController } {
+    cout << "ModelImport::ModelImport" << endl;
 }
 
-Polygon* ModelImport::createPolygonFromFile() {
+/**
+ * @brief Attempts to create a Polygon using the .obj file located in modelPath. modelPath is set via the constructor.
+ * 
+ * @return Polygon* created using .obj file passed into the constructor.
+ */
+Polygon ModelImport::createPolygonFromFile() {
     // File is closed when ifstream is destroyed
     ifstream file;  // Read file as read only
-    file.open(modelPath);
+    file.open(modelPath_);
     if (!file.is_open()) {  // If the file does not exist or cannot be opened
         cerr << "Model path does not exist!";
         throw runtime_error("Model path does not exist");
     }
-    auto polygon = new Polygon();
     auto currentObject = 0;
-    textureCount = texturePath.size();
+    textureCount_ = texturePath_.size();
     string charBuffer;  // Will temporarily hold each line in obj file
     // Grab entire lines from the object file to read at once
     while (getline(file, charBuffer)) {
-        currentObject = processLine(charBuffer, currentObject, polygon, true);
+        currentObject = processLine(charBuffer, currentObject);
     }
     // Create the final object in the polygon
-    polygon->merge(buildObject(currentObject - 1, true));
-    polygon->textureUniformId = glGetUniformLocation(programId, "mytexture");
-    polygon->programId = this->programId;
-    return polygon;
+    buildObject(currentObject - 1);
+    polygon_.textureUniformId = gfxController_->getShaderVariable(programId_, "mytexture").get();
+    polygon_.programId = this->programId_;
+    return polygon_;
 }
 
-int ModelImport::processLine(string charBuffer, int currentObject, Polygon *polygon, bool oglConfigure) {
+/**
+ * @brief Processes the current line in the .obj file at modelPath
+ * 
+ * @param charBuffer A string containing data from the current line in the object file.
+ * @param currentObject Index of current object in obj file. Obj files often times contain multiple sub-objects that make up one main object.
+ * @param polygon The Polygon that is currently being built
+ * @return int containing the current object index - incremented when a new object line is hit in the obj file.
+ */
+int ModelImport::processLine(string charBuffer, int currentObject) {
     // Compare the first two "header" bytes of the obj file below
     if (charBuffer.compare(0, 2, "v ") == 0) {
         vector<GLfloat> tempVertices(3);
@@ -47,7 +62,7 @@ int ModelImport::processLine(string charBuffer, int currentObject, Polygon *poly
         // Add tempVertices to vertexFrame
         vector<GLfloat>::iterator it;
         for (it = tempVertices.begin(); it != tempVertices.end(); ++it) {
-            vertexFrame.push_back(*it);  // Add points to vertexFrame
+            vertexFrame_.push_back(*it);  // Add points to vertexFrame
         }
     } else if (charBuffer.compare(0, 2, "vt") == 0) {
         vector<GLfloat> tempTextures(2);
@@ -55,7 +70,7 @@ int ModelImport::processLine(string charBuffer, int currentObject, Polygon *poly
             &tempTextures[1]);
         vector<GLfloat>::iterator it;
         for (it = tempTextures.begin(); it != tempTextures.end(); ++it) {
-            textureFrame.push_back(*it);  // Add points to textureFrame
+            textureFrame_.push_back(*it);  // Add points to textureFrame
         }
     } else if (charBuffer.compare(0, 2, "vn") == 0) {
         vector<GLfloat> tempNormals(3);
@@ -63,7 +78,7 @@ int ModelImport::processLine(string charBuffer, int currentObject, Polygon *poly
             &tempNormals[1], &tempNormals[2]);
         vector<GLfloat>::iterator it;
         for (it = tempNormals.begin(); it != tempNormals.end(); ++it) {
-            normalFrame.push_back(*it);  // Add points to normalFrame
+            normalFrame_.push_back(*it);  // Add points to normalFrame
         }
     } else if (charBuffer.compare(0, 2, "f ") == 0) {
         vector<GLint> coms(9);
@@ -81,107 +96,114 @@ int ModelImport::processLine(string charBuffer, int currentObject, Polygon *poly
         }
         vector<GLint>::iterator it;
         for (it = coms.begin(); it != coms.end(); ++it) {
-            commands.push_back(*it);  // Add commands from temp to main vec
+            commands_.push_back(*it);  // Add commands from temp to main vec
         }
     } else if (charBuffer.compare(0, 2, "o ") == 0) {
         if (currentObject) {  // Ignore first object
             // Merge polygon into master polygon object
-            polygon->merge(buildObject(currentObject - 1, oglConfigure));  // Start index at zero just because
+            buildObject(currentObject - 1);  // Start index at zero just because
             // Clear frame buffers
-            commands.clear();
+            commands_.clear();
         }
         ++currentObject;
     }
     return currentObject;
 }
 
-Polygon* ModelImport::buildObject(int objectId, bool oglConfigure) {
-    cout << "Building GameObject " << objectId << endl;
-    auto pointCount = commands.size() / 9;
+/**
+ * @brief Creates a new Polygon object that can be merged into a parent Polygon object
+ * 
+ * @param objectId The index of the current object being created relative to other objects in the obj file.
+ * @return int 
+ * @todo Double check the doxygen comments in here
+ */
+int ModelImport::buildObject(int objectId) {
+    cout << "Building Polygon obj index " << objectId << endl;
+    auto triCount = commands_.size() / 9;
     vector<GLfloat> vertexVbo;
     vector<GLfloat> textureVbo;
     vector<GLfloat> normalVbo;
     /// @todo If any glitches occur, clear frame buffers between each buildObject call...
     // Iterate over each polygon in model
-    cout << "pointCount is " << pointCount << endl;
-    for (int i = 0; i < pointCount; i++) {
+    cout << "pointCount is " << triCount << endl;
+    for (int i = 0; i < triCount; i++) {
         for (int k = 0; k < 3; k++) {  // Loop through each point
             int currentCommandIndex = (i*9) + (k*3);  // vertex coord command
-            int currentCommand = commands[currentCommandIndex];
+            int currentCommand = commands_[currentCommandIndex];
             // Assign vertex data
             for (int l = 0; l < 3; l++) {
-                vertexVbo.push_back(vertexFrame[(currentCommand-1)*3+l]);
+                vertexVbo.push_back(vertexFrame_[(currentCommand-1)*3+l]);
             }
             currentCommandIndex = (i*9) + (k*3) + 1;  // textureCoord command
-            currentCommand = commands[currentCommandIndex];
-            if (textureFrame.size() > 0) {
-                textureVbo.push_back(textureFrame[(currentCommand-1)*2]);
-                textureVbo.push_back(1.0f - textureFrame[(currentCommand-1)*2+1]);
+            currentCommand = commands_[currentCommandIndex];
+            if (textureFrame_.size() > 0) {
+                textureVbo.push_back(textureFrame_[(currentCommand-1)*2]);
+                textureVbo.push_back(1.0f - textureFrame_[(currentCommand-1)*2+1]);
             } else {
                 textureVbo.push_back(0.0f);
                 textureVbo.push_back(0.0f);  // Add dummy values for missing data
             }
             currentCommandIndex = (i*9) + (k*3) + 2;  // normal command
-            currentCommand = commands[currentCommandIndex];
+            currentCommand = commands_[currentCommandIndex];
             for (int l = 0; l < 3; l++) {
-                normalVbo.push_back(normalFrame[(currentCommand-1)*3+l]);
+                normalVbo.push_back(normalFrame_[(currentCommand-1)*3+l]);
             }
         }
     }
-    auto polygon = new Polygon(pointCount, this->programId, vertexVbo, textureVbo, normalVbo);
+    auto newPolygon = Polygon(triCount, this->programId_, vertexVbo, textureVbo, normalVbo);
     /// @todo Run configureOpenGL once when all objects are created - figure out deal with destructor
-    if (oglConfigure) configureOpenGl(polygon, objectId);
-    return polygon;
+    configureOpenGl(newPolygon, objectId);
+    polygon_.merge(newPolygon);
+    return 0;
 }
 
-void ModelImport::configureOpenGl(Polygon* polygon, int objectId) {
-    glGenBuffers(1, &(polygon->shapeBufferId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon->shapeBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon->pointCount[0] * 9,
-                 &(polygon->vertices[0][0]), GL_STATIC_DRAW);
-    glGenBuffers(1, &(polygon->normalBufferId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon->normalBufferId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon->pointCount[0] * 9,
-                 &(polygon->normalCoords[0][0]), GL_STATIC_DRAW);
+/**
+ * @brief Configures the created object with OpenGL. This step is required for object rendering.
+ * 
+ * @param polygon to configure OpenGL context for.
+ * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
+ */
+void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
+    // Generate vertex buffer
+    gfxController_->generateBuffer(&polygon.shapeBufferId[0]);
+    gfxController_->bindBuffer(polygon.shapeBufferId[0]);
+    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 9, &polygon.vertices[0][0]);
+    // Generate normal buffer
+    gfxController_->generateBuffer(&polygon.normalBufferId[0]);
+    gfxController_->bindBuffer(polygon.normalBufferId[0]);
+    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 9, &polygon.normalCoords[0][0]);
     // Specific case where the current object does not get a texture
-    if (!textureCount || texturePattern[objectId] >= textureCount ||
-        texturePattern[objectId] == -1) {
+    if (!textureCount_ || texturePattern_[objectId] >= textureCount_ ||
+        texturePattern_[objectId] == -1) {
         return;
     }
-    SDL_Surface *texture = IMG_Load(texturePath[texturePattern[objectId]].c_str());
+    SDL_Surface *texture = IMG_Load(texturePath_[texturePattern_[objectId]].c_str());
     if (texture == NULL) {
         cerr << "Failed to create SDL_Surface texture!\n";
         return;
     }
-    glGenTextures(1, &(polygon->textureId[0]));
-    glBindTexture(GL_TEXTURE_2D, polygon->textureId[0]);
-    if (texture->format->Amask) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h,
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
-    } else {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture->w, texture->h, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, texture->pixels);
-    }
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_NEAREST_MIPMAP_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10);
-    glGenerateMipmap(GL_TEXTURE_2D);
+
+    auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
+    // Send texture image to OpenGL
+    gfxController_->generateTexture(&polygon.textureId[0]);
+    gfxController_->bindTexture(polygon.textureId[0]);
+    gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
+    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
+    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
+    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
+    gfxController_->generateMipMap();
+
+    // Send texture coords to OpenGL
+    gfxController_->generateBuffer(&polygon.textureCoordsId[0]);
+    gfxController_->bindBuffer(polygon.textureCoordsId[0]);
+    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 6, &polygon.textureCoords[0][0]);
+
     SDL_FreeSurface(texture);
-    // glGenerateMipmap(GL_TEXTURE_2D);
-    glGenBuffers(1, &(polygon->textureCoordsId[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, polygon->textureCoordsId[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(GLfloat) * polygon->pointCount[0] * 6,
-                 &(polygon->textureCoords[0][0]), GL_STATIC_DRAW);
 }
 
 /**
  * @todo Not sure what to do here yet... but might keep state of OpenGL imports
 */
 ModelImport::~ModelImport() {
-
+    cout << "ModelImport::~ModelImport" << endl;
 }

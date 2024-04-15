@@ -14,11 +14,12 @@
 
 class Polygon {
  public:
-    Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
+    Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
         vector<GLfloat> normals);
-    Polygon(GLint pointCount, GLuint programId, vector<GLfloat> vertices);
-    Polygon();  // Default constructor for merging
-    Polygon* merge(Polygon*);
+    Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices);
+    Polygon();
+    void merge(Polygon&);
+    ~Polygon();
 
     vector<GLuint> shapeBufferId;  // used for vertex buffer
     vector<GLuint> textureCoordsId;  // used for texture coordinate buffer
@@ -27,8 +28,8 @@ class Polygon {
     vector<vector<GLfloat>> vertices;  // 2D vector for vertices
     vector<vector<GLfloat>> textureCoords;  // 2D vector for texture coord data
     vector<vector<GLfloat>> normalCoords;  // 2D vector for normal coord data
-    GLuint textureUniformId;  // ID for finding texture sampler in OpenGL table
-    vector<GLint> pointCount;  // no. of distinct points in shape
+    GLint textureUniformId;  // ID for finding texture sampler in OpenGL table
+    vector<GLuint> pointCount;  // no. of distinct points in shape
     GLint numberOfObjects;  // Contains the number of objects in the model
     GLuint programId;  // Used for storing programId of object's shader
 };

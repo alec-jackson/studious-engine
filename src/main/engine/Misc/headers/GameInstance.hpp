@@ -1,5 +1,5 @@
 /**
- * @file gameInstance.hpp
+ * @file GameInstance.hpp
  * @author Christian Galvez, Alec Jackson
  * @brief GameInstance class contains a current scene to render GameObjects in
  * @version 0.1
@@ -15,7 +15,6 @@
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
-#include <shaderLoader.hpp>
 #include <CameraObject.hpp>
 #include <TextObject.hpp>
 
@@ -32,27 +31,6 @@ typedef struct controllerReadout {
 } controllerReadout;
 
 /*
- gameInstanceArgs contains all of the arguments needed for the startGameInstance
- method inside the GameInstance class. The following struct members are used
- in the following manner:
- * int windowWidth - Defines the width of the window in pixels
- * int windowHeight - Defines the height of the window in pixels
- * vector<string> soundList - Contains paths to sound effects to be used in the
-     current GameInstance.
- * vector<string> vertexShaders - Contains paths to vertex shaders to be used in
-     the current GameInstance.
- * vector<string> fragmentShaders - Contains paths to fragment shaders to be
-     used in the current GameInstance.
-*/
-typedef struct gameInstanceArgs {
-    int windowWidth;
-    int windowHeight;
-    vector<string> soundList;
-    vector<string> vertexShaders;
-    vector<string> fragmentShaders;
-} gameInstanceArgs;
-
-/*
  The GameInstance class is the class that holds all of the information about the
  current game scene. Methods inside of this class are used to operate on
  most of the objects contained within the game scene. This class contains the
@@ -63,25 +41,26 @@ typedef struct gameInstanceArgs {
 class GameInstance {
  private:
     const Uint8 *keystate;
-    vector<string> sfxNames;
     int audioID, controllersConnected;
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Surface* screenSurface;
     SDL_Event event;
     vector<Mix_Chunk *> sound;
-    vector<GameObject *> gameObjects;
-    vector<CameraObject *> gameCameras;
-    vector<TextObject *> gameTexts;
-    vector<GLuint> programId;
-    GLuint vertexArrayID;
+    vector<SceneObject *> sceneObjects_;
+    vector<string> soundList_;
+    vector<string> fragShaders_;
+    vector<string> vertShaders_;
+    vector<string> texturePathStage_;
+    vector<string> texturePath_;
     GLdouble deltaTime;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
     vec3 directionalLight;
     GLfloat luminance;
-    int width, height;
-    mutex sceneLock;
+    int width_, height_;
+    mutex sceneLock_;
+    GfxController *gfxController_;
 
     void initWindow(int width, int height);
     void initAudio();
@@ -89,32 +68,31 @@ class GameInstance {
     void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
 
  public:
-    void startGameInstance(gameInstanceArgs args);
-    int createGameObject(gameObjectInfo objectInfo);
-    int createCamera(cameraInfo camInfo);
-    int createText(textObjectInfo info);
+    GameInstance(vector<string> soundList, vector<string> vertShaders,
+        vector<string> fragShaders, GfxController *gfxController, int width, int height);
+    void startGame();
+    GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
+        string objectName);
+    CameraObject *createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
+              GLfloat nearClipping, GLfloat farClipping);
+    TextObject *createText(string message, string fontPath, GLuint programId, string objectName);
     int getWidth();
     int getHeight();
     vec3 getDirectionalLight();
     const Uint8 *getKeystate();
-    GLuint getProgramID(uint index);
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
     void playSound(int soundIndex, int loop);
     void changeWindowMode(int mode);
     void cleanup();
-    int destroyGameObject(GameObject *object);
-    GameObject *getGameObject(uint gameObjectID);
-    CameraObject *getCamera(uint gameCameraID);
-    TextObject *getText(uint gameTextID);
+    int destroySceneObject(SceneObject *object);
+    SceneObject *getSceneObject(string objectName);
     GLdouble getDeltaTime();
     int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
     int setDeltaTime(GLdouble time);
     void setLuminance(GLfloat luminanceValue);
     void basicCollision(GameInstance* gameInstance);
     bool isWindowOpen();
-    void updateOGL();
-    int updateCameras();
     int updateObjects();
     int updateWindow();
     int lockScene();
