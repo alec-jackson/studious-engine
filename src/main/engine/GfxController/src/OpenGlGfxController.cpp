@@ -638,3 +638,18 @@ void OpenGlGfxController::clear(GfxClearMode clearMode) {
     glClear(clearVal);
 }
 
+void OpenGlGfxController::deleteBuffer(GLuint *bufferId) {
+    glDeleteBuffers(1, bufferId);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::deleteBuffer: Error %d\n", error);
+    }
+}
+
+void OpenGlGfxController::deleteVao(GLuint *vao) {
+    glDeleteVertexArrays(1, vao);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::deleteVao: Error %d\n", error);
+    }
+}

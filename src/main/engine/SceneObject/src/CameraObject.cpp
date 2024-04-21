@@ -50,6 +50,8 @@ void CameraObject::update() {
                 break;
         }
         // Send the VP matrix for the camera to its gameobjects
+        // Render the game objects
+        (*it)->update();
     }
 }
 

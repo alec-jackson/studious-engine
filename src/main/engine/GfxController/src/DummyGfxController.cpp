@@ -166,3 +166,13 @@ void DummyGfxController::clear(GfxClearMode clearMode) {
         clearMode);
 }
 
+void DummyGfxController::deleteBuffer(GLuint *bufferId) {
+    printf("GfxController::deleteBuffer: %p\n",
+        bufferId);
+}
+
+void DummyGfxController::deleteVao(GLuint *vao) {
+    printf("GfxController::deleteBuffer: %p\n",
+        vao);
+}
+

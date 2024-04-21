@@ -202,12 +202,6 @@ int GameInstance::updateObjects() {
     vector<SceneObject *> deferredUpdates;
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
         if ((*it)->type() == ObjectType::CAMERA_OBJECT) (*it)->update();
-        else
-            deferredUpdates.push_back(*it);
-    }
-    // Update all other updates after
-    for (auto it = deferredUpdates.begin(); it != deferredUpdates.end(); ++it) {
-        (*it)->update();
     }
     return 0;
 }
@@ -257,9 +251,11 @@ CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, GLfloa
     return gameCamera;
 }
 
-TextObject *GameInstance::createText(string message, string fontPath, GLuint programId, string objectName) {
+TextObject *GameInstance::createText(string message, vec3 position, GLfloat scale, string fontPath, GLuint programId,
+    string objectName) {
     printf("GameInstance::createText: Creating TextObject %lu\n", sceneObjects_.size());
-    auto text = new TextObject(message, fontPath, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
+    auto text = new TextObject(message, position, scale, fontPath, programId, objectName, ObjectType::TEXT_OBJECT,
+        gfxController_);
     sceneObjects_.push_back(text);
     return text;
 }
