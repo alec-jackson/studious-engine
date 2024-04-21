@@ -61,5 +61,4 @@ class TextObject : public SceneObject
     vector<GLuint> vbos_;
     unsigned int textureUniformId;
     map<GLchar, Character> characters;
-    GLfloat spaceSize_;
 };

@@ -15,7 +15,7 @@ TextObject::TextObject(string message, vec3 position, GLfloat scale, string font
     string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), message_  { message },
     fontPath_ { fontPath } {
-    printf("TextObject::TextObject: Creating message %s\n", message);
+    printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
     createMessage();
@@ -82,8 +82,6 @@ void TextObject::createMessage() {
         GLuint vao;
         gfxController_->initVao(&vao);
         gfxController_->bindVao(vao);
-        printf("TextObject::TextObject: Creating character %c at x: %f, y: %f\n",
-            character, x, y);
         GLuint vbo;
         gfxController_->generateBuffer(&vbo);
         gfxController_->bindBuffer(vbo);
