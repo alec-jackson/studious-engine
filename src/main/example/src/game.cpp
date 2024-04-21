@@ -256,15 +256,14 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
-        auto newCollision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
+        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
         string collMessage;
-        if (newCollision == 1) {
+        if (collision == 1) {
             collMessage = "Contact: True";
         } else {
             collMessage = "Contact: False";
         }
-        if (newCollision != collision) collDebugText->setMessage(collMessage);
-        collision = newCollision;
+        collDebugText->setMessage(collMessage);
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);

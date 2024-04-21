@@ -137,8 +137,14 @@ void TextObject::update() {
     render();
 }
 
-// Updating the message requires re-creating the object
+/**
+ * @brief Update the text object with a new message. If the incoming message is the same as the existing message, then
+ * the message is not updated.
+ * 
+ * @param message Incoming message to set TextObject to.
+ */
 void TextObject::setMessage(string message) {
+    if (!message.compare(message_)) return;
     // Perform cleanup on existing VAOs
     gfxController_->bindVao(0);
     for (auto vao : vaos_) {
