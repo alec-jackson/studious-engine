@@ -22,16 +22,14 @@
  * @param Bearing(ivec2) Offset from baseline to left/top of glyph
  * @param Advance(unsigned_int) Offset to advance to next glyph
  */
-typedef struct Character
-{
+typedef struct Character {
     unsigned int TextureID;  // ID handle of the glyph texture
     ivec2 Size;              // Size of glyph
     ivec2 Bearing;           // Offset from baseline to left/top of glyph
     unsigned int Advance;    // Offset to advance to next glyph
 } Character;
 
-class TextObject : public SceneObject
-{
+class TextObject : public SceneObject {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
