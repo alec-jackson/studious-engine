@@ -59,6 +59,9 @@ add_executable(${PROJECT_NAME}
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
   src/main/misc/src/config.cpp
 )
+
+
+IF($(GTest_FOUND))
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
@@ -80,8 +83,6 @@ target_include_directories(gtest_PolygonTests
   PRIVATE src/main/utilities/test/headers
 )
 
-
-IF($(GTest_FOUND))
 target_include_directories(gtest_ModelImportTests PUBLIC ${SDL2_INCLUDE_DIRS})
 target_include_directories(gtest_ModelImportTests PUBLIC ${GLEW_INCLUDE_DIRS})
 target_include_directories(gtest_ModelImportTests PUBLIC ${OPENGL_INCLUDE_DIR})
