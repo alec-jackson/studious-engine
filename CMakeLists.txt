@@ -42,7 +42,7 @@ find_package(SDL2_image REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
-find_package(GTest CONFIG REQUIRED)
+find_package(GTest CONFIG)
 
 add_executable(${PROJECT_NAME}
   src/main/example/src/game.cpp
@@ -59,6 +59,9 @@ add_executable(${PROJECT_NAME}
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
   src/main/misc/src/config.cpp
 )
+
+
+IF($(GTest_FOUND))
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
@@ -79,23 +82,6 @@ target_include_directories(gtest_ModelImportTests
 target_include_directories(gtest_PolygonTests
   PRIVATE src/main/utilities/test/headers
 )
-
-# Project include dirs
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
-target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${FREETYPE_INCLUDE_DIRS})
-#target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_NET_INCLUDE_DIRS})
-
-target_link_libraries(${PROJECT_NAME} SDL2::Main)
-target_link_libraries(${PROJECT_NAME} SDL2::Mixer)
-target_link_libraries(${PROJECT_NAME} SDL2::Image)
-#target_link_libraries(${PROJECT_NAME} SDL2::Net)
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} Threads::Threads)
-target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 
 target_include_directories(gtest_ModelImportTests PUBLIC ${SDL2_INCLUDE_DIRS})
 target_include_directories(gtest_ModelImportTests PUBLIC ${GLEW_INCLUDE_DIRS})
@@ -140,5 +126,23 @@ target_link_libraries(
 
 gtest_discover_tests(gtest_PolygonTests)
 gtest_discover_tests(gtest_ModelImportTests)
+ENDIF($(GTest_FOUND))
+
+# Project include dirs
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
+target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${FREETYPE_INCLUDE_DIRS})
+#target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_NET_INCLUDE_DIRS})
+
+target_link_libraries(${PROJECT_NAME} SDL2::Main)
+target_link_libraries(${PROJECT_NAME} SDL2::Mixer)
+target_link_libraries(${PROJECT_NAME} SDL2::Image)
+#target_link_libraries(${PROJECT_NAME} SDL2::Net)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} Threads::Threads)
+target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
