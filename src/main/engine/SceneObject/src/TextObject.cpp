@@ -48,6 +48,7 @@ void TextObject::initializeText() {
                 continue;
             }
             GLuint textureId;
+            // Generate OpenGL textures for Freetype font rasterizations
             gfxController_->generateTexture(&textureId);
             gfxController_->bindTexture(textureId);
             gfxController_->sendTextureData(
@@ -100,6 +101,8 @@ void TextObject::createMessage() {
             xpos + w, ypos,       1.0f, 1.0f,
             xpos + w, ypos + h,   1.0f, 0.0f
         };
+
+        // Send VBO data for each character to the currently bound buffer
         gfxController_->sendBufferData(sizeof(GLfloat) * vertices.size(), &vertices[0]);
         gfxController_->enableVertexAttArray(0, 4);
         vaos_.push_back(vao);
