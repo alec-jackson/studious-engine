@@ -112,4 +112,6 @@ class GfxController {
     virtual GfxResult<GLuint> drawTriangles(GLuint size) = 0;
     virtual void clear(GfxClearMode clearMode) = 0;
     virtual void update() = 0;
+    virtual void deleteBuffer(GLuint *bufferId) = 0;
+    virtual void deleteVao(GLuint *vao) = 0;
 };

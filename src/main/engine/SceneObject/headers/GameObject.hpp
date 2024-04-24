@@ -27,13 +27,13 @@ class GameObject: public SceneObject {
     inline void setScale(GLfloat scale) { this->scale = scale; }
     inline void setDirectionalLight(vec3 directionalLight) { this->directionalLight = directionalLight; }
     inline void setLuminance(GLfloat luminance) { this->luminance = luminance; }
-    inline void setProgramId(GLuint programId) { this->programId = programId; }
+    inline void setProgramId(GLuint programId) { this->programId_ = programId; }
 
     // Getters
     inline GLfloat getScale() { return this->scale; }
     inline vec3 getDirectionalLight() { return this->directionalLight; }
     inline GLfloat getLuminance() { return this->luminance; }
-    inline GLuint getProgramId() { return this->programId; }
+    inline GLuint getProgramId() { return this->programId_; }
 
     // Special Getters
     inline Polygon *getModel() { return model; }

@@ -45,12 +45,12 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GL
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
     // Grab IDs for shared variables between app and program (shader)
-    modelId = gfxController_->getShaderVariable(programId, "model").get();
-    vpId = gfxController_->getShaderVariable(programId, "VP").get();
-    hasTextureId = gfxController_->getShaderVariable(programId, "hasTexture").get();
-    directionalLightId = gfxController_->getShaderVariable(programId, "directionalLight").get();
-    luminanceId = gfxController_->getShaderVariable(programId, "luminance").get();
-    rollOffId = gfxController_->getShaderVariable(programId, "rollOff").get();
+    modelId = gfxController_->getShaderVariable(programId_, "model").get();
+    vpId = gfxController_->getShaderVariable(programId_, "VP").get();
+    hasTextureId = gfxController_->getShaderVariable(programId_, "hasTexture").get();
+    directionalLightId = gfxController_->getShaderVariable(programId_, "directionalLight").get();
+    luminanceId = gfxController_->getShaderVariable(programId_, "luminance").get();
+    rollOffId = gfxController_->getShaderVariable(programId_, "rollOff").get();
     vpMatrix_ = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
@@ -100,7 +100,7 @@ void GameObject::render() {
     // Send GameObject to render method
     // Draw each shape individually
     for (int i = 0; i < model->numberOfObjects; i++) {
-        gfxController_->setProgram(programId);
+        gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::FILL);
         // Update our model transformation matrices
         translateMatrix_ = glm::translate(mat4(1.0f), position);

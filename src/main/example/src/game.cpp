@@ -149,28 +149,42 @@ int runtime(GameInstance *currentGame) {
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
-    auto engineText = currentGame->createText("Studious Engine 2024", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "studious-text");
-    engineText->setPosition(vec3(25.0f, 25.0f, 0.0f));
-    // Re-using gameObject 4 for no particular reason
-    auto contactText = currentGame->createText("Contact", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "contact-text");
+    auto engineText = currentGame->createText(
+        "Studious Engine 2024",                 // Message
+        vec3(25.0f, 25.0f, 0.0f),               // Position
+        1.0f,                                   // Scale
+        "src/resources/fonts/AovelSans.ttf",    // Font Path
+        gfxController.getProgramId(2).get(),    // ProgramId
+        "studious-text");                       // ObjectName
+
+    auto contactText = currentGame->createText(
+        "Contact",                              // Message
+        vec3(25.0f, 300.0f, 0.0f),              // Position
+        0.7f,                                   // Scale
+        "src/resources/fonts/AovelSans.ttf",    // Font Path
+        gfxController.getProgramId(2).get(),    // ProgramId
+        "contact-text");                        // ObjectName
+
     pressUText = currentGame->createText(
-        "Press 'U' to attach/detach mouse", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "contact-text");
-    contactText->setPosition(vec3(25.0f, 300.0f, 0.0f));
-    pressUText->setPosition(vec3(800.0f, 670.0f, 0.0f));
-    pressUText->setScale(0.7f);
+        "Press 'U' to attach/detach mouse",
+        vec3(800.0f, 670.0f, 0.0f),
+        0.7f,
+        "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(),
+        "contact-text");
+
     collDebugText = contactText;
     collDebugText->setMessage("Contact: False");
-    collDebugText->setScale(0.7f);
 
-    auto fpsText = currentGame->createText("FPS", "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(), "fps-text");
-    fpsText->setPosition(vec3(25.0f, 670.0f, 0.0f));
+    auto fpsText = currentGame->createText("FPS",
+        vec3(25.0f, 670.0f, 0.0f),
+        0.7f,
+        "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(),
+        "fps-text");
+
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
-    fps_counter->setScale(0.7f);
 
     auto currentCamera = currentGame->createCamera(playerRef,
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
@@ -189,7 +203,8 @@ int runtime(GameInstance *currentGame) {
         wolfObject,
         engineText,
         contactText,
-        fpsText
+        fpsText,
+        pressUText
     };
 
     // Add all objects to active camera

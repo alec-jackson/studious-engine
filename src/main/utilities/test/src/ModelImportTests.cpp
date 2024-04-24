@@ -22,12 +22,16 @@ using std::endl;
 class ModelImportTest: public ::testing::Test {
  protected:
     void SetUp() override {
-        auto dummyController = DummyGfxController();
-        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0, &dummyController);
+        dummyController = new DummyGfxController();
+        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0, dummyController);
+    }
+    void TearDown() override {
+        delete dummyController;
     }
     vector<string> texturePathStage;
     vector<GLint> texturePatternStage;
     ModelImport *modelImport;
+    DummyGfxController *dummyController;
 };
 
 /**

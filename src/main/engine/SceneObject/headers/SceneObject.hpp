@@ -23,7 +23,7 @@ class SceneObject {
     // Constructors
     inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, GLfloat scale, GLuint programId,
         ObjectType type, GfxController *gfxController):
-            position(position), rotation(rotation), objectName(objectName), scale(scale), programId(programId),
+            position(position), rotation(rotation), objectName(objectName), scale(scale), programId_(programId),
             type_ { type }, gfxController_ { gfxController } {}
     inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController): type_ { type },
         objectName { objectName }, gfxController_ { gfxController } {}
@@ -60,7 +60,7 @@ class SceneObject {
 
     const string objectName;
     GLfloat scale;
-    GLuint programId;
+    GLuint programId_;
     GLuint vao_;
     ObjectType type_;
 

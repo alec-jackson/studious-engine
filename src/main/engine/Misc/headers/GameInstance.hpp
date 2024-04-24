@@ -75,7 +75,8 @@ class GameInstance {
         string objectName);
     CameraObject *createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
               GLfloat nearClipping, GLfloat farClipping);
-    TextObject *createText(string message, string fontPath, GLuint programId, string objectName);
+    TextObject *createText(string message, vec3 position, GLfloat scale, string fontPath, GLuint programId,
+        string objectName);
     int getWidth();
     int getHeight();
     vec3 getDirectionalLight();
