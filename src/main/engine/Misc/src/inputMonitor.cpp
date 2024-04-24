@@ -63,7 +63,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
         // Assume that the target is the origin
         auto charPos = character->getPosition();
         auto cameraPos = currentGameInfo->gameCamera->getOffset();
-        auto cameraDiffPos = cameraPos - charPos;
         double multiplier = 0.3f;
         // y over x
         float angle = angleOfPoint(cameraPos, charPos);
