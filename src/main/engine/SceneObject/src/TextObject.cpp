@@ -151,7 +151,6 @@ void TextObject::setMessage(string message) {
     // Perform cleanup on existing VAOs
     gfxController_->bindVao(0);
     for (auto vao : vaos_) {
-        gfxController_->disableVertexAttArray(0);
         gfxController_->deleteVao(&vao);
     }
     for (auto vbo : vbos_) {
