@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     configData config;
     int flag = loadConfig(&config, "src/resources/config.txt");
     int width, height;
-    if (flag) {
+    if (!flag) {
         width = config.resX;
         height = config.resY;
     } else {
