@@ -8,6 +8,7 @@ rpg
 engineExample
 *.DS_Store
 engineExample.xcodeproj/*
+*.log
 
 # Cmake Temp Files #
 

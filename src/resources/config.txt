@@ -1,2 +1,2 @@
-resX=1280
-resY=720
+resX=2560
+resY=1440

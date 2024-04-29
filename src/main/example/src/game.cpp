@@ -37,16 +37,32 @@
 vector<string> soundList = {
     "src/resources/sfx/music/endlessNight.wav"
 };  // A list of gameSounds to load
+
+// Lists of embedded/core shaders
+#ifndef GFX_EMBEDDED
 vector<string> fragShaders = {
-    "src/main/shaders/standardFragment.frag",
-    "src/main/shaders/coll.frag",
-    "src/main/shaders/text.frag"
+    "src/main/shaders/core/gameObject.frag",
+    "src/main/shaders/core/colliderObject.frag",
+    "src/main/shaders/core/textObject.frag"
 };  // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
-    "src/main/shaders/standardVertex.vert",
-    "src/main/shaders/coll.vert",
-    "src/main/shaders/text.vert"
+    "src/main/shaders/core/gameObject.vert",
+    "src/main/shaders/core/colliderObject.vert",
+    "src/main/shaders/core/textObject.vert"
 };  // Contains collider renderer and basic object renderer.
+#else
+vector<string> fragShaders = {
+    "src/main/shaders/es/gameObject.frag",
+    "src/main/shaders/es/colliderObject.frag",
+    "src/main/shaders/es/textObject.frag"
+};  // Contains collider renderer and basic object renderer.
+vector<string> vertShaders = {
+    "src/main/shaders/es/gameObject.vert",
+    "src/main/shaders/es/colliderObject.vert",
+    "src/main/shaders/es/textObject.vert"
+};  // Contains collider renderer and basic object renderer.
+#endif
+
 vector<string> texturePathStage = {
     "src/resources/images/skintexture.jpg"
 };
@@ -71,7 +87,7 @@ int main(int argc, char **argv) {
     configData config;
     int flag = loadConfig(&config, "src/resources/config.txt");
     int width, height;
-    if (flag) {
+    if (!flag) {
         width = config.resX;
         height = config.resY;
     } else {
