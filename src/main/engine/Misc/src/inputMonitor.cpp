@@ -233,8 +233,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             if (controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateY)) / INT16_MAX;
             }
-            pos[0] += (xSpeed / 300.0) * multiplier;
-            pos[2] += (ySpeed / 300.0) * multiplier;
+            pos[0] += (xSpeed / 300.0f) * multiplier;
+            pos[2] += (ySpeed / 300.0f) * multiplier;
         }
         if (currentGame->getKeystate()[SDL_SCANCODE_W] || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
             angles[1] = -1.0f * angle + 90.0f;
@@ -243,8 +243,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             if (controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateY * -1)) / INT16_MAX;
             }
-            pos[0] += (xSpeed / 300.0) * multiplier;
-            pos[2] += (ySpeed / 300.0) * multiplier;
+            pos[0] += (xSpeed / 300.0f) * multiplier;
+            pos[2] += (ySpeed / 300.0f) * multiplier;
         }
         if ((currentGame->getKeystate()[SDL_SCANCODE_SPACE] || buttonCheckA) && pos[1] == 0) {
             fallspeed = -0.003f;
@@ -265,8 +265,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             if (controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateX * -1)) / INT16_MAX;
             }
-            pos[0] += (xSpeed / 300.0) * multiplier;
-            pos[2] += (ySpeed / 300.0) * multiplier;
+            pos[0] += (xSpeed / 300.0f) * multiplier;
+            pos[2] += (ySpeed / 300.0f) * multiplier;
         }
         if (currentGame->getKeystate()[SDL_SCANCODE_D] || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
             angles[1] = -1.0f * angle;
@@ -276,8 +276,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
                 multiplier = static_cast<float>(controllerLeftStateX) / INT16_MAX;
             }
-            pos[0] += (xSpeed / 300.0) * multiplier;
-            pos[2] += (ySpeed / 300.0) * multiplier;
+            pos[0] += (xSpeed / 300.0f) * multiplier;
+            pos[2] += (ySpeed / 300.0f) * multiplier;
         }
         if (currentGame->getKeystate()[SDL_SCANCODE_Z]) {
             currentScale += scaleSpeed;
