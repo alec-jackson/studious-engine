@@ -16,7 +16,7 @@
 #include <Polygon.hpp>
 #include <common.hpp>
 // Temporary until we get a logger, disables noisy OpenGL logs
-//#define VERBOSE_LOGS
+// #define VERBOSE_LOGS
 
 class OpenGlGfxController : public GfxController {
  public:

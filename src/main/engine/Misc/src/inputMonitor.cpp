@@ -314,7 +314,11 @@ void rotateShape(void *gameInfoStruct, void *target) {
         // Set character rotation based on joysticks
         // Left rotation
         if (abs(controllerLeftStateX) > JOYSTICK_DEAD_ZONE || abs(controllerLeftStateY) > JOYSTICK_DEAD_ZONE) {
-            angles[1] = angleOfPoint(vec3(0.0f, 0.0f, 0.0f), vec3(static_cast<float>(controllerLeftStateY), 0.0f, static_cast<float>(controllerLeftStateX))) - 90.0f - angle;
+            angles[1] = angleOfPoint(
+                vec3(0.0f, 0.0f, 0.0f),
+                vec3(static_cast<float>(controllerLeftStateY),
+                    0.0f,
+                    static_cast<float>(controllerLeftStateX))) - 90.0f - angle;
         }
         fallspeed = basicPhysics(&pos[1], fallspeed);
         // cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
