@@ -27,3 +27,20 @@ float basicPhysics(float* pos, float fallspeed) {
     return fallspeed;
 }
 
+/* Physics Proposal
+
+TLDR; should somewhat resemble reality
+
+* The physics class has access to a list of GameObjects with physics enabled.
+* Objects can choose to obey gravity.
+* Position of objects is changed via this physics component.
+* Objects will have distance/velocity/acceleration components.
+* The physics class will report all collisions to a queue.
+* Objects can be either kinematic or passive. Kinematic objects can collide with one another.
+* All kinematic objects MUST have mass (kg).
+* When two objects collide, impulse will be calculated normally.
+* Objects can be immovable - this means they will not partake in impulse calculations.
+* Physics for object collision will be handled in this controller. Collision state changes will be reported
+  via a physics queue that other components can access.
+* Collision processing MUST BE multithreaded. No exceptions.
+*/
