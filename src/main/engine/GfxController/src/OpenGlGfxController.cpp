@@ -18,7 +18,9 @@
  * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
  */
 GfxResult<GLuint> OpenGlGfxController::generateBuffer(GLuint *bufferId) {
+#ifdef VERBOSE_LOGS
     printf("OpenGlGfxController::generateBuffer: bufferId %p\n", bufferId);
+#endif
     glGenBuffers(1, bufferId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -53,7 +55,9 @@ GfxResult<GLuint> OpenGlGfxController::bindBuffer(GLuint bufferId) {
  * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
  */
 GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
+#ifdef VERBOSE_LOGS
     printf("OpenGlGfxController::sendBufferData: size %lu data %p\n", size, data);
+#endif
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -190,7 +194,7 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
     if (logLength) {
         vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
-        cerr << &errorLog[0] << "\n";
+        cerr << vertexShader << ": " << &errorLog[0] << "\n";
     }
     file.close();
     success = GL_FALSE;
@@ -212,7 +216,7 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
     if (logLength) {
         vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
-        cerr << &errorLog[0] << "\n";
+        cerr << fragmentShader << ": " << &errorLog[0] << "\n";
     }
     file.close();
     GLuint programId = glCreateProgram();
@@ -232,6 +236,8 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
     glDeleteShader(fragmentShaderID);
     // Add programId to programIdList
     programIdList_.push_back(programId);
+
+    printf("OpenGlGfxController::loadShaders: Created programId %d\n", programId);
 
     return GfxResult<GLuint>(GfxApiResult::OK, programId);
 }
@@ -256,7 +262,10 @@ GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLuint programId, const 
  * 
  */
 void OpenGlGfxController::updateOpenGl() {
+    // Multisampling not available on ES
+#ifndef GFX_EMBEDDED
     glEnable(GL_MULTISAMPLE);
+#endif
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -265,6 +274,11 @@ void OpenGlGfxController::updateOpenGl() {
     glDepthFunc(GL_LESS);
     glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::updateOpenGl: Error: %d\n", error);
+        return;
+    }
 }
 
 /**
@@ -301,7 +315,7 @@ GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
     glUseProgram(programId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
-        fprintf(stderr, "OpenGlGfxController::setProgram: Error: %d\n", error);
+        fprintf(stderr, "OpenGlGfxController::setProgram: programId %d Error: %d\n", programId, error);
         return GFX_FAILURE(GLuint);
     }
     return GFX_OK(GLuint);
@@ -341,6 +355,8 @@ GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsize
  */
 GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
     auto result = GFX_OK(GLuint);
+    // Unsupported operations in OpenGL ES...
+#ifndef GFX_EMBEDDED
     switch (mode) {
         case RenderMode::POINT:
             glPolygonMode(GL_FRONT, GL_POINT);
@@ -356,6 +372,13 @@ GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
             result = GFX_FAILURE(GLuint);
             break;
     }
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        /// @todo When a logger is added, add OpenGL error log debugging
+        fprintf(stderr, "OpenGlGfxController::polygonRenderMode: mode %d, Error: %d\n", mode, error);
+        return GFX_FAILURE(GLuint);
+    }
+#endif
     return result;
 }
 
@@ -395,6 +418,12 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId) {
     glActiveTexture(GL_TEXTURE0);
     // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
     glBindTexture(GL_TEXTURE_2D, textureId);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        /// @todo When a logger is added, add OpenGL error log debugging
+        fprintf(stderr, "OpenGlGfxController::bindTexture: textureId %u, Error: %d\n", textureId, error);
+        return GFX_FAILURE(GLuint);
+    }
     return GFX_OK(GLuint);
 }
 
@@ -410,7 +439,7 @@ GfxResult<GLuint> OpenGlGfxController::bindVao(GLuint vao) {
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
-        fprintf(stderr, "OpenGlGfxController::bindVao: Error: %d\n", error);
+        fprintf(stderr, "OpenGlGfxController::bindVao: vao %u, Error: %d\n", vao, error);
         return GFX_FAILURE(GLuint);
     }
     return GFX_OK(GLuint);
@@ -460,6 +489,9 @@ GfxResult<GLuint> OpenGlGfxController::initVao(GLuint *vao) {
         fprintf(stderr, "OpenGlGfxController::initVao: Error %d\n", error);
         return GFX_FAILURE(GLuint);
     }
+#ifdef VERBOSE_LOGS
+    printf("OpenGlGfxController::initVao: Created vao %d\n", *vao);
+#endif
     return GFX_OK(GLuint);
 }
 

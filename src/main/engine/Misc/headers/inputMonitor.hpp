@@ -12,5 +12,5 @@
 #pragma once
 #include <game.hpp>
 void rotateShape(void *gameInfoStruct, void *target);
-double convertNegToDeg(double degree);
-double angleOfPoint(vec3 p1, vec3 p2);
+float convertNegToDeg(float degree);
+float angleOfPoint(vec3 p1, vec3 p2);
