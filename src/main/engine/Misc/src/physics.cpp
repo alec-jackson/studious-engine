@@ -39,8 +39,12 @@ TLDR; should somewhat resemble reality
 * Objects can be either kinematic or passive. Kinematic objects can collide with one another.
 * All kinematic objects MUST have mass (kg).
 * When two objects collide, impulse will be calculated normally.
+* For fun, I'll add an elasticity component to objects. This should let balls bounce :)
 * Objects can be immovable - this means they will not partake in impulse calculations.
 * Physics for object collision will be handled in this controller. Collision state changes will be reported
-  via a physics queue that other components can access.
+  via a physics queue.
+* Components that want to listen to physics reports will subscribe to this component.
+* The physics queue will propagate messages to any "subscribers".
 * Collision processing MUST BE multithreaded. No exceptions.
 */
+
