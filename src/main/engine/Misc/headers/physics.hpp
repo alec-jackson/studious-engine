@@ -43,8 +43,8 @@ typedef struct PhysicsSubscriber {
 };
 
 enum PhysicsResult {
-    OK,
-    FAILURE
+    PHYS_OK,
+    PHYS_FAILURE
 };
 
 float basicPhysics(float* pos, float fallspeed);
@@ -57,6 +57,7 @@ class PhysicsController {
     PhysicsResult subscribe(SUBSCRIPTION_PARAM, string name);
     static PhysicsResult setTrace(int trace);
     PhysicsResult calculate();
+    
  private:
     vector<PhysicsObject *> physicsObjects_;
     vector<PhysicsSubscriber> subscribers_;
