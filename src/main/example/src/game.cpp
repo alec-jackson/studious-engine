@@ -12,6 +12,7 @@
  */
 #include <game.hpp>
 #include <OpenGlGfxController.hpp>
+#include <OpenGlEsGfxController.hpp>
 
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
@@ -77,7 +78,11 @@ TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
+#ifdef GFX_EMBEDDED
+OpenGlEsGfxController gfxController = OpenGlEsGfxController();
+#else
 OpenGlGfxController gfxController = OpenGlGfxController();
+#endif
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);

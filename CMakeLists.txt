@@ -15,7 +15,7 @@ endif()
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (APPLE)
@@ -61,6 +61,7 @@ add_executable(${PROJECT_NAME}
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
+  src/main/engine/GfxController/src/OpenGlEsGfxController.cpp
   src/main/misc/src/config.cpp
 )
 
