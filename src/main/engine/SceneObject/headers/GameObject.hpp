@@ -43,6 +43,7 @@ class GameObject: public SceneObject {
     // Other methods
     void deleteTextures();  /// @todo: DEPRECATED - Use destructor for this now...
     void createCollider(int programId);
+    void configureOpenGl();
 
     void render() override;
     void update() override;
@@ -62,6 +63,7 @@ class GameObject: public SceneObject {
     GLfloat rollOff;
 
     vector<GLint> hasTexture;
+    vector<GLuint> vaos_;  // Temporary?
     vec3 directionalLight;
     vec3 velocity;
 

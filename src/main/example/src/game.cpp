@@ -127,8 +127,7 @@ int runtime(GameInstance *currentGame) {
     auto mapPoly = ModelImport("src/resources/models/map3.obj",
         texturePathStage,
         texturePatternStage,
-        gfxController.getProgramId(0).get(),
-        &gfxController)
+        gfxController.getProgramId(0).get())
         .createPolygonFromFile();
 
     auto mapObject = currentGame->createGameObject(&mapPoly,
@@ -140,8 +139,7 @@ int runtime(GameInstance *currentGame) {
         "src/resources/models/Dracula.obj",
         texturePath,
         texturePattern,
-        gfxController.getProgramId(0).get(),
-        &gfxController)
+        gfxController.getProgramId(0).get())
         .createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
@@ -154,8 +152,7 @@ int runtime(GameInstance *currentGame) {
     auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
         texturePath,
         texturePattern,
-        gfxController.getProgramId(0).get(),
-        &gfxController)
+        gfxController.getProgramId(0).get())
         .createPolygonFromFile();
 
     auto wolfObject = currentGame->createGameObject(&wolfPoly,

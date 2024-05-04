@@ -32,4 +32,8 @@ class Polygon {
     vector<GLuint> pointCount;  // no. of distinct points in shape
     GLint numberOfObjects;  // Contains the number of objects in the model
     GLuint programId;  // Used for storing programId of object's shader
+
+    // Adding these in Polygon for now until we figure out material rendering
+    vector<string> texturePath_;
+    vector<GLint> texturePattern_;
 };

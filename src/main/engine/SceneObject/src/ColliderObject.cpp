@@ -85,19 +85,16 @@ void ColliderObject::render() {
         gfxController_->setCapability(GfxCapability::CULL_FACE, false);
         mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
-        // Don't need to bind vao -> Should happen in render loop
+        // HINT: Render loops should really just be (bind Vao, draw triangles)
         gfxController_->bindVao(vao_);
-        // Enable vertex data
-        gfxController_->bindBuffer(poly_->shapeBufferId[0]);
-        gfxController_->enableVertexAttArray(0, 3);
         gfxController_->drawTriangles(poly_->pointCount[0]);
-        gfxController_->disableVertexAttArray(0);
     }
 }
 
 void ColliderObject::createCollider(GLuint programId) {
     // Initialize VAO
     gfxController_->initVao(&vao_);
+    gfxController_->bindVao(vao_);
     cout << "Building collider for " << objectName << endl;
     GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
     GLfloat max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
@@ -170,6 +167,7 @@ void ColliderObject::createCollider(GLuint programId) {
     gfxController_->generateBuffer(&poly_->shapeBufferId[0]);
     gfxController_->bindBuffer(poly_->shapeBufferId[0]);
     gfxController_->sendBufferData(sizeof(GLfloat) * colliderVertices.size(), &colliderVertices[0]);
+    gfxController_->enableVertexAttArray(0, 3);
 #endif
     // Set the correct center points
     for (int i = 0; i < 3; i++) {
@@ -182,6 +180,7 @@ void ColliderObject::createCollider(GLuint programId) {
         minPoints_[i] = min[i];
     }
     minPoints_[3] = 1;  // SET W!!!
+    gfxController_->bindVao(0);
 }
 
 ColliderObject::~ColliderObject() {

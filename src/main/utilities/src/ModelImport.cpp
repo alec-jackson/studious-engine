@@ -11,10 +11,9 @@
 
 #include <ModelImport.hpp>
 
-ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId,
-    GfxController *gfxController) :
+ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId) :
     modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
-    programId_ { programId }, gfxController_ { gfxController } {
+    programId_ { programId } {
     cout << "ModelImport::ModelImport" << endl;
 }
 
@@ -40,8 +39,9 @@ Polygon ModelImport::createPolygonFromFile() {
     }
     // Create the final object in the polygon
     buildObject(currentObject - 1);
-    polygon_.textureUniformId = gfxController_->getShaderVariable(programId_, "mytexture").get();
     polygon_.programId = this->programId_;
+    polygon_.texturePath_ = texturePath_;
+    polygon_.texturePattern_ = texturePattern_;
     return polygon_;
 }
 
@@ -151,54 +151,8 @@ int ModelImport::buildObject(int objectId) {
         }
     }
     auto newPolygon = Polygon(triCount, this->programId_, vertexVbo, textureVbo, normalVbo);
-    /// @todo Run configureOpenGL once when all objects are created - figure out deal with destructor
-    configureOpenGl(newPolygon, objectId);
     polygon_.merge(newPolygon);
     return 0;
-}
-
-/**
- * @brief Configures the created object with OpenGL. This step is required for object rendering.
- * 
- * @param polygon to configure OpenGL context for.
- * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
- */
-void ModelImport::configureOpenGl(Polygon& polygon, int objectId) {
-    // Generate vertex buffer
-    gfxController_->generateBuffer(&polygon.shapeBufferId[0]);
-    gfxController_->bindBuffer(polygon.shapeBufferId[0]);
-    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 9, &polygon.vertices[0][0]);
-    // Generate normal buffer
-    gfxController_->generateBuffer(&polygon.normalBufferId[0]);
-    gfxController_->bindBuffer(polygon.normalBufferId[0]);
-    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 9, &polygon.normalCoords[0][0]);
-    // Specific case where the current object does not get a texture
-    if (!textureCount_ || texturePattern_[objectId] >= textureCount_ ||
-        texturePattern_[objectId] == -1) {
-        return;
-    }
-    SDL_Surface *texture = IMG_Load(texturePath_[texturePattern_[objectId]].c_str());
-    if (texture == NULL) {
-        cerr << "Failed to create SDL_Surface texture!\n";
-        return;
-    }
-
-    auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
-    // Send texture image to OpenGL
-    gfxController_->generateTexture(&polygon.textureId[0]);
-    gfxController_->bindTexture(polygon.textureId[0]);
-    gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
-    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
-    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
-    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
-    gfxController_->generateMipMap();
-
-    // Send texture coords to OpenGL
-    gfxController_->generateBuffer(&polygon.textureCoordsId[0]);
-    gfxController_->bindBuffer(polygon.textureCoordsId[0]);
-    gfxController_->sendBufferData(sizeof(GLfloat) * polygon.pointCount[0] * 6, &polygon.textureCoords[0][0]);
-
-    SDL_FreeSurface(texture);
 }
 
 /**
