@@ -19,7 +19,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_compile_options(-Wall -Werror)
-add_compile_options(-std=c++17)
 
 if (APPLE)
 include_directories(
@@ -68,6 +67,7 @@ add_executable(${PROJECT_NAME}
   src/main/misc/src/config.cpp
 )
 
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 IF($(GTest_FOUND))
 add_executable(gtest_ModelImportTests
