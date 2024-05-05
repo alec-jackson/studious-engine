@@ -78,7 +78,8 @@ void GameObject::configureOpenGl() {
         gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 9, &model->normalCoords[i][0]);
         gfxController_->enableVertexAttArray(2, 3);
         // Specific case where the current object does not get a texture
-        if (model->texturePath_.empty() || model->texturePattern_[i] >= model->texturePath_.size() ||
+        int size = static_cast<int>(model->texturePath_.size()) < 0 ? 0 : model->texturePath_.size();
+        if (model->texturePath_.empty() || model->texturePattern_[i] >= size ||
             model->texturePattern_[i] == -1) {
             gfxController_->bindVao(0);
             // ADD VAO TO LIST

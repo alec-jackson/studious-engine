@@ -76,7 +76,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendBufferData(size_t size, void 
 unsigned char *OpenGlEsGfxController::convertToRgba(size_t size, unsigned char *data) {
     unsigned char *convertedData = new unsigned char[size * 3];
     // Converts the single color texture to use the RGBA format
-    for (auto i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         convertedData[i * 3] = data[i];
         convertedData[i * 3 + 1] = data[i];
         convertedData[i * 3 + 2] = data[i];
