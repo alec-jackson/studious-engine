@@ -44,8 +44,8 @@ class CameraObject : public SceneObject {
     mat4 vpMatrixPerspective_;
     mat4 vpMatrixOrthographic_;
 
+    GLfloat cameraAngle_;
     GLfloat aspectRatio_;
     GLfloat nearClipping_;
     GLfloat farClipping_;
-    GLfloat cameraAngle_;
 };

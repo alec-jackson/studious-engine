@@ -53,10 +53,7 @@ class TextObject : public SceneObject {
  private:
     string message_;
     string fontPath_;
-    int fontSize;
-    Polygon *poly_;
     vector<GLuint> vaos_;
     vector<GLuint> vbos_;
-    unsigned int textureUniformId;
     map<GLchar, Character> characters;
 };

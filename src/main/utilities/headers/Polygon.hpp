@@ -28,8 +28,8 @@ class Polygon {
     vector<vector<GLfloat>> vertices;  // 2D vector for vertices
     vector<vector<GLfloat>> textureCoords;  // 2D vector for texture coord data
     vector<vector<GLfloat>> normalCoords;  // 2D vector for normal coord data
-    GLint textureUniformId;  // ID for finding texture sampler in OpenGL table
     vector<GLuint> pointCount;  // no. of distinct points in shape
     GLint numberOfObjects;  // Contains the number of objects in the model
+    GLint textureUniformId;  // ID for finding texture sampler in OpenGL table
     GLuint programId;  // Used for storing programId of object's shader
 };

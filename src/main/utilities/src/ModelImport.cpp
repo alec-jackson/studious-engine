@@ -119,19 +119,19 @@ int ModelImport::processLine(string charBuffer, int currentObject) {
  */
 int ModelImport::buildObject(int objectId) {
     cout << "Building Polygon obj index " << objectId << endl;
-    auto triCount = commands_.size() / 9;
+    uint triCount = commands_.size() / 9;
     vector<GLfloat> vertexVbo;
     vector<GLfloat> textureVbo;
     vector<GLfloat> normalVbo;
     /// @todo If any glitches occur, clear frame buffers between each buildObject call...
     // Iterate over each polygon in model
     cout << "pointCount is " << triCount << endl;
-    for (int i = 0; i < triCount; i++) {
-        for (int k = 0; k < 3; k++) {  // Loop through each point
-            int currentCommandIndex = (i*9) + (k*3);  // vertex coord command
-            int currentCommand = commands_[currentCommandIndex];
+    for (uint i = 0; i < triCount; i++) {
+        for (uint k = 0; k < 3; k++) {  // Loop through each point
+            uint currentCommandIndex = (i*9) + (k*3);  // vertex coord command
+            uint currentCommand = commands_[currentCommandIndex];
             // Assign vertex data
-            for (int l = 0; l < 3; l++) {
+            for (uint l = 0; l < 3; l++) {
                 vertexVbo.push_back(vertexFrame_[(currentCommand-1)*3+l]);
             }
             currentCommandIndex = (i*9) + (k*3) + 1;  // textureCoord command
@@ -145,7 +145,7 @@ int ModelImport::buildObject(int objectId) {
             }
             currentCommandIndex = (i*9) + (k*3) + 2;  // normal command
             currentCommand = commands_[currentCommandIndex];
-            for (int l = 0; l < 3; l++) {
+            for (uint l = 0; l < 3; l++) {
                 normalVbo.push_back(normalFrame_[(currentCommand-1)*3+l]);
             }
         }

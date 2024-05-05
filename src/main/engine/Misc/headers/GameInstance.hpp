@@ -41,16 +41,16 @@ typedef struct controllerReadout {
 class GameInstance {
  private:
     const Uint8 *keystate;
-    int audioID, controllersConnected;
+    GfxController *gfxController_;
     SDL_Window *window;
     SDL_Renderer *renderer;
-    SDL_Surface* screenSurface;
     SDL_Event event;
+    SDL_GLContext mainContext;
     vector<Mix_Chunk *> sound;
     vector<SceneObject *> sceneObjects_;
     vector<string> soundList_;
-    vector<string> fragShaders_;
     vector<string> vertShaders_;
+    vector<string> fragShaders_;
     vector<string> texturePathStage_;
     vector<string> texturePath_;
     GLdouble deltaTime;
@@ -59,8 +59,8 @@ class GameInstance {
     vec3 directionalLight;
     GLfloat luminance;
     int width_, height_;
+    int audioID, controllersConnected;
     mutex sceneLock_;
-    GfxController *gfxController_;
 
     void initWindow(int width, int height);
     void initAudio();
@@ -71,6 +71,7 @@ class GameInstance {
     GameInstance(vector<string> soundList, vector<string> vertShaders,
         vector<string> fragShaders, GfxController *gfxController, int width, int height);
     void startGame();
+    void stopGame();
     GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
         string objectName);
     CameraObject *createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
