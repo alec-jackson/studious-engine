@@ -341,7 +341,7 @@ void GameInstance::initWindow(int width, int height) {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
 #endif
     mainContext = SDL_GL_CreateContext(window);
-    if(!mainContext){ exit(EXIT_FAILURE); }
+    if (!mainContext) exit(EXIT_FAILURE);
 
     SDL_GL_SetSwapInterval(0);  // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
