@@ -24,7 +24,7 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(Polygon *target, GLuint programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
+ColliderObject::ColliderObject(Polygon *target, unsigned int programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
     const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
     SceneObject(type, objectName, gfxController), target_ { target }, translateMatrix_ { translateMatrix },
     scaleMatrix_ { scaleMatrix }, vpMatrix_ { vpMatrix } {
@@ -91,13 +91,13 @@ void ColliderObject::render() {
     }
 }
 
-void ColliderObject::createCollider(GLuint programId) {
+void ColliderObject::createCollider(unsigned int programId) {
     // Initialize VAO
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
     cout << "Building collider for " << objectName << endl;
-    GLfloat min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
-    GLfloat max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
+    float min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
+    float max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
     // Set MVP ID for collider object
     mvpId_ = gfxController_->getShaderVariable(programId, "MVP").get();
     // Go through objects and get absolute min/max points
@@ -118,7 +118,7 @@ void ColliderObject::createCollider(GLuint programId) {
     // Save resources on embedded systems
 #ifndef GFX_EMBEDDED
     // Manually build triangles for cube collider
-    vector<GLfloat> colliderVertices = {
+    vector<float> colliderVertices = {
         // First face
         min[0], min[1], min[2],
         min[0], min[1], max[2],
@@ -166,7 +166,7 @@ void ColliderObject::createCollider(GLuint programId) {
     poly_ = new Polygon(pointCount, programId, colliderVertices);
     gfxController_->generateBuffer(&poly_->shapeBufferId[0]);
     gfxController_->bindBuffer(poly_->shapeBufferId[0]);
-    gfxController_->sendBufferData(sizeof(GLfloat) * colliderVertices.size(), &colliderVertices[0]);
+    gfxController_->sendBufferData(sizeof(float) * colliderVertices.size(), &colliderVertices[0]);
     gfxController_->enableVertexAttArray(0, 3);
 #endif
     // Set the correct center points
@@ -187,15 +187,15 @@ ColliderObject::~ColliderObject() {
     delete poly_;
 }
 
-GLfloat ColliderObject::getColliderVertices(vector<GLfloat> vertices, int axis,
+float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
     bool (*test)(float a, float b)) {
     if (vertices.size() < 3) {
         cerr << "Error: Vertices vector is empty!\n";
         return 0.0f;
     }
-    GLfloat currentMin = vertices[axis];
+    float currentMin = vertices[axis];
     for (int i = 0; i < vertices.size() / 3; i++) {
-        GLfloat tempMin = vertices[i * 3 + axis];
+        float tempMin = vertices[i * 3 + axis];
         if (test(tempMin, currentMin)) {
             currentMin = tempMin;
         }

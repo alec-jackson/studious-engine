@@ -22,7 +22,7 @@
  * @param objectName Friendly name for the object used to identify it in the scene
  * @param gfxController Graphics controller for rendering the game scene
  */
-GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
+GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
     string objectName, ObjectType type, GfxController *gfxController):
     SceneObject(position, rotation, objectName, scale, characterModel->programId, type, gfxController),
     model { characterModel } {
@@ -63,28 +63,34 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GL
 void GameObject::configureOpenGl() {
     printf("GameObject::configureOpenGl: Configuring for %s with %d objects\n", objectName.c_str(), model->numberOfObjects);
     for (auto i = 0; i < model->numberOfObjects; ++i) {
-        GLuint vao;
+        unsigned int vao;
         gfxController_->initVao(&vao);
         gfxController_->bindVao(vao);
         // Generate vertex buffer
         gfxController_->generateBuffer(&model->shapeBufferId[i]);
         gfxController_->bindBuffer(model->shapeBufferId[i]);
-        gfxController_->sendBufferData(sizeof(GLfloat) * model->pointCount[i] * 9, &model->vertices[i][0]);
+        gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 9, &model->vertices[i][0]);
         gfxController_->enableVertexAttArray(0, 3);
         // Generate normal buffer
         gfxController_->generateBuffer(&model->normalBufferId[i]);
         gfxController_->bindBuffer(model->normalBufferId[i]);
-        gfxController_->sendBufferData(sizeof(GLfloat) * model->pointCount[i] * 9, &model->normalCoords[i][0]);
+        gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 9, &model->normalCoords[i][0]);
         gfxController_->enableVertexAttArray(2, 3);
         // Specific case where the current object does not get a texture
         if (model->texturePath_.empty() || model->texturePattern_[i] >= model->texturePath_.size() ||
             model->texturePattern_[i] == -1) {
-            return;
+            gfxController_->bindVao(0);
+            // ADD VAO TO LIST
+            vaos_.push_back(vao);
+            continue;
         }
         SDL_Surface *texture = IMG_Load(model->texturePath_[model->texturePattern_[i]].c_str());
         if (texture == NULL) {
             cerr << "Failed to create SDL_Surface texture!\n";
-            return;
+            gfxController_->bindVao(0);
+            // ADD VAO TO LIST
+            vaos_.push_back(vao);
+            continue;
         }
 
         auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
@@ -92,6 +98,8 @@ void GameObject::configureOpenGl() {
         gfxController_->generateTexture(&model->textureId[i]);
         gfxController_->bindTexture(model->textureId[i]);
         gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
+        gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
+        gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
         gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
         gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
         gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
@@ -100,11 +108,12 @@ void GameObject::configureOpenGl() {
         // Send texture coords to OpenGL
         gfxController_->generateBuffer(&model->textureCoordsId[i]);
         gfxController_->bindBuffer(model->textureCoordsId[i]);
-        gfxController_->sendBufferData(sizeof(GLfloat) * model->pointCount[i] * 6, &model->textureCoords[i][0]);
+        gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 6, &model->textureCoords[i][0]);
         gfxController_->enableVertexAttArray(1, 2);
 
         SDL_FreeSurface(texture);
         gfxController_->bindVao(0);
+        gfxController_->bindTexture(0);
         // ADD VAO TO LIST
         vaos_.push_back(vao);
     }
@@ -178,9 +187,10 @@ void GameObject::render() {
         gfxController_->bindVao(vaos_[i]);
         if (hasTexture[i]) {
             // Bind texture to sampler for polygon rendering below
+            gfxController_->sendInteger(model->textureUniformId, 0);
             gfxController_->bindTexture(model->textureId[i]);
             // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
-            gfxController_->sendInteger(model->textureUniformId, 0);
+            
         }
         gfxController_->drawTriangles(model->pointCount[i] * 3);
         gfxController_->bindVao(0);

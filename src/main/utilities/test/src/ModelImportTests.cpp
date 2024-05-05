@@ -29,7 +29,7 @@ class ModelImportTest: public ::testing::Test {
         delete dummyController;
     }
     vector<string> texturePathStage;
-    vector<GLint> texturePatternStage;
+    vector<int> texturePatternStage;
     ModelImport *modelImport;
     DummyGfxController *dummyController;
 };

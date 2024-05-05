@@ -24,7 +24,7 @@ using std::ifstream;
 */
 class ModelImport {
  public:
-      explicit ModelImport(string, vector<string>, vector<GLint>, GLuint);
+      explicit ModelImport(string, vector<string>, vector<int>, unsigned int);
       Polygon createPolygonFromFile();
       inline Polygon getPolygon() { return polygon_; }
       int processLine(string, int);
@@ -33,12 +33,12 @@ class ModelImport {
  private:
       string modelPath_;
       vector<string> texturePath_;
-      vector<GLint> texturePattern_;
+      vector<int> texturePattern_;
       int textureCount_;  // Size of the texturePath vector
-      GLuint programId_;
-      vector<GLfloat> vertexFrame_;  // Unique vertex points
-      vector<GLfloat> normalFrame_;  // Unique normal points
-      vector<GLfloat> textureFrame_;  // Unique texture points
-      vector<GLint> commands_;  // Commands in obj file to build buffers
+      unsigned int programId_;
+      vector<float> vertexFrame_;  // Unique vertex points
+      vector<float> normalFrame_;  // Unique normal points
+      vector<float> textureFrame_;  // Unique texture points
+      vector<int> commands_;  // Commands in obj file to build buffers
       Polygon polygon_;
 };

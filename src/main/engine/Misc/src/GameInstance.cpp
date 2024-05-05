@@ -34,9 +34,9 @@ GameInstance::GameInstance(vector<string> soundList, vector<string> vertShaders,
 
 void GameInstance::startGame() {
     initWindow(width_, height_);
-    //initAudio();
+    initAudio();
     // Comment out playSound to disable music
-    //playSound(0, 1);
+    playSound(0, 1);
     initController();
     initApplication(vertShaders_, fragShaders_);
     keystate = SDL_GetKeyboardState(NULL);
@@ -102,7 +102,11 @@ int GameInstance::getControllersConnected() {
  (void) playSound does not return any value.
 */
 void GameInstance::playSound(int soundIndex, int loop) {
-    Mix_PlayChannel(-1, sound[soundIndex], loop);
+    if (audioInitialized_) {
+        Mix_PlayChannel(-1, sound[soundIndex], loop);
+    } else {
+        fprintf(stderr, "GameInstance::playSound: Sound uninitialized, not playing any sounds\n");
+    }
 }
 
 /*
@@ -219,18 +223,18 @@ int GameInstance::updateWindow() {
 }
 
 /*
- (int) setDeltaTime takes a (GLdouble) time and sets the current GameInstance's
+ (int) setDeltaTime takes a (double) time and sets the current GameInstance's
  deltaTime value to that time value. This time value should only ever be the
  amount of time in seconds passed since the last rendered frame.
 
  (int) setDeltaTime returns 0 upon success.
 */
-int GameInstance::setDeltaTime(GLdouble time) {
+int GameInstance::setDeltaTime(double time) {
     deltaTime = time;
     return 0;
 }
 
-GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
+GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
     string objectName) {
     printf("GameInstance::createGameObject: Creating GameObject %lu\n", sceneObjects_.size());
     auto gameObject = new GameObject(characterModel, position, rotation, scale, objectName, ObjectType::GAME_OBJECT,
@@ -241,8 +245,8 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
     return gameObject;
 }
 
-CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
-              GLfloat nearClipping, GLfloat farClipping) {
+CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+              float nearClipping, float farClipping) {
     printf("GameInstance::createCamera: Creating CameraObject %lu\n", sceneObjects_.size());
     auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
     auto gameCamera = new CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping,
@@ -251,7 +255,7 @@ CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, GLfloa
     return gameCamera;
 }
 
-TextObject *GameInstance::createText(string message, vec3 position, GLfloat scale, string fontPath, GLuint programId,
+TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath, unsigned int programId,
     string objectName) {
     printf("GameInstance::createText: Creating TextObject %lu\n", sceneObjects_.size());
     auto text = new TextObject(message, position, scale, fontPath, programId, objectName, ObjectType::TEXT_OBJECT,
@@ -269,10 +273,10 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
 }
 
 /*
- (GLdouble) getDeltaTime returns the amount of time in second since the last
+ (double) getDeltaTime returns the amount of time in second since the last
  rendered frame.
 */
-GLdouble GameInstance::getDeltaTime() {
+double GameInstance::getDeltaTime() {
     return deltaTime;
 }
 
@@ -300,9 +304,9 @@ int GameInstance::getCollision(GameObject *object1, GameObject *object2,
 
 /*
  (void) setLuminance sets the current GameInstance's luminance value to the
- provided (GLfloat) luminanceValue.
+ provided (float) luminanceValue.
 */
-void GameInstance::setLuminance(GLfloat luminanceValue) {
+void GameInstance::setLuminance(float luminanceValue) {
     luminance = luminanceValue;
 }
 
@@ -351,13 +355,13 @@ void GameInstance::initAudio() {
     if (audioID < 0) {
         cerr << "Error: Unable to open audio: " << SDL_GetError() <<
             "\n";
-        exit(-1);
+        return;
     }
     audioID = Mix_AllocateChannels(4);
     if (audioID < 0) {
         cerr << "Error: Unable to allocate mixing channels: "
             << SDL_GetError() << "\n";
-        exit(-1);
+        return;
     }
     vector<string>::iterator it;
     int i = 0;
@@ -367,6 +371,7 @@ void GameInstance::initAudio() {
             cerr << "Error: Unable to load wave file: " << soundList_[i] << '\n';
         }
     }
+    audioInitialized_ = true;
 }
 
 /*

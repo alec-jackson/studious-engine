@@ -32,7 +32,6 @@
 #endif
 #include <iostream>
 #define SDL2_image  // ? Should we remove this?
-#include <GL/glew.h> //NOLINT
 #define GLM_ENABLE_EXPERIMENTAL  // Keep this, I don't really remember why but just do it
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

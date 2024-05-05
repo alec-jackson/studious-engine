@@ -10,6 +10,7 @@
  */
 
 #pragma once
+#include <GL/glew.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -17,52 +18,52 @@
 #include <Polygon.hpp>
 #include <common.hpp>
 // Temporary until we get a logger, disables noisy OpenGL logs
-#define VERBOSE_LOGS
+// #define VERBOSE_LOGS
 
 struct GfxVaoData {
-   GLuint layout;
-   size_t size;
+    unsigned int layout;
+    size_t size;
 };
 
 class OpenGlEsGfxController : public GfxController {
  public:
-    GfxResult<GLint> init();
-    GfxResult<GLuint> generateBuffer(GLuint *bufferId);
-    GfxResult<GLuint> generateTexture(GLuint *textureId);
-    GfxResult<GLuint> bindBuffer(GLuint bufferId);
-    GfxResult<GLuint> sendBufferData(size_t size, void *data);
-    GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, TexFormat format, void *data);
-    GfxResult<GLint> getShaderVariable(GLuint, const char *);
-    GfxResult<GLint> cleanup();
-    GfxResult<GLuint> getProgramId(uint);
-    GfxResult<GLuint> setProgram(GLuint programId);
-    GfxResult<GLuint> loadShaders(string, string);
-    GfxResult<GLuint> sendFloat(GLuint variableId, GLfloat data);
-    GfxResult<GLuint> sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data);
-    GfxResult<GLuint> polygonRenderMode(RenderMode mode);
-    GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data);
-    GfxResult<GLuint> sendInteger(GLuint variableId, GLint data);
-    GfxResult<GLuint> bindTexture(GLuint textureId);
-    GfxResult<GLuint> initVao(GLuint *vao);
-    GfxResult<GLuint> bindVao(GLuint vao);
-    GfxResult<GLuint> setCapability(GfxCapability capabilityId, bool enabled);
-    GfxResult<GLuint> deleteTextures(GLuint *tId);
-    GfxResult<GLuint> updateBufferData(const vector<GLfloat> &vertices, GLuint vbo);
-    GfxResult<GLuint> setTexParam(TexParam param, TexVal val);
-    GfxResult<GLuint> generateMipMap();
-    GfxResult<GLuint> enableVertexAttArray(GLuint layout, size_t size);
-    GfxResult<GLuint> disableVertexAttArray(GLuint layout);
-    GfxResult<GLuint> drawTriangles(GLuint size);
-    void deleteVao(GLuint *vao);
-    void deleteBuffer(GLuint *bufferId);
+    GfxResult<int> init();
+    GfxResult<unsigned int> generateBuffer(unsigned int *bufferId);
+    GfxResult<unsigned int> generateTexture(unsigned int *textureId);
+    GfxResult<unsigned int> bindBuffer(unsigned int bufferId);
+    GfxResult<unsigned int> sendBufferData(size_t size, void *data);
+    GfxResult<unsigned int> sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data);
+    GfxResult<int> getShaderVariable(unsigned int, const char *);
+    GfxResult<int> cleanup();
+    GfxResult<unsigned int> getProgramId(uint);
+    GfxResult<unsigned int> setProgram(unsigned int programId);
+    GfxResult<unsigned int> loadShaders(string, string);
+    GfxResult<unsigned int> sendFloat(unsigned int variableId, float data);
+    GfxResult<unsigned int> sendFloatVector(unsigned int variableId, size_t count, float *data);
+    GfxResult<unsigned int> polygonRenderMode(RenderMode mode);
+    GfxResult<unsigned int> sendFloatMatrix(unsigned int variableId, size_t count, float *data);
+    GfxResult<unsigned int> sendInteger(unsigned int variableId, int data);
+    GfxResult<unsigned int> bindTexture(unsigned int textureId);
+    GfxResult<unsigned int> initVao(unsigned int *vao);
+    GfxResult<unsigned int> bindVao(unsigned int vao);
+    GfxResult<unsigned int> setCapability(GfxCapability capabilityId, bool enabled);
+    GfxResult<unsigned int> deleteTextures(unsigned int *tId);
+    GfxResult<unsigned int> updateBufferData(const vector<float> &vertices, unsigned int vbo);
+    GfxResult<unsigned int> setTexParam(TexParam param, TexVal val);
+    GfxResult<unsigned int> generateMipMap();
+    GfxResult<unsigned int> enableVertexAttArray(unsigned int layout, size_t size);
+    GfxResult<unsigned int> disableVertexAttArray(unsigned int layout);
+    GfxResult<unsigned int> drawTriangles(unsigned int size);
+    void deleteVao(unsigned int *vao);
+    void deleteBuffer(unsigned int *bufferId);
     void clear(GfxClearMode clearMode);
     void update();
     void updateOpenGl();
 
  private:
-    vector<GLuint> programIdList_;
+    vector<unsigned int> programIdList_;
     // VAO -> (VBO -> Attribute Data)
-    map<GLuint, map<GLuint, GfxVaoData>> vaoBindData_;
-    GLuint activeVao_ = 0;
-    GLuint activeVbo_ = 0;
+    map<unsigned int, map<unsigned int, GfxVaoData>> vaoBindData_;
+    unsigned int activeVao_ = 0;
+    unsigned int activeVbo_ = 0;
 };

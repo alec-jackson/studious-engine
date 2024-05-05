@@ -15,9 +15,9 @@
  * @brief Generates a buffer in the OpenGL context
  * 
  * @param bufferId unsigned int to store new buffer ID created in OpenGL context
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::generateBuffer(GLuint *bufferId) {
+GfxResult<unsigned int> OpenGlGfxController::generateBuffer(unsigned int *bufferId) {
 #ifdef VERBOSE_LOGS
     printf("OpenGlGfxController::generateBuffer: bufferId %p\n", bufferId);
 #endif
@@ -25,25 +25,25 @@ GfxResult<GLuint> OpenGlGfxController::generateBuffer(GLuint *bufferId) {
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::generateBuffer: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Binds a buffer to the current OpenGL context
  * 
  * @param bufferId ID of buffer to bind (needs to be generated first via generateBuffer)
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::bindBuffer(GLuint bufferId) {
+GfxResult<unsigned int> OpenGlGfxController::bindBuffer(unsigned int bufferId) {
     glBindBuffer(GL_ARRAY_BUFFER, bufferId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::bindBuffer: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -52,9 +52,9 @@ GfxResult<GLuint> OpenGlGfxController::bindBuffer(GLuint bufferId) {
  * 
  * @param size Size of the data array
  * @param data The data array write to the OpenGL buffer
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
+GfxResult<unsigned int> OpenGlGfxController::sendBufferData(size_t size, void *data) {
 #ifdef VERBOSE_LOGS
     printf("OpenGlGfxController::sendBufferData: size %lu data %p\n", size, data);
 #endif
@@ -62,9 +62,9 @@ GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::sendBufferData: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -74,9 +74,9 @@ GfxResult<GLuint> OpenGlGfxController::sendBufferData(size_t size, void *data) {
  * @param height of the texture to send
  * @param format of the texture
  * @param data pixel data to send to the GPU
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint height, TexFormat format, void *data) {
+GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data) {
     auto texFormat = GL_RGB;
     switch (format) {
         case RGBA:
@@ -90,78 +90,78 @@ GfxResult<GLuint> OpenGlGfxController::sendTextureData(GLuint width, GLuint heig
             break;
         default:
             fprintf(stderr, "OpenGlGfxController::sendTextureData: Unknown texture format %d\n", format);
-            return GFX_FAILURE(GLuint);
+            return GFX_FAILURE(unsigned int);
     }
     glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, data);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::sendTextureData: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Generates mipmaps for the currently bound texture
  * 
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::generateMipMap() {
+GfxResult<unsigned int> OpenGlGfxController::generateMipMap() {
 #ifndef GFX_EMBEDDED
     glGenerateMipmap(GL_TEXTURE_2D);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::generateMipMap: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
 #endif
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Generates a new texture and writes the new texture ID to the textureId variable passed in.
  * 
  * @param textureId assigned to newly created texture in OpenGL context.
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::generateTexture(GLuint *textureId) {
+GfxResult<unsigned int> OpenGlGfxController::generateTexture(unsigned int *textureId) {
     glGenTextures(1, textureId);
 
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::generateTexture: Error: %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Cleans up OpenGL artifacts. Currently a WIP.
  * 
- * @return GfxResult<GLint> OK result containing the number of deleted programs.
+ * @return GfxResult<int> OK result containing the number of deleted programs.
  */
-GfxResult<GLint> OpenGlGfxController::cleanup() {
+GfxResult<int> OpenGlGfxController::cleanup() {
     auto deletedPrograms = 0;
     for (auto it = programIdList_.begin(); it != programIdList_.end(); ++it) {
         glDeleteProgram(*it);
         deletedPrograms++;
     }
     // glDeleteVertexArrays(1, &vertexArrayId_);
-    return GfxResult<GLint>(GfxApiResult::OK, deletedPrograms);
+    return GfxResult<int>(GfxApiResult::OK, deletedPrograms);
 }
 
 /**
  * @brief Gets a programId for a specific index in the programIdList.
  * 
  * @param index in the programId list
- * @return GfxResult<GLuint> OK with returned program ID when successful; FAILURE otherwise.
+ * @return GfxResult<unsigned int> OK with returned program ID when successful; FAILURE otherwise.
  */
-GfxResult<GLuint> OpenGlGfxController::getProgramId(uint index) {
+GfxResult<unsigned int> OpenGlGfxController::getProgramId(uint index) {
     // Boundary check index
     if (index > programIdList_.size()) {
-        return GfxResult<GLuint>(GfxApiResult::FAILURE, UINT_MAX);
+        return GfxResult<unsigned int>(GfxApiResult::FAILURE, UINT_MAX);
     }
-    return GfxResult<GLuint>(GfxApiResult::OK, programIdList_[index]);
+    return GfxResult<unsigned int>(GfxApiResult::OK, programIdList_[index]);
 }
 
 /**
@@ -169,26 +169,26 @@ GfxResult<GLuint> OpenGlGfxController::getProgramId(uint index) {
  * 
  * @param vertexShader Path to the vertexShader to compile on the system
  * @param fragmentShader Path to the fragmentShader to compile on the system
- * @return GfxResult<GLuint> OK with the newly created programId; FAILURE otherwise.
+ * @return GfxResult<unsigned int> OK with the newly created programId; FAILURE otherwise.
  */
-GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string fragmentShader) {
-    GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+GfxResult<unsigned int> OpenGlGfxController::loadShaders(string vertexShader, string fragmentShader) {
+    unsigned int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    unsigned int fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     int logLength;
-    GLint success = GL_FALSE;
+    int success = GL_FALSE;
     string vertShader, fragShader, tempLine;
     ifstream file;
     file.open(vertexShader);
     if (!file.is_open()) {  // If the file does not exist or cannot be opened
         cerr << "Error: Cannot open file " << vertexShader << "!\n";
-        return GfxResult<GLuint>(GfxApiResult::FAILURE, UINT_MAX);
+        return GfxResult<unsigned int>(GfxApiResult::FAILURE, UINT_MAX);
     }
     while (getline(file, tempLine)) {
         vertShader.append(tempLine + '\n');
     }
     cout << "Now compiling " << vertexShader << "...\n";
-    vector<const GLchar *> vertShaderInfo(1);
-    vertShaderInfo[0] = reinterpret_cast<const GLchar *>(vertShader.c_str());
+    vector<const char *> vertShaderInfo(1);
+    vertShaderInfo[0] = reinterpret_cast<const char *>(vertShader.c_str());
     glShaderSource(vertexShaderID, 1, &vertShaderInfo[0], NULL);
     glCompileShader(vertexShaderID);
     glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &success);
@@ -203,14 +203,14 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
     file.open(fragmentShader);
     if (!file.is_open()) {  // If the file does not exist or cannot be opened
         cerr << "Error: Cannot open file " << fragmentShader << "!\n";
-        return GfxResult<GLuint>(GfxApiResult::FAILURE, UINT_MAX);
+        return GfxResult<unsigned int>(GfxApiResult::FAILURE, UINT_MAX);
     }
     while (getline(file, tempLine)) {
         fragShader.append(tempLine + '\n');
     }
     cout << "Now compiling " << fragmentShader << "...\n";
-    vector<const GLchar *>fragShaderInfo(1);
-    fragShaderInfo[0] = reinterpret_cast<const GLchar *>(fragShader.c_str());
+    vector<const char *>fragShaderInfo(1);
+    fragShaderInfo[0] = reinterpret_cast<const char *>(fragShader.c_str());
     glShaderSource(fragmentShaderID, 1, &fragShaderInfo[0], NULL);
     glCompileShader(fragmentShaderID);
     glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &success);
@@ -221,7 +221,7 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
         cerr << fragmentShader << ": " << &errorLog[0] << "\n";
     }
     file.close();
-    GLuint programId = glCreateProgram();
+    unsigned int programId = glCreateProgram();
     glAttachShader(programId, vertexShaderID);
     glAttachShader(programId, fragmentShaderID);
     glLinkProgram(programId);
@@ -241,7 +241,7 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
 
     printf("OpenGlGfxController::loadShaders: Created programId %d\n", programId);
 
-    return GfxResult<GLuint>(GfxApiResult::OK, programId);
+    return GfxResult<unsigned int>(GfxApiResult::OK, programId);
 }
 
 /**
@@ -249,12 +249,12 @@ GfxResult<GLuint> OpenGlGfxController::loadShaders(string vertexShader, string f
  * 
  * @param programId program to search for variable inside of.
  * @param variableName name of variable to find in shader.
- * @return GfxResult<GLint> OK with variableId; FAILURE otherwise.
+ * @return GfxResult<int> OK with variableId; FAILURE otherwise.
  */
-GfxResult<GLint> OpenGlGfxController::getShaderVariable(GLuint programId, const char *variableName) {
+GfxResult<int> OpenGlGfxController::getShaderVariable(unsigned int programId, const char *variableName) {
     auto varId = glGetUniformLocation(programId, variableName);
-    auto result = GfxResult<GLint>(GfxApiResult::FAILURE, varId);
-    if (varId == -1) result = GfxResult<GLint>(GfxApiResult::OK, varId);
+    auto result = GfxResult<int>(GfxApiResult::FAILURE, varId);
+    if (varId == -1) result = GfxResult<int>(GfxApiResult::OK, varId);
     return result;
 }
 
@@ -294,33 +294,33 @@ void OpenGlGfxController::update() {
 /**
  * @brief Initialize the OpenGL context.
  * 
- * @return GfxResult<GLint> OK if successful; FAILURE otherwise
+ * @return GfxResult<int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLint> OpenGlGfxController::init() {
+GfxResult<int> OpenGlGfxController::init() {
     cout << "OpenGlGfxController::init" << endl;
     if (glewInit() != GLEW_OK) {
         cerr << "Error: Failed to initialize GLEW!\n";
-        return GFX_FAILURE(GLint);
+        return GFX_FAILURE(int);
     }
     // Set pixel storage alignment mode for font loading
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    return GFX_OK(GLint);
+    return GFX_OK(int);
 }
 
 /**
  * @brief Sets the current program (shader) in the OpenGL context.
  * 
  * @param programId created by OpenGL for a set of shaders (program).
- * @return GfxResult<GLuint> OK if successful, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if successful, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
+GfxResult<unsigned int> OpenGlGfxController::setProgram(unsigned int programId) {
     glUseProgram(programId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::setProgram: programId %d Error: %d\n", programId, error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -328,11 +328,11 @@ GfxResult<GLuint> OpenGlGfxController::setProgram(GLuint programId) {
  * 
  * @param variableId of the variable inside of the program to send data to
  * @param data to write to variable
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::sendFloat(GLuint variableId, GLfloat data) {
+GfxResult<unsigned int> OpenGlGfxController::sendFloat(unsigned int variableId, float data) {
     glUniform1f(variableId, data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -341,11 +341,11 @@ GfxResult<GLuint> OpenGlGfxController::sendFloat(GLuint variableId, GLfloat data
  * @param variableId variableId to write data to
  * @param count Number of float vectors to send
  * @param data Raw data to send to GPU
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) {
+GfxResult<unsigned int> OpenGlGfxController::sendFloatVector(unsigned int variableId, size_t count, float *data) {
     glUniform3fv(variableId, count, data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -353,10 +353,10 @@ GfxResult<GLuint> OpenGlGfxController::sendFloatVector(GLuint variableId, GLsize
  * @see RenderMode enum for rendering options.
  * 
  * @param mode method for rendering triangles.
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
-    auto result = GFX_OK(GLuint);
+GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
+    auto result = GFX_OK(unsigned int);
     // Unsupported operations in OpenGL ES...
 #ifndef GFX_EMBEDDED
     switch (mode) {
@@ -371,14 +371,14 @@ GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
             break;
         default:
             fprintf(stderr, "OpenGlGfxController::polygonRenderMode: Unsupported render mode %d", mode);
-            result = GFX_FAILURE(GLuint);
+            result = GFX_FAILURE(unsigned int);
             break;
     }
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
         fprintf(stderr, "OpenGlGfxController::polygonRenderMode: mode %d, Error: %d\n", mode, error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
 #endif
     return result;
@@ -390,11 +390,11 @@ GfxResult<GLuint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
  * @param variableId Variable to write data to
  * @param count Number of matrices to write - generally just one
  * @param data Raw data to send over to program variable.
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) {
+GfxResult<unsigned int> OpenGlGfxController::sendFloatMatrix(unsigned int variableId, size_t count, float *data) {
     glUniformMatrix4fv(variableId, count, GL_FALSE, data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -402,20 +402,20 @@ GfxResult<GLuint> OpenGlGfxController::sendFloatMatrix(GLuint variableId, GLsize
  * 
  * @param variableId Variable identifier in the current program
  * @param data Raw data to copy to GPU
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::sendInteger(GLuint variableId, GLint data) {
+GfxResult<unsigned int> OpenGlGfxController::sendInteger(unsigned int variableId, int data) {
     glUniform1i(variableId, data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Binds a texture to the current OpenGL context.
  * 
  * @param textureId ID of texture to bind.
- * @return GfxResult<GLuint> OK if successful; FAILURE otherwise
+ * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId) {
+GfxResult<unsigned int> OpenGlGfxController::bindTexture(unsigned int textureId) {
     // Use texture unit zero - nothing fancy
     glActiveTexture(GL_TEXTURE0);
     // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
@@ -424,9 +424,9 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId) {
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
         fprintf(stderr, "OpenGlGfxController::bindTexture: textureId %u, Error: %d\n", textureId, error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -434,19 +434,19 @@ GfxResult<GLuint> OpenGlGfxController::bindTexture(GLuint textureId) {
  * @note The name of this method will most likely change other GFX backends are added.
  * 
  * @param vao VAO ID to bind
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::bindVao(GLuint vao) {
+GfxResult<unsigned int> OpenGlGfxController::bindVao(unsigned int vao) {
 #ifndef GFX_EMBEDDED
     glBindVertexArray(vao);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
         fprintf(stderr, "OpenGlGfxController::bindVao: vao %u, Error: %d\n", vao, error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
 #endif
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -458,9 +458,9 @@ GfxResult<GLuint> OpenGlGfxController::bindVao(GLuint vao) {
  * 
  * @param capabilityId ID of the capability to toggle on/off.
  * @param enabled Whether or not to enable/disable the capability
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::setCapability(GfxCapability capability, bool enabled) {
+GfxResult<unsigned int> OpenGlGfxController::setCapability(GfxCapability capability, bool enabled) {
     auto capabilityId = 0;
     switch (capability) {
         case CULL_FACE:
@@ -469,52 +469,52 @@ GfxResult<GLuint> OpenGlGfxController::setCapability(GfxCapability capability, b
         default:
             printf("OpenGlGfxController::setCapability: Unknown capability %d\n",
                 static_cast<int>(capability));
-            return GFX_FAILURE(GLuint);
+            return GFX_FAILURE(unsigned int);
     }
     enabled ? glEnable(capabilityId) : glDisable(capabilityId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::setCapability: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Initializes a VAO object
  * 
  * @param vao to initialize
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::initVao(GLuint *vao) {
+GfxResult<unsigned int> OpenGlGfxController::initVao(unsigned int *vao) {
 #ifndef GFX_EMBEDDED
     glGenVertexArrays(1, vao);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::initVao: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
 #endif
 #ifdef VERBOSE_LOGS
     printf("OpenGlGfxController::initVao: Created vao %d\n", *vao);
 #endif
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Deletes textures from the OpenGL context.
  * 
  * @param tId texture ID to delete in the OpenGL context.
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::deleteTextures(GLuint *tId) {
+GfxResult<unsigned int> OpenGlGfxController::deleteTextures(unsigned int *tId) {
     glDeleteTextures(1, tId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::deleteTextures: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -522,18 +522,18 @@ GfxResult<GLuint> OpenGlGfxController::deleteTextures(GLuint *tId) {
  * 
  * @param vertices Vector of vertex data to copy to VBO object
  * @param vbo identifier for the buffer to write data into
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::updateBufferData(const vector<GLfloat> &vertices, GLuint vbo) {
+GfxResult<unsigned int> OpenGlGfxController::updateBufferData(const vector<float> &vertices, unsigned int vbo) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * vertices.size(), &vertices[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * vertices.size(), &vertices[0]);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::updateBufferData: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -541,9 +541,9 @@ GfxResult<GLuint> OpenGlGfxController::updateBufferData(const vector<GLfloat> &v
  * 
  * @param param parameter to update @see TexParam in GfxController
  * @param val value to set for the given parameter
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
+GfxResult<unsigned int> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
     // Convert Studious GFX enums to OpenGL enums
     auto glParam = 0;
     auto glVal = 0;
@@ -566,7 +566,7 @@ GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
         default:
             printf("OpenGlGfxController::setTexParam: Unknown parameter option for OpenGL: %d\n",
                 static_cast<int>(param));
-            return GFX_FAILURE(GLuint);
+            return GFX_FAILURE(unsigned int);
     }
     switch (val.type()) {
         case CLAMP_TO_EDGE:
@@ -593,9 +593,9 @@ GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::setTexParam: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -603,55 +603,55 @@ GfxResult<GLuint> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
  * 
  * @param layout The layout set in the OpenGL shader
  * @param size The per-object size. A 3D vertex would have a size of 3, because each point is made of 3 floats
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::enableVertexAttArray(GLuint layout, size_t size) {
+GfxResult<unsigned int> OpenGlGfxController::enableVertexAttArray(unsigned int layout, size_t size) {
     glVertexAttribPointer(
         layout,                     // layout in shader
         size,                       // size
         GL_FLOAT,                   // type
         GL_FALSE,                   // normalized?
-        size * sizeof(GLfloat),     // stride
+        size * sizeof(float),     // stride
         0);                         // array buffer offset
     glEnableVertexAttribArray(layout);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::enableVertexAttArray: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Disables a vertex attribute array in the OpenGL context.
  * 
  * @param layout The layout of the vertex attribute array to disable in the current program.
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::disableVertexAttArray(GLuint layout) {
+GfxResult<unsigned int> OpenGlGfxController::disableVertexAttArray(unsigned int layout) {
     glDisableVertexAttribArray(layout);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::disableVertexAttArray: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
  * @brief Draws triangles using currently bound textures/buffers.
  * 
  * @param size The number of vertices to render
- * @return GfxResult<GLuint> OK if succeeded, FAILURE if error occurred
+ * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<GLuint> OpenGlGfxController::drawTriangles(GLuint size) {
+GfxResult<unsigned int> OpenGlGfxController::drawTriangles(unsigned int size) {
     glDrawArrays(GL_TRIANGLES, 0, size);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::drawTriangles: Error %d\n", error);
-        return GFX_FAILURE(GLuint);
+        return GFX_FAILURE(unsigned int);
     }
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 /**
@@ -681,7 +681,7 @@ void OpenGlGfxController::clear(GfxClearMode clearMode) {
  * 
  * @param bufferId pointer to VBO ID of buffer to delete
  */
-void OpenGlGfxController::deleteBuffer(GLuint *bufferId) {
+void OpenGlGfxController::deleteBuffer(unsigned int *bufferId) {
     glDeleteBuffers(1, bufferId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -694,7 +694,7 @@ void OpenGlGfxController::deleteBuffer(GLuint *bufferId) {
  * 
  * @param vao pointer to VAO ID of VAO to delete
  */
-void OpenGlGfxController::deleteVao(GLuint *vao) {
+void OpenGlGfxController::deleteVao(unsigned int *vao) {
 #ifndef GFX_EMBEDDED
     glDeleteVertexArrays(1, vao);
     auto error = glGetError();

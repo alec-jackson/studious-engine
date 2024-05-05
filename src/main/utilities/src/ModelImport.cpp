@@ -11,7 +11,7 @@
 
 #include <ModelImport.hpp>
 
-ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<GLint> texturePattern, GLuint programId) :
+ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern, unsigned int programId) :
     modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
     programId_ { programId } {
     cout << "ModelImport::ModelImport" << endl;
@@ -56,32 +56,32 @@ Polygon ModelImport::createPolygonFromFile() {
 int ModelImport::processLine(string charBuffer, int currentObject) {
     // Compare the first two "header" bytes of the obj file below
     if (charBuffer.compare(0, 2, "v ") == 0) {
-        vector<GLfloat> tempVertices(3);
+        vector<float> tempVertices(3);
         sscanf(charBuffer.c_str(), "v %f %f %f\n", &tempVertices[0],
             &tempVertices[1], &tempVertices[2]);
         // Add tempVertices to vertexFrame
-        vector<GLfloat>::iterator it;
+        vector<float>::iterator it;
         for (it = tempVertices.begin(); it != tempVertices.end(); ++it) {
             vertexFrame_.push_back(*it);  // Add points to vertexFrame
         }
     } else if (charBuffer.compare(0, 2, "vt") == 0) {
-        vector<GLfloat> tempTextures(2);
+        vector<float> tempTextures(2);
         sscanf(charBuffer.c_str(), "vt %f %f\n", &tempTextures[0],
             &tempTextures[1]);
-        vector<GLfloat>::iterator it;
+        vector<float>::iterator it;
         for (it = tempTextures.begin(); it != tempTextures.end(); ++it) {
             textureFrame_.push_back(*it);  // Add points to textureFrame
         }
     } else if (charBuffer.compare(0, 2, "vn") == 0) {
-        vector<GLfloat> tempNormals(3);
+        vector<float> tempNormals(3);
         sscanf(charBuffer.c_str(), "vn %f %f %f\n", &tempNormals[0],
             &tempNormals[1], &tempNormals[2]);
-        vector<GLfloat>::iterator it;
+        vector<float>::iterator it;
         for (it = tempNormals.begin(); it != tempNormals.end(); ++it) {
             normalFrame_.push_back(*it);  // Add points to normalFrame
         }
     } else if (charBuffer.compare(0, 2, "f ") == 0) {
-        vector<GLint> coms(9);
+        vector<int> coms(9);
         // If the model is missing texture coordinates, take into account
         if (charBuffer.find("//") != std::string::npos) {
             sscanf(charBuffer.c_str(), "f %i//%i %i//%i %i//%i\n",
@@ -94,7 +94,7 @@ int ModelImport::processLine(string charBuffer, int currentObject) {
                 &coms[0], &coms[1], &coms[2], &coms[3], &coms[4], &coms[5],
                 &coms[6], &coms[7], &coms[8]);
         }
-        vector<GLint>::iterator it;
+        vector<int>::iterator it;
         for (it = coms.begin(); it != coms.end(); ++it) {
             commands_.push_back(*it);  // Add commands from temp to main vec
         }
@@ -120,9 +120,9 @@ int ModelImport::processLine(string charBuffer, int currentObject) {
 int ModelImport::buildObject(int objectId) {
     cout << "Building Polygon obj index " << objectId << endl;
     auto triCount = commands_.size() / 9;
-    vector<GLfloat> vertexVbo;
-    vector<GLfloat> textureVbo;
-    vector<GLfloat> normalVbo;
+    vector<float> vertexVbo;
+    vector<float> textureVbo;
+    vector<float> normalVbo;
     /// @todo If any glitches occur, clear frame buffers between each buildObject call...
     // Iterate over each polygon in model
     cout << "pointCount is " << triCount << endl;

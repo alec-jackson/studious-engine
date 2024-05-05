@@ -33,7 +33,7 @@ class TextObject : public SceneObject {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
-    explicit TextObject(string message, vec3 position, GLfloat scale, string fontPath, GLuint programId,
+    explicit TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
         string objectName, ObjectType type, GfxController *gfxController);
     ~TextObject() override;
 
@@ -49,14 +49,15 @@ class TextObject : public SceneObject {
     void createMessage();
     void initializeText();
     void initializeShaderVars();
+    unsigned char *rgbConversion(size_t size, unsigned char *data);
 
  private:
     string message_;
     string fontPath_;
     int fontSize;
     Polygon *poly_;
-    vector<GLuint> vaos_;
-    vector<GLuint> vbos_;
+    vector<unsigned int> vaos_;
+    vector<unsigned int> vbos_;
     unsigned int textureUniformId;
-    map<GLchar, Character> characters;
+    map<char, Character> characters;
 };

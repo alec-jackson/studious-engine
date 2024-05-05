@@ -14,26 +14,26 @@
 
 class Polygon {
  public:
-    Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices, vector<GLfloat> textures,
-        vector<GLfloat> normals);
-    Polygon(GLuint pointCount, GLuint programId, vector<GLfloat> vertices);
+    Polygon(unsigned int pointCount, unsigned int programId, vector<float> vertices, vector<float> textures,
+        vector<float> normals);
+    Polygon(unsigned int pointCount, unsigned int programId, vector<float> vertices);
     Polygon();
     void merge(Polygon&);
     ~Polygon();
 
-    vector<GLuint> shapeBufferId;  // used for vertex buffer
-    vector<GLuint> textureCoordsId;  // used for texture coordinate buffer
-    vector<GLuint> textureId;  // ID for texture binding
-    vector<GLuint> normalBufferId;
-    vector<vector<GLfloat>> vertices;  // 2D vector for vertices
-    vector<vector<GLfloat>> textureCoords;  // 2D vector for texture coord data
-    vector<vector<GLfloat>> normalCoords;  // 2D vector for normal coord data
-    GLint textureUniformId;  // ID for finding texture sampler in OpenGL table
-    vector<GLuint> pointCount;  // no. of distinct points in shape
-    GLint numberOfObjects;  // Contains the number of objects in the model
-    GLuint programId;  // Used for storing programId of object's shader
+    vector<unsigned int> shapeBufferId;  // used for vertex buffer
+    vector<unsigned int> textureCoordsId;  // used for texture coordinate buffer
+    vector<unsigned int> textureId;  // ID for texture binding
+    vector<unsigned int> normalBufferId;
+    vector<vector<float>> vertices;  // 2D vector for vertices
+    vector<vector<float>> textureCoords;  // 2D vector for texture coord data
+    vector<vector<float>> normalCoords;  // 2D vector for normal coord data
+    int textureUniformId;  // ID for finding texture sampler in OpenGL table
+    vector<unsigned int> pointCount;  // no. of distinct points in shape
+    int numberOfObjects;  // Contains the number of objects in the model
+    unsigned int programId;  // Used for storing programId of object's shader
 
     // Adding these in Polygon for now until we figure out material rendering
     vector<string> texturePath_;
-    vector<GLint> texturePattern_;
+    vector<int> texturePattern_;
 };

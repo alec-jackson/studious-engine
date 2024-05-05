@@ -11,7 +11,7 @@
 
 #include <TextObject.hpp>
 
-TextObject::TextObject(string message, vec3 position, GLfloat scale, string fontPath, GLuint programId,
+TextObject::TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
     string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), message_  { message },
     fontPath_ { fontPath } {
@@ -47,7 +47,7 @@ void TextObject::initializeText() {
                 cout << "ERROR::FREETYTPE: Failed to load Glyph\n";
                 continue;
             }
-            GLuint textureId;
+            unsigned int textureId;
             // Generate OpenGL textures for Freetype font rasterizations
             gfxController_->generateTexture(&textureId);
             gfxController_->bindTexture(textureId);
@@ -56,7 +56,6 @@ void TextObject::initializeText() {
                 face->glyph->bitmap.rows,
                 TexFormat::BITMAP,
                 face->glyph->bitmap.buffer);
-
             gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
             gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
             gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR));
@@ -80,19 +79,19 @@ void TextObject::createMessage() {
     auto x = this->position.x, y = this->position.y;
     // Use textures to create each character as an independent object
     for (auto character : message_) {
-        GLuint vao;
+        unsigned int vao;
         gfxController_->initVao(&vao);
         gfxController_->bindVao(vao);
-        GLuint vbo;
+        unsigned int vbo;
         gfxController_->generateBuffer(&vbo);
         gfxController_->bindBuffer(vbo);
         Character ch = characters[character];
-        GLfloat xpos = x + ch.Bearing.x * scale;
-        GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-        GLfloat w = ch.Size.x * scale;
-        GLfloat h = ch.Size.y * scale;
+        float xpos = x + ch.Bearing.x * scale;
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
         // update VBO for each character
-        vector<GLfloat> vertices = {
+        vector<float> vertices = {
             xpos,     ypos + h,   0.0f, 0.0f,
             xpos,     ypos,       0.0f, 1.0f,
             xpos + w, ypos,       1.0f, 1.0f,
@@ -103,11 +102,11 @@ void TextObject::createMessage() {
         };
 
         // Send VBO data for each character to the currently bound buffer
-        gfxController_->sendBufferData(sizeof(GLfloat) * vertices.size(), &vertices[0]);
+        gfxController_->sendBufferData(sizeof(float) * vertices.size(), &vertices[0]);
         gfxController_->enableVertexAttArray(0, 4);
         vaos_.push_back(vao);
         // Update x/y
-        x = w == 0 ? x + static_cast<GLfloat>(ch.Advance / 100.0f) : xpos + w;
+        x = w == 0 ? x + static_cast<float>(ch.Advance / 100.0f) : xpos + w;
     }
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);

@@ -21,7 +21,7 @@ enum ObjectType {
 class SceneObject {
  public:
     // Constructors
-    inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, GLfloat scale, GLuint programId,
+    inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, float scale, unsigned int programId,
         ObjectType type, GfxController *gfxController):
             position(position), rotation(rotation), objectName(objectName), scale(scale), programId_(programId),
             type_ { type }, gfxController_ { gfxController } {}
@@ -32,7 +32,7 @@ class SceneObject {
     inline void setVpMatrix(mat4 vpMatrix) { vpMatrix_ = vpMatrix; }
     inline void setPosition(vec3 position) { this->position = position; }
     inline void setRotation(vec3 rotation) { this->rotation = rotation; }
-    inline void setScale(GLfloat scale) { this->scale = scale ; }
+    inline void setScale(float scale) { this->scale = scale ; }
 
     // Getter methods
     inline const mat4 &vpMatrix() const { return vpMatrix_; }
@@ -59,9 +59,9 @@ class SceneObject {
     vec3 rotation;
 
     const string objectName;
-    GLfloat scale;
-    GLuint programId_;
-    GLuint vao_;
+    float scale;
+    unsigned int programId_;
+    unsigned int vao_;
     ObjectType type_;
 
     GfxController *gfxController_;

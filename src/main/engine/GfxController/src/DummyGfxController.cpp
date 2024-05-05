@@ -10,155 +10,155 @@
  */
 #include <DummyGfxController.hpp>
 
-GfxResult<GLuint> DummyGfxController::generateBuffer(GLuint *bufferId) {
+GfxResult<unsigned int> DummyGfxController::generateBuffer(unsigned int *bufferId) {
     printf("GfxController::generateBuffer %p\n", bufferId);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::generateTexture(GLuint *textureId) {
+GfxResult<unsigned int> DummyGfxController::generateTexture(unsigned int *textureId) {
     printf("GfxController::generateTexture %p\n", textureId);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::bindBuffer(GLuint bufferId) {
+GfxResult<unsigned int> DummyGfxController::bindBuffer(unsigned int bufferId) {
     printf("GfxController::bindBuffer %d\n", bufferId);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::sendBufferData(size_t size, void *data) {
+GfxResult<unsigned int> DummyGfxController::sendBufferData(size_t size, void *data) {
     printf("GfxController::sendBufferData: size %ld, data %p\n", size, data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::sendTextureData(GLuint width, GLuint height, TexFormat format, void *data) {
+GfxResult<unsigned int> DummyGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data) {
     printf("GfxController::sendTextureData: width %u, height %u, format %d, data %p\n",
         width, height, format, data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLint> DummyGfxController::getShaderVariable(GLuint, const char *) {
+GfxResult<int> DummyGfxController::getShaderVariable(unsigned int, const char *) {
     cout << "GfxController::getShaderVariable" << endl;
-    return GFX_OK(GLint);
+    return GFX_OK(int);
 }
 
-GfxResult<GLint> DummyGfxController::cleanup() {
+GfxResult<int> DummyGfxController::cleanup() {
     cout << "GfxController::cleanup" << endl;
-    return GFX_OK(GLint);
+    return GFX_OK(int);
 }
 
-GfxResult<GLuint> DummyGfxController::getProgramId(uint index) {
+GfxResult<unsigned int> DummyGfxController::getProgramId(uint index) {
     cout << "GfxController::getProgramId" << endl;
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::loadShaders(string vertexPath, string fragmentPath) {
+GfxResult<unsigned int> DummyGfxController::loadShaders(string vertexPath, string fragmentPath) {
     cout << "GfxController::loadShaders" << endl;
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 void DummyGfxController::update() {
     cout << "GfxController::update" << endl;
 }
 
-GfxResult<GLint> DummyGfxController::init() {
+GfxResult<int> DummyGfxController::init() {
     cout << "GfxController::init" << endl;
-    return GFX_OK(GLint);
+    return GFX_OK(int);
 }
 
-GfxResult<GLuint> DummyGfxController::setProgram(GLuint programId) {
+GfxResult<unsigned int> DummyGfxController::setProgram(unsigned int programId) {
     cout << "GfxController::setProgram" << endl;
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::sendFloat(GLuint variableId, GLfloat data) {
+GfxResult<unsigned int> DummyGfxController::sendFloat(unsigned int variableId, float data) {
     printf("GfxController::sendFloat: variableId=[%u], data=[%f]", variableId, data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) {
+GfxResult<unsigned int> DummyGfxController::sendFloatVector(unsigned int variableId, size_t count, float *data) {
     printf("GfxController::sendFloatVector: variableId=[%u], count=[%d], data=[%p]\n",
         variableId,
         count,
         data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::polygonRenderMode(RenderMode mode) {
+GfxResult<unsigned int> DummyGfxController::polygonRenderMode(RenderMode mode) {
     printf("GfxController::polygonRenderMode: mode=[%d]", mode);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) {
+GfxResult<unsigned int> DummyGfxController::sendFloatMatrix(unsigned int variableId, size_t count, float *data) {
     printf("GfxController::sendFloatMatrix: variableId=[%u], count=[%d], data=[%p]\n",
         variableId,
         count,
         data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::sendInteger(GLuint variableId, GLint data) {
+GfxResult<unsigned int> DummyGfxController::sendInteger(unsigned int variableId, int data) {
     printf("GfxController::sendInteger: variableId=[%u], data=[%d]", variableId, data);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::bindTexture(GLuint textureId) {
+GfxResult<unsigned int> DummyGfxController::bindTexture(unsigned int textureId) {
     printf("GfxController::bindTexture: textureId=[%u]", textureId);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::bindVao(GLuint vao) {
+GfxResult<unsigned int> DummyGfxController::bindVao(unsigned int vao) {
     printf("GfxController::bindVao: VAO ID %d\n", vao);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::setCapability(GfxCapability capabilityId, bool enabled) {
+GfxResult<unsigned int> DummyGfxController::setCapability(GfxCapability capabilityId, bool enabled) {
     printf("GfxController::setCapability: CAPABILITY: %d, enabled: %d\n",
         capabilityId, enabled);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::initVao(GLuint *vao) {
+GfxResult<unsigned int> DummyGfxController::initVao(unsigned int *vao) {
     printf("GfxController::initVao: vao %p\n", vao);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::deleteTextures(GLuint *tId) {
+GfxResult<unsigned int> DummyGfxController::deleteTextures(unsigned int *tId) {
     printf("GfxController::initVao: tId %p\n", tId);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::updateBufferData(const vector<GLfloat> &vertices, GLuint vbo) {
+GfxResult<unsigned int> DummyGfxController::updateBufferData(const vector<float> &vertices, unsigned int vbo) {
     printf("GfxController::updateBufferData\n");
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::setTexParam(TexParam param, TexVal val) {
+GfxResult<unsigned int> DummyGfxController::setTexParam(TexParam param, TexVal val) {
     printf("GfxController::setTexParam: param %d, val %d\n",
         param, val.type());
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::generateMipMap() {
+GfxResult<unsigned int> DummyGfxController::generateMipMap() {
     printf("GfxController::generateMipMap\n");
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::enableVertexAttArray(GLuint layout, size_t size) {
+GfxResult<unsigned int> DummyGfxController::enableVertexAttArray(unsigned int layout, size_t size) {
     printf("GfxController::enableVertexAttArray: layout %d, size %ld\n",
         layout, size);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::disableVertexAttArray(GLuint layout) {
+GfxResult<unsigned int> DummyGfxController::disableVertexAttArray(unsigned int layout) {
     printf("GfxController::disableVertexAttArray: layout %d\n",
         layout);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
-GfxResult<GLuint> DummyGfxController::drawTriangles(GLuint size) {
+GfxResult<unsigned int> DummyGfxController::drawTriangles(unsigned int size) {
     printf("GfxController::drawTriangles: size %d\n",
         size);
-    return GFX_OK(GLuint);
+    return GFX_OK(unsigned int);
 }
 
 void DummyGfxController::clear(GfxClearMode clearMode) {
@@ -166,12 +166,12 @@ void DummyGfxController::clear(GfxClearMode clearMode) {
         clearMode);
 }
 
-void DummyGfxController::deleteBuffer(GLuint *bufferId) {
+void DummyGfxController::deleteBuffer(unsigned int *bufferId) {
     printf("GfxController::deleteBuffer: %p\n",
         bufferId);
 }
 
-void DummyGfxController::deleteVao(GLuint *vao) {
+void DummyGfxController::deleteVao(unsigned int *vao) {
     printf("GfxController::deleteBuffer: %p\n",
         vao);
 }
