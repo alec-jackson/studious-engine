@@ -461,7 +461,6 @@ GfxResult<unsigned int> OpenGlEsGfxController::bindVao(unsigned int vao) {
                 error = glGetError();
                 if (error != GL_NO_ERROR) {
                     fprintf(stderr, "OpenGlEsGfxController::bindVao:[ATTRIB_POINTER] vao %u, Error: %d\n", vao, error);
-                    exit(1);
                     return GFX_FAILURE(unsigned int);
                 }
                 glEnableVertexAttribArray(bindData.layout);
@@ -478,7 +477,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::bindVao(unsigned int vao) {
     } else {
         // If we're clearing the currently bound vao...
         for (const auto &[vbo, bindData] : vaoBindData_[vao]) {
-                disableVertexAttArray(bindData.layout);
+            disableVertexAttArray(bindData.layout);
         }
     }
     activeVao_ = vao;
