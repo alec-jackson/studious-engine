@@ -44,7 +44,6 @@ class GameInstance {
     GfxController *gfxController_;
     SDL_Window *window;
     SDL_Renderer *renderer;
-    SDL_Surface* screenSurface;
     SDL_Event event;
     SDL_GLContext mainContext;
     vector<Mix_Chunk *> sound;
