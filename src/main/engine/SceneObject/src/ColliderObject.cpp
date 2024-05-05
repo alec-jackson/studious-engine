@@ -24,8 +24,8 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(Polygon *target, unsigned int programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
-    const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
+ColliderObject::ColliderObject(Polygon *target, unsigned int programId, const mat4 &translateMatrix,
+    const mat4 &scaleMatrix, const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
     SceneObject(type, objectName, gfxController), target_ { target }, translateMatrix_ { translateMatrix },
     scaleMatrix_ { scaleMatrix }, vpMatrix_ { vpMatrix } {
     createCollider(programId);

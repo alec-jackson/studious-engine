@@ -11,7 +11,8 @@
 
 #include <ModelImport.hpp>
 
-ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern, unsigned int programId) :
+ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern,
+    unsigned int programId) :
     modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
     programId_ { programId } {
     cout << "ModelImport::ModelImport" << endl;

@@ -30,7 +30,8 @@ GfxResult<unsigned int> DummyGfxController::sendBufferData(size_t size, void *da
     return GFX_OK(unsigned int);
 }
 
-GfxResult<unsigned int> DummyGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data) {
+GfxResult<unsigned int> DummyGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format,
+    void *data) {
     printf("GfxController::sendTextureData: width %u, height %u, format %d, data %p\n",
         width, height, format, data);
     return GFX_OK(unsigned int);
@@ -76,7 +77,7 @@ GfxResult<unsigned int> DummyGfxController::sendFloat(unsigned int variableId, f
 }
 
 GfxResult<unsigned int> DummyGfxController::sendFloatVector(unsigned int variableId, size_t count, float *data) {
-    printf("GfxController::sendFloatVector: variableId=[%u], count=[%d], data=[%p]\n",
+    printf("GfxController::sendFloatVector: variableId=[%u], count=[%lu], data=[%p]\n",
         variableId,
         count,
         data);
@@ -89,7 +90,7 @@ GfxResult<unsigned int> DummyGfxController::polygonRenderMode(RenderMode mode) {
 }
 
 GfxResult<unsigned int> DummyGfxController::sendFloatMatrix(unsigned int variableId, size_t count, float *data) {
-    printf("GfxController::sendFloatMatrix: variableId=[%u], count=[%d], data=[%p]\n",
+    printf("GfxController::sendFloatMatrix: variableId=[%u], count=[%lu], data=[%p]\n",
         variableId,
         count,
         data);

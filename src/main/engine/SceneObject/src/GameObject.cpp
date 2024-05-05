@@ -61,7 +61,8 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
 void GameObject::configureOpenGl() {
-    printf("GameObject::configureOpenGl: Configuring for %s with %d objects\n", objectName.c_str(), model->numberOfObjects);
+    printf("GameObject::configureOpenGl: Configuring for %s with %d objects\n", objectName.c_str(),
+        model->numberOfObjects);
     for (auto i = 0; i < model->numberOfObjects; ++i) {
         unsigned int vao;
         gfxController_->initVao(&vao);
@@ -186,11 +187,10 @@ void GameObject::render() {
         gfxController_->sendInteger(hasTextureId, hasTexture[i]);
         gfxController_->bindVao(vaos_[i]);
         if (hasTexture[i]) {
-            // Bind texture to sampler for polygon rendering below
-            gfxController_->sendInteger(model->textureUniformId, 0);
-            gfxController_->bindTexture(model->textureId[i]);
             // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
-            
+            gfxController_->sendInteger(model->textureUniformId, 0);
+            // Bind texture to sampler for polygon rendering below
+            gfxController_->bindTexture(model->textureId[i]);
         }
         gfxController_->drawTriangles(model->pointCount[i] * 3);
         gfxController_->bindVao(0);

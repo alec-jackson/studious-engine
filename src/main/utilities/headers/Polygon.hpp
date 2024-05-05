@@ -10,6 +10,7 @@
  */
 #pragma once
 #include <vector>
+#include <string>
 #include <common.hpp>
 
 class Polygon {

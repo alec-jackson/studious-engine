@@ -93,7 +93,8 @@ unsigned char *OpenGlEsGfxController::convertToRgba(size_t size, unsigned char *
  * @param data pixel data to send to the GPU
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data) {
+GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int width, unsigned int height,
+    TexFormat format, void *data) {
     auto texFormat = GL_RGB;
     unsigned char *convertedData = nullptr;
     switch (format) {
@@ -414,18 +415,12 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendInteger(unsigned int variable
 GfxResult<unsigned int> OpenGlEsGfxController::bindTexture(unsigned int textureId) {
     // Use texture unit zero - nothing fancy
     glActiveTexture(GL_TEXTURE0);
+    // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
+    glBindTexture(GL_TEXTURE_2D, textureId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
-        fprintf(stderr, "OpenGlEsGfxController::bindTexture:[ACTIVE_TEXTURE] textureId %u, Error: %d\n", textureId, error);
-        return GFX_FAILURE(unsigned int);
-    }
-    // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    error = glGetError();
-    if (error != GL_NO_ERROR) {
-        /// @todo When a logger is added, add OpenGL error log debugging
-        fprintf(stderr, "OpenGlEsGfxController::bindTexture:[BIND_TEXTURE] textureId %u, Error: %d\n", textureId, error);
+        fprintf(stderr, "OpenGlEsGfxController::bindTexture: textureId %u, Error: %d\n", textureId, error);
         return GFX_FAILURE(unsigned int);
     }
     return GFX_OK(unsigned int);
@@ -472,7 +467,8 @@ GfxResult<unsigned int> OpenGlEsGfxController::bindVao(unsigned int vao) {
                 glEnableVertexAttribArray(bindData.layout);
                 error = glGetError();
                 if (error != GL_NO_ERROR) {
-                    fprintf(stderr, "OpenGlEsGfxController::bindVao:[ENABLE_ATTRIB_ARRAY] vao %u, Error: %d\n", vao, error);
+                    fprintf(stderr, "OpenGlEsGfxController::bindVao:[ENABLE_ATTRIB_ARRAY] vao %u, Error: %d\n", vao,
+                        error);
                     return GFX_FAILURE(unsigned int);
                 }
             }
@@ -480,12 +476,10 @@ GfxResult<unsigned int> OpenGlEsGfxController::bindVao(unsigned int vao) {
             printf("OpenGlEsGfxController::bindVao: VAO uninitialized\n");
         }
     } else {
-        // If we're clearing the currently bound vao...\
-	printf("OpenGlEsGfxController::bindVao: Clearing previous VAO\n");
-	for (const auto &[vbo, bindData] : vaoBindData_[vao]) {
-            disableVertexAttArray(bindData.layout);
-	}
-        //disableVertexAttArray(vaoBindData_[vao].layout);
+        // If we're clearing the currently bound vao...
+        for (const auto &[vbo, bindData] : vaoBindData_[vao]) {
+                disableVertexAttArray(bindData.layout);
+        }
     }
     activeVao_ = vao;
     return GFX_OK(unsigned int);
@@ -534,11 +528,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::initVao(unsigned int *vao) {
     if (vaoId == 0) vaoId += 1;
     *vao = vaoId++;
     // Create a new entry in the vaoBindData_ map
-    vaoBindData_[*vao];// = vector<GfxVaoData>();
-    if (*vao == 27) 
-    {
-        printf("Something bad\n");
-    }
+    vaoBindData_[*vao];
 #ifdef VERBOSE_LOGS
     printf("OpenGlEsGfxController::initVao: Created vao %d\n", *vao);
 #endif

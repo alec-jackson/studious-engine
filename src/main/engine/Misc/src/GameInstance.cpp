@@ -255,8 +255,8 @@ CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, float 
     return gameCamera;
 }
 
-TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath, unsigned int programId,
-    string objectName) {
+TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
+    unsigned int programId, string objectName) {
     printf("GameInstance::createText: Creating TextObject %lu\n", sceneObjects_.size());
     auto text = new TextObject(message, position, scale, fontPath, programId, objectName, ObjectType::TEXT_OBJECT,
         gfxController_);

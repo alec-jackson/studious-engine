@@ -76,7 +76,8 @@ GfxResult<unsigned int> OpenGlGfxController::sendBufferData(size_t size, void *d
  * @param data pixel data to send to the GPU
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data) {
+GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format,
+    void *data) {
     auto texFormat = GL_RGB;
     switch (format) {
         case RGBA:
