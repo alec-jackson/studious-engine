@@ -54,10 +54,7 @@ class TextObject : public SceneObject {
  private:
     string message_;
     string fontPath_;
-    int fontSize;
-    Polygon *poly_;
     vector<unsigned int> vaos_;
     vector<unsigned int> vbos_;
-    unsigned int textureUniformId;
     map<char, Character> characters;
 };

@@ -32,6 +32,7 @@ GameInstance::GameInstance(vector<string> soundList, vector<string> vertShaders,
     controllersConnected = 0;
 }
 
+// Helper function for startup
 void GameInstance::startGame() {
     initWindow(width_, height_);
     initAudio();
@@ -40,6 +41,11 @@ void GameInstance::startGame() {
     initController();
     initApplication(vertShaders_, fragShaders_);
     keystate = SDL_GetKeyboardState(NULL);
+}
+
+// Helper Function for teardown
+void GameInstance::stopGame() {
+    SDL_GL_DeleteContext(mainContext);
 }
 
 /*
@@ -334,7 +340,9 @@ void GameInstance::initWindow(int width, int height) {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, AASAMPLES);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
 #endif
-    SDL_GLContext mainContext = SDL_GL_CreateContext(window);
+    mainContext = SDL_GL_CreateContext(window);
+    if(!mainContext){ exit(EXIT_FAILURE); }
+
     SDL_GL_SetSwapInterval(0);  // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
     if (window == NULL) {

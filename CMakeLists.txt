@@ -18,6 +18,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_compile_options(-Wall -Werror)
+add_compile_options(-std=c++17)
+
 if (APPLE)
 include_directories(
   /usr/local/Cellar/glew/2.2.0_1/include/

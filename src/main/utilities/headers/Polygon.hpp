@@ -29,9 +29,9 @@ class Polygon {
     vector<vector<float>> vertices;  // 2D vector for vertices
     vector<vector<float>> textureCoords;  // 2D vector for texture coord data
     vector<vector<float>> normalCoords;  // 2D vector for normal coord data
-    int textureUniformId;  // ID for finding texture sampler in OpenGL table
     vector<unsigned int> pointCount;  // no. of distinct points in shape
     int numberOfObjects;  // Contains the number of objects in the model
+    int textureUniformId;  // ID for finding texture sampler in OpenGL table
     unsigned int programId;  // Used for storing programId of object's shader
 
     // Adding these in Polygon for now until we figure out material rendering

@@ -31,9 +31,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
-    float speed = 0.001f, rotateSpeed = 1.0f, scaleSpeed = 0.0002f,
-        offsetSpeed = 0.1f, currentScale = character->getScale(),
-        currentLuminance = 1.0f;
+    float rotateSpeed = 1.0f, offsetSpeed = 0.1f, currentLuminance = 1.0f;
     vec3 cameraOffset = vec3(7.140022f, 1.349999f, 2.309998f), angles = vec3(0),
         pos = vec3(0);
     float fallspeed = 0;
@@ -63,7 +61,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
         // Assume that the target is the origin
         auto charPos = character->getPosition();
         auto cameraPos = currentGameInfo->gameCamera->getOffset();
-        auto cameraDiffPos = cameraPos - charPos;
         float multiplier = 1.0f;
         float speed = 0.3f;
         // y over x
@@ -278,12 +275,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
             }
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
-        }
-        if (currentGame->getKeystate()[SDL_SCANCODE_Z]) {
-            currentScale += scaleSpeed;
-        }
-        if (currentGame->getKeystate()[SDL_SCANCODE_X]) {
-            currentScale -= scaleSpeed;
         }
         if (currentGame->getKeystate()[SDL_SCANCODE_C]) {
             currentLuminance += 0.01f;

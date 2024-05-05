@@ -44,8 +44,8 @@ class CameraObject : public SceneObject {
     mat4 vpMatrixPerspective_;
     mat4 vpMatrixOrthographic_;
 
+    float cameraAngle_;
     float aspectRatio_;
     float nearClipping_;
     float farClipping_;
-    float cameraAngle_;
 };

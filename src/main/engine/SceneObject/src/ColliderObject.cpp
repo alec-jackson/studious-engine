@@ -189,7 +189,7 @@ float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
         return 0.0f;
     }
     float currentMin = vertices[axis];
-    for (int i = 0; i < vertices.size() / 3; i++) {
+    for (uint i = 0; i < vertices.size() / 3; i++) {
         float tempMin = vertices[i * 3 + axis];
         if (test(tempMin, currentMin)) {
             currentMin = tempMin;

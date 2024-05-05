@@ -27,8 +27,10 @@ static int polyCount;
  */
 Polygon::Polygon(unsigned int triCount, unsigned int programId, vector<float> vertices, vector<float> textures,
     vector<float> normals) : Polygon(triCount, programId, vertices) {
-    cout << "Polygon::Polygon: More complex constructor: polyCount[" << polyCount << "] -> [" << ++polyCount << "]"
+    cout << "Polygon::Polygon: More complex constructor: polyCount[" << polyCount << "] -> [" << polyCount + 1 << "]"
         << endl;
+
+    ++polyCount;
 
     /* Add textures*/
     this->textureCoords.push_back(textures);
@@ -44,7 +46,9 @@ Polygon::Polygon(unsigned int triCount, unsigned int programId, vector<float> ve
  */
 Polygon::Polygon(unsigned int pointCount, unsigned int programId, vector<float> vertices) :
     pointCount { pointCount }, numberOfObjects { 1 }, textureUniformId { 0 }, programId { programId } {
-    cout << "Polygon::Polygon: Basic constructor: polyCount[" << polyCount << "] -> [" << ++polyCount << "]" << endl;
+    cout << "Polygon::Polygon: Basic constructor: polyCount[" << polyCount << "] -> [" << polyCount + 1 << "]" << endl;
+    ++polyCount;
+
     this->vertices.push_back(vertices);
 
     // Push zeroes into vectors for glBuffer functions to write into
@@ -57,7 +61,8 @@ Polygon::Polygon(unsigned int pointCount, unsigned int programId, vector<float> 
 }
 
 Polygon::Polygon() : numberOfObjects { 0 }, textureUniformId { 0 } {
-    cout << "Polygon::Polygon: Empty constructor: polyCount[" << polyCount << "] -> [" << ++polyCount << "]" << endl;
+    cout << "Polygon::Polygon: Empty constructor: polyCount[" << polyCount << "] -> [" << polyCount + 1 << "]" << endl;
+    ++polyCount;
 }
 
 /**
@@ -65,7 +70,8 @@ Polygon::Polygon() : numberOfObjects { 0 }, textureUniformId { 0 } {
  * 
  */
 Polygon::~Polygon() {
-    cout << "Polygon::~Polygon: polyCount[" << polyCount << "] -> [" << --polyCount << "]" << endl;
+    cout << "Polygon::~Polygon: polyCount[" << polyCount << "] -> [" << polyCount - 1 << "]" << endl;
+    --polyCount;
 }
 
 void Polygon::merge(Polygon &polygon) {
