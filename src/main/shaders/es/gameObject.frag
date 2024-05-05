@@ -17,9 +17,9 @@ void main() {
         if (texColor.a < 0.1) {
             discard;
         }
-        texColor.r *= Color.r;
-        texColor.g *= Color.g;
-        texColor.b *= Color.b;
+        texColor.r *= Color.r + 0.3;
+        texColor.g *= Color.g + 0.3;
+        texColor.b *= Color.b + 0.3;
         // texColor.a *= brightness * luminance;
         gl_FragColor = texColor;
         // gl_FragColor = texture2D(mytexture, f_texcoord);

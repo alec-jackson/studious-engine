@@ -73,6 +73,17 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendBufferData(size_t size, void 
     return GFX_OK(unsigned int);
 }
 
+unsigned char *OpenGlEsGfxController::convertToRgba(size_t size, unsigned char *data) {
+    unsigned char *convertedData = new unsigned char[size * 3];
+    // Converts the single color texture to use the RGBA format
+    for (auto i = 0; i < size; i++) {
+        convertedData[i * 3] = data[i];
+        convertedData[i * 3 + 1] = data[i];
+        convertedData[i * 3 + 2] = data[i];
+    }
+    return convertedData;
+}
+
 /**
  * @brief Copies texture data to the currently bound texture buffer.
  * 
@@ -84,6 +95,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendBufferData(size_t size, void 
  */
 GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data) {
     auto texFormat = GL_RGB;
+    unsigned char *convertedData = nullptr;
     switch (format) {
         case RGBA:
             texFormat = GL_RGBA;
@@ -92,13 +104,19 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int widt
             texFormat = GL_RGB;
             break;
         case BITMAP:
-            texFormat = GL_RED;
+            texFormat = GL_RGB;
+            convertedData = convertToRgba(width * height, static_cast<unsigned char *>(data));
             break;
         default:
             fprintf(stderr, "OpenGlEsGfxController::sendTextureData: Unknown texture format %d\n", format);
             return GFX_FAILURE(unsigned int);
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, data);
+    if (convertedData != nullptr) {
+        glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, convertedData);
+        delete[] convertedData;
+    } else {
+        glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, data);
+    }
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlEsGfxController::sendTextureData: Error %d\n", error);

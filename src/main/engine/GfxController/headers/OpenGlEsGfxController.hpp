@@ -59,6 +59,7 @@ class OpenGlEsGfxController : public GfxController {
     void clear(GfxClearMode clearMode);
     void update();
     void updateOpenGl();
+    unsigned char *convertToRgba(size_t size, unsigned char *data);
 
  private:
     vector<unsigned int> programIdList_;
