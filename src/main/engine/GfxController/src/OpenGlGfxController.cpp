@@ -107,14 +107,12 @@ GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width,
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
 GfxResult<unsigned int> OpenGlGfxController::generateMipMap() {
-#ifndef GFX_EMBEDDED
     glGenerateMipmap(GL_TEXTURE_2D);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::generateMipMap: Error %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
-#endif
     return GFX_OK(unsigned int);
 }
 
@@ -264,10 +262,7 @@ GfxResult<int> OpenGlGfxController::getShaderVariable(unsigned int programId, co
  * 
  */
 void OpenGlGfxController::updateOpenGl() {
-    // Multisampling not available on ES
-#ifndef GFX_EMBEDDED
     glEnable(GL_MULTISAMPLE);
-#endif
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -357,8 +352,6 @@ GfxResult<unsigned int> OpenGlGfxController::sendFloatVector(unsigned int variab
  */
 GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
     auto result = GFX_OK(unsigned int);
-    // Unsupported operations in OpenGL ES...
-#ifndef GFX_EMBEDDED
     switch (mode) {
         case RenderMode::POINT:
             glPolygonMode(GL_FRONT, GL_POINT);
@@ -380,7 +373,6 @@ GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) 
         fprintf(stderr, "OpenGlGfxController::polygonRenderMode: mode %d, Error: %d\n", mode, error);
         return GFX_FAILURE(unsigned int);
     }
-#endif
     return result;
 }
 
@@ -437,7 +429,6 @@ GfxResult<unsigned int> OpenGlGfxController::bindTexture(unsigned int textureId)
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
 GfxResult<unsigned int> OpenGlGfxController::bindVao(unsigned int vao) {
-#ifndef GFX_EMBEDDED
     glBindVertexArray(vao);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -445,7 +436,6 @@ GfxResult<unsigned int> OpenGlGfxController::bindVao(unsigned int vao) {
         fprintf(stderr, "OpenGlGfxController::bindVao: vao %u, Error: %d\n", vao, error);
         return GFX_FAILURE(unsigned int);
     }
-#endif
     return GFX_OK(unsigned int);
 }
 
@@ -487,14 +477,12 @@ GfxResult<unsigned int> OpenGlGfxController::setCapability(GfxCapability capabil
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
 GfxResult<unsigned int> OpenGlGfxController::initVao(unsigned int *vao) {
-#ifndef GFX_EMBEDDED
     glGenVertexArrays(1, vao);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::initVao: Error %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
-#endif
 #ifdef VERBOSE_LOGS
     printf("OpenGlGfxController::initVao: Created vao %d\n", *vao);
 #endif
@@ -695,12 +683,10 @@ void OpenGlGfxController::deleteBuffer(unsigned int *bufferId) {
  * @param vao pointer to VAO ID of VAO to delete
  */
 void OpenGlGfxController::deleteVao(unsigned int *vao) {
-#ifndef GFX_EMBEDDED
     glDeleteVertexArrays(1, vao);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::deleteVao: Error %d\n", error);
     }
-#endif
 }
 

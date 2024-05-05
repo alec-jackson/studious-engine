@@ -353,6 +353,9 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendFloatVector(unsigned int vari
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
 GfxResult<unsigned int> OpenGlEsGfxController::polygonRenderMode(RenderMode mode) {
+    if (mode != RenderMode::FILL) drawDisabled_ = true;
+    else
+        drawDisabled_ = false;
 #ifdef VERBOSE_LOGS
     printf("OpenGlEsGfxController::polygonRenderMode: No special render modes on OpenGL ES 2.0\n");
 #endif
@@ -666,7 +669,8 @@ GfxResult<unsigned int> OpenGlEsGfxController::disableVertexAttArray(unsigned in
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
 GfxResult<unsigned int> OpenGlEsGfxController::drawTriangles(unsigned int size) {
-    glDrawArrays(GL_TRIANGLES, 0, size);
+    if (!drawDisabled_)
+        glDrawArrays(GL_TRIANGLES, 0, size);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlEsGfxController::drawTriangles: Error %d\n", error);

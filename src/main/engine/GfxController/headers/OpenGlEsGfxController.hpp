@@ -66,4 +66,5 @@ class OpenGlEsGfxController : public GfxController {
     map<unsigned int, map<unsigned int, GfxVaoData>> vaoBindData_;
     unsigned int activeVao_ = 0;
     unsigned int activeVbo_ = 0;
+    bool drawDisabled_ = true;
 };
