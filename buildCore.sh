@@ -1,19 +1,12 @@
 #!/bin/bash
 
-# Compile libraries
-#cd misc/yaml-cpp-0.6.3/
-#mkdir build
-#cd build
-#cmake ..
-#make
-#cd ../../../
-
+if { [ "$1" = "-clean" ] || [ "$2" = "-clean" ]; } && [ -d build ]; then
+    echo "Performing clean build"
+    rm -rdf build
+fi
 # Setup Build Directories
 if [ ! -d build ]; then
     mkdir build
-fi
-if [ "$1" = "-clean" ] || [ "$2" = "-clean" ] && [ ! -d build ]; then
-    rm -rdf build
 fi
 cd build
 # If -d flag is present, build in debug mode
