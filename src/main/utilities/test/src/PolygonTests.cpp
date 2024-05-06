@@ -39,9 +39,9 @@ int main(int argc, char **argv) {
 Polygon createTestPolygon() {
     auto expectedPointCount = 123;
     auto expectedProgramId = 1;
-    vector<GLfloat> expectedVertices = { 0.333, 0.694, 0.777 };
-    vector<GLfloat> expectedTextures = { 1.0, 0.1, 0.0 };
-    vector<GLfloat> expectedNormals = { 0.123, 0.234, 0.345 };
+    vector<float> expectedVertices = { 0.333, 0.694, 0.777 };
+    vector<float> expectedTextures = { 1.0, 0.1, 0.0 };
+    vector<float> expectedNormals = { 0.123, 0.234, 0.345 };
 
     auto polygon = Polygon(expectedPointCount, expectedProgramId, expectedVertices, expectedTextures, expectedNormals);
 
@@ -53,7 +53,7 @@ Polygon createTestPolygon() {
     return polygon;
 }
 
-bool vectorEquals(vector<GLfloat> expectedVertices, vector<GLfloat> actualVertices) {
+bool vectorEquals(vector<float> expectedVertices, vector<float> actualVertices) {
     auto result = true;
     if (expectedVertices.size() != actualVertices.size()) return false;
     for (int i = 0; i < expectedVertices.size(); i++) {
@@ -69,9 +69,9 @@ TEST(PolygonConstructor, WhenConstructedWithData_ThenPolygonHasExpectedData) {
     auto expectedShapeBufferId = 0;
     auto expectedNormalBufferId = 0;
     auto expectedNumberOfObjects = 1;
-    vector<GLfloat> expectedVertices = { 0.333, 0.694, 0.777 };
-    vector<GLfloat> expectedTextures = { 1.0, 0.1, 0.0 };
-    vector<GLfloat> expectedNormals = { 0.123, 0.234, 0.345 };
+    vector<float> expectedVertices = { 0.333, 0.694, 0.777 };
+    vector<float> expectedTextures = { 1.0, 0.1, 0.0 };
+    vector<float> expectedNormals = { 0.123, 0.234, 0.345 };
 
     // Action
     auto polygon = Polygon(expectedPointCount, expectedProgramId, expectedVertices, expectedTextures, expectedNormals);
@@ -96,9 +96,9 @@ TEST(PolygonMerge, WhenTwoPolygonsMerged_ThenPolygonDataMergedOk) {
     auto poly1 = createTestPolygon();
     auto poly2 = createTestPolygon();
 
-    vector<GLfloat> expectedVertices = { 0.333, 0.694, 0.777 };
-    vector<GLfloat> expectedTextures = { 1.0, 0.1, 0.0 };
-    vector<GLfloat> expectedNormals = { 0.123, 0.234, 0.345 };
+    vector<float> expectedVertices = { 0.333, 0.694, 0.777 };
+    vector<float> expectedTextures = { 1.0, 0.1, 0.0 };
+    vector<float> expectedNormals = { 0.123, 0.234, 0.345 };
 
     // Action
     poly1.merge(poly2);

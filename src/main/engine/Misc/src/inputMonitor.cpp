@@ -31,7 +31,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
-    GLfloat rotateSpeed = 1.0f, offsetSpeed = 0.1f, currentLuminance = 1.0f;
+    float rotateSpeed = 1.0f, offsetSpeed = 0.1f, currentLuminance = 1.0f;
     vec3 cameraOffset = vec3(7.140022f, 1.349999f, 2.309998f), angles = vec3(0),
         pos = vec3(0);
     float fallspeed = 0;

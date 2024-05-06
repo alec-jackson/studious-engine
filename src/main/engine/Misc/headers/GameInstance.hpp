@@ -53,14 +53,15 @@ class GameInstance {
     vector<string> fragShaders_;
     vector<string> texturePathStage_;
     vector<string> texturePath_;
-    GLdouble deltaTime;
+    double deltaTime;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
     vec3 directionalLight;
-    GLfloat luminance;
+    float luminance;
     int width_, height_;
     int audioID, controllersConnected;
     mutex sceneLock_;
+    bool audioInitialized_ = false;
 
     void initWindow(int width, int height);
     void initAudio();
@@ -72,11 +73,11 @@ class GameInstance {
         vector<string> fragShaders, GfxController *gfxController, int width, int height);
     void startGame();
     void stopGame();
-    GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
+    GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
-    CameraObject *createCamera(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
-              GLfloat nearClipping, GLfloat farClipping);
-    TextObject *createText(string message, vec3 position, GLfloat scale, string fontPath, GLuint programId,
+    CameraObject *createCamera(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+              float nearClipping, float farClipping);
+    TextObject *createText(string message, vec3 position, float scale, string fontPath, unsigned int programId,
         string objectName);
     int getWidth();
     int getHeight();
@@ -89,10 +90,10 @@ class GameInstance {
     void cleanup();
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);
-    GLdouble getDeltaTime();
+    double getDeltaTime();
     int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
-    int setDeltaTime(GLdouble time);
-    void setLuminance(GLfloat luminanceValue);
+    int setDeltaTime(double time);
+    void setLuminance(float luminanceValue);
     void basicCollision(GameInstance* gameInstance);
     bool isWindowOpen();
     int updateObjects();

@@ -20,7 +20,7 @@ void main() {
   vec3 lightPosition = directionalLight;
 
   vec4 normal = normalize(model * vec4(normals, 0.0));
-  const vec3 LightIntensity = vec3(20);
+  const vec3 LightIntensity = vec3(40);
 
   float distance = length(lightPosition - vertexPosition_modelspace);
   float intensity = dot(normal, normalize(vec4(lightPosition, 0.0) - vec4(vertexPosition_modelspace, 1.0)));

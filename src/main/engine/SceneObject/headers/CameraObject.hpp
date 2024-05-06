@@ -18,18 +18,18 @@
 class CameraObject : public SceneObject {
  public:
     // Constructors
-    explicit CameraObject(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
-        GLfloat nearClipping, GLfloat farClipping, ObjectType type, string objectName, GfxController *gfxController);
+    explicit CameraObject(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+        float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController);
     ~CameraObject() override;
 
     // Setters
     inline void setOffset(vec3 offset) { offset_ = offset; }
-    inline void setAspectRatio(GLfloat aspectRatio) { aspectRatio_ = aspectRatio; }
+    inline void setAspectRatio(float aspectRatio) { aspectRatio_ = aspectRatio; }
 
     // Getters
     inline vec3 getOffset() { return offset_; }
     inline GameObject *getTarget() { return target_; }
-    inline GLfloat getAspectRatio() { return aspectRatio_; }
+    inline float getAspectRatio() { return aspectRatio_; }
 
     // Camera Specific Methods
     void render() override;
@@ -44,8 +44,8 @@ class CameraObject : public SceneObject {
     mat4 vpMatrixPerspective_;
     mat4 vpMatrixOrthographic_;
 
-    GLfloat cameraAngle_;
-    GLfloat aspectRatio_;
-    GLfloat nearClipping_;
-    GLfloat farClipping_;
+    float cameraAngle_;
+    float aspectRatio_;
+    float nearClipping_;
+    float farClipping_;
 };

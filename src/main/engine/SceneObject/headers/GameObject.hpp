@@ -19,30 +19,31 @@
 class GameObject: public SceneObject {
  public:
     // Constructurs
-    explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, GLfloat scale,
+    explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
             string objectName, ObjectType type, GfxController *gfxController);
     ~GameObject() override;
 
     // Setters
-    inline void setScale(GLfloat scale) { this->scale = scale; }
+    inline void setScale(float scale) { this->scale = scale; }
     inline void setDirectionalLight(vec3 directionalLight) { this->directionalLight = directionalLight; }
-    inline void setLuminance(GLfloat luminance) { this->luminance = luminance; }
-    inline void setProgramId(GLuint programId) { this->programId_ = programId; }
+    inline void setLuminance(float luminance) { this->luminance = luminance; }
+    inline void setProgramId(unsigned int programId) { this->programId_ = programId; }
 
     // Getters
-    inline GLfloat getScale() { return this->scale; }
+    inline float getScale() { return this->scale; }
     inline vec3 getDirectionalLight() { return this->directionalLight; }
-    inline GLfloat getLuminance() { return this->luminance; }
-    inline GLuint getProgramId() { return this->programId_; }
+    inline float getLuminance() { return this->luminance; }
+    inline unsigned int getProgramId() { return this->programId_; }
 
     // Special Getters
     inline Polygon *getModel() { return model; }
     ColliderObject *getCollider();
-    GLfloat getColliderVertices(vector<GLfloat> vertices, int axis, bool (*test)(float a, float b));
+    float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
 
     // Other methods
     void deleteTextures();  /// @todo: DEPRECATED - Use destructor for this now...
     void createCollider(int programId);
+    void configureOpenGl();
 
     void render() override;
     void update() override;
@@ -52,16 +53,17 @@ class GameObject: public SceneObject {
 
     unsigned int VAO;  /// @todo: Why do we have this?
 
-    GLuint vpId, modelId, textureId, textCoordsId,
+    unsigned int vpId, modelId, textureId, textCoordsId,
         hasTextureId, directionalLightId, luminanceId, rollOffId,
         collider_shaderId;  /// @todo: Organize these into another class
 
-    GLint textureCoordId;
+    int textureCoordId;
 
-    GLfloat luminance;
-    GLfloat rollOff;
+    float luminance;
+    float rollOff;
 
-    vector<GLint> hasTexture;
+    vector<int> hasTexture;
+    vector<unsigned int> vaos_;  // Temporary?
     vec3 directionalLight;
     vec3 velocity;
 

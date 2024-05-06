@@ -12,8 +12,8 @@
 #include <CameraObject.hpp>
 #include <algorithm>
 
-CameraObject::CameraObject(GameObject *target, vec3 offset, GLfloat cameraAngle, GLfloat aspectRatio,
-    GLfloat nearClipping, GLfloat farClipping, ObjectType type, string objectName, GfxController *gfxController) :
+CameraObject::CameraObject(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+    float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
     SceneObject(type, objectName, gfxController), target_ { target }, offset_ { offset }, cameraAngle_ { cameraAngle },
     aspectRatio_ { aspectRatio }, nearClipping_ { nearClipping }, farClipping_ { farClipping } {}
 

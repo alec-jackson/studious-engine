@@ -1,5 +1,5 @@
 /**
- * @file OpenGlGfxController.hpp
+ * @file OpenGlEsGfxController.hpp
  * @author Christian Galvez
  * @brief 
  * @version 0.1
@@ -13,13 +13,19 @@
 #include <GL/glew.h>
 #include <vector>
 #include <string>
+#include <map>
 #include <GfxController.hpp>
 #include <Polygon.hpp>
 #include <common.hpp>
 // Temporary until we get a logger, disables noisy OpenGL logs
 // #define VERBOSE_LOGS
 
-class OpenGlGfxController : public GfxController {
+struct GfxVaoData {
+    unsigned int layout;
+    size_t size;
+};
+
+class OpenGlEsGfxController : public GfxController {
  public:
     GfxResult<int> init();
     GfxResult<unsigned int> generateBuffer(unsigned int *bufferId);
@@ -53,7 +59,13 @@ class OpenGlGfxController : public GfxController {
     void clear(GfxClearMode clearMode);
     void update();
     void updateOpenGl();
+    unsigned char *convertToRgba(size_t size, unsigned char *data);
 
  private:
     vector<unsigned int> programIdList_;
+    // VAO -> (VBO -> Attribute Data)
+    map<unsigned int, map<unsigned int, GfxVaoData>> vaoBindData_;
+    unsigned int activeVao_ = 0;
+    unsigned int activeVbo_ = 0;
+    bool drawDisabled_ = true;
 };

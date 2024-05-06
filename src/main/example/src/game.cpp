@@ -11,8 +11,11 @@
  * 
  */
 #include <game.hpp>
+#ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
-
+#else
+#include <OpenGlEsGfxController.hpp>
+#endif
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
  Currently, the below global vectors are used for loading in sound effect files,
@@ -77,7 +80,11 @@ TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
+#ifdef GFX_EMBEDDED
+OpenGlEsGfxController gfxController = OpenGlEsGfxController();
+#else
 OpenGlGfxController gfxController = OpenGlGfxController();
+#endif
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -119,16 +126,15 @@ int runtime(GameInstance *currentGame) {
 
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
-    vector<GLint> texturePattern = {0, 1, 2, 3};
-    vector<GLint> texturePatternStage = {0, 0, 0, 0};
+    vector<int> texturePattern = {0, 1, 2, 3};
+    vector<int> texturePatternStage = {0, 0, 0, 0};
 
     cout << "Creating Map.\n";
 
     auto mapPoly = ModelImport("src/resources/models/map3.obj",
         texturePathStage,
         texturePatternStage,
-        gfxController.getProgramId(0).get(),
-        &gfxController)
+        gfxController.getProgramId(0).get())
         .createPolygonFromFile();
 
     auto mapObject = currentGame->createGameObject(&mapPoly,
@@ -140,8 +146,7 @@ int runtime(GameInstance *currentGame) {
         "src/resources/models/Dracula.obj",
         texturePath,
         texturePattern,
-        gfxController.getProgramId(0).get(),
-        &gfxController)
+        gfxController.getProgramId(0).get())
         .createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
@@ -154,8 +159,7 @@ int runtime(GameInstance *currentGame) {
     auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
         texturePath,
         texturePattern,
-        gfxController.getProgramId(0).get(),
-        &gfxController)
+        gfxController.getProgramId(0).get())
         .createPolygonFromFile();
 
     auto wolfObject = currentGame->createGameObject(&wolfPoly,

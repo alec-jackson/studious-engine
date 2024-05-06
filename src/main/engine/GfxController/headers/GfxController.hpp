@@ -52,12 +52,12 @@ enum TexValType {
 class TexVal {
  public:
     explicit inline TexVal(TexValType type) : type_ { type } {}
-    explicit inline TexVal(GLint data) : type_ { TexValType::CUSTOM }, data_ { data } {}
+    explicit inline TexVal(int data) : type_ { TexValType::CUSTOM }, data_ { data } {}
     inline TexValType type() { return type_; }
-    inline GLint data() { return data_; }
+    inline int data() { return data_; }
  private:
     TexValType type_;
-    GLint data_;
+    int data_;
 };
 
 enum GfxCapability {
@@ -83,35 +83,36 @@ class GfxResult {
 
 class GfxController {
  public:
-    virtual GfxResult<GLint> init() = 0;
-    virtual GfxResult<GLuint> generateBuffer(GLuint *bufferId) = 0;
-    virtual GfxResult<GLuint> generateTexture(GLuint *textureId) = 0;
-    virtual GfxResult<GLuint> bindBuffer(GLuint bufferId) = 0;
-    virtual GfxResult<GLuint> sendBufferData(size_t size, void *data) = 0;
-    virtual GfxResult<GLuint> sendTextureData(GLuint width, GLuint height, TexFormat format, void *data) = 0;
-    virtual GfxResult<GLint>  getShaderVariable(GLuint, const char *) = 0;
-    virtual GfxResult<GLint>  cleanup() = 0;
-    virtual GfxResult<GLuint> getProgramId(uint) = 0;
-    virtual GfxResult<GLuint> setProgram(GLuint) = 0;
-    virtual GfxResult<GLuint> loadShaders(string, string) = 0;
-    virtual GfxResult<GLuint> sendFloat(GLuint variableId, GLfloat data) = 0;
-    virtual GfxResult<GLuint> sendFloatVector(GLuint variableId, GLsizei count, GLfloat *data) = 0;
-    virtual GfxResult<GLuint> polygonRenderMode(RenderMode mode) = 0;
-    virtual GfxResult<GLuint> sendFloatMatrix(GLuint variableId, GLsizei count, GLfloat *data) = 0;
-    virtual GfxResult<GLuint> sendInteger(GLuint variableId, GLint data) = 0;
-    virtual GfxResult<GLuint> bindTexture(GLuint textureId) = 0;
-    virtual GfxResult<GLuint> initVao(GLuint *vao) = 0;
-    virtual GfxResult<GLuint> bindVao(GLuint vao) = 0;
-    virtual GfxResult<GLuint> setCapability(GfxCapability capabilityId, bool enabled) = 0;
-    virtual GfxResult<GLuint> deleteTextures(GLuint *tId) = 0;
-    virtual GfxResult<GLuint> updateBufferData(const vector<GLfloat> &vertices, GLuint vbo) = 0;
-    virtual GfxResult<GLuint> setTexParam(TexParam param, TexVal val) = 0;
-    virtual GfxResult<GLuint> generateMipMap() = 0;
-    virtual GfxResult<GLuint> enableVertexAttArray(GLuint layout, size_t size) = 0;
-    virtual GfxResult<GLuint> disableVertexAttArray(GLuint layout) = 0;
-    virtual GfxResult<GLuint> drawTriangles(GLuint size) = 0;
+    virtual GfxResult<int> init() = 0;
+    virtual GfxResult<unsigned int> generateBuffer(unsigned int *bufferId) = 0;
+    virtual GfxResult<unsigned int> generateTexture(unsigned int *textureId) = 0;
+    virtual GfxResult<unsigned int> bindBuffer(unsigned int bufferId) = 0;
+    virtual GfxResult<unsigned int> sendBufferData(size_t size, void *data) = 0;
+    virtual GfxResult<unsigned int> sendTextureData(unsigned int width, unsigned int height, TexFormat format,
+        void *data) = 0;
+    virtual GfxResult<int>  getShaderVariable(unsigned int, const char *) = 0;
+    virtual GfxResult<int>  cleanup() = 0;
+    virtual GfxResult<unsigned int> getProgramId(uint) = 0;
+    virtual GfxResult<unsigned int> setProgram(unsigned int) = 0;
+    virtual GfxResult<unsigned int> loadShaders(string, string) = 0;
+    virtual GfxResult<unsigned int> sendFloat(unsigned int variableId, float data) = 0;
+    virtual GfxResult<unsigned int> sendFloatVector(unsigned int variableId, size_t count, float *data) = 0;
+    virtual GfxResult<unsigned int> polygonRenderMode(RenderMode mode) = 0;
+    virtual GfxResult<unsigned int> sendFloatMatrix(unsigned int variableId, size_t count, float *data) = 0;
+    virtual GfxResult<unsigned int> sendInteger(unsigned int variableId, int data) = 0;
+    virtual GfxResult<unsigned int> bindTexture(unsigned int textureId) = 0;
+    virtual GfxResult<unsigned int> initVao(unsigned int *vao) = 0;
+    virtual GfxResult<unsigned int> bindVao(unsigned int vao) = 0;
+    virtual GfxResult<unsigned int> setCapability(GfxCapability capabilityId, bool enabled) = 0;
+    virtual GfxResult<unsigned int> deleteTextures(unsigned int *tId) = 0;
+    virtual GfxResult<unsigned int> updateBufferData(const vector<float> &vertices, unsigned int vbo) = 0;
+    virtual GfxResult<unsigned int> setTexParam(TexParam param, TexVal val) = 0;
+    virtual GfxResult<unsigned int> generateMipMap() = 0;
+    virtual GfxResult<unsigned int> enableVertexAttArray(unsigned int layout, size_t size) = 0;
+    virtual GfxResult<unsigned int> disableVertexAttArray(unsigned int layout) = 0;
+    virtual GfxResult<unsigned int> drawTriangles(unsigned int size) = 0;
     virtual void clear(GfxClearMode clearMode) = 0;
     virtual void update() = 0;
-    virtual void deleteBuffer(GLuint *bufferId) = 0;
-    virtual void deleteVao(GLuint *vao) = 0;
+    virtual void deleteBuffer(unsigned int *bufferId) = 0;
+    virtual void deleteVao(unsigned int *vao) = 0;
 };
