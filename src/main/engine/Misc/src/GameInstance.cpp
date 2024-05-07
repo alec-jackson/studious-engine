@@ -33,8 +33,8 @@ GameInstance::GameInstance(vector<string> soundList, vector<string> vertShaders,
 }
 
 // Helper function for startup
-void GameInstance::startGame() {
-    initWindow(width_, height_);
+void GameInstance::startGame(const configData &config) {
+    initWindow(config);
     initAudio();
     // Comment out playSound to disable music
     playSound(0, 1);
@@ -322,10 +322,10 @@ void GameInstance::setLuminance(float luminanceValue) {
 
  (void) initWindow does not return any values.
 */
-void GameInstance::initWindow(int width, int height) {
+void GameInstance::initWindow(const configData &config) {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
     window = SDL_CreateWindow("Studious Engine Example", SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED, width, height,
+        SDL_WINDOWPOS_CENTERED, width_, height_,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 #ifndef GFX_EMBEDDED
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -343,7 +343,7 @@ void GameInstance::initWindow(int width, int height) {
     mainContext = SDL_GL_CreateContext(window);
     if (!mainContext) exit(EXIT_FAILURE);
 
-    SDL_GL_SetSwapInterval(0);  // 0 - Disable VSYNC / 1 - Enable VSYNC
+    SDL_GL_SetSwapInterval(config.enableVsync);  // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
     if (window == NULL) {
         cerr << "Error: Failed to create SDL window!\n";

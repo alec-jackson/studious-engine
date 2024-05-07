@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
         height = 720;
     }
     GameInstance currentGame(soundList, vertShaders, fragShaders, &gfxController, width, height);
-    currentGame.startGame();
+    currentGame.startGame(config);
     errorNum = runtime(&currentGame);
     return errorNum;
 }
