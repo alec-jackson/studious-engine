@@ -24,9 +24,9 @@ int loadConfig(configData* config, string filename) {
     if (file) {
         char buf[512];
         char convert[11];
-        int varSaves[2];
+        int varSaves[3];
         int retSize = 0;
-        int loops = 2;
+        int loops = 3;
         int offset = 0;
         retSize = SDL_RWread(file, buf, sizeof(char), 1024);
         for (int j = 0; j < loops; j++) {
@@ -51,9 +51,11 @@ int loadConfig(configData* config, string filename) {
             varSaves[j] = atoi(convert);
         }
         SDL_RWclose(file);
-        cout << "Resolution X: " << varSaves[0] << " Resolution Y: " << varSaves[1] << "\n";
+        printf("loadConfig: Resolution X: %d, Resolution Y: %d, VSYNC: %d\n",
+            varSaves[0], varSaves[1], varSaves[2]);
         config->resX = varSaves[0];
         config->resY = varSaves[1];
+        config->enableVsync = static_cast<bool>(varSaves[2]);
         return 0;
     } else {
         cout << "Could not open config file\n";

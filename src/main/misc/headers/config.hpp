@@ -22,6 +22,7 @@
 typedef struct configData {
   int resX;
   int resY;
+  bool enableVsync;
 } configData;
 
 int loadConfig(configData* config, string filename);

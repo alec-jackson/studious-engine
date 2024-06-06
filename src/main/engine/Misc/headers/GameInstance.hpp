@@ -17,6 +17,7 @@
 #include <GameObject.hpp>
 #include <CameraObject.hpp>
 #include <TextObject.hpp>
+#include <config.hpp>
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
@@ -63,7 +64,7 @@ class GameInstance {
     mutex sceneLock_;
     bool audioInitialized_ = false;
 
-    void initWindow(int width, int height);
+    void initWindow(const configData &config);
     void initAudio();
     void initController();
     void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
@@ -71,7 +72,7 @@ class GameInstance {
  public:
     GameInstance(vector<string> soundList, vector<string> vertShaders,
         vector<string> fragShaders, GfxController *gfxController, int width, int height);
-    void startGame();
+    void startGame(const configData &config);
     void stopGame();
     GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
