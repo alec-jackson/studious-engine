@@ -74,7 +74,7 @@ add_executable(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
-IF($(GTest_FOUND))
+#IF($(GTest_FOUND))
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
@@ -87,11 +87,19 @@ add_executable(gtest_PolygonTests
   src/main/utilities/src/Polygon.cpp
 )
 
+add_executable(gtest_SafeQueueTests
+  src/main/utilities/test/src/SafeQueueTests.cpp
+)
+
 target_include_directories(gtest_ModelImportTests
   PRIVATE src/main/utilities/test/headers
 )
 
 target_include_directories(gtest_PolygonTests
+  PRIVATE src/main/utilities/test/headers
+)
+
+target_include_directories(gtest_SafeQueueTests
   PRIVATE src/main/utilities/test/headers
 )
 
@@ -136,9 +144,15 @@ target_link_libraries(
   GTest::gtest_main
 )
 
+target_link_libraries(
+  gtest_SafeQueueTests
+  GTest::gtest_main
+)
+
 gtest_discover_tests(gtest_PolygonTests)
 gtest_discover_tests(gtest_ModelImportTests)
-ENDIF($(GTest_FOUND))
+gtest_discover_tests(gtest_SafeQueueTests)
+#ENDIF($(GTest_FOUND))
 
 # Project include dirs
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
