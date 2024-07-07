@@ -10,6 +10,12 @@
  */
 
 #include <physics.hpp>
+
+static PhysicsResult physDoWork() {
+    printf("This is a test\n");
+    return PhysicsResult::PHYS_OK;
+}
+
 // Takes a pointer to the y postion the current fallspeed, returns the updated fallspeed
 // NOTE: Not a class function, can be called from a class with the y position variable
 // Application: once a tick loop through all physics objects in the world and apply physics
@@ -76,13 +82,17 @@ PhysicsResult PhysicsController::addGameObject(GameObject *gameObject, PhysicsPa
 }
 
 PhysicsResult PhysicsController::removeGameObject(GameObject *gameObject) {
-    auto it = std::find(physicsObjects_.begin(), physicsObjects_.end(), gameObject);
+    auto compare = [&gameObject](PhysicsObject *po) {
+        return gameObject->getObjectName().compare(po->gameObject->getObjectName()) == 0;
+    };
+    auto it = std::find_if(physicsObjects_.begin(), physicsObjects_.end(), compare);
     if (it != physicsObjects_.end()) {
         auto physObject = *it;
         printf("PhysicsController::removeGameObject: Deleting object %p\n", gameObject);
         physicsObjects_.erase(it);
         delete physObject;
     }
+    return PhysicsResult::PHYS_OK;
 }
 
 PhysicsResult PhysicsController::subscribe(string name, SUBSCRIPTION_PARAM) {
@@ -92,29 +102,26 @@ PhysicsResult PhysicsController::subscribe(string name, SUBSCRIPTION_PARAM) {
 }
 
 PhysicsResult PhysicsController::unsubscribe(string name) {
-    auto compare = [&name](const PhysicsSubscriber *sub) {
-        name.compare(sub->name);
+    auto compare = [&name](PhysicsSubscriber sub) {
+        return name.compare(sub.name) == 0;
     };
     // Remove the subscriber from the subscriptions list
-    auto it = std::find(subscribers_.begin(), subscribers_.end(), compare);
+    auto it = std::find_if(subscribers_.begin(), subscribers_.end(), compare);
     if (it != subscribers_.end()) {
-        printf("PhysicsController::unsubscribe: Removed subscription %s\n", *it->name.c_str());
+        printf("PhysicsController::unsubscribe: Removed subscription %s\n", it->name.c_str());
         subscribers_.erase(it);
     }
+    return PHYS_OK;
 }
 
-PhysicsResult PhysicsController::PhysicsController(int threadNum) : threadNum_{threadNum} {
-    if (threadNum > PHYS_MAX_THREADS) return PhysicsResult::PHYS_FAILURE;
+PhysicsController::PhysicsController(int threadNum) : threadNum_{threadNum} {
+    if (threadNum_ > PHYS_MAX_THREADS) return;
     // Create thread pool for physics calculations
-    for (int i = 0; i < threadNum; ++i) {
-        threads_.emplace_back(calculate);
+    for (int i = 0; i < threadNum_; ++i) {
+        threads_.emplace_back(physDoWork);
     }
     for (auto i = threads_.begin(); i != threads_.end(); i++) {
         i->join();
     }
 }
 
-PhysicsResult PhysicsController::calculate() {
-    printf("This is a test\n");
-    return PhysicsResult::PHYS_OK;
-}

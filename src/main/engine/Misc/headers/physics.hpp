@@ -69,7 +69,6 @@ class PhysicsController {
     PhysicsResult subscribe(string name, SUBSCRIPTION_PARAM);
     PhysicsResult unsubscribe(string name);
     //static PhysicsResult setTrace(int trace);
-    PhysicsResult calculate();
  private:
     const int threadNum_;
     std::vector<std::thread> threads_;
