@@ -22,8 +22,8 @@ add_compile_options(-Wall -Werror)
 
 if (APPLE)
 include_directories(
-  /usr/local/Cellar/glew/2.2.0_1/include/
-  /usr/local/Cellar/glm/0.9.9.8/include/
+  /opt/homebrew/Cellar/glew/2.2.0_1/include/
+  /opt/homebrew/Cellar/glm/1.0.1/include/
 )
 endif (APPLE)
 
@@ -81,6 +81,15 @@ add_executable(gtest_ModelImportTests
   src/main/utilities/src/Polygon.cpp
 )
 
+add_executable(gtest_PhysicsControllerTests
+  src/main/engine/Misc/test/src/PhysicsControllerTests.cpp
+  src/main/engine/Misc/src/physics.cpp
+  src/main/utilities/src/Polygon.cpp
+  src/main/engine/SceneObject/src/GameObject.cpp
+  src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
+)
+
 add_executable(gtest_PolygonTests
   src/main/utilities/test/src/PolygonTests.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
@@ -93,6 +102,10 @@ add_executable(gtest_SafeQueueTests
 
 target_include_directories(gtest_ModelImportTests
   PRIVATE src/main/utilities/test/headers
+)
+
+target_include_directories(gtest_PhysicsControllerTests
+  PRIVATE src/main/engine/Misc/test/headers
 )
 
 target_include_directories(gtest_PolygonTests
@@ -115,6 +128,12 @@ target_include_directories(gtest_PolygonTests PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(gtest_PolygonTests PUBLIC ${FREETYPE_INCLUDE_DIRS})
 #target_include_directories(gtest_PolygonTests PUBLIC ${SDL2_NET_INCLUDE_DIRS})
 
+target_include_directories(gtest_PhysicsControllerTests PUBLIC ${SDL2_INCLUDE_DIRS})
+target_include_directories(gtest_PhysicsControllerTests PUBLIC ${GLEW_INCLUDE_DIRS})
+target_include_directories(gtest_PhysicsControllerTests PUBLIC ${OPENGL_INCLUDE_DIR})
+target_include_directories(gtest_PhysicsControllerTests PUBLIC ${FREETYPE_INCLUDE_DIRS})
+#target_include_directories(gtest_PolygonTests PUBLIC ${SDL2_NET_INCLUDE_DIRS})
+
 target_link_libraries(gtest_ModelImportTests SDL2::Main)
 target_link_libraries(gtest_ModelImportTests SDL2::Mixer)
 target_link_libraries(gtest_ModelImportTests SDL2::Image)
@@ -134,8 +153,23 @@ target_link_libraries(gtest_PolygonTests ${GLEW_LIBRARIES})
 target_link_libraries(gtest_PolygonTests Threads::Threads)
 target_link_libraries(gtest_PolygonTests ${FREETYPE_LIBRARIES})
 
+target_link_libraries(gtest_PhysicsControllerTests SDL2::Main)
+target_link_libraries(gtest_PhysicsControllerTests SDL2::Mixer)
+target_link_libraries(gtest_PhysicsControllerTests SDL2::Image)
+#target_link_libraries(gtest_ModelImportTests SDL2::Net)
+target_link_libraries(gtest_PhysicsControllerTests ${OPENGL_LIBRARIES})
+
+target_link_libraries(gtest_PhysicsControllerTests ${GLEW_LIBRARIES})
+target_link_libraries(gtest_PhysicsControllerTests Threads::Threads)
+target_link_libraries(gtest_PhysicsControllerTests ${FREETYPE_LIBRARIES})
+
 target_link_libraries(
   gtest_ModelImportTests
+  GTest::gtest_main
+)
+
+target_link_libraries(
+  gtest_PhysicsControllerTests
   GTest::gtest_main
 )
 
@@ -152,6 +186,7 @@ target_link_libraries(
 gtest_discover_tests(gtest_PolygonTests)
 gtest_discover_tests(gtest_ModelImportTests)
 gtest_discover_tests(gtest_SafeQueueTests)
+gtest_discover_tests(gtest_PhysicsControllerTests)
 #ENDIF($(GTest_FOUND))
 
 # Project include dirs

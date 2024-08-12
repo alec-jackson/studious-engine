@@ -10,9 +10,19 @@
  */
 
 #include <physics.hpp>
+#include <string>
 
-static PhysicsResult physDoWork() {
-    printf("This is a test\n");
+// Sleep the thread on the work safequeue until work becomes available
+PhysicsResult PhysicsController::doWork() {
+    printf("physDoWork: Waiting for work\n");
+    auto item = workQueue_.pop();
+    if (item->workType == PhysicsWorkType::DIE) {
+        // Close the thread
+        printf("PhysicsController::doWork: Closing on DIE message\n");
+        return PhysicsResult::PHYS_OK;
+    }
+    string name = item->gameObject->getObjectName();
+    printf("physDoWork: Retrieved gameObject for work [%s]\n", name.c_str());
     return PhysicsResult::PHYS_OK;
 }
 
@@ -82,6 +92,7 @@ PhysicsResult PhysicsController::addGameObject(GameObject *gameObject, PhysicsPa
 }
 
 PhysicsResult PhysicsController::removeGameObject(GameObject *gameObject) {
+    std::unique_lock<std::mutex> scopeLock(objectLock_);
     auto compare = [&gameObject](PhysicsObject *po) {
         return gameObject->getObjectName().compare(po->gameObject->getObjectName()) == 0;
     };
@@ -96,12 +107,14 @@ PhysicsResult PhysicsController::removeGameObject(GameObject *gameObject) {
 }
 
 PhysicsResult PhysicsController::subscribe(string name, SUBSCRIPTION_PARAM) {
+    std::unique_lock<std::mutex> scopeLock(subscriberLock_);
     auto physicsSubscriber = PhysicsSubscriber(name, callback);
     subscribers_.push_back(physicsSubscriber);
     return PHYS_OK;
 }
 
 PhysicsResult PhysicsController::unsubscribe(string name) {
+    std::unique_lock<std::mutex> scopeLock(subscriberLock_);
     auto compare = [&name](PhysicsSubscriber sub) {
         return name.compare(sub.name) == 0;
     };
@@ -115,13 +128,59 @@ PhysicsResult PhysicsController::unsubscribe(string name) {
 }
 
 PhysicsController::PhysicsController(int threadNum) : threadNum_{threadNum} {
+    printf("PhysicsController::PhysicsController: Entered constructor\n");
     if (threadNum_ > PHYS_MAX_THREADS) return;
     // Create thread pool for physics calculations
     for (int i = 0; i < threadNum_; ++i) {
-        threads_.emplace_back(physDoWork);
+        threads_.emplace_back(&PhysicsController::doWork, this);
+    }
+    printf("PhysicsController::PhysicsController: Exit\n");
+}
+
+PhysicsController::~PhysicsController() {
+    shutdown();  // Mark the scheduler to shutdown
+    PhysicsObject death;
+    death.workType = PhysicsWorkType::DIE;
+    // When we end, send kill signal to threads and join
+    for (auto i = threads_.begin(); i != threads_.end(); i++) {
+        workQueue_.push(&death);
     }
     for (auto i = threads_.begin(); i != threads_.end(); i++) {
         i->join();
     }
 }
 
+PhysicsResult PhysicsController::physicsScheduler() {
+    printf("PhysicsController::physicsScheduler: Start\n");
+    while (1) {
+        std::unique_lock<std::mutex> scopeLock(objectLock_);
+        // Check if the shutdown signal was received
+        if (shutdown_) break;
+        // Populate the work list
+        for (auto i = physicsObjects_.begin(); i != physicsObjects_.end(); i++) {
+            workQueue_.push(*i);
+        }
+        printf("PhysicsController::physicsScheduler: Submitted all work objects\n");
+        break;
+    }
+    printf("PhysicsController::physicsScheduler: Shutdown signal received\n");
+    return PhysicsResult::PHYS_OK;
+}
+
+PhysicsResult PhysicsController::notifySubscribers(PhysicsReport *rep) {
+    // We need to lock the subscriber list when notifying
+    std::unique_lock<std::mutex> scopeLock(subscriberLock_);
+    for (auto sub = subscribers_.begin(); sub != subscribers_.end(); sub++) {
+        // Send the physics report to each registered callback
+        sub->callback(rep);
+    }
+    return PHYS_OK;
+}
+
+PhysicsResult PhysicsController::shutdown() {
+    std::unique_lock<std::mutex> scopeLock(objectLock_);
+    printf("PhysicsController::shutdown: Sending shutdown signal\n");
+    // Mark the shutdown variable as true
+    shutdown_ = 1;
+    return PhysicsResult::PHYS_OK;
+}

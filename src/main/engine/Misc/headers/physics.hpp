@@ -23,6 +23,11 @@
 
 static int PHYSICS_TRACE = 0;
 
+enum PhysicsWorkType {
+    OBJECT,
+    DIE
+};
+
 // Internal - used in physics component
 typedef struct PhysicsObject {
     GameObject *         gameObject;
@@ -33,6 +38,7 @@ typedef struct PhysicsObject {
     bool                 obeyGravity;
     vector<float>        impulse;
     float                elasticity;
+    PhysicsWorkType      workType;
 } PhysicsObject;
 
 typedef struct PhysicsParams {
@@ -63,16 +69,25 @@ float basicPhysics(float* pos, float fallspeed);
 
 class PhysicsController {
  public:
-    PhysicsController(int threadNum);
+    explicit PhysicsController(int threadNum);
     PhysicsResult addGameObject(GameObject *, PhysicsParams params);
     PhysicsResult removeGameObject(GameObject *);
     PhysicsResult subscribe(string name, SUBSCRIPTION_PARAM);
     PhysicsResult unsubscribe(string name);
-    //static PhysicsResult setTrace(int trace);
+    /// @todo WATCH - need to make sure we're handling memory correctly here...
+    PhysicsResult notifySubscribers(PhysicsReport *rep);
+    PhysicsResult physicsScheduler();
+    PhysicsResult doWork();
+    PhysicsResult shutdown();
+    inline int hasShutdown() { return shutdown_; }
+    ~PhysicsController();
  private:
     const int threadNum_;
+    int shutdown_;
     std::vector<std::thread> threads_;
     std::mutex objectLock_;
+    std::mutex subscriberLock_;
     vector<PhysicsObject *> physicsObjects_;
+    SafeQueue<PhysicsObject *> workQueue_;
     vector<PhysicsSubscriber> subscribers_;
 };
