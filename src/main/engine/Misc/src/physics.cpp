@@ -208,7 +208,7 @@ PhysicsResult PhysicsController::physicsScheduler() {
             workQueue_.push(*i);
         }
         // Don't proceed until all threads are done in this stage
-        completedWorkSignal_.wait(scopeLock, [this] { return !workQueue_.size(); });
+        completedWorkSignal_.wait(scopeLock, [this] { return workQueue_.size() == threadNum_; });
         printf("PhysicsController::physicsScheduler: Completed initial\n");
         break;
     }

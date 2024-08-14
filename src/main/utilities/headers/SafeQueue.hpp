@@ -47,5 +47,6 @@ class SafeQueue {
     std::mutex queue_lock_;
     std::queue<T> queue_;
     std::condition_variable item_available_;
+    
     std::atomic<int> waiters_;
 };
