@@ -24,21 +24,25 @@
 static int PHYSICS_TRACE = 0;
 
 enum PhysicsWorkType {
-    OBJECT,
+    POSITION,
+    COLLISION,
+    FINALIZE,
+    SUBMIT,
     DIE
 };
 
 // Internal - used in physics component
 typedef struct PhysicsObject {
     GameObject *         gameObject;
-    vector<float>        distance;
+    vector<float>        position;
     vector<float>        velocity;
     vector<float>        acceleration;
     bool                 isKinematic;
     bool                 obeyGravity;
     vector<float>        impulse;
     float                elasticity;
-    PhysicsWorkType      workType;
+    float                mass;
+    PhysicsWorkType      workType;  // MIght want to move this to a work queue specific class...
 } PhysicsObject;
 
 typedef struct PhysicsParams {
@@ -90,4 +94,5 @@ class PhysicsController {
     vector<PhysicsObject *> physicsObjects_;
     SafeQueue<PhysicsObject *> workQueue_;
     vector<PhysicsSubscriber> subscribers_;
+    std::condition_variable completedWorkSignal_;
 };

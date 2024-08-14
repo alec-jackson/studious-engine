@@ -15,14 +15,33 @@
 // Sleep the thread on the work safequeue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     printf("physDoWork: Waiting for work\n");
-    auto item = workQueue_.pop();
-    if (item->workType == PhysicsWorkType::DIE) {
+    auto po = workQueue_.pop();
+    if (po->workType == PhysicsWorkType::DIE) {
         // Close the thread
         printf("PhysicsController::doWork: Closing on DIE message\n");
         return PhysicsResult::PHYS_OK;
     }
-    string name = item->gameObject->getObjectName();
-    printf("physDoWork: Retrieved gameObject for work [%s]\n", name.c_str());
+    string name = po->gameObject->getObjectName();
+    printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), po->workType);
+    switch (po->workType) {
+        case PhysicsWorkType::POSITION:
+            // Perform work here, determine if another iteration is required
+            // Missing - ? Update Acceleration...
+            // Update velocity from acceleration - might have a cleaner way to do this
+            po->velocity[0] += po->acceleration[0];
+            po->velocity[1] += po->acceleration[1];
+            po->velocity[2] += po->acceleration[2];
+            // Upate position from velocity
+            po->position[0] += po->velocity[0];
+            po->position[1] += po->velocity[1];
+            po->position[2] += po->velocity[2];
+            break;
+        default:
+            printf("HORRIBLE BADNESS\n");
+            break;
+    }
+    printf("physDoWork: Finished work [%s], work type [%d]\n", name.c_str(), po->workType);
+
     return PhysicsResult::PHYS_OK;
 }
 
@@ -78,7 +97,7 @@ PhysicsResult PhysicsController::addGameObject(GameObject *gameObject, PhysicsPa
     auto physicsObject = new PhysicsObject();
     if (physicsObject == nullptr) return PhysicsResult::PHYS_FAILURE;
     physicsObject->gameObject = gameObject;
-    physicsObject->distance = params.position;
+    physicsObject->position = params.position;
     physicsObject->velocity = {0.0f, 0.0f, 0.0f};
     physicsObject->acceleration = {0.0f, 0.0f, 0.0f};
     physicsObject->isKinematic = params.isKinematic;
@@ -150,17 +169,47 @@ PhysicsController::~PhysicsController() {
     }
 }
 
+/**
+ * @brief Runs the physics scheduler for the physics controller.
+ * The physics pipeline has four stages: position, collision, finalize, submit. Each phase can be parallelized
+ * when run on its own, but multiple different stages in the pipeline should NOT be run simultaneously...
+ * 
+ * POSITION - This is the first step in the physics pipeline. At the start, just feed all of the physics objects
+ * into the work queue to start. This will update the positions of each gameobject. This considers the object's
+ * force (acceleration * mass), as well as other things.
+ * 
+ * COLLISION - This is the second step in the pipeline. After the positions of all objects has been updated, we can
+ * start checking for collisions with each object. This is going to be a very heavy step. We're going to check for
+ * collisions against all of the other objects in the scene. This can be optimized using object distances later, but for
+ * V1 this is OK. We check for collisions and then report any collisions via physics reports. Subscribers to physics events
+ * will be notified.
+ * 
+ * FINALIZE - This stage is going to handle the physics behind object collisions between two objects, We can calculate
+ * impulse or whatever else we want here, and then update the object's acceleration/velocity/position again. When
+ * objects collide here, we want to send those objects BACK into the POSITION workload. This will also require checking
+ * for COLLISIONS again, and then finalizing again... We can run into infiite loops here if we're possible, but again
+ * that's a V2 issue :)
+ * 
+ * SUBMIT - This may not actually be a separate step, but we'll need to see how this turns out. We want to make sure we
+ * report all of the physics events to their subscribers. Maybe we'll only submit physics reports at this step? 
+ * 
+ * @return PhysicsResult 
+ */
 PhysicsResult PhysicsController::physicsScheduler() {
     printf("PhysicsController::physicsScheduler: Start\n");
+    auto pipelineStage = PhysicsWorkType::POSITION;  // Start the pipeline at the POSITION step
     while (1) {
         std::unique_lock<std::mutex> scopeLock(objectLock_);
         // Check if the shutdown signal was received
         if (shutdown_) break;
-        // Populate the work list
+        // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
         for (auto i = physicsObjects_.begin(); i != physicsObjects_.end(); i++) {
+            (*i)->workType = pipelineStage;
             workQueue_.push(*i);
         }
-        printf("PhysicsController::physicsScheduler: Submitted all work objects\n");
+        // Don't proceed until all threads are done in this stage
+        completedWorkSignal_.wait(scopeLock, [this] { return !workQueue_.size(); });
+        printf("PhysicsController::physicsScheduler: Completed initial\n");
         break;
     }
     printf("PhysicsController::physicsScheduler: Shutdown signal received\n");

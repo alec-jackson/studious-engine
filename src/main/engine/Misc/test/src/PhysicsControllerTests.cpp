@@ -49,7 +49,7 @@ TEST_F(GivenPhysicsControllerThreaded, WhenShutdownSent_ThenSchedulerStops) {
     // Add 2 gameObjects
     for (int i = 0; i < 2; i++) {
         printf("Adding gameobject %d\n", i);
-        PhysicsParams params;
+        PhysicsParams params = { {0.0f, 0.0f, 0.0f}, true, true, 1.0f };
         physicsController_->addGameObject(&items[i], params);
     }
     // Send the sleep signal in 2 seconds and start the scheduler
