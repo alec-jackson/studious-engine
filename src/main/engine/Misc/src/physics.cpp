@@ -14,34 +14,38 @@
 
 // Sleep the thread on the work safequeue until work becomes available
 PhysicsResult PhysicsController::doWork() {
-    printf("physDoWork: Waiting for work\n");
-    auto po = workQueue_.pop();
-    if (po->workType == PhysicsWorkType::DIE) {
-        // Close the thread
-        printf("PhysicsController::doWork: Closing on DIE message\n");
-        return PhysicsResult::PHYS_OK;
+    while (1) {
+        printf("physDoWork: Waiting for work\n");
+        // Signal when the thread first starts its work - used for checking idle status
+        completedWorkSignal_.notify_one();
+        // The notify needs to happen from within the pop function - The idle tracker could not be updated
+        auto po = workQueue_.pop();
+        if (po->workType == PhysicsWorkType::DIE) {
+            // Close the thread
+            printf("PhysicsController::doWork: Closing on DIE message\n");
+            return PhysicsResult::PHYS_OK;
+        }
+        string name = po->gameObject->getObjectName();
+        printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), po->workType);
+        switch (po->workType) {
+            case PhysicsWorkType::POSITION:
+                // Perform work here, determine if another iteration is required
+                // Missing - ? Update Acceleration...
+                // Update velocity from acceleration - might have a cleaner way to do this
+                po->velocity[0] += po->acceleration[0];
+                po->velocity[1] += po->acceleration[1];
+                po->velocity[2] += po->acceleration[2];
+                // Upate position from velocity
+                po->position[0] += po->velocity[0];
+                po->position[1] += po->velocity[1];
+                po->position[2] += po->velocity[2];
+                break;
+            default:
+                printf("HORRIBLE BADNESS\n");
+                break;
+        }
+        printf("physDoWork: Finished work [%s], work type [%d]\n", name.c_str(), po->workType);
     }
-    string name = po->gameObject->getObjectName();
-    printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), po->workType);
-    switch (po->workType) {
-        case PhysicsWorkType::POSITION:
-            // Perform work here, determine if another iteration is required
-            // Missing - ? Update Acceleration...
-            // Update velocity from acceleration - might have a cleaner way to do this
-            po->velocity[0] += po->acceleration[0];
-            po->velocity[1] += po->acceleration[1];
-            po->velocity[2] += po->acceleration[2];
-            // Upate position from velocity
-            po->position[0] += po->velocity[0];
-            po->position[1] += po->velocity[1];
-            po->position[2] += po->velocity[2];
-            break;
-        default:
-            printf("HORRIBLE BADNESS\n");
-            break;
-    }
-    printf("physDoWork: Finished work [%s], work type [%d]\n", name.c_str(), po->workType);
-
     return PhysicsResult::PHYS_OK;
 }
 

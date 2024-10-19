@@ -22,13 +22,15 @@ class SafeQueue {
     inline SafeQueue() : waiters_(0) {}
     inline T pop() {
         waiters_.fetch_add(1);
-        std::unique_lock<std::mutex> scopeLock(queue_lock_);
+        popBase();
         waiters_.fetch_sub(1);
-        item_available_.wait(scopeLock, [this] { return !queue_.empty(); });
-        assert(!queue_.empty());
-        auto item = queue_.front();
-        queue_.pop();
-        return item;
+    }
+
+    inline T pop(const std::condition_variable &signal) {
+        waiters_.fetch_add(1);
+        signal.notify_one();
+        popBase();
+        waiters_.fetch_sub(1);
     }
     inline void push(T item) {
         std::unique_lock<std::mutex> scopeLock(queue_lock_);
@@ -39,11 +41,20 @@ class SafeQueue {
         std::unique_lock<std::mutex> scopeLock(queue_lock_);
         return queue_.size();
     }
-    inline int getWaiters() {
-        return waiters_.load();
+    inline int idleAndEmpty(int maxThreads) {
+        std::unique_lock<std::mutex> scopeLock(queue_lock_);
+        return maxThreads == queue_.size();
     }
 
  private:
+    inline T popBase() {
+        std::unique_lock<std::mutex> scopeLock(queue_lock_);
+        item_available_.wait(scopeLock, [this] { return !queue_.empty(); });
+        assert(!queue_.empty());
+        auto item = queue_.front();
+        queue_.pop();
+        return item;
+    }
     std::mutex queue_lock_;
     std::queue<T> queue_;
     std::condition_variable item_available_;
