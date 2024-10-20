@@ -11,9 +11,10 @@
 
 #include <UiObject.hpp>
 
-UiObject::UiObject(string spritePath, vec3 position, float scale, unsigned int programId,
+UiObject::UiObject(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
         string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
-    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath } {
+    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath }, wScale_ { wScale },
+    hScale_ { hScale } {
     printf("UiObject::UiObject: Creating sprite %s\n", objectName.c_str());
     initializeShaderVars();
     initializeSprite();
@@ -26,6 +27,10 @@ void UiObject::initializeShaderVars() {
     gfxController_->setProgram(programId_);
     auto projectionId = gfxController_->getShaderVariable(programId_, "projection").get();
     gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
+    wScaleId_ = gfxController_->getShaderVariable(programId_, "wScale").get();
+    hScaleId_ = gfxController_->getShaderVariable(programId_, "hScale").get();
+    gfxController_->sendFloat(wScaleId_, wScale_);
+    gfxController_->sendFloat(hScaleId_, hScale_);
 }
 
 void UiObject::generateVertexBase(float *vertexData, int triIdx, float x, float y, float x2, float y2) {
@@ -120,6 +125,8 @@ void UiObject::render() {
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
+    gfxController_->sendFloat(wScaleId_, wScale_);
+    gfxController_->sendFloat(hScaleId_, hScale_);
     // Find a more clever solution
     gfxController_->bindVao(vao_);
     gfxController_->bindTexture(textureId_);
@@ -132,3 +139,10 @@ void UiObject::update() {
     render();
 }
 
+void UiObject::setWScale(float scale) {
+    wScale_ = scale;
+}
+
+void UiObject::setHScale(float scale) {
+    hScale_ = scale;
+}

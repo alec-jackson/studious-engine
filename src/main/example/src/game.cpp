@@ -81,7 +81,7 @@ vector<string> texturePath = {
 };
 
 string textBoxImage =
-    "src/resources/images/Message Bubble Base.png";
+    "src/resources/images/Banjo Textbox.png";
 
 TextObject *fps_counter;
 TextObject *collDebugText;
@@ -131,8 +131,6 @@ int runtime(GameInstance *currentGame) {
     bool isDone = false;
     cout << "Creating camera.\n";
 
-    // Create a "Sprite" GameObject type... Probably going to be a good amount of work
-
     auto fpsText = currentGame->createText("FPS",
         vec3(25.0f, 670.0f, 0.0f),
         0.7f,
@@ -140,7 +138,14 @@ int runtime(GameInstance *currentGame) {
         gfxController.getProgramId(2).get(),
         "fps-text");
 
-    auto box = currentGame->createUi(textBoxImage, vec3(0.0f, 700.0f, 0.0f), 1.0f, gfxController.getProgramId(4).get(), "testSpriteObject");
+    auto box = currentGame->createUi(textBoxImage, vec3(30.0f, 200.0f, 0.0f), 0.7f, 300.0f, -50.0f, gfxController.getProgramId(4).get(), "testSpriteObject");
+
+    auto textTest = currentGame->createText("Sample Text",
+        vec3(30.0f, 150.0f, 0.0f),
+        0.5f,
+        "src/resources/fonts/Comic Sans MS.ttf",
+        gfxController.getProgramId(2).get(),
+        "message-text");
 
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
@@ -152,8 +157,9 @@ int runtime(GameInstance *currentGame) {
 
     // Add objects to camera
     vector<SceneObject *> targets = {
+        box,
         fpsText,
-        box
+        textTest
     };
 
     // Add all objects to active camera

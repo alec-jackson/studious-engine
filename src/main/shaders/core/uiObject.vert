@@ -116,7 +116,7 @@ int stretchTriangle(int index, float horizontalScale, float verticalScale) {
 }
 
 void main() {
-    int triangle = stretchTriangle(gl_VertexID, hScale, wScale);
+    int triangle = stretchTriangle(gl_VertexID, wScale, hScale);
     gl_Position = projection * modifiedPos;
     TexCoords = vertex.zw;
     TriDex = float(triangle);

@@ -19,7 +19,7 @@ class UiObject : public SceneObject {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
-    explicit UiObject(string spritePath, vec3 position, float scale, unsigned int programId,
+    explicit UiObject(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
         string objectName, ObjectType type, GfxController *gfxController);
     ~UiObject() override;
 
@@ -31,10 +31,21 @@ class UiObject : public SceneObject {
     float *generateVertices(float x, float y, float iFx, float iFy);
     void generateVertexBase(float *vertexData, int triIdx, float x, float y, float x2, float y2);
 
+    // Set scale methods
+    void setHScale(float scale);
+    void setWScale(float scale);
+
  private:
     string spritePath_;
+
     unsigned int textureId_;
+    unsigned int wScaleId_;
+    unsigned int hScaleId_;
     unsigned int vao_;
     unsigned int vbo_;
+
     float *vertexData_;
+
+    float wScale_;
+    float hScale_;
 };

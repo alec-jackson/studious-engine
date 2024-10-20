@@ -84,7 +84,7 @@ class GameInstance {
         string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName);
-    UiObject *createUi(string spritePath, vec3 position, float scale, unsigned int programId,
+    UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
         string objectName);
     int getWidth();
     int getHeight();
