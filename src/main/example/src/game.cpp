@@ -38,7 +38,7 @@
 */
 // Global Variables, should eventually be moved to a config file
 vector<string> soundList = {
-    "src/resources/sfx/music/endlessNight.wav"
+    "src/resources/sfx/music/GruntyFurnace.mp3"
 };  // A list of gameSounds to load
 
 // Lists of embedded/core shaders
@@ -46,12 +46,16 @@ vector<string> soundList = {
 vector<string> fragShaders = {
     "src/main/shaders/core/gameObject.frag",
     "src/main/shaders/core/colliderObject.frag",
-    "src/main/shaders/core/textObject.frag"
+    "src/main/shaders/core/textObject.frag",
+    "src/main/shaders/core/spriteObject.frag",
+    "src/main/shaders/core/uiObject.frag"
 };  // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
     "src/main/shaders/core/gameObject.vert",
     "src/main/shaders/core/colliderObject.vert",
-    "src/main/shaders/core/textObject.vert"
+    "src/main/shaders/core/textObject.vert",
+    "src/main/shaders/core/spriteObject.vert",
+    "src/main/shaders/core/uiObject.vert"
 };  // Contains collider renderer and basic object renderer.
 #else
 vector<string> fragShaders = {
@@ -75,6 +79,9 @@ vector<string> texturePath = {
     "src/resources/images/shoetexture.jpg",
     "src/resources/images/shirttexture.jpg"
 };
+
+string textBoxImage =
+    "src/resources/images/Message Bubble Base.png";
 
 TextObject *fps_counter;
 TextObject *collDebugText;
@@ -124,107 +131,29 @@ int runtime(GameInstance *currentGame) {
     bool isDone = false;
     cout << "Creating camera.\n";
 
-    /// @todo Make loading textures for objects a little more user friendly
-    // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
-    vector<int> texturePattern = {0, 1, 2, 3};
-    vector<int> texturePatternStage = {0, 0, 0, 0};
-
-    cout << "Creating Map.\n";
-
-    auto mapPoly = ModelImport("src/resources/models/map3.obj",
-        texturePathStage,
-        texturePatternStage,
-        gfxController.getProgramId(0).get())
-        .createPolygonFromFile();
-
-    auto mapObject = currentGame->createGameObject(&mapPoly,
-        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
-
-    cout << "Creating Player\n";
-
-    auto playerPoly = ModelImport(
-        "src/resources/models/Dracula.obj",
-        texturePath,
-        texturePattern,
-        gfxController.getProgramId(0).get())
-        .createPolygonFromFile();
-
-    // Ready the gameObjectInfo for the player object
-    playerRef = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
-    playerRef->createCollider(gfxController.getProgramId(1).get());
-
-    cout << "Creating wolf\n";
-
-    auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
-        texturePath,
-        texturePattern,
-        gfxController.getProgramId(0).get())
-        .createPolygonFromFile();
-
-    auto wolfObject = currentGame->createGameObject(&wolfPoly,
-        vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
-
-    wolfObject->createCollider(gfxController.getProgramId(1).get());
-    wolfRef = wolfObject;
-
-    // Configure some in-game text objects
-    auto engineText = currentGame->createText(
-        "Studious Engine 2024",                 // Message
-        vec3(25.0f, 25.0f, 0.0f),               // Position
-        1.0f,                                   // Scale
-        "src/resources/fonts/AovelSans.ttf",    // Font Path
-        gfxController.getProgramId(2).get(),    // ProgramId
-        "studious-text");                       // ObjectName
-
-    auto contactText = currentGame->createText(
-        "Contact",                              // Message
-        vec3(25.0f, 300.0f, 0.0f),              // Position
-        0.7f,                                   // Scale
-        "src/resources/fonts/AovelSans.ttf",    // Font Path
-        gfxController.getProgramId(2).get(),    // ProgramId
-        "contact-text");                        // ObjectName
-
-    pressUText = currentGame->createText(
-        "Press 'U' to attach/detach mouse",
-        vec3(800.0f, 670.0f, 0.0f),
-        0.7f,
-        "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(),
-        "contact-text");
-
-    collDebugText = contactText;
-    collDebugText->setMessage("Contact: False");
+    // Create a "Sprite" GameObject type... Probably going to be a good amount of work
 
     auto fpsText = currentGame->createText("FPS",
         vec3(25.0f, 670.0f, 0.0f),
         0.7f,
-        "src/resources/fonts/AovelSans.ttf",
+        "src/resources/fonts/Comic Sans MS.ttf",
         gfxController.getProgramId(2).get(),
         "fps-text");
+
+    auto box = currentGame->createUi(textBoxImage, vec3(0.0f, 700.0f, 0.0f), 1.0f, gfxController.getProgramId(4).get(), "testSpriteObject");
 
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
 
-    auto currentCamera = currentGame->createCamera(playerRef,
+    auto currentCamera = currentGame->createCamera(nullptr,
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
-    playerRef->setRotation(vec3(0, 0, 0));
-    cout << "currentGameObject tag is " << playerRef->getObjectName()
+    cout << "currentGameObject tag is NULLPTR" // playerRef->getObjectName()
         << '\n';
-
-    playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
-    playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
-    playerRef->setScale(0.0062f);
 
     // Add objects to camera
     vector<SceneObject *> targets = {
-        mapObject,
-        playerRef,
-        wolfObject,
-        engineText,
-        contactText,
         fpsText,
-        pressUText
+        box
     };
 
     // Add all objects to active camera
@@ -242,10 +171,10 @@ int runtime(GameInstance *currentGame) {
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
-    thread rotThread(rotateShape, &currentGameInfo, playerRef);
+    //thread rotThread(rotateShape, &currentGameInfo, playerRef);
     mainLoop(&currentGameInfo);
     isDone = true;
-    rotThread.join();
+    //rotThread.join();
     cout << "Running cleanup\n";
     currentGame->cleanup();
     return 0;
@@ -261,7 +190,7 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int running = 1, collision = 0;
+    int running = 1;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     double deltaTime;
@@ -276,14 +205,6 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
-        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
-        string collMessage;
-        if (collision == 1) {
-            collMessage = "Contact: True";
-        } else {
-            collMessage = "Contact: False";
-        }
-        collDebugText->setMessage(collMessage);
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);

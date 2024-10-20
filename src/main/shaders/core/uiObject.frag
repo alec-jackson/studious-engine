@@ -1,6 +1,7 @@
 #version 330 core
 in vec2 TexCoords;
 in float TriDex;
+in vec4 tipColor;
 out vec4 color;
 
 uniform sampler2D sprite;
@@ -16,7 +17,7 @@ void main() {
         if (int(TriDex) == isolatedTriangles[i]) blank = 1;
     }
     if (blank == 1) {
-        color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        color = tipColor;
     } else {
         color = texColor;
     }

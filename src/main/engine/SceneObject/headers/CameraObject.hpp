@@ -48,4 +48,6 @@ class CameraObject : public SceneObject {
     float aspectRatio_;
     float nearClipping_;
     float farClipping_;
+
+    bool cleanTarget_ = 0;
 };

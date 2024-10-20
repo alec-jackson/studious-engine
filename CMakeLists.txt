@@ -56,6 +56,8 @@ add_executable(${PROJECT_NAME}
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/GameInstance.cpp
   src/main/engine/SceneObject/src/GameObject.cpp
+  src/main/engine/SceneObject/src/SpriteObject.cpp
+  src/main/engine/SceneObject/src/UiObject.cpp
   src/main/engine/SceneObject/src/TextObject.cpp
   src/main/engine/SceneObject/src/CameraObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp

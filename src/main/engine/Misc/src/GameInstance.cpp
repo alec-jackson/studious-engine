@@ -270,6 +270,22 @@ TextObject *GameInstance::createText(string message, vec3 position, float scale,
     return text;
 }
 
+SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
+    string objectName) {
+        auto sprite = new SpriteObject(spritePath, position, scale, programId, objectName,
+            ObjectType::GAME_OBJECT, gfxController_);
+        sceneObjects_.push_back(sprite);
+        return sprite;
+}
+
+UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, unsigned int programId,
+    string objectName) {
+        auto ui = new UiObject(spritePath, position, scale, programId, objectName,
+            ObjectType::GAME_OBJECT, gfxController_);
+        sceneObjects_.push_back(ui);
+        return ui;
+}
+
 SceneObject *GameInstance::getSceneObject(string objectName) {
     SceneObject *result = nullptr;
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {

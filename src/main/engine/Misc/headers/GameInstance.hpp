@@ -17,6 +17,8 @@
 #include <GameObject.hpp>
 #include <CameraObject.hpp>
 #include <TextObject.hpp>
+#include <SpriteObject.hpp>
+#include <UiObject.hpp>
 #include <config.hpp>
 
 // Number of samples to use for anti-aliasing
@@ -79,6 +81,10 @@ class GameInstance {
     CameraObject *createCamera(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, unsigned int programId,
+        string objectName);
+    SpriteObject *createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
+        string objectName);
+    UiObject *createUi(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName);
     int getWidth();
     int getHeight();

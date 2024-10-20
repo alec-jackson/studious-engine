@@ -19,6 +19,7 @@ CameraObject::CameraObject(GameObject *target, vec3 offset, float cameraAngle, f
 
 /// @todo: Figure out what the destructor should do
 CameraObject::~CameraObject() {
+    if (cleanTarget_) delete target_;
 }
 
 /// @todo: Change NULL checks to nullptr
@@ -34,6 +35,11 @@ void CameraObject::render() {
 }
 
 void CameraObject::update() {
+    // Support target as being nullptr
+    if (target_ == nullptr) {
+        cleanTarget_ = true;
+        target_ = new GameObject(gfxController_);
+    }
     render();
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
         // Check if the object is ORTHO or PERSPECTIVE

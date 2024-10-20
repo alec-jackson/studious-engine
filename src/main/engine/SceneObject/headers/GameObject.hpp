@@ -21,6 +21,7 @@ class GameObject: public SceneObject {
     // Constructurs
     explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
             string objectName, ObjectType type, GfxController *gfxController);
+    explicit GameObject(GfxController *gfxController);
     ~GameObject() override;
 
     // Setters
@@ -58,6 +59,8 @@ class GameObject: public SceneObject {
         collider_shaderId;  /// @todo: Organize these into another class
 
     int textureCoordId;
+
+    bool cleanModel_ = false;
 
     float luminance;
     float rollOff;

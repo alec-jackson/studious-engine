@@ -54,6 +54,12 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
     vpMatrix_ = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
+GameObject::GameObject(GfxController *gfxController) :
+    SceneObject(ObjectType::GAME_OBJECT, "EmptyModel", gfxController) {
+    model = new Polygon();
+    cleanModel_ = true;
+}
+
 /**
  * @brief Configures the created object with OpenGL. This step is required for object rendering.
  * 
