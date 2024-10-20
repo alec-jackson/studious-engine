@@ -29,8 +29,10 @@ void UiObject::initializeShaderVars() {
     gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
     wScaleId_ = gfxController_->getShaderVariable(programId_, "wScale").get();
     hScaleId_ = gfxController_->getShaderVariable(programId_, "hScale").get();
+    modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
+    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
 }
 
 void UiObject::generateVertexBase(float *vertexData, int triIdx, float x, float y, float x2, float y2) {
@@ -100,7 +102,7 @@ void UiObject::initializeSprite() {
     gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
     gfxController_->generateMipMap();
 
-    auto x = this->position.x, y = this->position.y;
+    auto x = 0.0f, y = 0.0f;
     auto incrementFactorX = (texture->w * scale / 3.0f);
     auto incrementFactorY = (texture->h * scale / 3.0f);
     // Use textures to create each character as an independent object
@@ -122,11 +124,15 @@ UiObject::~UiObject() {
 }
 
 void UiObject::render() {
+    // Update model matrices
+    translateMatrix_ = glm::translate(mat4(1.0f), position);
+    modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
+    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);
     gfxController_->bindTexture(textureId_);

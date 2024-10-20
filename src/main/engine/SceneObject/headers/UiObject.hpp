@@ -41,6 +41,7 @@ class UiObject : public SceneObject {
     unsigned int textureId_;
     unsigned int wScaleId_;
     unsigned int hScaleId_;
+    unsigned int modelMatId_;
     unsigned int vao_;
     unsigned int vbo_;
 
@@ -48,4 +49,6 @@ class UiObject : public SceneObject {
 
     float wScale_;
     float hScale_;
+
+    mat4 modelMat_;
 };

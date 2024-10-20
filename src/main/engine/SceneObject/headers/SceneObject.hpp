@@ -11,6 +11,7 @@
 #include <common.hpp>
 #include <GfxController.hpp>
 
+/// @todo Add SceneObject grouping for shared model changes
 enum ObjectType {
     UNDEFINED,
     TEXT_OBJECT,

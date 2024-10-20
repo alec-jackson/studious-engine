@@ -57,4 +57,8 @@ class TextObject : public SceneObject {
     vector<unsigned int> vaos_;
     vector<unsigned int> vbos_;
     map<char, Character> characters;
+
+    unsigned int modelMatId_;
+
+    mat4 modelMat_;
 };

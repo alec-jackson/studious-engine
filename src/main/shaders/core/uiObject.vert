@@ -5,6 +5,7 @@ out float TriDex;
 out vec4 tipColor;
 
 uniform mat4 projection;
+uniform mat4 model;
 uniform float hScale;
 uniform float wScale;
 
@@ -117,7 +118,7 @@ int stretchTriangle(int index, float horizontalScale, float verticalScale) {
 
 void main() {
     int triangle = stretchTriangle(gl_VertexID, wScale, hScale);
-    gl_Position = projection * modifiedPos;
+    gl_Position = projection * model * modifiedPos;
     TexCoords = vertex.zw;
     TriDex = float(triangle);
 }

@@ -26,6 +26,8 @@ void SpriteObject::initializeShaderVars() {
     gfxController_->setProgram(programId_);
     auto projectionId = gfxController_->getShaderVariable(programId_, "projection").get();
     gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
+    modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
+
 }
 
 void SpriteObject::initializeSprite() {
@@ -43,40 +45,27 @@ void SpriteObject::initializeSprite() {
     gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
     gfxController_->generateMipMap();
 
-    auto x = this->position.x, y = this->position.y;
+    auto x = 0.0f, y = 0.0f;
     auto x2 = x + (texture->w * scale), y2 = y - (texture->h * scale);
     // Use textures to create each character as an independent object
-        gfxController_->initVao(&vao_);
-        gfxController_->bindVao(vao_);
-        gfxController_->generateBuffer(&vbo_);
-        gfxController_->bindBuffer(vbo_);
-        // update VBO for each character
-        vector<float> vertices = {
-            x, y, 0.0f, 0.0f,
-            x, y2, 0.0f, 1.0f,
-            x2, y2, 1.0f, 1.0f,
+    gfxController_->initVao(&vao_);
+    gfxController_->bindVao(vao_);
+    gfxController_->generateBuffer(&vbo_);
+    gfxController_->bindBuffer(vbo_);
+    // update VBO for each character
+    vector<float> vertices = {
+        x, y, 0.0f, 0.0f,
+        x, y2, 0.0f, 1.0f,
+        x2, y2, 1.0f, 1.0f,
 
-            x, y, 0.0f, 0.0f,
-            x2, y2, 1.0f, 1.0f,
-            x2, y, 1.0f, 0.0f
-        };
+        x, y, 0.0f, 0.0f,
+        x2, y2, 1.0f, 1.0f,
+        x2, y, 1.0f, 0.0f
+    };
 
-        cout << "SpriteObject coords: " << endl;
-        int formatter = 0;
-        for (float pos : vertices) {
-            
-            cout << pos << ", ";
-            if (formatter < 3) {
-                formatter++;
-            } else {
-                formatter = 0;
-                cout << endl;
-            }
-        }
-        cout << endl << "DONE" << endl;
-        // Send VBO data for each character to the currently bound buffer
-        gfxController_->sendBufferData(sizeof(float) * vertices.size(), &vertices[0]);
-        gfxController_->enableVertexAttArray(0, 4);
+    // Send VBO data for each character to the currently bound buffer
+    gfxController_->sendBufferData(sizeof(float) * vertices.size(), &vertices[0]);
+    gfxController_->enableVertexAttArray(0, 4);
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
 }
@@ -86,9 +75,12 @@ SpriteObject::~SpriteObject() {
 }
 
 void SpriteObject::render() {
+    translateMatrix_ = glm::translate(mat4(1.0f), position);
+    modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
+    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);
     gfxController_->bindTexture(textureId_);

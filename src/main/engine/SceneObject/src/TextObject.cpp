@@ -28,6 +28,8 @@ void TextObject::initializeShaderVars() {
     gfxController_->setProgram(programId_);
     auto projectionId = gfxController_->getShaderVariable(programId_, "projection").get();
     gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
+    modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
+    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
 }
 
 void TextObject::initializeText() {
@@ -76,7 +78,7 @@ void TextObject::initializeText() {
 }
 
 void TextObject::createMessage() {
-    auto x = this->position.x, y = this->position.y;
+    auto x = 0, y = 0;
     // Use textures to create each character as an independent object
     for (auto character : message_) {
         unsigned int vao;
@@ -117,10 +119,15 @@ TextObject::~TextObject() {
 }
 
 void TextObject::render() {
+    // Update model matrices
+    translateMatrix_ = glm::translate(mat4(1.0f), position);
+    modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     vec3 color = vec3(1.0f);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
+    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
+    /// @todo optimize this...
     auto textColorId = gfxController_->getShaderVariable(programId_, "textColor").get();
     gfxController_->sendFloatVector(textColorId, 1, &color[0]);
     // Find a more clever solution

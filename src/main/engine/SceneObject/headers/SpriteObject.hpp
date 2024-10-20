@@ -31,7 +31,11 @@ class SpriteObject : public SceneObject {
 
  private:
     string spritePath_;
+
     unsigned int textureId_;
+    unsigned int modelMatId_;
     unsigned int vao_;
     unsigned int vbo_;
+
+    mat4 modelMat_;
 };
