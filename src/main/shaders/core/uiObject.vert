@@ -5,6 +5,8 @@ out float TriDex;
 out vec4 tipColor;
 
 uniform mat4 projection;
+uniform float hScale;
+uniform float wScale;
 
 vec4 modifiedPos;
 
@@ -44,10 +46,10 @@ int getCorner(int vertexIdx) {
     }
 }
 
-int stretchTriangle(int index, float scaleFactor) {
+int stretchTriangle(int index, float horizontalScale, float verticalScale) {
     int square = index / 6;
     int vertIdx = index % 6;
-    int edge = getCorner(vertIdx);
+    int corner = getCorner(vertIdx);
     /* Triangle corner topology
     0-----3
     |     |
@@ -64,36 +66,57 @@ int stretchTriangle(int index, float scaleFactor) {
     | 6 | 7 | 8 |
     *---*---*---*
     */
-    // Rules
+
+    // Apply scale factor depending on location (horizontal)
+    float x = vertex.x;
+    float y = vertex.y;
     switch (square) {
         case 1:
         case 4:
         case 7:
-            if (edge == 2 || edge == 3) modifiedPos = vec4(vertex.x + scaleFactor, vertex.y, 0.0, 1.0);
-            else modifiedPos = vec4(vertex.xy, 0.0, 1.0);
+            if (corner == 2 || corner == 3) x += horizontalScale;
             break;
         case 2:
         case 5:
         case 8:
-            modifiedPos = vec4(vertex.x + scaleFactor, vertex.y, 0.0, 1.0);
+            x += horizontalScale;
             break;
         case 0:
         case 3:
         case 6:
         default:
-            modifiedPos = vec4(vertex.xy, 0.0, 1.0);
-            tipColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
             // Don't do anything here either
             break;
     }
 
+    // Apply scale factor depending on location (vertical)
+    switch (square) {
+        case 3:
+        case 4:
+        case 5:
+            if (corner == 1 || corner == 2) y -= verticalScale;
+            break;
+        case 6:
+        case 7:
+        case 8:
+            y -= verticalScale;
+            break;
+        case 0:
+        case 1:
+        case 2:
+        default:
+            // Don't do anything here either
+            break;
+    }
+
+    tipColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    modifiedPos = vec4(x, y, 0.0, 1.0);
     
     return square;
 }
 
 void main() {
-    float scaleFactor = 222.0f;
-    int triangle = stretchTriangle(gl_VertexID, scaleFactor);
+    int triangle = stretchTriangle(gl_VertexID, hScale, wScale);
     gl_Position = projection * modifiedPos;
     TexCoords = vertex.zw;
     TriDex = float(triangle);
