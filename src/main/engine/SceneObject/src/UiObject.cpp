@@ -152,3 +152,11 @@ void UiObject::setWScale(float scale) {
 void UiObject::setHScale(float scale) {
     hScale_ = scale;
 }
+
+float UiObject::getHScale() {
+    return hScale_;
+}
+
+float UiObject::getWScale() {
+    return wScale_;
+}

@@ -45,6 +45,7 @@ void CameraObject::update() {
         // Check if the object is ORTHO or PERSPECTIVE
         switch ((*it)->type()) {
             case GAME_OBJECT:
+            case UI_OBJECT:
                 (*it)->setVpMatrix(vpMatrixPerspective_);
                 break;
             case TEXT_OBJECT:

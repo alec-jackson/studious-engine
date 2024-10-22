@@ -281,7 +281,7 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
 UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
     string objectName) {
         auto ui = new UiObject(spritePath, position, scale, wScale, hScale, programId, objectName,
-            ObjectType::GAME_OBJECT, gfxController_);
+            ObjectType::UI_OBJECT, gfxController_);
         sceneObjects_.push_back(ui);
         return ui;
 }

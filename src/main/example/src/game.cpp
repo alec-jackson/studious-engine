@@ -165,6 +165,7 @@ int runtime(GameInstance *currentGame) {
     KeyFrame k1;
     k1.targetTime = 5.0f; // 3 seconds
     k1.pos.desired =  vec3(600.0f, 200.0f, 0.0f);
+    k1.stretch.desired = vec3(600.0f, -50.0f, 0.0f);
     animationController.addKeyframe(box, k1);
 
     auto textTest = currentGame->createText("Sample Text",

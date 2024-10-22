@@ -35,6 +35,10 @@ class UiObject : public SceneObject {
     void setHScale(float scale);
     void setWScale(float scale);
 
+    // Get scale methods
+    float getHScale();
+    float getWScale();
+
  private:
     string spritePath_;
 
