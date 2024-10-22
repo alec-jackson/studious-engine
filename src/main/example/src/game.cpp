@@ -16,6 +16,7 @@
 #else
 #include <OpenGlEsGfxController.hpp>
 #endif
+#include <AnimationController.hpp>
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
  Currently, the below global vectors are used for loading in sound effect files,
@@ -87,11 +88,13 @@ TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
+double deltaTime = 0.0f;
 #ifdef GFX_EMBEDDED
 OpenGlEsGfxController gfxController = OpenGlEsGfxController();
 #else
 OpenGlGfxController gfxController = OpenGlGfxController();
 #endif
+AnimationController animationController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -112,6 +115,25 @@ int main(int argc, char **argv) {
     currentGame.startGame(config);
     errorNum = runtime(&currentGame);
     return errorNum;
+}
+
+void sendMessageRoutine(UiObject *textBox, TextObject *message, gameInfo *currentGameInfo) {
+    // This is essentially a cutscene, so we're going to pace each action like so
+    printf("sendMessageRoutine: Entry\n");
+    auto boxPos = textBox->getPosition();
+    auto messagePos = message->getPosition();
+    // Use deltaTime to scale object shifting
+    auto startPos = -100.0f;
+    //auto targetPos = 100.0f;
+    
+    boxPos.x = startPos;
+    messagePos.x = startPos;
+    textBox->setPosition(boxPos);
+    message->setPosition(messagePos);
+    // Perform a "travel to" operation using delta time
+    //auto targetTime = 3.0f;  // 3 seconds to get from start to end
+    // Will be dirty this time, but we should signal when deltaTime is accurate
+
 }
 
 /*
@@ -139,6 +161,11 @@ int runtime(GameInstance *currentGame) {
         "fps-text");
 
     auto box = currentGame->createUi(textBoxImage, vec3(30.0f, 200.0f, 0.0f), 0.7f, 300.0f, -50.0f, gfxController.getProgramId(4).get(), "testSpriteObject");
+
+    KeyFrame k1;
+    k1.targetTime = 5.0f; // 3 seconds
+    k1.pos.desired =  vec3(600.0f, 200.0f, 0.0f);
+    animationController.addKeyframe(box, k1);
 
     auto textTest = currentGame->createText("Sample Text",
         vec3(30.0f, 150.0f, 0.0f),
@@ -178,9 +205,11 @@ int runtime(GameInstance *currentGame) {
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
     //thread rotThread(rotateShape, &currentGameInfo, playerRef);
+    thread messageRoutine(sendMessageRoutine, box, textTest, &currentGameInfo);
     mainLoop(&currentGameInfo);
     isDone = true;
     //rotThread.join();
+    messageRoutine.join();
     cout << "Running cleanup\n";
     currentGame->cleanup();
     return 0;
@@ -199,7 +228,6 @@ int mainLoop(gameInfo* gamein) {
     int running = 1;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
-    double deltaTime;
     int error = 0;
     vector<double> times;
     while (running) {
@@ -212,6 +240,7 @@ int mainLoop(gameInfo* gamein) {
             return error;
         }
         end = SDL_GetPerformanceCounter();
+        animationController.update();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
         if (SHOW_FPS) {  // use sampleSize to find average FPS

@@ -16,7 +16,8 @@ enum ObjectType {
     UNDEFINED,
     TEXT_OBJECT,
     CAMERA_OBJECT,
-    GAME_OBJECT
+    GAME_OBJECT,
+    UI_OBJECT
 };
 
 class SceneObject {

@@ -31,6 +31,7 @@ include_directories(
   src/main/utilities/headers
   src/main/common/headers
   src/main/engine/GfxController/headers
+  src/main/engine/AnimationController/headers
   src/main/engine/Misc/headers
   src/main/engine/SceneObject/headers
   src/main/example/headers
@@ -66,6 +67,7 @@ add_executable(${PROJECT_NAME}
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
   src/main/engine/GfxController/src/OpenGlEsGfxController.cpp
+  src/main/engine/AnimationController/src/AnimationController.cpp
   src/main/misc/src/config.cpp
 )
 
