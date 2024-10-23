@@ -44,10 +44,11 @@ typedef struct KeyFrames {
 
 class AnimationController {
 public:
-    int addKeyframe(SceneObject *target, KeyFrame keyFrame);
+    int addKeyframe(SceneObject *target, KeyFrame *keyFrame);
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
+    static KeyFrame *createKeyFrame(vec3 pos, vec3 stretch, float time);
 private:
     map<string, KeyFrames> keyFrameStore_;
 };

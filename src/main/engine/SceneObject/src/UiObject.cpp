@@ -145,18 +145,15 @@ void UiObject::update() {
     render();
 }
 
-void UiObject::setWScale(float scale) {
+void UiObject::setWStretch(float scale) {
     wScale_ = scale;
 }
 
-void UiObject::setHScale(float scale) {
+void UiObject::setHStretch(float scale) {
     hScale_ = scale;
 }
 
-float UiObject::getHScale() {
-    return hScale_;
+vec3 UiObject::getStretch() {
+    return vec3(wScale_, hScale_, 0.0f);
 }
 
-float UiObject::getWScale() {
-    return wScale_;
-}

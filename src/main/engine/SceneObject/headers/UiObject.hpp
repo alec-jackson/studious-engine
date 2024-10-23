@@ -32,12 +32,11 @@ class UiObject : public SceneObject {
     void generateVertexBase(float *vertexData, int triIdx, float x, float y, float x2, float y2);
 
     // Set scale methods
-    void setHScale(float scale);
-    void setWScale(float scale);
+    void setHStretch(float scale);
+    void setWStretch(float scale);
 
     // Get scale methods
-    float getHScale();
-    float getWScale();
+    vec3 getStretch();
 
  private:
     string spritePath_;

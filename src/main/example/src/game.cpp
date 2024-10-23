@@ -84,6 +84,9 @@ vector<string> texturePath = {
 string textBoxImage =
     "src/resources/images/Banjo Textbox.png";
 
+string sgrunty =
+    "src/resources/images/Scuffed Grunty.png";
+
 TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
@@ -120,20 +123,6 @@ int main(int argc, char **argv) {
 void sendMessageRoutine(UiObject *textBox, TextObject *message, gameInfo *currentGameInfo) {
     // This is essentially a cutscene, so we're going to pace each action like so
     printf("sendMessageRoutine: Entry\n");
-    auto boxPos = textBox->getPosition();
-    auto messagePos = message->getPosition();
-    // Use deltaTime to scale object shifting
-    auto startPos = -100.0f;
-    //auto targetPos = 100.0f;
-    
-    boxPos.x = startPos;
-    messagePos.x = startPos;
-    textBox->setPosition(boxPos);
-    message->setPosition(messagePos);
-    // Perform a "travel to" operation using delta time
-    //auto targetTime = 3.0f;  // 3 seconds to get from start to end
-    // Will be dirty this time, but we should signal when deltaTime is accurate
-
 }
 
 /*
@@ -160,13 +149,45 @@ int runtime(GameInstance *currentGame) {
         gfxController.getProgramId(2).get(),
         "fps-text");
 
-    auto box = currentGame->createUi(textBoxImage, vec3(30.0f, 200.0f, 0.0f), 0.7f, 300.0f, -50.0f, gfxController.getProgramId(4).get(), "testSpriteObject");
+    auto grunty = currentGame->createSprite(sgrunty, vec3(-240.0f, 190.0f, 0.0f), 0.45f, gfxController.getProgramId(3).get(), "grunty");
 
-    KeyFrame k1;
-    k1.targetTime = 5.0f; // 3 seconds
-    k1.pos.desired =  vec3(600.0f, 200.0f, 0.0f);
-    k1.stretch.desired = vec3(600.0f, -50.0f, 0.0f);
+    auto box = currentGame->createUi(textBoxImage, vec3(-220.0f, 150.0f, 0.0f), 0.7f, -50.0f, -50.0f, gfxController.getProgramId(4).get(), "textbox");
+
+    KeyFrame *k0 = AnimationController::createKeyFrame(
+        box->getPosition(),
+        box->getStretch(),
+        1.0f
+    );
+    KeyFrame *k1 = AnimationController::createKeyFrame(
+        vec3(30.0f, 150.0f, 0.0f),  // Position
+        box->getStretch(),  // Stretch
+        0.3f  // Time in SECONDS
+    );
+    KeyFrame *k2 = AnimationController::createKeyFrame(
+        vec3(30.0f, 150.0f, 0.0f),
+        vec3(1035, -50, 0.0f),
+        0.5f
+    );
+
+    // Keyframes for Grunty
+    KeyFrame *gk0 = AnimationController::createKeyFrame(
+        grunty->getPosition(),
+        grunty->getPosition(),  // Ignore for sprites
+        1.0f
+    );
+
+    KeyFrame *gk1 = AnimationController::createKeyFrame(
+        vec3(10.0f, 190.0f, 0.0f),
+        grunty->getPosition(),
+        0.3f
+    );
+    
+    animationController.addKeyframe(box, k0);
     animationController.addKeyframe(box, k1);
+    animationController.addKeyframe(box, k2);
+
+    animationController.addKeyframe(grunty, gk0);
+    animationController.addKeyframe(grunty, gk1);
 
     auto textTest = currentGame->createText("Sample Text",
         vec3(30.0f, 150.0f, 0.0f),
@@ -186,6 +207,7 @@ int runtime(GameInstance *currentGame) {
     // Add objects to camera
     vector<SceneObject *> targets = {
         box,
+        grunty,
         fpsText,
         textTest
     };

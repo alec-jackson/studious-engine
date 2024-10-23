@@ -12,35 +12,38 @@
 #include <AnimationController.hpp>
 #include <UiObject.hpp>
 
-int AnimationController::addKeyframe(SceneObject *target, KeyFrame keyFrame) {
+KeyFrame *AnimationController::createKeyFrame(vec3 pos, vec3 stretch, float time) {
+    auto keyframe = new KeyFrame();
+    keyframe->pos.desired = pos;
+    keyframe->stretch.desired = stretch;
+    keyframe->targetTime = time;
+    keyframe->currentTime = 0.0f;
+    return keyframe;
+}
+
+int AnimationController::addKeyframe(SceneObject *target, KeyFrame *keyFrame) {
     auto targetName = target->getObjectName();
     // Check if the target object exists in the keyframestore
     auto it = keyFrameStore_.find(targetName);
     auto kfQueueSize = 0;
 
-    // Move the keyFrame onto the heap... #jank
-    auto heapFrame = new KeyFrame();
-    heapFrame->currentTime = 0.0f;
-    heapFrame->pos.desired = keyFrame.pos.desired;
-    heapFrame->targetTime = keyFrame.targetTime;
-    heapFrame->pos.original = target->getPosition();
+    keyFrame->pos.original = target->getPosition();
     // Use stretch if UI object
     if (target->type() == ObjectType::UI_OBJECT) {
         auto cTarget = (UiObject *)target;
-        heapFrame->stretch.original = vec3(cTarget->getWScale(), cTarget->getHScale(), 0.0f);
+        keyFrame->stretch.original = cTarget->getStretch();
     }
 
     // If the target exists in the key store, do some sanity checks...
     if (it != keyFrameStore_.end()) {
-        auto keyFrames = it->second;
         // Make sure we do not have duplicate SceneObject names in the store
-        assert(keyFrames.target == target);
+        assert(it->second.target == target);
         // Add the keyFrame to the object's keyframe queue
-        keyFrames.kQueue.push(heapFrame);
-        kfQueueSize = keyFrames.kQueue.size();
+        it->second.kQueue.push(keyFrame);
+        kfQueueSize = it->second.kQueue.size();
     } else {
         // If the object has no keyframestore, add it
-        keyFrameStore_[target->getObjectName()].kQueue.push(heapFrame);
+        keyFrameStore_[target->getObjectName()].kQueue.push(keyFrame);
         keyFrameStore_[target->getObjectName()].target = target;
         kfQueueSize = 1;
     }
@@ -64,12 +67,13 @@ void AnimationController::update() {
         result |= updatePosition(target, currentKf);
         result |= updateStretch(target, currentKf);
         // Only remove the keyframe when all updates are done...
-        if (result & done) {
+        if (result == done) {
             printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
             // Remove the keyframe from the queue
             entry.second.kQueue.pop();
             free(currentKf);
-            deferredDelete.push_back(entry.first);
+            if (entry.second.kQueue.empty())
+                deferredDelete.push_back(entry.first);
         }
         // Probably remove this entry from the map after this loop if empty...
     }
@@ -104,11 +108,13 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
                 }
                 break;
             default:
+            capped = true;
                 break;
         }
-        return capped;
+        return capped || *pos == target;
     };
     auto matchedPos = 0;
+    auto timeMet = 0;
     // Translation delta is time per frame * totalTime
     auto targetPos = target->getPosition();
     auto tDx = keyFrame->pos.desired.x - keyFrame->pos.original.x;
@@ -127,7 +133,7 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
     // Perform position locking when max time is met...
     if (keyFrame->currentTime >= keyFrame->targetTime) {
         targetPos = keyFrame->pos.desired;
-        return POSITION_MET;
+        timeMet = 1;
     }
     // Perform position capping for xyz
     if (positionCapping(&targetPos.x, keyFrame->pos.desired.x, tDx))
@@ -138,7 +144,7 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
         matchedPos++;
     target->setPosition(targetPos);
 
-    return matchedPos == NUM_AXIS ? POSITION_MET : UPDATE_NOT_COMPLETE;
+    return (matchedPos == NUM_AXIS && timeMet) ? POSITION_MET : UPDATE_NOT_COMPLETE;
 }
 
 int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) {
@@ -177,11 +183,12 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
             default:
                 break;
         }
-        return capped;
+        return  capped || *stretch == target;
     };
     auto matchedPos = 0;
+    auto timeMet = 0;
     // Translation delta is time per frame * totalTime
-    auto targetStretch = vec3(cTarget->getWScale(), cTarget->getHScale(), 0.0f);
+    auto targetStretch = cTarget->getStretch();
     auto tDx = keyFrame->stretch.desired.x - keyFrame->stretch.original.x;
     auto tDy = keyFrame->stretch.desired.y - keyFrame->stretch.original.y;
     auto tDz = keyFrame->stretch.desired.z - keyFrame->stretch.original.z;
@@ -198,18 +205,18 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
     // Perform position locking when max time is met...
     if (keyFrame->currentTime >= keyFrame->targetTime) {
         targetStretch = keyFrame->stretch.desired;
-        return POSITION_MET;
+        timeMet = 1;
     }
     // Perform position capping for xyz
-    if (stretchCapping(&targetStretch.x, keyFrame->stretch.desired.x, tDx))
+    if (stretchCapping(&targetStretch.x, keyFrame->stretch.desired.x, tDx) || tDx == 0.0f)
         matchedPos++;
-    if (stretchCapping(&targetStretch.y, keyFrame->stretch.desired.y, tDy))
+    if (stretchCapping(&targetStretch.y, keyFrame->stretch.desired.y, tDy) || tDy == 0.0f)
         matchedPos++;
-    if (stretchCapping(&targetStretch.z, keyFrame->stretch.desired.z, tDz))
+    if (stretchCapping(&targetStretch.z, keyFrame->stretch.desired.z, tDz) || tDz == 0.0f)
         matchedPos++;
-    cTarget->setWScale(targetStretch.x);
-    cTarget->setHScale(targetStretch.y);
+    cTarget->setWStretch(targetStretch.x);
+    cTarget->setHStretch(targetStretch.y);
 
-    return matchedPos == NUM_AXIS ? STRETCH_MET : UPDATE_NOT_COMPLETE;
+    return (matchedPos == NUM_AXIS && timeMet) ? STRETCH_MET : UPDATE_NOT_COMPLETE;
 
 }
