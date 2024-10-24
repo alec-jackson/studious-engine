@@ -11,11 +11,13 @@
 
 #include <AnimationController.hpp>
 #include <UiObject.hpp>
+#include <TextObject.hpp>
 
-KeyFrame *AnimationController::createKeyFrame(vec3 pos, vec3 stretch, float time) {
+KeyFrame *AnimationController::createKeyFrame(vec3 pos, vec3 stretch, string text, float time) {
     auto keyframe = new KeyFrame();
     keyframe->pos.desired = pos;
     keyframe->stretch.desired = stretch;
+    keyframe->text.desired = text;
     keyframe->targetTime = time;
     keyframe->currentTime = 0.0f;
     return keyframe;
@@ -59,13 +61,14 @@ void AnimationController::update() {
         auto currentKf = entry.second.kQueue.front();
         auto target = entry.second.target;
         auto result = UPDATE_NOT_COMPLETE;
-        auto done = POSITION_MET | STRETCH_MET;
+        auto done = POSITION_MET | STRETCH_MET | TEXT_MET;
 
         // Update the time passed since keyframe has started
         currentKf->currentTime += deltaTime;
         // Perform updates in keyframe
         result |= updatePosition(target, currentKf);
         result |= updateStretch(target, currentKf);
+        result |= updateText(target, currentKf);
         // Only remove the keyframe when all updates are done...
         if (result == done) {
             printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
@@ -103,7 +106,7 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
         return STRETCH_MET;
     }
 
-    UiObject *cTarget = (UiObject *)target;
+    UiObject *cTarget = reinterpret_cast<UiObject *>(target);
     auto updated = updateVector(keyFrame->stretch.original,
         keyFrame->stretch.desired,
         cTarget->getStretch(),
@@ -170,4 +173,44 @@ UpdateData<vec3> AnimationController::updateVector(vec3 original, vec3 desired, 
     }
     updateResult = (matchedPos == NUM_AXIS && timeMet);
     return UpdateData<vec3>(current, updateResult);
+}
+
+UpdateData<string> AnimationController::updateString(string original, string desired, string current, KeyFrame *keyFrame) {
+    // Do the delta math (per line??)
+    auto timeMet = false;
+    // Math will be different than vectors, transformations will NOT be anything crazy
+    // Will only support string shrinking and growing...
+    auto deltaLength = desired.length() - original.length();
+    auto timePercentage = keyFrame->currentTime / keyFrame->targetTime;
+    auto dLength = 1.0f / deltaLength;
+    auto characterLength = static_cast<int>(timePercentage / dLength);
+
+    // Use the timePercentage to add characters to the current string
+    current = desired.substr(0, characterLength);
+
+    if (keyFrame->currentTime >= keyFrame->targetTime) {
+        current = desired;
+        timeMet = true;
+    }
+
+    return UpdateData<string>(current, timeMet);
+}
+
+int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
+    // Check if the target is a text object
+    if (target->type() != ObjectType::TEXT_OBJECT) {
+        // Do nothing - update is not applicable
+        return TEXT_MET;
+    }
+    auto cTarget = reinterpret_cast<TextObject *>(target);
+    auto result = updateString(
+        keyFrame->text.original,
+        keyFrame->text.desired,
+        cTarget->getMessage(),
+        keyFrame);
+
+    cTarget->setMessage(result.updatedValue_);
+
+    return result.updateComplete_ ? TEXT_MET : UPDATE_NOT_COMPLETE;
+
 }

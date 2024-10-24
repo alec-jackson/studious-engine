@@ -148,6 +148,12 @@ int runtime(GameInstance *currentGame) {
         "src/resources/fonts/Comic Sans MS.ttf",
         gfxController.getProgramId(2).get(),
         "fps-text");
+    auto textTest = currentGame->createText("Sample Text",
+        vec3(30.0f, 150.0f, 0.0f),
+        0.5f,
+        "src/resources/fonts/Comic Sans MS.ttf",
+        gfxController.getProgramId(2).get(),
+        "message-text");
 
     auto grunty = currentGame->createSprite(sgrunty, vec3(-240.0f, 190.0f, 0.0f), 0.45f, gfxController.getProgramId(3).get(), "grunty");
 
@@ -156,16 +162,19 @@ int runtime(GameInstance *currentGame) {
     KeyFrame *k0 = AnimationController::createKeyFrame(
         box->getPosition(),
         box->getStretch(),
+        "",
         1.0f
     );
     KeyFrame *k1 = AnimationController::createKeyFrame(
         vec3(30.0f, 150.0f, 0.0f),  // Position
         box->getStretch(),  // Stretch
+        "",
         0.3f  // Time in SECONDS
     );
     KeyFrame *k2 = AnimationController::createKeyFrame(
         vec3(30.0f, 150.0f, 0.0f),
         vec3(1035, -50, 0.0f),
+        "",
         0.5f
     );
 
@@ -173,13 +182,22 @@ int runtime(GameInstance *currentGame) {
     KeyFrame *gk0 = AnimationController::createKeyFrame(
         grunty->getPosition(),
         grunty->getPosition(),  // Ignore for sprites
+        "",
         1.0f
     );
 
     KeyFrame *gk1 = AnimationController::createKeyFrame(
         vec3(10.0f, 190.0f, 0.0f),
         grunty->getPosition(),
+        "",
         0.3f
+    );
+
+    KeyFrame *tk0 = AnimationController::createKeyFrame(
+        textTest->getPosition(),
+        textTest->getPosition(),
+        "This is a really long text test for animations",
+        3.0f
     );
     
     animationController.addKeyframe(box, k0);
@@ -189,12 +207,7 @@ int runtime(GameInstance *currentGame) {
     animationController.addKeyframe(grunty, gk0);
     animationController.addKeyframe(grunty, gk1);
 
-    auto textTest = currentGame->createText("Sample Text",
-        vec3(30.0f, 150.0f, 0.0f),
-        0.5f,
-        "src/resources/fonts/Comic Sans MS.ttf",
-        gfxController.getProgramId(2).get(),
-        "message-text");
+    animationController.addKeyframe(textTest, tk0);
 
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");

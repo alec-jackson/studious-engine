@@ -59,9 +59,11 @@ public:
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
-    static KeyFrame *createKeyFrame(vec3 pos, vec3 stretch, float time);
+    int updateText(SceneObject *target, KeyFrame *keyFrame);
+    static KeyFrame *createKeyFrame(vec3 pos, vec3 stretch, string text, float time);
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
+    UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
 private:
     map<string, KeyFrames> keyFrameStore_;
 };
