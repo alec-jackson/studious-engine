@@ -84,67 +84,15 @@ void AnimationController::update() {
 }
 
 int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame) {
-    // Caps the position when the position differs than the target
-    auto positionCapping = [](float *pos, float target, float dp) {
-        auto capped = false;
-        auto direction = 0;
-        // Use dp to determine direction...
-        if (dp > 0.0f) {
-            direction = CAP_POS;
-        } else if (dp < 0.0f) {
-            direction = CAP_NEG;
-        }
-        switch (direction) {
-            case CAP_POS:
-                if (*pos > target) {
-                    capped = true;
-                    *pos = target;
-                }
-                break;
-            case CAP_NEG:
-                if (*pos < target) {
-                    capped = true;
-                    *pos = target;
-                }
-                break;
-            default:
-            capped = true;
-                break;
-        }
-        return capped || *pos == target;
-    };
-    auto matchedPos = 0;
-    auto timeMet = 0;
-    // Translation delta is time per frame * totalTime
-    auto targetPos = target->getPosition();
-    auto tDx = keyFrame->pos.desired.x - keyFrame->pos.original.x;
-    auto tDy = keyFrame->pos.desired.y - keyFrame->pos.original.y;
-    auto tDz = keyFrame->pos.desired.z - keyFrame->pos.original.z;
+    auto result = updateVector(
+        keyFrame->pos.original,
+        keyFrame->pos.desired,
+        target->getPosition(),
+        keyFrame);
 
-    auto timeScalar = deltaTime / keyFrame->targetTime;
-    targetPos.x += (timeScalar * tDx);
-    targetPos.y += (timeScalar * tDy);
-    targetPos.z += (timeScalar * tDz);
+    target->setPosition(result.updatedValue_);
 
-    printf("AnimationController::updatePosition: currentTime %f, [%f][%f][%f]\n",
-        keyFrame->currentTime, targetPos.x, targetPos.y, targetPos.z);
-    printf("AnimationController::updatePosition: targetTime %f\n", keyFrame->targetTime);
-
-    // Perform position locking when max time is met...
-    if (keyFrame->currentTime >= keyFrame->targetTime) {
-        targetPos = keyFrame->pos.desired;
-        timeMet = 1;
-    }
-    // Perform position capping for xyz
-    if (positionCapping(&targetPos.x, keyFrame->pos.desired.x, tDx))
-        matchedPos++;
-    if (positionCapping(&targetPos.y, keyFrame->pos.desired.y, tDy))
-        matchedPos++;
-    if (positionCapping(&targetPos.z, keyFrame->pos.desired.z, tDz))
-        matchedPos++;
-    target->setPosition(targetPos);
-
-    return (matchedPos == NUM_AXIS && timeMet) ? POSITION_MET : UPDATE_NOT_COMPLETE;
+    return (result.updateComplete_) ? POSITION_MET : UPDATE_NOT_COMPLETE;
 }
 
 int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) {
@@ -156,67 +104,70 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
     }
 
     UiObject *cTarget = (UiObject *)target;
+    auto updated = updateVector(keyFrame->stretch.original,
+        keyFrame->stretch.desired,
+        cTarget->getStretch(),
+        keyFrame);
+    cTarget->setWStretch(updated.updatedValue_.x);
+    cTarget->setHStretch(updated.updatedValue_.y);
 
-    // Caps the position when the position differs than the target
-    auto stretchCapping = [](float *stretch, float target, float ds) {
+    return (updated.updateComplete_) ? STRETCH_MET : UPDATE_NOT_COMPLETE;
+
+}
+
+bool AnimationController::cap(float *cur, float target, float dv) {
         auto capped = false;
         auto direction = 0;
         // Use dp to determine direction...
-        if (ds > 0.0f) {
+        if (dv > 0.0f) {
             direction = CAP_POS;
-        } else if (ds < 0.0f) {
+        } else if (dv < 0.0f) {
             direction = CAP_NEG;
         }
         switch (direction) {
             case CAP_POS:
-                if (*stretch > target) {
+                if (*cur > target) {
                     capped = true;
-                    *stretch = target;
+                    *cur = target;
                 }
                 break;
             case CAP_NEG:
-                if (*stretch < target) {
+                if (*cur < target) {
                     capped = true;
-                    *stretch = target;
+                    *cur = target;
                 }
                 break;
             default:
                 break;
         }
-        return  capped || *stretch == target;
-    };
+        return  capped || *cur == target;
+}
+
+UpdateData<vec3> AnimationController::updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame) {
+    // Caps the position when the position differs than the target
     auto matchedPos = 0;
     auto timeMet = 0;
+    auto updateResult = false;
     // Translation delta is time per frame * totalTime
-    auto targetStretch = cTarget->getStretch();
-    auto tDx = keyFrame->stretch.desired.x - keyFrame->stretch.original.x;
-    auto tDy = keyFrame->stretch.desired.y - keyFrame->stretch.original.y;
-    auto tDz = keyFrame->stretch.desired.z - keyFrame->stretch.original.z;
+    auto tD = desired - original;
 
-    auto timeScalar = deltaTime / keyFrame->targetTime;
-    targetStretch.x += (timeScalar * tDx);
-    targetStretch.y += (timeScalar * tDy);
-    targetStretch.z += (timeScalar * tDz);
+    auto timeScalar = static_cast<float>(deltaTime) / keyFrame->targetTime;
+    current += (tD * timeScalar);
 
-    printf("AnimationController::updateStretch: currentTime %f, [%f][%f][%f]\n",
-        keyFrame->currentTime, targetStretch.x, targetStretch.y, targetStretch.z);
-    printf("AnimationController::updateStretch: targetTime %f\n", keyFrame->targetTime);
+    printf("AnimationController::updateVector: currentTime %f, [%f][%f][%f]\n",
+        keyFrame->currentTime, current.x, current.y, current.z);
+    printf("AnimationController::updateVector: targetTime %f\n", keyFrame->targetTime);
 
     // Perform position locking when max time is met...
     if (keyFrame->currentTime >= keyFrame->targetTime) {
-        targetStretch = keyFrame->stretch.desired;
+        current = desired;
         timeMet = 1;
     }
     // Perform position capping for xyz
-    if (stretchCapping(&targetStretch.x, keyFrame->stretch.desired.x, tDx) || tDx == 0.0f)
+    for (int i = 0; i < 3; ++i) {
+        if (cap(&current[i], desired[i], tD[i]))
         matchedPos++;
-    if (stretchCapping(&targetStretch.y, keyFrame->stretch.desired.y, tDy) || tDy == 0.0f)
-        matchedPos++;
-    if (stretchCapping(&targetStretch.z, keyFrame->stretch.desired.z, tDz) || tDz == 0.0f)
-        matchedPos++;
-    cTarget->setWStretch(targetStretch.x);
-    cTarget->setHStretch(targetStretch.y);
-
-    return (matchedPos == NUM_AXIS && timeMet) ? STRETCH_MET : UPDATE_NOT_COMPLETE;
-
+    }
+    updateResult = (matchedPos == NUM_AXIS && timeMet);
+    return UpdateData<vec3>(current, updateResult);
 }

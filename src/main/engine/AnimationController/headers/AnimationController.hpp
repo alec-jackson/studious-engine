@@ -32,6 +32,14 @@ public:
     T original;
 };
 
+template <typename T>
+class UpdateData {
+public:
+    inline UpdateData(T v, bool complete) : updatedValue_ { v }, updateComplete_ { complete } {}
+    T updatedValue_;
+    bool updateComplete_;
+};
+
 typedef struct KeyFrame {
     AnimationData<vec3> pos;
     AnimationData<vec3> stretch;
@@ -52,6 +60,8 @@ public:
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     static KeyFrame *createKeyFrame(vec3 pos, vec3 stretch, float time);
+    static bool cap(float *cur, float target, float dv);
+    UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
 private:
     map<string, KeyFrames> keyFrameStore_;
 };
