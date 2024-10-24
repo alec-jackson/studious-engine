@@ -270,7 +270,7 @@ void OpenGlGfxController::updateOpenGl() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glCullFace(GL_BACK);
     glDepthFunc(GL_LESS);
-    glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
+    glClearColor(0.7088f, 0.1760f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {

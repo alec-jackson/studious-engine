@@ -12,11 +12,13 @@
 #include <map>
 #include <queue>
 #include <cassert>
+#include <string>
 #include <SceneObject.hpp>
 
 #define UPDATE_NOT_COMPLETE 0
 #define POSITION_MET 1
 #define STRETCH_MET 2
+#define TEXT_MET 4
 #define CAP_POS 1
 #define CAP_NEG 2
 #define NUM_AXIS 3
@@ -33,6 +35,7 @@ public:
 typedef struct KeyFrame {
     AnimationData<vec3> pos;
     AnimationData<vec3> stretch;
+    AnimationData<string> text;
     float targetTime;
     float currentTime = 0.0f;
 } KeyFrame;
