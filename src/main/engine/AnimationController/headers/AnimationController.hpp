@@ -15,13 +15,25 @@
 #include <string>
 #include <SceneObject.hpp>
 
+// Update return values
 #define UPDATE_NOT_COMPLETE 0
 #define POSITION_MET 1
 #define STRETCH_MET 2
 #define TEXT_MET 4
+#define TIME_MET 8
+
+// Update Types
+#define UPDATE_NONE 0
+#define UPDATE_POS 1
+#define UPDATE_STRETCH 2
+#define UPDATE_TEXT 4
+#define UPDATE_TIME 8
+
+// MISC
 #define CAP_POS 1
 #define CAP_NEG 2
 #define NUM_AXIS 3
+#define UPDATE_TYPES 5
 
 extern double deltaTime;
 
@@ -46,6 +58,7 @@ typedef struct KeyFrame {
     AnimationData<string> text;
     float targetTime;
     float currentTime = 0.0f;
+    int type;
 } KeyFrame;
 
 typedef struct KeyFrames {
@@ -60,7 +73,8 @@ public:
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
-    static KeyFrame *createKeyFrame(vec3 pos, vec3 stretch, string text, float time);
+    int updateTime(SceneObject *target, KeyFrame *keyFrame);
+    static KeyFrame *createKeyFrame(int type, vec3 pos, vec3 stretch, string text, float time);
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);

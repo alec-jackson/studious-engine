@@ -14,7 +14,7 @@
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
     string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), message_  { message },
-    fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 250.0f, 0.0f) } {
+    fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -129,6 +129,7 @@ void TextObject::render() {
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
+    gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
     /// @todo optimize this...
     auto textColorId = gfxController_->getShaderVariable(programId_, "textColor").get();
     gfxController_->sendFloatVector(textColorId, 1, &color[0]);

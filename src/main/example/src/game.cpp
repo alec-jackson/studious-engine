@@ -120,9 +120,9 @@ int main(int argc, char **argv) {
     return errorNum;
 }
 
-void sendMessageRoutine(UiObject *textBox, TextObject *message, gameInfo *currentGameInfo) {
-    // This is essentially a cutscene, so we're going to pace each action like so
-    printf("sendMessageRoutine: Entry\n");
+
+int showMessage(string message, CameraObject *renderer) {
+    
 }
 
 /*
@@ -161,23 +161,29 @@ int runtime(GameInstance *currentGame) {
         "src/resources/fonts/Comic Sans MS.ttf",
         gfxController.getProgramId(2).get(),
         "message-text2");
+
+    textTest->setCutoff(vec3(0.0f, 125.0f, 0.0f));
+    textTest1->setCutoff(vec3(0.0f, 125.0f, 0.0f));
     auto grunty = currentGame->createSprite(sgrunty, vec3(-240.0f, 190.0f, 0.0f), 0.45f, gfxController.getProgramId(3).get(), "grunty");
 
     auto box = currentGame->createUi(textBoxImage, vec3(-220.0f, 150.0f, 0.0f), 0.7f, -50.0f, -50.0f, gfxController.getProgramId(4).get(), "textbox");
 
     KeyFrame *k0 = AnimationController::createKeyFrame(
+        UPDATE_NONE,
         box->getPosition(),
         box->getStretch(),
         "",
         1.0f
     );
     KeyFrame *k1 = AnimationController::createKeyFrame(
+        UPDATE_POS,
         vec3(30.0f, 150.0f, 0.0f),  // Position
         box->getStretch(),  // Stretch
         "",
         0.3f  // Time in SECONDS
     );
     KeyFrame *k2 = AnimationController::createKeyFrame(
+        UPDATE_STRETCH,
         vec3(30.0f, 150.0f, 0.0f),
         vec3(1035, -50, 0.0f),
         "",
@@ -186,6 +192,7 @@ int runtime(GameInstance *currentGame) {
 
     // Keyframes for Grunty
     KeyFrame *gk0 = AnimationController::createKeyFrame(
+        UPDATE_NONE,
         grunty->getPosition(),
         grunty->getPosition(),  // Ignore for sprites
         "",
@@ -193,6 +200,7 @@ int runtime(GameInstance *currentGame) {
     );
 
     KeyFrame *gk1 = AnimationController::createKeyFrame(
+        UPDATE_POS,
         vec3(10.0f, 190.0f, 0.0f),
         grunty->getPosition(),
         "",
@@ -200,6 +208,7 @@ int runtime(GameInstance *currentGame) {
     );
 
     KeyFrame *tk0 = AnimationController::createKeyFrame(
+        UPDATE_NONE,
         textTest->getPosition(),
         textTest->getPosition(),
         textTest->getMessage(),
@@ -207,6 +216,7 @@ int runtime(GameInstance *currentGame) {
     );
 
     KeyFrame *tk1 = AnimationController::createKeyFrame(
+        UPDATE_TEXT,
         textTest->getPosition(),
         textTest->getPosition(),
         "Hello sweet kevin. Where is Ryan?",
@@ -214,6 +224,7 @@ int runtime(GameInstance *currentGame) {
     );
 
     KeyFrame *tk2 = AnimationController::createKeyFrame(
+        UPDATE_NONE,
         textTest->getPosition(),
         textTest->getPosition(),
         "Hello sweet kevin. Where is Ryan?",
@@ -221,6 +232,7 @@ int runtime(GameInstance *currentGame) {
     );
 
     KeyFrame *tk3 = AnimationController::createKeyFrame(
+        UPDATE_POS,
         textTest->getPosition() + vec3(0.0f, 50.0f, 0.0f),
         textTest->getPosition(),
         "Hello sweet kevin. Where is Ryan?",
@@ -228,13 +240,15 @@ int runtime(GameInstance *currentGame) {
     );
 
     KeyFrame *t1k0 = AnimationController::createKeyFrame(
+        UPDATE_NONE,
         textTest1->getPosition(),
         textTest1->getPosition(),
         textTest1->getMessage(),
-        4.5f
+        4.0f
     );
 
     KeyFrame *t1k1 = AnimationController::createKeyFrame(
+        UPDATE_TEXT,
         textTest1->getPosition(),
         textTest1->getPosition(),
         "Maybe he is playing DRG with Matty?",
@@ -242,6 +256,7 @@ int runtime(GameInstance *currentGame) {
     );
 
     KeyFrame *t1k2 = AnimationController::createKeyFrame(
+        UPDATE_POS,
         textTest1->getPosition() + vec3(0.0f, 50.0f, 0.0f),
         textTest1->getPosition(),
         "Maybe he is playing DRG with Matty?",

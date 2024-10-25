@@ -39,9 +39,11 @@ class TextObject : public SceneObject {
 
     // Setters
     void setMessage(string message);
+    inline void setCutoff(vec3 cutoff) { cutoff_ = cutoff; }
 
     // Getters
     inline string getMessage() { return this->message_; }
+    inline vec3 getCutoff() { return cutoff_; }
 
     // Render method
     void render() override;

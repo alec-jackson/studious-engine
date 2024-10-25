@@ -13,13 +13,29 @@
 #include <UiObject.hpp>
 #include <TextObject.hpp>
 
-KeyFrame *AnimationController::createKeyFrame(vec3 pos, vec3 stretch, string text, float time) {
+// Using pointers for null checks - no other reason...
+KeyFrame *AnimationController::createKeyFrame(int type, vec3 pos, vec3 stretch, string text, float time) {
     auto keyframe = new KeyFrame();
-    keyframe->pos.desired = pos;
-    keyframe->stretch.desired = stretch;
-    keyframe->text.desired = text;
+    for (int i = 0; i < UPDATE_TYPES; ++i) {
+        auto typeMask = (type & (1<<(i)));
+        switch (typeMask) {
+            case UPDATE_POS:
+                keyframe->pos.desired = pos;
+                break;
+            case UPDATE_STRETCH:
+                keyframe->stretch.desired = stretch;
+                break;
+            case UPDATE_TEXT:
+                keyframe->text.desired = text;
+                break;
+            case UPDATE_NONE:
+            default:
+                break;
+        }
+    }
     keyframe->targetTime = time;
     keyframe->currentTime = 0.0f;
+    keyframe->type = type;
     return keyframe;
 }
 
@@ -53,7 +69,6 @@ int AnimationController::addKeyframe(SceneObject *target, KeyFrame *keyFrame) {
 }
 
 void AnimationController::update() {
-    printf("AnimationController::update: DeltaTime %f\n", deltaTime);
     vector<string> deferredDelete;
     // Run update methods on each object here
     for (auto &entry : keyFrameStore_) {
@@ -61,7 +76,7 @@ void AnimationController::update() {
         auto currentKf = entry.second.kQueue.front();
         auto target = entry.second.target;
         auto result = UPDATE_NOT_COMPLETE;
-        auto done = POSITION_MET | STRETCH_MET | TEXT_MET;
+        auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET;
 
         // Update the time passed since keyframe has started
         currentKf->currentTime += deltaTime;
@@ -69,6 +84,7 @@ void AnimationController::update() {
         result |= updatePosition(target, currentKf);
         result |= updateStretch(target, currentKf);
         result |= updateText(target, currentKf);
+        result |= updateTime(target, currentKf);
         // Only remove the keyframe when all updates are done...
         if (result == done) {
             printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
@@ -87,6 +103,10 @@ void AnimationController::update() {
 }
 
 int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame) {
+    // Only update if the keyframe type has POSITION
+    if (!(keyFrame->type & UPDATE_POS)) {
+        return POSITION_MET;
+    }
     auto result = updateVector(
         keyFrame->pos.original,
         keyFrame->pos.desired,
@@ -99,11 +119,16 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
 }
 
 int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) {
+    // Only update if the keyframe type is stretch
+    if (!(keyFrame->type & UPDATE_STRETCH)) {
+        return STRETCH_MET;
+    }
     // Update the stretch components for the target (if supported)
     if (target->type() != ObjectType::UI_OBJECT) {
-        printf("AnimationController::updateStretch: Stretch on unsupported target %s\n",
+        fprintf(stderr, "AnimationController::updateStretch: Stretch on unsupported target %s\n",
             target->getObjectName().c_str());
-        return STRETCH_MET;
+        // Unsupported update type, assert
+        assert(false);
     }
 
     UiObject *cTarget = reinterpret_cast<UiObject *>(target);
@@ -157,10 +182,6 @@ UpdateData<vec3> AnimationController::updateVector(vec3 original, vec3 desired, 
     auto timeScalar = static_cast<float>(deltaTime) / keyFrame->targetTime;
     current += (tD * timeScalar);
 
-    printf("AnimationController::updateVector: currentTime %f, [%f][%f][%f]\n",
-        keyFrame->currentTime, current.x, current.y, current.z);
-    printf("AnimationController::updateVector: targetTime %f\n", keyFrame->targetTime);
-
     // Perform position locking when max time is met...
     if (keyFrame->currentTime >= keyFrame->targetTime) {
         current = desired;
@@ -198,10 +219,16 @@ UpdateData<string> AnimationController::updateString(string original, string des
 }
 
 int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
+    // Check if the keyframe type has text
+    if (!(keyFrame->type & UPDATE_TEXT)) {
+        return TEXT_MET;
+    }
     // Check if the target is a text object
     if (target->type() != ObjectType::TEXT_OBJECT) {
-        // Do nothing - update is not applicable
-        return TEXT_MET;
+        // This is horrible, log the error and assert
+        fprintf(stderr, "AnimationController::updateText: Attempting to update non-text object %s!\n",
+            target->getObjectName());
+        assert(false);
     }
     auto cTarget = reinterpret_cast<TextObject *>(target);
     auto result = updateString(
@@ -214,4 +241,13 @@ int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
 
     return result.updateComplete_ ? TEXT_MET : UPDATE_NOT_COMPLETE;
 
+}
+
+int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
+    // Literally just check if we've reached the time quota
+    auto result = UPDATE_NOT_COMPLETE;
+    if (keyFrame->currentTime >= keyFrame->targetTime) {
+        result = UPDATE_TIME;
+    }
+    return result;
 }
