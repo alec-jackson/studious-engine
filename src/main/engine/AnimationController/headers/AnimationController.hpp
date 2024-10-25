@@ -64,6 +64,7 @@ typedef struct KeyFrame {
     int type;
     ANIMATION_COMPLETE_CB;
     bool hasCb;
+    bool isNew = true;
 } KeyFrame;
 
 typedef struct KeyFrames {

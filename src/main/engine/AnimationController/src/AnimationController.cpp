@@ -73,13 +73,6 @@ int AnimationController::addKeyframe(SceneObject *target, KeyFrame *keyFrame) {
     auto it = keyFrameStore_.find(targetName);
     auto kfQueueSize = 0;
 
-    keyFrame->pos.original = target->getPosition();
-    // Use stretch if UI object
-    if (target->type() == ObjectType::UI_OBJECT) {
-        auto cTarget = (UiObject *)target;
-        keyFrame->stretch.original = cTarget->getStretch();
-    }
-
     // If the target exists in the key store, do some sanity checks...
     if (it != keyFrameStore_.end()) {
         // Make sure we do not have duplicate SceneObject names in the store
@@ -105,6 +98,23 @@ void AnimationController::update() {
         // Grab the front keyFrame for the object
         auto currentKf = entry.second.kQueue.front();
         auto target = entry.second.target;
+        // If this is a brand new keyframe, set original values...
+        if (currentKf->isNew) {
+            currentKf->isNew = false;
+            currentKf->pos.original = target->getPosition();
+            // Use stretch if UI object
+            if (currentKf->type & UPDATE_STRETCH) {
+                assert(target->type() == ObjectType::UI_OBJECT);
+                auto cTarget = static_cast<UiObject *>(target);
+                currentKf->stretch.original = cTarget->getStretch();
+            }
+            if (currentKf->type & UPDATE_TEXT) {
+                assert(target->type() == ObjectType::TEXT_OBJECT);
+                auto cTarget = static_cast<TextObject *>(target);
+                currentKf->text.original = cTarget->getMessage();
+            }
+        }
+        
         auto result = UPDATE_NOT_COMPLETE;
         auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET;
 
@@ -236,7 +246,7 @@ UpdateData<string> AnimationController::updateString(string original, string des
     auto deltaLength = desired.length() - original.length();
     auto timePercentage = keyFrame->currentTime / keyFrame->targetTime;
     auto dLength = 1.0f / deltaLength;
-    auto characterLength = static_cast<int>(timePercentage / dLength);
+    auto characterLength = static_cast<int>(timePercentage / dLength) + original.length();
 
     // Use the timePercentage to add characters to the current string
     if (current.compare(desired) != 0)

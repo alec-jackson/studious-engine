@@ -42,9 +42,9 @@
 vector<string> soundList = {
     "src/resources/sfx/music/GruntyFurnace.mp3",
     "src/resources/sfx/Soundbox SFX.mp3",
-    "src/resources/sfx/Grunty SFX1.mp3",
-    "src/resources/sfx/Grunty SFX2.mp3",
-    "src/resources/sfx/Grunty SFX3.mp3"
+    "src/resources/sfx/Grunty Witch SFX1.mp3",
+    "src/resources/sfx/Grunty Witch SFX2.mp3",
+    "src/resources/sfx/Grunty Witch SFX3.mp3"
 };  // A list of gameSounds to load
 
 // Lists of embedded/core shaders
@@ -262,6 +262,8 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
         // Determine type time by string length @todo
         // Grab the line of text to use
         auto text = makeline(words);
+        // Split again for additional keyframes... you'll see
+        auto lsplit = split(text);
         auto referenceLineLength = 50;
         // Tweak the type time for different lengths
         float tweakedTypeTime = typeTime * (static_cast<float>(text.length()) / static_cast<float>(referenceLineLength));
@@ -280,6 +282,11 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
         vec3 curPos = textBox->getPosition();
 
         auto cbVoice = [currentGame]() {
+            static int lastchannel = -1;
+            // Stop playing the last sound if set
+            if (lastchannel != -1) {
+                currentGame->stopSound(lastchannel);
+            }
             std::random_device rd;
             std::mt19937 gen(rd());
             // Calculate random number between 2-4
@@ -287,29 +294,40 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
 
             int random_number = dis(gen);
             assert(random_number > 1 && random_number < 5);
-            currentGame->playSound(random_number, 0, 128);
+            lastchannel = currentGame->playSound(random_number, 0, 50);
+            printf("cbVoice: Playing sound%d\n", random_number);
         };
 
-        auto kf = AnimationController::createKeyFrameCb(
+        auto kf = AnimationController::createKeyFrame(
             UPDATE_NONE,
             topLine,
             topLine,
             text,
-            cbVoice,
             textShiftTime
         );
         
         animationController.addKeyframe(textBox, kf);
-
-        kf = AnimationController::createKeyFrame(
-            UPDATE_TEXT,
-            topLine,
-            topLine,
-            text,
-            i == nLines - 1 ? tweakedTypeTime : typeTime
-        );
-        textShiftTime += tweakedTypeTime;
-        animationController.addKeyframe(textBox, kf);
+        auto writeTime = i == nLines - 1 ? tweakedTypeTime : typeTime;
+        string builtString = "";
+        auto ogSize = lsplit.size();
+        for (auto i = 0; i < ogSize; ++i) {
+            builtString += lsplit.front() + " ";
+            lsplit.pop();
+            auto proportionaltime = writeTime / ogSize;
+            // Add each word at a time...
+            kf = AnimationController::createKeyFrameCb(
+                UPDATE_TEXT,
+                topLine,
+                topLine,
+                builtString,
+                cbVoice,
+                proportionaltime
+            );
+            animationController.addKeyframe(textBox, kf);
+        }
+        
+        textShiftTime += writeTime;
+        
 
         // If last, DONE
         if (i == nLines - 1) continue;

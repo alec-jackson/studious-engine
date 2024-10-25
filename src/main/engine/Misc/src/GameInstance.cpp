@@ -107,16 +107,26 @@ int GameInstance::getControllersConnected() {
 
  (void) playSound does not return any value.
 */
-void GameInstance::playSound(int soundIndex, int loop, int volume) {
+int GameInstance::playSound(int soundIndex, int loop, int volume) {
+    int channel = -1;
     if (audioInitialized_) {
         // Adjust the volume of the sound
         // Volume ranges from (0-128)
         // so (volume / 128) = % volume
         Mix_VolumeChunk(sound[soundIndex], volume);
-        Mix_PlayChannel(-1, sound[soundIndex], loop);
+        channel = Mix_PlayChannel(-1, sound[soundIndex], loop);
     } else {
         fprintf(stderr, "GameInstance::playSound: Sound uninitialized, not playing any sounds\n");
     }
+    return channel;
+}
+
+void GameInstance::stopSound(int channel) {
+    if (channel == -1) {
+        fprintf(stderr, "GameInstance::stopSound: Invalid channel\n");
+        return;
+    }
+    Mix_HaltChannel(channel);
 }
 
 /*

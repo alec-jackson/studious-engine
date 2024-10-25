@@ -93,7 +93,8 @@ class GameInstance {
     const Uint8 *getKeystate();
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
-    void playSound(int soundIndex, int loop, int volume);
+    int playSound(int soundIndex, int loop, int volume);
+    void stopSound(int channel);
     void changeWindowMode(int mode);
     void cleanup();
     int destroySceneObject(SceneObject *object);
