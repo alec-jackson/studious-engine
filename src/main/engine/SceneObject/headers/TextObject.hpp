@@ -59,6 +59,8 @@ class TextObject : public SceneObject {
     map<char, Character> characters;
 
     unsigned int modelMatId_;
+    unsigned int cutoffId_;
 
     mat4 modelMat_;
+    vec3 cutoff_;
 };

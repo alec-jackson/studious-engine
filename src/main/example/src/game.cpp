@@ -148,13 +148,19 @@ int runtime(GameInstance *currentGame) {
         "src/resources/fonts/Comic Sans MS.ttf",
         gfxController.getProgramId(2).get(),
         "fps-text");
-    auto textTest = currentGame->createText("Sample Text",
-        vec3(30.0f, 150.0f, 0.0f),
-        0.5f,
+    auto textTest = currentGame->createText("",
+        vec3(250.0f, 90.0f, 0.0f),
+        0.8f,
         "src/resources/fonts/Comic Sans MS.ttf",
         gfxController.getProgramId(2).get(),
         "message-text");
 
+    auto textTest1 = currentGame->createText("",
+        vec3(250.0f, 45.0f, 0.0f),
+        0.8f,
+        "src/resources/fonts/Comic Sans MS.ttf",
+        gfxController.getProgramId(2).get(),
+        "message-text2");
     auto grunty = currentGame->createSprite(sgrunty, vec3(-240.0f, 190.0f, 0.0f), 0.45f, gfxController.getProgramId(3).get(), "grunty");
 
     auto box = currentGame->createUi(textBoxImage, vec3(-220.0f, 150.0f, 0.0f), 0.7f, -50.0f, -50.0f, gfxController.getProgramId(4).get(), "textbox");
@@ -196,8 +202,50 @@ int runtime(GameInstance *currentGame) {
     KeyFrame *tk0 = AnimationController::createKeyFrame(
         textTest->getPosition(),
         textTest->getPosition(),
-        "This is a really long text test for animations",
-        3.0f
+        textTest->getMessage(),
+        2.0f
+    );
+
+    KeyFrame *tk1 = AnimationController::createKeyFrame(
+        textTest->getPosition(),
+        textTest->getPosition(),
+        "Hello sweet kevin. Where is Ryan?",
+        2.0f
+    );
+
+    KeyFrame *tk2 = AnimationController::createKeyFrame(
+        textTest->getPosition(),
+        textTest->getPosition(),
+        "Hello sweet kevin. Where is Ryan?",
+        2.0f
+    );
+
+    KeyFrame *tk3 = AnimationController::createKeyFrame(
+        textTest->getPosition() + vec3(0.0f, 50.0f, 0.0f),
+        textTest->getPosition(),
+        "Hello sweet kevin. Where is Ryan?",
+        2.0f
+    );
+
+    KeyFrame *t1k0 = AnimationController::createKeyFrame(
+        textTest1->getPosition(),
+        textTest1->getPosition(),
+        textTest1->getMessage(),
+        4.5f
+    );
+
+    KeyFrame *t1k1 = AnimationController::createKeyFrame(
+        textTest1->getPosition(),
+        textTest1->getPosition(),
+        "Maybe he is playing DRG with Matty?",
+        2.0f
+    );
+
+    KeyFrame *t1k2 = AnimationController::createKeyFrame(
+        textTest1->getPosition() + vec3(0.0f, 50.0f, 0.0f),
+        textTest1->getPosition(),
+        "Maybe he is playing DRG with Matty?",
+        2.0f
     );
     
     animationController.addKeyframe(box, k0);
@@ -208,6 +256,13 @@ int runtime(GameInstance *currentGame) {
     animationController.addKeyframe(grunty, gk1);
 
     animationController.addKeyframe(textTest, tk0);
+    animationController.addKeyframe(textTest, tk1);
+    animationController.addKeyframe(textTest, tk2);
+    animationController.addKeyframe(textTest, tk3);
+
+    animationController.addKeyframe(textTest1, t1k0);
+    animationController.addKeyframe(textTest1, t1k1);
+    animationController.addKeyframe(textTest1, t1k2);
 
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
@@ -222,7 +277,8 @@ int runtime(GameInstance *currentGame) {
         box,
         grunty,
         fpsText,
-        textTest
+        textTest,
+        textTest1
     };
 
     // Add all objects to active camera

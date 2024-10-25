@@ -186,7 +186,8 @@ UpdateData<string> AnimationController::updateString(string original, string des
     auto characterLength = static_cast<int>(timePercentage / dLength);
 
     // Use the timePercentage to add characters to the current string
-    current = desired.substr(0, characterLength);
+    if (current.compare(desired) != 0)
+        current = desired.substr(0, characterLength);
 
     if (keyFrame->currentTime >= keyFrame->targetTime) {
         current = desired;

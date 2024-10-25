@@ -14,7 +14,7 @@
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
     string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), message_  { message },
-    fontPath_ { fontPath } {
+    fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 250.0f, 0.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -30,6 +30,8 @@ void TextObject::initializeShaderVars() {
     gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
+    cutoffId_ = gfxController_->getShaderVariable(programId_, "cutoff").get();
+    gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
 }
 
 void TextObject::initializeText() {
