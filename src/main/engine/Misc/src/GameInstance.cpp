@@ -37,7 +37,7 @@ void GameInstance::startGame(const configData &config) {
     initWindow(config);
     initAudio();
     // Comment out playSound to disable music
-    playSound(0, 1);
+    playSound(0, 1, 50);
     initController();
     initApplication(vertShaders_, fragShaders_);
     keystate = SDL_GetKeyboardState(NULL);
@@ -107,8 +107,12 @@ int GameInstance::getControllersConnected() {
 
  (void) playSound does not return any value.
 */
-void GameInstance::playSound(int soundIndex, int loop) {
+void GameInstance::playSound(int soundIndex, int loop, int volume) {
     if (audioInitialized_) {
+        // Adjust the volume of the sound
+        // Volume ranges from (0-128)
+        // so (volume / 128) = % volume
+        Mix_VolumeChunk(sound[soundIndex], volume);
         Mix_PlayChannel(-1, sound[soundIndex], loop);
     } else {
         fprintf(stderr, "GameInstance::playSound: Sound uninitialized, not playing any sounds\n");

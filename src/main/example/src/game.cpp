@@ -10,6 +10,7 @@
  * @copyright Copyright (c) 2023
  * 
  */
+#include <random>
 #include <game.hpp>
 #ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
@@ -40,7 +41,10 @@
 // Global Variables, should eventually be moved to a config file
 vector<string> soundList = {
     "src/resources/sfx/music/GruntyFurnace.mp3",
-    "src/resources/sfx/Soundbox SFX.mp3"
+    "src/resources/sfx/Soundbox SFX.mp3",
+    "src/resources/sfx/Grunty SFX1.mp3",
+    "src/resources/sfx/Grunty SFX2.mp3",
+    "src/resources/sfx/Grunty SFX3.mp3"
 };  // A list of gameSounds to load
 
 // Lists of embedded/core shaders
@@ -180,8 +184,8 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
     auto nLines = words.empty() ? 0 : (static_cast<int>(words.size()) / WORDS_PER_LINE) + 1; // Number of text lines = number of text boxes
     assert(nLines > 0);
 
-    auto cb1 = []() {
-        printf("Running callback 1\n Words size is %lu\n", fragShaders.size());
+    auto cbTextNoise = [currentGame]() {
+        currentGame->playSound(1, 0, 128);
     };
 
     auto grunty = currentGame->createSprite(sgrunty, vec3(-240.0f, 190.0f, 0.0f), 0.45f, gfxController.getProgramId(3).get(), "grunty");
@@ -196,7 +200,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
         box->getPosition(),
         box->getStretch(),
         "",
-        cb1,
+        cbTextNoise,
         1.0f
     );
     KeyFrame *k1 = AnimationController::createKeyFrame(
@@ -275,11 +279,23 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
         generatedObjects.push(textBox);
         vec3 curPos = textBox->getPosition();
 
-        auto kf = AnimationController::createKeyFrame(
+        auto cbVoice = [currentGame]() {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            // Calculate random number between 2-4
+            std::uniform_int_distribution<> dis(2, 4);
+
+            int random_number = dis(gen);
+            assert(random_number > 1 && random_number < 5);
+            currentGame->playSound(random_number, 0, 128);
+        };
+
+        auto kf = AnimationController::createKeyFrameCb(
             UPDATE_NONE,
             topLine,
             topLine,
             text,
+            cbVoice,
             textShiftTime
         );
         
@@ -369,12 +385,17 @@ void hideMessage(queue<SceneObject *> objects, GameInstance *currentGame) {
     assert(box->getObjectName().compare("textbox") == 0);
     assert(box->type() == ObjectType::UI_OBJECT);
     auto cBox = static_cast<UiObject *>(box);
+
+    auto cbTextNoise = [currentGame]() {
+        currentGame->playSound(1, 0, 128);
+    };
     
-    KeyFrame *k0 = AnimationController::createKeyFrame(
+    KeyFrame *k0 = AnimationController::createKeyFrameCb(
         UPDATE_NONE,
         cBox->getPosition(),
         cBox->getStretch(),
         "",
+        cbTextNoise,
         1.0f
     );
     KeyFrame *k1 = AnimationController::createKeyFrame(
