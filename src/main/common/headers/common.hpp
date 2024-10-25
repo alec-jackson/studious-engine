@@ -18,6 +18,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <queue>
 #include <thread>  //NOLINT
 #include <mutex>  //NOLINT
 #include <fstream>
@@ -55,6 +56,7 @@ using std::endl;
 using std::vector;
 using std::string;
 using std::map;
+using std::queue;
 using std::to_string;
 
 using std::mutex;

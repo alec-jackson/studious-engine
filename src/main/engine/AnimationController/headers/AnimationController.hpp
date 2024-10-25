@@ -13,6 +13,7 @@
 #include <queue>
 #include <cassert>
 #include <string>
+#include <functional>
 #include <SceneObject.hpp>
 
 // Update return values
@@ -34,6 +35,7 @@
 #define CAP_NEG 2
 #define NUM_AXIS 3
 #define UPDATE_TYPES 5
+#define ANIMATION_COMPLETE_CB std::function<void(void)> callback
 
 extern double deltaTime;
 
@@ -59,6 +61,8 @@ typedef struct KeyFrame {
     float targetTime;
     float currentTime = 0.0f;
     int type;
+    ANIMATION_COMPLETE_CB;
+    bool hasCb;
 } KeyFrame;
 
 typedef struct KeyFrames {
@@ -74,6 +78,7 @@ public:
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
+    static KeyFrame *createKeyFrameCb(int type, vec3 pos, vec3 stretch, string text, ANIMATION_COMPLETE_CB, float time);
     static KeyFrame *createKeyFrame(int type, vec3 pos, vec3 stretch, string text, float time);
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);

@@ -92,6 +92,7 @@ TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
 double deltaTime = 0.0f;
+int WORDS_PER_LINE = 8; // Arbitrary
 #ifdef GFX_EMBEDDED
 OpenGlEsGfxController gfxController = OpenGlEsGfxController();
 #else
@@ -121,58 +122,74 @@ int main(int argc, char **argv) {
 }
 
 
-int showMessage(string message, CameraObject *renderer) {
-    
-}
+int showMessage(string message, CameraObject *renderer, GameInstance *currentGame) {
+    auto topLine = vec3(250.0f, 90.0f, 0.0f);
+    auto bottomLine = vec3(250.0f, 45.0f, 0.0f);
+    auto shift = vec3(0.0f, 50.0f, 0.0f); // Text transform when "wiping"
+    auto textScale = 0.8f; // Good for 720p
+    auto fontPath = "src/resources/fonts/Comic Sans MS.ttf";
+    auto textProgramId = gfxController.getProgramId(2).get();
+    auto typeTime = 2.0f; // Seconds to draw lines
+    auto wipeTime = 0.5f; // Seconds to perform text "wiping"
+    auto cutoff = vec3(0.0f, 125.0f, 0.0f);
+    // How many text boxes should be present? 3? Infinite?
+    // Let's go with infinite for now... Then we can refine later...
+    auto split = [](string val) {
+        // Split val into a vector of "words"
+        auto wordSize = 0;
+        auto lastSpacePos = -1;
+        queue<string> words;
+        for (auto i = 0; i < static_cast<int>(val.length()); ++i) {
+            if (val[i] != ' ') wordSize++;
+            else {
+                if (wordSize == 0) continue;
+                assert(i - wordSize >= 0);
+                words.push(val.substr(i - wordSize, wordSize));
+                lastSpacePos = i;
+                wordSize = 0;
+            }
+        }
+        // Check if there's a word at the string's tail
+        if (wordSize > 0) {
+            words.push(val.substr(lastSpacePos + 1, val.length() - lastSpacePos));
+        }
+        return words;
+    };
 
-/*
- (int) runtime takes a (GameInstance *) gamein to create the current scene in.
- This function creates all of the GameObjects and CameraObjects in the current
- scene and creates a seperate thread for handling user input. All of the setup
- done in the runtime function is for demonstration purposes for now. The final
- studious engine product will source scene information from a .yaml file
- supplied by the user and build the game scene based on that data.
+    auto makeline = [](queue<string> &words) {
+        string line = "";
+        // Pop some words off the queue to form the line
+        for (auto i = 0; i < WORDS_PER_LINE; ++i) {
+            if (words.empty()) break;
+            line += words.front();
+            words.pop();
+            if (i < WORDS_PER_LINE - 1 || !words.empty()) {
+                line += " ";
+            }
+        }
+        return line;
+    };
+    // Determine how many text boxes we need - from my small UNSCIENTIFIC experiments,
+    // it looks like we can fit around 8 words per line... so let's go with that.
+    auto words = split(message);
+    printf("Number of words: %lu\n", words.size());
+    auto nLines = words.empty() ? 0 : (static_cast<int>(words.size()) / WORDS_PER_LINE) + 1; // Number of text lines = number of text boxes
+    assert(nLines > 0);
 
- (int) runtime returns 0 on success.
-*/
-int runtime(GameInstance *currentGame) {
-    cout << "Building game scene!\n";
-    SDL_SetRelativeMouseMode(SDL_FALSE);
-    struct gameInfo currentGameInfo;
-    bool isDone = false;
-    cout << "Creating camera.\n";
+    auto cb1 = [&words]() {
+        printf("Running callback 1\n Words size is %lu\n", words.size());
+    };
 
-    auto fpsText = currentGame->createText("FPS",
-        vec3(25.0f, 670.0f, 0.0f),
-        0.7f,
-        "src/resources/fonts/Comic Sans MS.ttf",
-        gfxController.getProgramId(2).get(),
-        "fps-text");
-    auto textTest = currentGame->createText("",
-        vec3(250.0f, 90.0f, 0.0f),
-        0.8f,
-        "src/resources/fonts/Comic Sans MS.ttf",
-        gfxController.getProgramId(2).get(),
-        "message-text");
-
-    auto textTest1 = currentGame->createText("",
-        vec3(250.0f, 45.0f, 0.0f),
-        0.8f,
-        "src/resources/fonts/Comic Sans MS.ttf",
-        gfxController.getProgramId(2).get(),
-        "message-text2");
-
-    textTest->setCutoff(vec3(0.0f, 125.0f, 0.0f));
-    textTest1->setCutoff(vec3(0.0f, 125.0f, 0.0f));
     auto grunty = currentGame->createSprite(sgrunty, vec3(-240.0f, 190.0f, 0.0f), 0.45f, gfxController.getProgramId(3).get(), "grunty");
 
     auto box = currentGame->createUi(textBoxImage, vec3(-220.0f, 150.0f, 0.0f), 0.7f, -50.0f, -50.0f, gfxController.getProgramId(4).get(), "textbox");
 
-    KeyFrame *k0 = AnimationController::createKeyFrame(
+    KeyFrame *k0 = AnimationController::createKeyFrameCb(
         UPDATE_NONE,
         box->getPosition(),
         box->getStretch(),
         "",
+        cb1,
         1.0f
     );
     KeyFrame *k1 = AnimationController::createKeyFrame(
@@ -207,61 +224,8 @@ int runtime(GameInstance *currentGame) {
         0.3f
     );
 
-    KeyFrame *tk0 = AnimationController::createKeyFrame(
-        UPDATE_NONE,
-        textTest->getPosition(),
-        textTest->getPosition(),
-        textTest->getMessage(),
-        2.0f
-    );
-
-    KeyFrame *tk1 = AnimationController::createKeyFrame(
-        UPDATE_TEXT,
-        textTest->getPosition(),
-        textTest->getPosition(),
-        "Hello sweet kevin. Where is Ryan?",
-        2.0f
-    );
-
-    KeyFrame *tk2 = AnimationController::createKeyFrame(
-        UPDATE_NONE,
-        textTest->getPosition(),
-        textTest->getPosition(),
-        "Hello sweet kevin. Where is Ryan?",
-        2.0f
-    );
-
-    KeyFrame *tk3 = AnimationController::createKeyFrame(
-        UPDATE_POS,
-        textTest->getPosition() + vec3(0.0f, 50.0f, 0.0f),
-        textTest->getPosition(),
-        "Hello sweet kevin. Where is Ryan?",
-        2.0f
-    );
-
-    KeyFrame *t1k0 = AnimationController::createKeyFrame(
-        UPDATE_NONE,
-        textTest1->getPosition(),
-        textTest1->getPosition(),
-        textTest1->getMessage(),
-        4.0f
-    );
-
-    KeyFrame *t1k1 = AnimationController::createKeyFrame(
-        UPDATE_TEXT,
-        textTest1->getPosition(),
-        textTest1->getPosition(),
-        "Maybe he is playing DRG with Matty?",
-        2.0f
-    );
-
-    KeyFrame *t1k2 = AnimationController::createKeyFrame(
-        UPDATE_POS,
-        textTest1->getPosition() + vec3(0.0f, 50.0f, 0.0f),
-        textTest1->getPosition(),
-        "Maybe he is playing DRG with Matty?",
-        2.0f
-    );
+    renderer->addSceneObject(box);
+    renderer->addSceneObject(grunty);
     
     animationController.addKeyframe(box, k0);
     animationController.addKeyframe(box, k1);
@@ -270,27 +234,126 @@ int runtime(GameInstance *currentGame) {
     animationController.addKeyframe(grunty, gk0);
     animationController.addKeyframe(grunty, gk1);
 
-    animationController.addKeyframe(textTest, tk0);
-    animationController.addKeyframe(textTest, tk1);
-    animationController.addKeyframe(textTest, tk2);
-    animationController.addKeyframe(textTest, tk3);
+    
+    queue<TextObject *>textLines;
+    auto textBoxId = 0; // Make sure textbox names are UNIQUE
+    auto textShiftTime = 1.8f;
+    // Create the text objects
+    for (int i = 0; i < nLines; ++i) {
+        // Grab the line of text to use
+        auto text = makeline(words);
+        // The first text box will always be on the top
+        auto textBox = currentGame->createText("",
+            i == 0 ? topLine : bottomLine,
+            textScale,
+            fontPath,
+            textProgramId,
+            "MessageText" + std::to_string(textBoxId++));
+        textBox->setCutoff(cutoff);
+        textLines.push(textBox);
+        renderer->addSceneObject(textBox);
 
-    animationController.addKeyframe(textTest1, t1k0);
-    animationController.addKeyframe(textTest1, t1k1);
-    animationController.addKeyframe(textTest1, t1k2);
+        KeyFrame *kpause = nullptr;
 
-    fps_counter = fpsText;
-    fps_counter->setMessage("FPS: 0");
+        kpause = AnimationController::createKeyFrame(
+            UPDATE_NONE,
+            topLine,
+            topLine,
+            text,
+            textShiftTime
+        );
 
+        // Now we animate the text boxes to draw text. Let's just do linear
+        // drawing and then do something fancy later
+        auto k0 = AnimationController::createKeyFrame(
+            UPDATE_TEXT,
+            topLine,
+            topLine,
+            text,
+            typeTime
+        );
+
+        auto k1 = AnimationController::createKeyFrame(
+            UPDATE_NONE,
+            topLine,
+            topLine,
+            text,
+            typeTime
+        );
+
+        auto k2 = AnimationController::createKeyFrame(
+            UPDATE_POS,
+            textBox->getPosition() + shift,
+            topLine,
+            text,
+            wipeTime
+        );
+        textShiftTime += typeTime;
+        if (kpause != nullptr) animationController.addKeyframe(textBox, kpause);
+        animationController.addKeyframe(textBox, k0);
+        animationController.addKeyframe(textBox, k1);
+        animationController.addKeyframe(textBox, k2);
+
+    };
+
+    return 0;
+    // Probs delete the generated text objects when we're done so we don't
+    // need to worry about them breaking later
+}
+
+/*
+ (int) runtime takes a (GameInstance *) gamein to create the current scene in.
+ This function creates all of the GameObjects and CameraObjects in the current
+ scene and creates a seperate thread for handling user input. All of the setup
+ done in the runtime function is for demonstration purposes for now. The final
+ studious engine product will source scene information from a .yaml file
+ supplied by the user and build the game scene based on that data.
+
+ (int) runtime returns 0 on success.
+*/
+int runtime(GameInstance *currentGame) {
+    cout << "Building game scene!\n";
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+    struct gameInfo currentGameInfo;
+    bool isDone = false;
+    cout << "Creating camera.\n";
+
+    
+    auto fpsText = currentGame->createText("FPS",
+        vec3(25.0f, 670.0f, 0.0f),
+        0.7f,
+        "src/resources/fonts/Comic Sans MS.ttf",
+        gfxController.getProgramId(2).get(),
+        "fps-text");
+    auto textTest = currentGame->createText("",
+        vec3(250.0f, 90.0f, 0.0f),
+        0.8f,
+        "src/resources/fonts/Comic Sans MS.ttf",
+        gfxController.getProgramId(2).get(),
+        "message-text");
+
+    auto textTest1 = currentGame->createText("",
+        vec3(250.0f, 45.0f, 0.0f),
+        0.8f,
+        "src/resources/fonts/Comic Sans MS.ttf",
+        gfxController.getProgramId(2).get(),
+        "message-text2");
+
+    textTest->setCutoff(vec3(0.0f, 125.0f, 0.0f));
+    textTest1->setCutoff(vec3(0.0f, 125.0f, 0.0f));
+    
     auto currentCamera = currentGame->createCamera(nullptr,
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
     cout << "currentGameObject tag is NULLPTR" // playerRef->getObjectName()
         << '\n';
 
+    showMessage("Hocus Pocus, Honus Loopus. Where have I seen this cryptic skinny dipping? LAKE, WATER, POOL, FENCE?", currentCamera, currentGame);
+
+    fps_counter = fpsText;
+    fps_counter->setMessage("FPS: 0");
+
     // Add objects to camera
     vector<SceneObject *> targets = {
-        box,
-        grunty,
         fpsText,
         textTest,
         textTest1
@@ -312,11 +375,11 @@ int runtime(GameInstance *currentGame) {
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
     //thread rotThread(rotateShape, &currentGameInfo, playerRef);
-    thread messageRoutine(sendMessageRoutine, box, textTest, &currentGameInfo);
+    //thread messageRoutine(sendMessageRoutine, box, textTest, &currentGameInfo);
     mainLoop(&currentGameInfo);
     isDone = true;
     //rotThread.join();
-    messageRoutine.join();
+    //messageRoutine.join();
     cout << "Running cleanup\n";
     currentGame->cleanup();
     return 0;

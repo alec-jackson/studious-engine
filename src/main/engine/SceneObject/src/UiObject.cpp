@@ -51,7 +51,7 @@ void UiObject::generateVertexBase(float *vertexData, int triIdx, float x, float 
             x2, y, tX2, tY
     };
     cout << "UiObject::generateVertex: " << endl;
-    for (int i = 0; i < vertices.size(); ++i) {
+    for (unsigned int i = 0; i < vertices.size(); ++i) {
         printf("%f, ", vertices[i]);
         if (i % 4 == 3) {
             cout << endl;

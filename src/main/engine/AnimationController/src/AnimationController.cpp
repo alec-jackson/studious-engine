@@ -13,7 +13,33 @@
 #include <UiObject.hpp>
 #include <TextObject.hpp>
 
-// Using pointers for null checks - no other reason...
+KeyFrame *AnimationController::createKeyFrameCb(int type, vec3 pos, vec3 stretch, string text, ANIMATION_COMPLETE_CB, float time) {
+    auto keyframe = new KeyFrame();
+    for (int i = 0; i < UPDATE_TYPES; ++i) {
+        auto typeMask = (type & (1<<(i)));
+        switch (typeMask) {
+            case UPDATE_POS:
+                keyframe->pos.desired = pos;
+                break;
+            case UPDATE_STRETCH:
+                keyframe->stretch.desired = stretch;
+                break;
+            case UPDATE_TEXT:
+                keyframe->text.desired = text;
+                break;
+            case UPDATE_NONE:
+            default:
+                break;
+        }
+    }
+    keyframe->targetTime = time;
+    keyframe->currentTime = 0.0f;
+    keyframe->type = type;
+    keyframe->callback = callback;
+    keyframe->hasCb = true;
+    return keyframe;
+}
+
 KeyFrame *AnimationController::createKeyFrame(int type, vec3 pos, vec3 stretch, string text, float time) {
     auto keyframe = new KeyFrame();
     for (int i = 0; i < UPDATE_TYPES; ++i) {
@@ -36,6 +62,7 @@ KeyFrame *AnimationController::createKeyFrame(int type, vec3 pos, vec3 stretch, 
     keyframe->targetTime = time;
     keyframe->currentTime = 0.0f;
     keyframe->type = type;
+    keyframe->hasCb = false;
     return keyframe;
 }
 
@@ -90,6 +117,8 @@ void AnimationController::update() {
             printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
             // Remove the keyframe from the queue
             entry.second.kQueue.pop();
+            // Call the callback associated with the keyframe
+            if (currentKf->hasCb) currentKf->callback();
             free(currentKf);
             if (entry.second.kQueue.empty())
                 deferredDelete.push_back(entry.first);
@@ -227,7 +256,7 @@ int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
     if (target->type() != ObjectType::TEXT_OBJECT) {
         // This is horrible, log the error and assert
         fprintf(stderr, "AnimationController::updateText: Attempting to update non-text object %s!\n",
-            target->getObjectName());
+            target->getObjectName().c_str());
         assert(false);
     }
     auto cTarget = reinterpret_cast<TextObject *>(target);
