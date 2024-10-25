@@ -12,6 +12,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
@@ -97,6 +98,7 @@ class GameInstance {
     void cleanup();
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);
+    int removeSceneObject(string objectName);
     double getDeltaTime();
     int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
     int setDeltaTime(double time);

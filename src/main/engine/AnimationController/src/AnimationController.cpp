@@ -67,6 +67,7 @@ KeyFrame *AnimationController::createKeyFrame(int type, vec3 pos, vec3 stretch, 
 }
 
 int AnimationController::addKeyframe(SceneObject *target, KeyFrame *keyFrame) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto targetName = target->getObjectName();
     // Check if the target object exists in the keyframestore
     auto it = keyFrameStore_.find(targetName);
@@ -96,6 +97,8 @@ int AnimationController::addKeyframe(SceneObject *target, KeyFrame *keyFrame) {
 }
 
 void AnimationController::update() {
+    // Lock the controller
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
     vector<string> deferredDelete;
     // Run update methods on each object here
     for (auto &entry : keyFrameStore_) {

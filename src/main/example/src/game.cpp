@@ -39,7 +39,8 @@
 */
 // Global Variables, should eventually be moved to a config file
 vector<string> soundList = {
-    "src/resources/sfx/music/GruntyFurnace.mp3"
+    "src/resources/sfx/music/GruntyFurnace.mp3",
+    "src/resources/sfx/Soundbox SFX.mp3"
 };  // A list of gameSounds to load
 
 // Lists of embedded/core shaders
@@ -122,7 +123,8 @@ int main(int argc, char **argv) {
 }
 
 
-int showMessage(string message, CameraObject *renderer, GameInstance *currentGame) {
+queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameInstance *currentGame) {
+    printf("showMessage: Entry\n");
     auto topLine = vec3(250.0f, 90.0f, 0.0f);
     auto bottomLine = vec3(250.0f, 45.0f, 0.0f);
     auto shift = vec3(0.0f, 50.0f, 0.0f); // Text transform when "wiping"
@@ -132,6 +134,8 @@ int showMessage(string message, CameraObject *renderer, GameInstance *currentGam
     auto typeTime = 2.0f; // Seconds to draw lines
     auto wipeTime = 0.5f; // Seconds to perform text "wiping"
     auto cutoff = vec3(0.0f, 125.0f, 0.0f);
+    queue<SceneObject *> generatedObjects;
+
     // How many text boxes should be present? 3? Infinite?
     // Let's go with infinite for now... Then we can refine later...
     auto split = [](string val) {
@@ -176,13 +180,16 @@ int showMessage(string message, CameraObject *renderer, GameInstance *currentGam
     auto nLines = words.empty() ? 0 : (static_cast<int>(words.size()) / WORDS_PER_LINE) + 1; // Number of text lines = number of text boxes
     assert(nLines > 0);
 
-    auto cb1 = [&words]() {
-        printf("Running callback 1\n Words size is %lu\n", words.size());
+    auto cb1 = []() {
+        printf("Running callback 1\n Words size is %lu\n", fragShaders.size());
     };
 
     auto grunty = currentGame->createSprite(sgrunty, vec3(-240.0f, 190.0f, 0.0f), 0.45f, gfxController.getProgramId(3).get(), "grunty");
 
     auto box = currentGame->createUi(textBoxImage, vec3(-220.0f, 150.0f, 0.0f), 0.7f, -50.0f, -50.0f, gfxController.getProgramId(4).get(), "textbox");
+
+    generatedObjects.push(grunty);
+    generatedObjects.push(box);
 
     KeyFrame *k0 = AnimationController::createKeyFrameCb(
         UPDATE_NONE,
@@ -224,6 +231,14 @@ int showMessage(string message, CameraObject *renderer, GameInstance *currentGam
         0.3f
     );
 
+    KeyFrame *gk2 = AnimationController::createKeyFrame(
+        UPDATE_NONE,
+        vec3(10.0f, 190.0f, 0.0f),
+        grunty->getPosition(),
+        "",
+        0.5f
+    );
+
     renderer->addSceneObject(box);
     renderer->addSceneObject(grunty);
     
@@ -233,15 +248,20 @@ int showMessage(string message, CameraObject *renderer, GameInstance *currentGam
 
     animationController.addKeyframe(grunty, gk0);
     animationController.addKeyframe(grunty, gk1);
+    animationController.addKeyframe(grunty, gk2);
 
     
     queue<TextObject *>textLines;
     auto textBoxId = 0; // Make sure textbox names are UNIQUE
     auto textShiftTime = 1.8f;
-    // Create the text objects
     for (int i = 0; i < nLines; ++i) {
+        // Determine type time by string length @todo
         // Grab the line of text to use
         auto text = makeline(words);
+        auto referenceLineLength = 50;
+        // Tweak the type time for different lengths
+        float tweakedTypeTime = typeTime * (static_cast<float>(text.length()) / static_cast<float>(referenceLineLength));
+
         // The first text box will always be on the top
         auto textBox = currentGame->createText("",
             i == 0 ? topLine : bottomLine,
@@ -252,53 +272,156 @@ int showMessage(string message, CameraObject *renderer, GameInstance *currentGam
         textBox->setCutoff(cutoff);
         textLines.push(textBox);
         renderer->addSceneObject(textBox);
+        generatedObjects.push(textBox);
+        vec3 curPos = textBox->getPosition();
 
-        KeyFrame *kpause = nullptr;
-
-        kpause = AnimationController::createKeyFrame(
+        auto kf = AnimationController::createKeyFrame(
             UPDATE_NONE,
             topLine,
             topLine,
             text,
             textShiftTime
         );
+        
+        animationController.addKeyframe(textBox, kf);
 
-        // Now we animate the text boxes to draw text. Let's just do linear
-        // drawing and then do something fancy later
-        auto k0 = AnimationController::createKeyFrame(
+        kf = AnimationController::createKeyFrame(
             UPDATE_TEXT,
             topLine,
             topLine,
             text,
-            typeTime
+            i == nLines - 1 ? tweakedTypeTime : typeTime
         );
+        textShiftTime += tweakedTypeTime;
+        animationController.addKeyframe(textBox, kf);
 
-        auto k1 = AnimationController::createKeyFrame(
-            UPDATE_NONE,
-            topLine,
-            topLine,
-            text,
-            typeTime
-        );
+        // If last, DONE
+        if (i == nLines - 1) continue;
 
-        auto k2 = AnimationController::createKeyFrame(
+        // If First, PAUSE
+        if (i == 0) {
+            kf = AnimationController::createKeyFrame(
+                UPDATE_NONE,
+                topLine,
+                topLine,
+                text,
+                typeTime
+            );
+            animationController.addKeyframe(textBox, kf);
+        } else if (i != nLines - 1) {
+            // If NOT last and NOT first - perform SHIFT
+            curPos += shift;
+            textShiftTime += wipeTime;
+            kf = AnimationController::createKeyFrame(
+                UPDATE_POS,
+                curPos,
+                topLine,
+                text,
+                wipeTime
+            );
+            animationController.addKeyframe(textBox, kf);
+        }
+
+        // If second to last, DONE
+        if (i == nLines - 2) continue;
+        
+        // Otherwise...
+        // If not first, PAUSE
+        if (i != 0) {
+            kf = AnimationController::createKeyFrame(
+                UPDATE_NONE,
+                topLine,
+                topLine,
+                text,
+                typeTime
+            );
+            animationController.addKeyframe(textBox, kf);
+        }
+
+        // And wipe!
+        curPos += shift;
+        kf = AnimationController::createKeyFrame(
             UPDATE_POS,
-            textBox->getPosition() + shift,
+            curPos,
             topLine,
             text,
             wipeTime
         );
-        textShiftTime += typeTime;
-        if (kpause != nullptr) animationController.addKeyframe(textBox, kpause);
-        animationController.addKeyframe(textBox, k0);
-        animationController.addKeyframe(textBox, k1);
-        animationController.addKeyframe(textBox, k2);
+        animationController.addKeyframe(textBox, kf);
 
     };
 
-    return 0;
+    return generatedObjects;
     // Probs delete the generated text objects when we're done so we don't
     // need to worry about them breaking later
+}
+
+void hideMessage(queue<SceneObject *> objects, GameInstance *currentGame) {
+    printf("hideMessage: Entry\n");
+    assert(objects.size() > 1);
+    // Runs a routine to hide the on-screen message
+    // Grunty should be the first object
+    auto grunty = objects.front();
+    objects.pop();
+    assert(grunty->getObjectName().compare("grunty") == 0);
+    auto box = objects.front();
+    objects.pop();
+    assert(box->getObjectName().compare("textbox") == 0);
+    assert(box->type() == ObjectType::UI_OBJECT);
+    auto cBox = static_cast<UiObject *>(box);
+    
+    KeyFrame *k0 = AnimationController::createKeyFrame(
+        UPDATE_NONE,
+        cBox->getPosition(),
+        cBox->getStretch(),
+        "",
+        1.0f
+    );
+    KeyFrame *k1 = AnimationController::createKeyFrame(
+        UPDATE_STRETCH,
+        vec3(30.0f, 150.0f, 0.0f),  // Position
+        vec3(-50.0f, -50.0f, 0.0f),  // Stretch
+        "",
+        0.5f  // Time in SECONDS
+    );
+    KeyFrame *k2 = AnimationController::createKeyFrame(
+        UPDATE_POS,
+        vec3(-220.0f, 150.0f, 0.0f),
+        vec3(1035, -50, 0.0f),
+        "",
+        0.3f
+    );
+
+    // Keyframes for Grunty
+    KeyFrame *gk0 = AnimationController::createKeyFrame(
+        UPDATE_NONE,
+        grunty->getPosition(),
+        grunty->getPosition(),  // Ignore for sprites
+        "",
+        0.5f
+    );
+
+    KeyFrame *gk1 = AnimationController::createKeyFrame(
+        UPDATE_POS,
+        vec3(-240.0f, 190.0f, 0.0f),
+        grunty->getPosition(),
+        "",
+        0.3f
+    );
+
+    //animationController.addKeyframe(box, k0);
+    animationController.addKeyframe(box, k1);
+    animationController.addKeyframe(box, k2);
+
+    animationController.addKeyframe(grunty, gk0);
+    animationController.addKeyframe(grunty, gk1);
+
+    while (!objects.empty()) {
+        // Pop the text objects off the queue and delete them
+        auto object = objects.front();
+        objects.pop();
+        currentGame->removeSceneObject(object->getObjectName());
+    }
 }
 
 /*
@@ -325,38 +448,20 @@ int runtime(GameInstance *currentGame) {
         "src/resources/fonts/Comic Sans MS.ttf",
         gfxController.getProgramId(2).get(),
         "fps-text");
-    auto textTest = currentGame->createText("",
-        vec3(250.0f, 90.0f, 0.0f),
-        0.8f,
-        "src/resources/fonts/Comic Sans MS.ttf",
-        gfxController.getProgramId(2).get(),
-        "message-text");
-
-    auto textTest1 = currentGame->createText("",
-        vec3(250.0f, 45.0f, 0.0f),
-        0.8f,
-        "src/resources/fonts/Comic Sans MS.ttf",
-        gfxController.getProgramId(2).get(),
-        "message-text2");
-
-    textTest->setCutoff(vec3(0.0f, 125.0f, 0.0f));
-    textTest1->setCutoff(vec3(0.0f, 125.0f, 0.0f));
     
     auto currentCamera = currentGame->createCamera(nullptr,
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
     cout << "currentGameObject tag is NULLPTR" // playerRef->getObjectName()
         << '\n';
 
-    showMessage("Hocus Pocus, Honus Loopus. Where have I seen this cryptic skinny dipping? LAKE, WATER, POOL, FENCE?", currentCamera, currentGame);
+    
 
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
 
     // Add objects to camera
     vector<SceneObject *> targets = {
-        fpsText,
-        textTest,
-        textTest1
+        fpsText
     };
 
     // Add all objects to active camera
@@ -375,7 +480,7 @@ int runtime(GameInstance *currentGame) {
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
     //thread rotThread(rotateShape, &currentGameInfo, playerRef);
-    //thread messageRoutine(sendMessageRoutine, box, textTest, &currentGameInfo);
+    //thread messageRoutine(showMessage, "Hee-hee-hee! Hear that tune, it's quite a mystery, whose theme song could it be?", currentCamera, currentGame);
     mainLoop(&currentGameInfo);
     isDone = true;
     //rotThread.join();
@@ -400,6 +505,9 @@ int mainLoop(gameInfo* gamein) {
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
+    bool hasHidden = false;
+    double timePassed = 0.0;
+    auto objects = showMessage("Hee-hee-hee! Hear that tune, it's quite a mystery, whose theme song could it be? Listen close, and then you will see.", gamein->gameCamera, currentGame);
     while (running) {
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
@@ -413,6 +521,11 @@ int mainLoop(gameInfo* gamein) {
         animationController.update();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
+        timePassed += deltaTime;
+        if (timePassed > 15.0 && !hasHidden) {
+            hideMessage(objects, currentGame);
+            hasHidden = true;
+        }
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;

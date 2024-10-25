@@ -164,7 +164,7 @@ void GameInstance::cleanup() {
  failure, -1 is returned and an error is printed to stderr.
  */
 int GameInstance::destroySceneObject(SceneObject *object) {
-    if (object == NULL) {
+    if (object == nullptr) {
         cerr << "Error: Cannot destroy empty GameObject!\n";
         return -1;
     }
@@ -208,8 +208,7 @@ int GameInstance::updateObjects() {
         return -1;
     }
     gfxController_->update();
-    // Update cameras first
-    vector<SceneObject *> deferredUpdates;
+    // Update cameras
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
         if ((*it)->type() == ObjectType::CAMERA_OBJECT) (*it)->update();
     }
@@ -242,6 +241,7 @@ int GameInstance::setDeltaTime(double time) {
 
 GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
     string objectName) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createGameObject: Creating GameObject %lu\n", sceneObjects_.size());
     auto gameObject = new GameObject(characterModel, position, rotation, scale, objectName, ObjectType::GAME_OBJECT,
         gfxController_);
@@ -253,6 +253,7 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
 
 CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createCamera: Creating CameraObject %lu\n", sceneObjects_.size());
     auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
     auto gameCamera = new CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping,
@@ -263,6 +264,7 @@ CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, float 
 
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
     unsigned int programId, string objectName) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createText: Creating TextObject %lu\n", sceneObjects_.size());
     auto text = new TextObject(message, position, scale, fontPath, programId, objectName, ObjectType::TEXT_OBJECT,
         gfxController_);
@@ -272,26 +274,57 @@ TextObject *GameInstance::createText(string message, vec3 position, float scale,
 
 SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
     string objectName) {
-        auto sprite = new SpriteObject(spritePath, position, scale, programId, objectName,
-            ObjectType::GAME_OBJECT, gfxController_);
-        sceneObjects_.push_back(sprite);
-        return sprite;
+    std::unique_lock<std::mutex> lock(sceneLock_);
+    auto sprite = new SpriteObject(spritePath, position, scale, programId, objectName,
+        ObjectType::GAME_OBJECT, gfxController_);
+    sceneObjects_.push_back(sprite);
+    return sprite;
 }
 
 UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
     string objectName) {
-        auto ui = new UiObject(spritePath, position, scale, wScale, hScale, programId, objectName,
-            ObjectType::UI_OBJECT, gfxController_);
-        sceneObjects_.push_back(ui);
-        return ui;
+    std::unique_lock<std::mutex> lock(sceneLock_);
+    auto ui = new UiObject(spritePath, position, scale, wScale, hScale, programId, objectName,
+        ObjectType::UI_OBJECT, gfxController_);
+    sceneObjects_.push_back(ui);
+    return ui;
 }
 
 SceneObject *GameInstance::getSceneObject(string objectName) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
     SceneObject *result = nullptr;
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
         if ((*it)->getObjectName().compare(objectName) == 0) result = (*it);
     }
     return result;
+}
+
+int GameInstance::removeSceneObject(string objectName) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
+    SceneObject *target = nullptr;
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        if ((*it)->getObjectName().compare(objectName) == 0) target = (*it);
+    }
+    if (target == nullptr) {
+        fprintf(stderr, "GameInstance::removeSceneObject: Not found (%s)\n",
+            objectName.c_str());
+        return -1;
+    }
+    // Remove the scene object from all cameras first...
+    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        if ((*it)->type() == ObjectType::CAMERA_OBJECT) {
+            // Attempt to remove the object from the current camera
+            auto camera = static_cast<CameraObject *>(*it);
+            camera->removeSceneObject(target);
+        }
+    }
+
+    sceneObjects_.erase(remove(sceneObjects_.begin(), sceneObjects_.end(), target), sceneObjects_.end());
+
+    // Free the memory for the deleted object
+    destroySceneObject(target);
+    
+    return 0;
 }
 
 /*

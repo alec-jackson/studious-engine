@@ -14,6 +14,7 @@
 #include <cassert>
 #include <string>
 #include <functional>
+#include <mutex>
 #include <SceneObject.hpp>
 
 // Update return values
@@ -85,4 +86,5 @@ public:
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
 private:
     map<string, KeyFrames> keyFrameStore_;
+    std::mutex controllerLock_;
 };
