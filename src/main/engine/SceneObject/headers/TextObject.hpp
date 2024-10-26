@@ -40,10 +40,12 @@ class TextObject : public SceneObject {
     // Setters
     void setMessage(string message);
     inline void setCutoff(vec3 cutoff) { cutoff_ = cutoff; }
+    inline void setColor(vec3 color) { textColor_ = color; }
 
     // Getters
     inline string getMessage() { return this->message_; }
     inline vec3 getCutoff() { return cutoff_; }
+    inline vec3 getColor() { return textColor_; }
 
     // Render method
     void render() override;
@@ -65,4 +67,5 @@ class TextObject : public SceneObject {
 
     mat4 modelMat_;
     vec3 cutoff_;
+    vec3 textColor_;
 };

@@ -121,6 +121,14 @@ int GameInstance::playSound(int soundIndex, int loop, int volume) {
     return channel;
 }
 
+void GameInstance::changeVolume(int soundIndex, int volume) {
+    if (audioInitialized_) {
+        Mix_VolumeChunk(sound[soundIndex], volume);
+    } else {
+        fprintf(stderr, "GameInstance::playSound: Sound uninitialized, cannot change volume!\n");
+    }
+}
+
 void GameInstance::stopSound(int channel) {
     if (channel == -1) {
         fprintf(stderr, "GameInstance::stopSound: Invalid channel\n");

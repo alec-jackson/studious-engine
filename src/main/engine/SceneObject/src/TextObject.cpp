@@ -14,7 +14,7 @@
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
     string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), message_  { message },
-    fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) } {
+    fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) }, textColor_ { vec3(1.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -81,19 +81,27 @@ void TextObject::initializeText() {
 
 void TextObject::createMessage() {
     auto x = 0, y = 0;
+    auto spacing = 0.5f;
     // Use textures to create each character as an independent object
     for (auto character : message_) {
+        
+        Character ch = characters[character];
+        float xpos = x + ch.Bearing.x * scale;
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
+        if (character == '\n') {
+            x = 0;
+            y -= (h * (spacing + 1.0f));
+            continue;
+        }
         unsigned int vao;
         gfxController_->initVao(&vao);
         gfxController_->bindVao(vao);
         unsigned int vbo;
         gfxController_->generateBuffer(&vbo);
         gfxController_->bindBuffer(vbo);
-        Character ch = characters[character];
-        float xpos = x + ch.Bearing.x * scale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-        float w = ch.Size.x * scale;
-        float h = ch.Size.y * scale;
+        
         // update VBO for each character
         vector<float> vertices = {
             xpos,     ypos + h,   0.0f, 0.0f,
@@ -125,17 +133,17 @@ void TextObject::render() {
     translateMatrix_ = glm::translate(mat4(1.0f), position);
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
-    vec3 color = vec3(1.0f);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
     /// @todo optimize this...
     auto textColorId = gfxController_->getShaderVariable(programId_, "textColor").get();
-    gfxController_->sendFloatVector(textColorId, 1, &color[0]);
+    gfxController_->sendFloatVector(textColorId, 1, glm::value_ptr(textColor_));
     // Find a more clever solution
     auto index = 0;
     for (auto character : message_) {
+        if (character == '\n') continue;
         gfxController_->bindVao(vaos_[index++]);
         Character ch = characters[character];
         gfxController_->bindTexture(ch.TextureID);
