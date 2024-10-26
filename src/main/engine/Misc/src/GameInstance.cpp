@@ -110,6 +110,7 @@ int GameInstance::getControllersConnected() {
 int GameInstance::playSound(int soundIndex, int loop, int volume) {
     int channel = -1;
     if (audioInitialized_) {
+        assert(soundIndex < sound.size());
         // Adjust the volume of the sound
         // Volume ranges from (0-128)
         // so (volume / 128) = % volume
@@ -416,6 +417,7 @@ void GameInstance::initWindow(const configData &config) {
 
     SDL_GL_SetSwapInterval(config.enableVsync);  // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
+
     if (window == NULL) {
         cerr << "Error: Failed to create SDL window!\n";
         return;

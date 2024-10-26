@@ -41,13 +41,18 @@
  the texture to use).
 */
 // Global Variables, should eventually be moved to a config file
+
+// Just to make this easier to understand...
+#define ACCEPT_SFX_NUM 7
 vector<string> soundList = {
     "src/resources/sfx/music/GruntyFurnace.mp3",
     "src/resources/sfx/Soundbox SFX.mp3",
     "src/resources/sfx/Grunty Witch SFX1.mp3",
     "src/resources/sfx/Grunty Witch SFX2.mp3",
     "src/resources/sfx/Grunty Witch SFX3.mp3",
-    "src/resources/sfx/Select SFX.mp3"
+    "src/resources/sfx/Select SFX.mp3",
+    "src/resources/sfx/Song Snippet 1.mp3",
+    "src/resources/sfx/Accept SFX.mp3",
 };  // A list of gameSounds to load
 
 // Lists of embedded/core shaders
@@ -99,6 +104,8 @@ TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 std::atomic<int> optionsReady(0);
+std::atomic<int> wordsSpoken(0);
+std::atomic<int> uiElementsReset(0);
 double deltaTime = 0.0f;
 int WORDS_PER_LINE = 8; // Arbitrary
 #ifdef GFX_EMBEDDED
@@ -107,6 +114,37 @@ OpenGlEsGfxController gfxController = OpenGlEsGfxController();
 OpenGlGfxController gfxController = OpenGlGfxController();
 #endif
 AnimationController animationController;
+
+enum GameState {
+    CHATTING, 
+    ANSWERING,
+    SHOWCASE,
+    WAITING,
+    CONFIRMING,
+    CONFIRM_CHAT
+};
+
+enum QuestionType {
+    MUSIC,
+    TRIVIA,
+    IMAGE
+};
+
+struct GameLogicInfo {
+    GameInstance *currentGame;
+    GameState currentState = WAITING;
+    float currentDebounce = 0.0f;
+    float debounceSeconds = 0.3f;
+    int currentOption = 0;
+    int prevOption = 0;
+    float currentVolume = 50.0f;
+    float maxSongVolume = 50.0f;
+    float songTimePass = 12.0f;
+    float currentSongTime = 0.0f;
+    float volumeRampSeconds = 2.0f;
+    float currentVolumeRampSeconds = 0.0f;
+    int songChannel = -1;
+};
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -129,6 +167,22 @@ int main(int argc, char **argv) {
     return errorNum;
 }
 
+int countWords(string val) {
+    int wordCount = 0;
+    auto wordSize = 0;
+        for (auto i = 0; i < static_cast<int>(val.length()); ++i) {
+            if (val[i] != ' ') wordSize++;
+            else {
+                if (wordSize == 0) continue;
+                assert(i - wordSize >= 0);
+                wordSize = 0;
+                wordCount++;
+            }
+        }
+        // Check if there's a word at the string's tail
+        if (wordSize > 0) wordCount++;
+        return wordCount;
+    };
 
 queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameInstance *currentGame) {
     printf("showMessage: Entry\n");
@@ -138,7 +192,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
     auto textScale = 0.8f; // Good for 720p
     auto fontPath = "src/resources/fonts/Comic Sans MS.ttf";
     auto textProgramId = gfxController.getProgramId(2).get();
-    auto typeTime = 2.0f; // Seconds to draw lines
+    auto typeTime = 3.0f; // Seconds to draw lines
     auto wipeTime = 0.5f; // Seconds to perform text "wiping"
     auto cutoff = vec3(0.0f, 125.0f, 0.0f);
     queue<SceneObject *> generatedObjects;
@@ -299,6 +353,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
             assert(random_number > 1 && random_number < 5);
             lastchannel = currentGame->playSound(random_number, 0, 50);
             printf("cbVoice: Playing sound%d\n", random_number);
+            wordsSpoken++;
         };
 
         auto kf = AnimationController::createKeyFrame(
@@ -410,6 +465,16 @@ void hideMessage(queue<SceneObject *> objects, GameInstance *currentGame) {
     auto cbTextNoise = [currentGame]() {
         currentGame->playSound(1, 0, 128);
     };
+
+    auto cbElementResetG = [currentGame, grunty]() {
+        currentGame->removeSceneObject(grunty->getObjectName());
+        uiElementsReset++;
+    };
+
+    auto cbElementResetB = [currentGame, box]() {
+        currentGame->removeSceneObject(box->getObjectName());
+        uiElementsReset++;
+    };
     
     KeyFrame *k0 = AnimationController::createKeyFrameCb(
         UPDATE_NONE,
@@ -426,11 +491,12 @@ void hideMessage(queue<SceneObject *> objects, GameInstance *currentGame) {
         "",
         0.5f  // Time in SECONDS
     );
-    KeyFrame *k2 = AnimationController::createKeyFrame(
+    KeyFrame *k2 = AnimationController::createKeyFrameCb(
         UPDATE_POS,
         vec3(-220.0f, 150.0f, 0.0f),
         vec3(1035, -50, 0.0f),
         "",
+        cbElementResetB,
         0.3f
     );
 
@@ -443,11 +509,12 @@ void hideMessage(queue<SceneObject *> objects, GameInstance *currentGame) {
         0.5f
     );
 
-    KeyFrame *gk1 = AnimationController::createKeyFrame(
+    KeyFrame *gk1 = AnimationController::createKeyFrameCb(
         UPDATE_POS,
         vec3(-240.0f, 190.0f, 0.0f),
         grunty->getPosition(),
         "",
+        cbElementResetG,
         0.3f
     );
 
@@ -457,6 +524,8 @@ void hideMessage(queue<SceneObject *> objects, GameInstance *currentGame) {
 
     animationController.addKeyframe(grunty, gk0);
     animationController.addKeyframe(grunty, gk1);
+
+    // Will need to perform cleanup in callbacks...
 
     while (!objects.empty()) {
         // Pop the text objects off the queue and delete them
@@ -495,6 +564,14 @@ int runtime(GameInstance *currentGame) {
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
     cout << "currentGameObject tag is NULLPTR" // playerRef->getObjectName()
         << '\n';
+    
+    auto backdrop = currentGame->createSprite(
+        "src/resources/images/Furnace Fun Image.png",
+        vec3(-300.0f, 900.0f, 0.0f),
+        1.0f,
+        gfxController.getProgramId(3).get(),
+        "Backdrop"
+    );
 
     
 
@@ -503,6 +580,7 @@ int runtime(GameInstance *currentGame) {
 
     // Add objects to camera
     vector<SceneObject *> targets = {
+        backdrop,
         fpsText
     };
 
@@ -515,6 +593,8 @@ int runtime(GameInstance *currentGame) {
     currentGameInfo.isDone = &isDone;
     currentGameInfo.gameCamera = currentCamera;
     currentGameInfo.currentGame = currentGame;
+    
+    currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN);
     /*
      End Scene Loading
      */
@@ -530,6 +610,68 @@ int runtime(GameInstance *currentGame) {
     cout << "Running cleanup\n";
     currentGame->cleanup();
     return 0;
+}
+
+void hideOptions(vector<SceneObject *> objects, GameLogicInfo *game) {
+    printf("hideOptions: Entry\n");
+    for (auto object : objects) {
+        auto objectCleanupCb = [object, game]() {
+            game->currentGame->removeSceneObject(object->getObjectName());
+        };
+        // Check if not text box
+        if (object->type() == ObjectType::UI_OBJECT) {
+            // Key frame and then delete
+            // Key frames for PAF button are special
+            if (object->getObjectName().compare("option4") == 0) {
+                auto endPafButton = vec3(1030.0f, 400.0f, 0.0f);
+                auto midPafButton = vec3(1130.0f, 300.0f, 0.0f);
+                auto startPafButton = vec3(1280.0f, 300.0f, 0.0f);
+                auto pafStretchStart = vec3(-50.0f, -50.0f, 0.0f);
+                auto pafStretchEnd = vec3(50.0f, 50.0f, 0.0f);
+                auto kf = AnimationController::createKeyFrame(
+                    UPDATE_STRETCH | UPDATE_POS,
+                    midPafButton,
+                    pafStretchStart, 
+                    "",
+                    0.3f
+                );
+                animationController.addKeyframe(object, kf);
+
+                kf = AnimationController::createKeyFrameCb(
+                    UPDATE_POS,
+                    startPafButton,
+                    startPafButton,
+                    "",
+                    objectCleanupCb,
+                    0.2f
+                );
+                animationController.addKeyframe(object, kf);
+            } else {
+                auto startStretch = vec3(-50.0f, -50.0f, 0.0f);
+                auto endShift = vec3(440.0f, 0.0f, 0.0f);
+                auto kf = AnimationController::createKeyFrame(
+                    UPDATE_STRETCH,
+                    startStretch,
+                    startStretch, 
+                    "",
+                    0.3f
+                );
+                animationController.addKeyframe(object, kf);
+                kf = AnimationController::createKeyFrameCb(
+                    UPDATE_POS,
+                    object->getPosition() - endShift,
+                    startStretch,
+                    "",
+                    objectCleanupCb,
+                    0.2f
+                );
+                animationController.addKeyframe(object, kf);   
+            }
+        } else {
+            // Just delete the text objects
+            game->currentGame->removeSceneObject(object->getObjectName());
+        }
+    }
 }
 
 vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
@@ -551,6 +693,10 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         optionsReady++;
     };
 
+    auto cbTextNoise = [currentGame]() {
+        currentGame->playSound(1, 0, 128);
+    };
+
     // Present up to four options to the user - use cbs to determine when done
     auto currentOptionIndex = 0;
     for (auto option : options) {
@@ -561,11 +707,12 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         uiElements.push_back(box);
 
         // Create animations for each text box
-        auto k0 = AnimationController::createKeyFrame(
+        auto k0 = AnimationController::createKeyFrameCb(
             UPDATE_NONE,
             startPos,
             startPos,
             "",
+            cbTextNoise,
             1.0f
         );
 
@@ -574,7 +721,7 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
             box->getPosition() + endShift,
             startPos,
             "",
-            0.5f
+            0.2f
         );
 
         auto k2 = AnimationController::createKeyFrame(
@@ -582,7 +729,7 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
             startPos,
             endStretch, 
             "",
-            0.5f
+            0.3f
         );
 
         animationController.addKeyframe(box, k0);
@@ -607,7 +754,7 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
             textPosStart,
             textPosStart,
             "",
-            2.0f
+            1.5f
         );
 
         auto t1 = AnimationController::createKeyFrameCb(
@@ -616,7 +763,7 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
             textPosStart,
             option,
             incrementOptCb,
-            1.0f
+            0.3f
         );
 
         animationController.addKeyframe(textBox, t0);
@@ -646,7 +793,7 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         midPafButton,
         startPos,
         "",
-        0.5f
+        0.2f
     );
 
     auto k2 = AnimationController::createKeyFrame(
@@ -654,7 +801,7 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         endPafButton,
         pafStretchEnd, 
         "",
-        0.5f
+        0.3f
     );
 
     animationController.addKeyframe(pafBox, k0);
@@ -682,7 +829,7 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         textPosStart,
         textPosStart,
         "",
-        2.0f
+        1.5f
     );
 
     auto t1 = AnimationController::createKeyFrameCb(
@@ -691,12 +838,59 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         textPosStart,
         "  PHONE\nA FRIEND",
         incrementOptCb,
-        1.0f
+        0.3f
     );
 
     animationController.addKeyframe(textBox, t0);
     animationController.addKeyframe(textBox, t1);
     return uiElements;
+}
+
+bool debounceCheck(GameLogicInfo *game) {
+    return game->currentDebounce > game->debounceSeconds;
+}
+
+int selectionHandler(GameLogicInfo *game) {
+    int result = -1;
+    if (game->currentGame->getKeystate()[SDL_SCANCODE_W] && debounceCheck(game)) {
+        // "up" action
+        // Change the selected option up to 3
+        if (game->currentOption < 3) {
+            game->currentOption++;
+            game->currentGame->playSound(5, 0, 50);
+        }
+        game->currentDebounce = 0.0f;
+    } else if (game->currentGame->getKeystate()[SDL_SCANCODE_S] && debounceCheck(game)) {
+        // "up" action
+        // Change the selected option up to 3
+        if (game->currentOption > 0) {
+            game->currentOption--;
+            game->currentGame->playSound(5, 0, 50);
+        }
+        game->currentDebounce = 0.0f;
+    } else if (game->currentGame->getKeystate()[SDL_SCANCODE_D] && debounceCheck(game)) {
+        // "right" action
+        // Switch to option 4
+        if (game->currentOption != 4) {
+            game->prevOption = game->currentOption;
+            game->currentOption = 4;
+            game->currentGame->playSound(5, 0, 50);
+        }
+        game->currentDebounce = 0.0f;
+    } else if (game->currentGame->getKeystate()[SDL_SCANCODE_A] && debounceCheck(game)) {
+        // "left" action
+        // Change the selected option back from "PAF"
+        if (game->currentOption == 4) {
+            game->currentOption = game->prevOption;
+            game->currentGame->playSound(5, 0, 50);
+        }
+        game->currentDebounce = 0.0f;
+    } else if (game->currentGame->getKeystate()[SDL_SCANCODE_RETURN] && debounceCheck(game)) {
+        // "SELECT" action
+        result = game->currentOption;
+        game->currentGame->playSound(ACCEPT_SFX_NUM, 0, 100);
+    }
+    return result;
 }
 
 /*
@@ -708,6 +902,7 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
  mainLoop closes prematurely, an error code is returned.
 */
 int mainLoop(gameInfo* gamein) {
+    auto gameState = WAITING;
     Uint64 begin, end;
     int running = 1;
     double currentTime = 0.0, sampleTime = 1.0;
@@ -718,17 +913,27 @@ int mainLoop(gameInfo* gamein) {
     double timePassed = 0.0;
     // Going to just make the entire game in the main loop
     vector<string> options = {
-        "Hello Fun Test",
-        "Option B",
-        "Option C",
-        "OPTION D"
+        "Answer 1",
+        "Answer 2",
+        "Answer 3",
+        "Answer 4"
     };
-    auto currentOption = 0;
-    auto prevOption = 0;
-    auto buttonDebounce = 0.3f;
-    auto currentDebounce = 0.0f;
-    auto uiObjects = drawOptions(options, gamein);
-    auto objects = showMessage("Hee-hee-hee! Hear that tune, it's quite a mystery, whose theme song could it be?", gamein->gameCamera, gamein->currentGame);
+
+    /**
+     * Types of QUESTIONS we can be asked:
+     * * Name that tune.
+     * * General trivia question.
+     * * Name that image.
+     */
+    auto songStarted = false;
+    GameLogicInfo game;
+    game.currentGame = currentGame;
+    string firstMessage = "Hee-hee-hee! Hear that tune, it's quite a mystery, whose theme song could it be?";
+    auto firstMessageWords = countWords(firstMessage);
+    int selectionHandlerResult;
+    vector<SceneObject *> uiObjects;
+    queue<SceneObject *>chatObjectCache;
+    string answer = "";
     while (running) {
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
@@ -738,71 +943,15 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
+
         end = SDL_GetPerformanceCounter();
         animationController.update();
         //gameLogicLoop(gamein);
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
         timePassed += deltaTime;
-        currentDebounce += deltaTime;
-        if (timePassed > 15.0 && !hasHidden) {
-            //hideMessage(objects, currentGame);
-            hasHidden = true;
-        }
-        // "dim" unselected options 
-        if (optionsReady == 5) {
-            auto dimColor = vec3(0.3f, 0.3f, 0.3f);
-            auto brightColor = vec3(1.0f);
-            string key = "OptionText";
-            vector<TextObject *> texts;
-            // Dim all optiontext objects
-            for (int i = 0; i < 5; ++i) {
-                auto obj = currentGame->getSceneObject(key + std::to_string(i));
-                assert(obj != nullptr);
-                texts.push_back(static_cast<TextObject *>(obj));
-            }
+        game.currentDebounce += deltaTime;
 
-            for (auto sel : texts) {
-                sel->setColor(dimColor);
-            }
-
-            // Brighten the selected one
-            texts.at(currentOption)->setColor(brightColor);
-        }
-        if (currentGame->getKeystate()[SDL_SCANCODE_W] && currentDebounce > buttonDebounce) {
-            // "up" action
-            // Change the selected option up to 3
-            if (currentOption < 3) {
-                currentOption++;
-                currentGame->playSound(5, 0, 50);
-            }
-            currentDebounce = 0.0f;
-        } else if (currentGame->getKeystate()[SDL_SCANCODE_S] && currentDebounce > buttonDebounce) {
-            // "up" action
-            // Change the selected option up to 3
-            if (currentOption > 0) {
-                currentOption--;
-                currentGame->playSound(5, 0, 50);
-            }
-            currentDebounce = 0.0f;
-        } else if (currentGame->getKeystate()[SDL_SCANCODE_D] && currentDebounce > buttonDebounce) {
-            // "right" action
-            // Switch to option 4
-            if (currentOption != 4) {
-                prevOption = currentOption;
-                currentOption = 4;
-                currentGame->playSound(5, 0, 50);
-            }
-            currentDebounce = 0.0f;
-        } else if (currentGame->getKeystate()[SDL_SCANCODE_A] && currentDebounce > buttonDebounce) {
-            // "left" action
-            // Change the selected option back from "PAF"
-            if (currentOption == 4) {
-                currentOption = prevOption;
-                currentGame->playSound(5, 0, 50);
-            }
-            currentDebounce = 0.0f;
-        }
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;
@@ -816,6 +965,104 @@ int mainLoop(gameInfo* gamein) {
                 cout << "FPS: " << 1.0 / sum << '\n';
                 fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
+        }
+
+        /**
+         * Game logic loop
+         */
+
+        switch (gameState) {
+            case WAITING:
+                // If nothing is happening (usually waiting for wheel input)
+                chatObjectCache = showMessage(firstMessage, gamein->gameCamera, gamein->currentGame);
+                gameState = CHATTING;
+                break;
+            case CHATTING:
+                // Wait for the chatting to end for the showcase step
+                if (wordsSpoken == firstMessageWords) {
+                    gameState = SHOWCASE;
+                    wordsSpoken = 0;
+                }
+                break;
+            case SHOWCASE:
+                if (game.currentVolume > 0.0f) {
+                    game.currentVolumeRampSeconds += deltaTime;
+                    auto volFrac = game.currentVolumeRampSeconds / game.volumeRampSeconds;
+                    game.currentVolume = game.maxSongVolume - game.maxSongVolume * volFrac;
+                    currentGame->changeVolume(0, game.currentVolume);
+                } else if (!songStarted) {
+                    // Start playing the jesus song
+                    game.songChannel = currentGame->playSound(6, 0, 100);
+                    songStarted = true;
+                } else {
+                    if (game.currentSongTime < game.songTimePass) {
+                        game.currentSongTime += deltaTime;
+                    } else {
+                        songStarted = false;
+                        currentGame->stopSound(game.songChannel);
+                        
+                        uiObjects = drawOptions(options, gamein);
+                        currentGame->changeVolume(0, game.maxSongVolume);
+                        game.currentVolume = game.maxSongVolume;
+                        gameState = ANSWERING;
+                    }
+                }
+                break;
+            case ANSWERING:
+                // "dim" unselected options 
+                if (optionsReady == 5) {
+                    selectionHandlerResult = selectionHandler(&game);
+                    auto dimColor = vec3(0.3f, 0.3f, 0.3f);
+                    auto brightColor = vec3(1.0f);
+                    string key = "OptionText";
+                    vector<TextObject *> texts;
+                    // Dim all optiontext objects
+                    for (int i = 0; i < 5; ++i) {
+                        auto obj = currentGame->getSceneObject(key + std::to_string(i));
+                        assert(obj != nullptr);
+                        texts.push_back(static_cast<TextObject *>(obj));
+                    }
+
+                    for (auto sel : texts) {
+                        sel->setColor(dimColor);
+                    }
+
+                    // Brighten the selected one
+                    texts.at(game.currentOption)->setColor(brightColor);
+                    if (selectionHandlerResult != -1) {
+                        // Perform selection operation
+                        gameState = CONFIRMING;
+                        optionsReady = 0;
+                        hideOptions(uiObjects, &game);
+                        hideMessage(chatObjectCache, game.currentGame);
+                        if (selectionHandlerResult == 4) {
+                            answer = "PHONE A FRIEND";
+                        } else {
+                            answer = options[selectionHandlerResult];
+                        }
+                        
+                        printf("mainLoop: User answered %s\n", answer.c_str());
+                    }
+                }
+                break;
+            case CONFIRMING:
+                // Wait for grunty dialoge to dismiss
+                if (uiElementsReset != 2) break;
+                if (answer.compare("Answer 1") != 0) {
+                    chatObjectCache = showMessage("Guffaw, fool! That answer's wrong, oh boo-hoo! Sucks to be you, my dear—better luck next time, too!",
+                        gamein->gameCamera, gamein->currentGame);
+                } else {
+                    chatObjectCache = showMessage("Well, well, well, you got it right, but don't think I'm impressed! That's the correct answer, much to my distress! Humph!", gamein->gameCamera, gamein->currentGame);
+                }
+                gameState = CONFIRM_CHAT;
+                break;
+            case CONFIRM_CHAT:
+                
+                break;
+            default:
+                printf("mainLoop: ERROR CASE\n");
+                assert(false);
+                break;
         }
     }
     return 0;
