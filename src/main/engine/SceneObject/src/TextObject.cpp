@@ -32,6 +32,8 @@ void TextObject::initializeShaderVars() {
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     cutoffId_ = gfxController_->getShaderVariable(programId_, "cutoff").get();
     gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
+    resolutionId_ = gfxController_->getShaderVariable(programId_, "resolution").get();
+    gfxController_->sendFloatVector(resolutionId_, 1, glm::value_ptr(screenResolution_));
 }
 
 void TextObject::initializeText() {

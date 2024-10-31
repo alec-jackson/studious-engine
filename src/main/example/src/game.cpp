@@ -594,7 +594,7 @@ int runtime(GameInstance *currentGame) {
     currentGameInfo.gameCamera = currentCamera;
     currentGameInfo.currentGame = currentGame;
     
-    currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN);
+    //currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN);
     /*
      End Scene Loading
      */
