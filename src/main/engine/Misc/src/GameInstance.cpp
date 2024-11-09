@@ -65,7 +65,7 @@ int GameInstance::getHeight() {
 }
 
 vec3 GameInstance::getResolution() {
-    return vec3(width_, height_, 0);
+    return vec3(static_cast<float>(width_), static_cast<float>(height_), 0.0f);
 }
 
 /*
@@ -237,7 +237,12 @@ int GameInstance::updateObjects() {
     gfxController_->update();
     // Update cameras
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
-        if ((*it)->type() == ObjectType::CAMERA_OBJECT) (*it)->update();
+        if ((*it)->type() == ObjectType::CAMERA_OBJECT) {
+            CameraObject *cObj = static_cast<CameraObject *>(*it);
+            // Send the current screen resolution to the camera
+            cObj->setResolution(this->getResolution());
+            cObj->update();
+        } 
     }
     return 0;
 }
@@ -253,6 +258,7 @@ int GameInstance::updateWindow() {
     SDL_GL_SwapWindow(window);
     // Retrieve the current window resolution
     SDL_GetWindowSize(window, &width_, &height_);
+    printf("GameInstance::updateWindow: Current resolution %d, %d\n", width_, height_);
     return 0;
 }
 

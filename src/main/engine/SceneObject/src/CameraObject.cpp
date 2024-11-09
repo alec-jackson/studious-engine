@@ -35,6 +35,8 @@ void CameraObject::render() {
 }
 
 void CameraObject::update() {
+    // Update aspect ratio
+    setAspectRatio(resolution_.x / resolution_.y);
     // Support target as being nullptr
     if (target_ == nullptr) {
         cleanTarget_ = true;
@@ -42,6 +44,9 @@ void CameraObject::update() {
     }
     render();
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        // Send the current screen res to each object
+        /// @todo Maybe use a global variable for resolution?
+        (*it)->setResolution(resolution_);
         // Check if the object is ORTHO or PERSPECTIVE
         switch ((*it)->type()) {
             case GAME_OBJECT:

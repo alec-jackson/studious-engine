@@ -65,10 +65,9 @@ class TextObject : public SceneObject {
     unsigned int modelMatId_;
     unsigned int cutoffId_;
     unsigned int resolutionId_;
+    unsigned int projectionId_;
 
     mat4 modelMat_;
     vec3 cutoff_;
     vec3 textColor_;
-    // Reference resolution = 720p
-    vec3 screenResolution_ = vec3(1280, 720, 0);
 };

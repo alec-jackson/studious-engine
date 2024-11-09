@@ -24,16 +24,16 @@ TextObject::TextObject(string message, vec3 position, float scale, string fontPa
 /// @todo Resolution is hardcoded to 720p right now. Add functionality to change this on the fly. Will need to re-send
 /// projection matrix.
 void TextObject::initializeShaderVars() {
-    mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
+    mat4 projection = ortho(0.0f, 1280.0f, 0.0f, 720.0f);
     gfxController_->setProgram(programId_);
-    auto projectionId = gfxController_->getShaderVariable(programId_, "projection").get();
-    gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
+    projectionId_ = gfxController_->getShaderVariable(programId_, "projection").get();
+    gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(projection));
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     cutoffId_ = gfxController_->getShaderVariable(programId_, "cutoff").get();
     gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
     resolutionId_ = gfxController_->getShaderVariable(programId_, "resolution").get();
-    gfxController_->sendFloatVector(resolutionId_, 1, glm::value_ptr(screenResolution_));
+    gfxController_->sendFloatVector(resolutionId_, 1, glm::value_ptr(resolution_));
 }
 
 void TextObject::initializeText() {
@@ -133,12 +133,16 @@ TextObject::~TextObject() {
 void TextObject::render() {
     // Update model matrices
     translateMatrix_ = glm::translate(mat4(1.0f), position);
+    //mat4 projection = ortho(0.0f, resolution_.x, 0.0f, resolution_.y);
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
+    gfxController_->sendFloatVector(resolutionId_, 1, glm::value_ptr(resolution_));
+    //gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(projection));
+    printf("TextObject::render: Resolution %f, %f\n", resolution_.x, resolution_.y);
     /// @todo optimize this...
     auto textColorId = gfxController_->getShaderVariable(programId_, "textColor").get();
     gfxController_->sendFloatVector(textColorId, 1, glm::value_ptr(textColor_));
