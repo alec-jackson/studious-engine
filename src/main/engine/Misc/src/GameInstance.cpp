@@ -64,6 +64,10 @@ int GameInstance::getHeight() {
     return height_;
 }
 
+vec3 GameInstance::getResolution() {
+    return vec3(width_, height_, 0);
+}
+
 /*
  (vec3) getDirectionalLight returns the current location of the directionalLight
  in the scene.
@@ -247,6 +251,8 @@ int GameInstance::updateObjects() {
 */
 int GameInstance::updateWindow() {
     SDL_GL_SwapWindow(window);
+    // Retrieve the current window resolution
+    SDL_GetWindowSize(window, &width_, &height_);
     return 0;
 }
 

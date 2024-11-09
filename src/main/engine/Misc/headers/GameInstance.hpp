@@ -89,6 +89,7 @@ class GameInstance {
         string objectName);
     int getWidth();
     int getHeight();
+    vec3 getResolution();
     vec3 getDirectionalLight();
     const Uint8 *getKeystate();
     controllerReadout *getControllers(int controllerIndex);

@@ -139,7 +139,7 @@ struct GameLogicInfo {
     int prevOption = 0;
     float currentVolume = 50.0f;
     float maxSongVolume = 50.0f;
-    float songTimePass = 12.0f;
+    float songTimePass = 2.0f;
     float currentSongTime = 0.0f;
     float volumeRampSeconds = 2.0f;
     float currentVolumeRampSeconds = 0.0f;
@@ -194,7 +194,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
     auto textProgramId = gfxController.getProgramId(2).get();
     auto typeTime = 3.0f; // Seconds to draw lines
     auto wipeTime = 0.5f; // Seconds to perform text "wiping"
-    auto cutoff = vec3(0.0f, 125.0f, 0.0f);
+    auto cutoff = vec3(0.0f, 250.0f, 0.0f);
     queue<SceneObject *> generatedObjects;
 
     // How many text boxes should be present? 3? Infinite?
