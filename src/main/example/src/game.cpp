@@ -13,6 +13,7 @@
 #include <random>
 #include <atomic>
 #include <game.hpp>
+#include <JsonParser.hpp>
 #ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
 #else
@@ -115,41 +116,15 @@ OpenGlGfxController gfxController = OpenGlGfxController();
 #endif
 AnimationController animationController;
 
-enum GameState {
-    CHATTING, 
-    ANSWERING,
-    SHOWCASE,
-    WAITING,
-    CONFIRMING,
-    CONFIRM_CHAT
-};
-
-enum QuestionType {
-    MUSIC,
-    TRIVIA,
-    IMAGE
-};
-
-struct GameLogicInfo {
-    GameInstance *currentGame;
-    GameState currentState = WAITING;
-    float currentDebounce = 0.0f;
-    float debounceSeconds = 0.3f;
-    int currentOption = 0;
-    int prevOption = 0;
-    float currentVolume = 50.0f;
-    float maxSongVolume = 50.0f;
-    float songTimePass = 2.0f;
-    float currentSongTime = 0.0f;
-    float volumeRampSeconds = 2.0f;
-    float currentVolumeRampSeconds = 0.0f;
-    int songChannel = -1;
-};
-
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
 
 int main(int argc, char **argv) {
+    auto res = parseJson("{\"Hello\": \"World\"}");
+    assert(res != nullptr);
+    assert(res->objectData["Hello"]->data.compare("World") == 0);
+    return 0;
+    /*
     int errorNum;
     configData config;
     int flag = loadConfig(&config, "src/resources/config.txt");
@@ -164,7 +139,7 @@ int main(int argc, char **argv) {
     GameInstance currentGame(soundList, vertShaders, fragShaders, &gfxController, width, height);
     currentGame.startGame(config);
     errorNum = runtime(&currentGame);
-    return errorNum;
+    return errorNum;*/
 }
 
 int countWords(string val) {
@@ -893,6 +868,18 @@ int selectionHandler(GameLogicInfo *game) {
     return result;
 }
 
+bool gameTimer(double time) {
+    static double waitTime;
+    auto result = false;
+    waitTime += deltaTime;
+    if (waitTime > time) {
+        // Reset the timer and return true
+        waitTime = 0.0;
+        result = true;
+    }
+    return result;
+}
+
 /*
  (int) mainLoop starts rendering objects in the current GameInstance to the
  main SDL window. The methods called from the currentGame object render parts
@@ -911,6 +898,7 @@ int mainLoop(gameInfo* gamein) {
     vector<double> times;
     bool hasHidden = false;
     double timePassed = 0.0;
+    string currentPhrase;
     // Going to just make the entire game in the main loop
     vector<string> options = {
         "Answer 1",
@@ -995,9 +983,7 @@ int mainLoop(gameInfo* gamein) {
                     game.songChannel = currentGame->playSound(6, 0, 100);
                     songStarted = true;
                 } else {
-                    if (game.currentSongTime < game.songTimePass) {
-                        game.currentSongTime += deltaTime;
-                    } else {
+                    if (gameTimer(game.songTimePass)) {
                         songStarted = false;
                         currentGame->stopSound(game.songChannel);
                         
@@ -1049,15 +1035,21 @@ int mainLoop(gameInfo* gamein) {
                 // Wait for grunty dialoge to dismiss
                 if (uiElementsReset != 2) break;
                 if (answer.compare("Answer 1") != 0) {
-                    chatObjectCache = showMessage("Guffaw, fool! That answer's wrong, oh boo-hoo! Sucks to be you, my dear—better luck next time, too!",
-                        gamein->gameCamera, gamein->currentGame);
+                    currentPhrase = "Guffaw, fool! That answer's wrong, oh boo-hoo! Sucks to be you, my dear—better luck next time, too!";
                 } else {
-                    chatObjectCache = showMessage("Well, well, well, you got it right, but don't think I'm impressed! That's the correct answer, much to my distress! Humph!", gamein->gameCamera, gamein->currentGame);
+                    currentPhrase = "Well, well, well, you got it right, but don't think I'm impressed! That's the correct answer, much to my distress! Humph!";
                 }
+                chatObjectCache = showMessage(currentPhrase, gamein->gameCamera, gamein->currentGame);
                 gameState = CONFIRM_CHAT;
                 break;
             case CONFIRM_CHAT:
-                
+                firstMessageWords = countWords(currentPhrase);
+                if (wordsSpoken == firstMessageWords) {
+                    // Sleep for a few seconds -> make a function for that
+                    //gameState = SHOWCASE;
+                    wordsSpoken = 0;
+                    printf("Finished speaking final phrase\n");
+                }
                 break;
             default:
                 printf("mainLoop: ERROR CASE\n");

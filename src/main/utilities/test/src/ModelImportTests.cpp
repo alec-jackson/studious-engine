@@ -12,8 +12,6 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ModelImportTests.hpp>
-#include <DummyGfxController.hpp>
-#include <inputMonitor.hpp>
 #define PI 3.14159265
 using std::cout;
 using std::endl;
@@ -22,16 +20,13 @@ using std::endl;
 class ModelImportTest: public ::testing::Test {
  protected:
     void SetUp() override {
-        dummyController = new DummyGfxController();
-        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0, dummyController);
+        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0);
     }
     void TearDown() override {
-        delete dummyController;
     }
     vector<string> texturePathStage;
     vector<int> texturePatternStage;
     ModelImport *modelImport;
-    DummyGfxController *dummyController;
 };
 
 /**
