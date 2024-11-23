@@ -18,7 +18,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_options(-Wall)
+add_compile_options(-Wall -Werror)
 
 if (APPLE)
 include_directories(
@@ -75,7 +75,6 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 add_executable(gtest_JsonParserTests
   src/main/utilities/test/src/JsonParserTests.cpp
-  src/main/utilities/src/JsonParser.cpp
 )
 
 add_executable(gtest_ModelImportTests

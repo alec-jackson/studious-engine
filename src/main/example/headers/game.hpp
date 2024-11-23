@@ -10,6 +10,8 @@
  */
 
 #pragma once
+#include <vector>
+#include <string>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
 #include <GameInstance.hpp>
@@ -29,7 +31,7 @@ struct gameInfo {
 };
 
 enum GameState {
-    CHATTING, 
+    CHATTING,
     ANSWERING,
     SHOWCASE,
     WAITING,
@@ -52,16 +54,17 @@ struct GameLogicInfo {
     int prevOption = 0;
     float currentVolume = 50.0f;
     float maxSongVolume = 50.0f;
-    float songTimePass = 2.0f;
+    float songTimePass = 1.0f;
     float volumeRampSeconds = 2.0f;
     float currentVolumeRampSeconds = 0.0f;
     int songChannel = -1;
 };
 
-struct gameQuestion {
-    vector<string> responses;
+struct GameQuestions {
+    string responses[4];
     string question;
     QuestionType type;
+    string answer;
     string correctResponse;
     string wrongResponse;
     string mediaData;

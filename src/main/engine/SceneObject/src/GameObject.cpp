@@ -8,7 +8,9 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <string>
+#include <cstdio>
+#include <iostream>
 #include <GameObject.hpp>
 
 /**

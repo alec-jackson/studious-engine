@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
 #include <gtest/gtest.h>
+#include <vector>
 #include <iostream>
 #include <PolygonTests.hpp>
 

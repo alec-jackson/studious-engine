@@ -8,12 +8,16 @@
  * @copyright Copyright (c) 2024
  * 
  */
+#pragma once
 #include <string>
 #include <map>
 #include <vector>
 #include <cassert>
+#include <cstdio>
 
-using namespace std;
+using std::string;
+using std::map;
+using std::vector;
 
 enum JsonType {
     DATA,
@@ -28,8 +32,8 @@ struct JsonNode {
     string data;
 };
 
-JsonNode *parseJsonHelper(std::string::iterator &it) {
-    printf("Current char: %c\n", *it);
+JsonNode *parseJsonHelper(std::string::iterator *it) {
+    printf("Current char: %c\n", **it);
     auto doReturn = false;
     auto node = new JsonNode();
     auto inString = false;
@@ -39,7 +43,7 @@ JsonNode *parseJsonHelper(std::string::iterator &it) {
     while (!doReturn) {
         auto isSpace = false;
         ++it;
-        switch (*it) {
+        switch (**it) {
             case '{':
                 printf("Creating new object");
                 // Recursively call this function
@@ -67,17 +71,15 @@ JsonNode *parseJsonHelper(std::string::iterator &it) {
                 // Ignore spaces outside of key
             default:
                 if (inString && inKey) {
-                    key += *it;
+                    key += **it;
                 } else if (!inKey && !isSpace) {
-                    value += *it;
+                    value += **it;
                 }
                 // Parse name from chars
         }
-
     }
     printf("Key: %s\n", key.c_str());
     printf("Value: %s\n", value.c_str());
-    
     return node;
 }
 
@@ -85,7 +87,7 @@ JsonNode *parseJsonHelper(std::string::iterator &it) {
 JsonNode *parseJson(std::string jsonData) {
     auto it = jsonData.begin();
     assert(*it == '{');
-    auto node = parseJsonHelper(it);
+    auto node = parseJsonHelper(&it);
     return node;
 }
 

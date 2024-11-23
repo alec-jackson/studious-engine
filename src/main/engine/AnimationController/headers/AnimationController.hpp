@@ -9,6 +9,7 @@
  * 
  */
 
+#pragma once
 #include <map>
 #include <queue>
 #include <cassert>
@@ -42,14 +43,14 @@ extern double deltaTime;
 
 template <typename T>
 class AnimationData {
-public:
+ public:
     T desired;
     T original;
 };
 
 template <typename T>
 class UpdateData {
-public:
+ public:
     inline UpdateData(T v, bool complete) : updatedValue_ { v }, updateComplete_ { complete } {}
     T updatedValue_;
     bool updateComplete_;
@@ -73,7 +74,7 @@ typedef struct KeyFrames {
 } KeyFrames;
 
 class AnimationController {
-public:
+ public:
     int addKeyframe(SceneObject *target, KeyFrame *keyFrame);
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
@@ -85,7 +86,7 @@ public:
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
-private:
+ private:
     map<string, KeyFrames> keyFrameStore_;
     std::mutex controllerLock_;
 };

@@ -8,13 +8,16 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <string>
+#include <vector>
+#include <cstdio>
+#include <iostream>
 #include <UiObject.hpp>
 
 UiObject::UiObject(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
         string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
-    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath }, wScale_ { wScale },
-    hScale_ { hScale } {
+        vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath },
+        wScale_ { wScale }, hScale_ { hScale } {
     printf("UiObject::UiObject: Creating sprite %s\n", objectName.c_str());
     initializeShaderVars();
     initializeSprite();
@@ -37,7 +40,7 @@ void UiObject::initializeShaderVars() {
 
 void UiObject::generateVertexBase(float *vertexData, int triIdx, float x, float y, float x2, float y2) {
     auto dT = (1.0f/3.0f);
-    auto tX = (triIdx % 3) * dT; // 0.33 target...
+    auto tX = (triIdx % 3) * dT;  // 0.33 target...
     auto tY = (triIdx / 3) * dT;
     auto tX2 = tX + dT;
     auto tY2 = tY + dT;

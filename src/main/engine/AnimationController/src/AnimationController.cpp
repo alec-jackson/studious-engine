@@ -9,14 +9,18 @@
  * 
  */
 
+#include <vector>
+#include <string>
+#include <cstdio>
 #include <AnimationController.hpp>
 #include <UiObject.hpp>
 #include <TextObject.hpp>
 
-KeyFrame *AnimationController::createKeyFrameCb(int type, vec3 pos, vec3 stretch, string text, ANIMATION_COMPLETE_CB, float time) {
+KeyFrame *AnimationController::createKeyFrameCb(int type, vec3 pos, vec3 stretch, string text,
+    ANIMATION_COMPLETE_CB, float time) {
     auto keyframe = new KeyFrame();
     for (int i = 0; i < UPDATE_TYPES; ++i) {
-        auto typeMask = (type & (1<<(i)));
+        auto typeMask = (type & (1 << (i)));
         switch (typeMask) {
             case UPDATE_POS:
                 keyframe->pos.desired = pos;
@@ -43,7 +47,7 @@ KeyFrame *AnimationController::createKeyFrameCb(int type, vec3 pos, vec3 stretch
 KeyFrame *AnimationController::createKeyFrame(int type, vec3 pos, vec3 stretch, string text, float time) {
     auto keyframe = new KeyFrame();
     for (int i = 0; i < UPDATE_TYPES; ++i) {
-        auto typeMask = (type & (1<<(i)));
+        auto typeMask = (type & (1 << (i)));
         switch (typeMask) {
             case UPDATE_POS:
                 keyframe->pos.desired = pos;
@@ -114,7 +118,7 @@ void AnimationController::update() {
                 currentKf->text.original = cTarget->getMessage();
             }
         }
-        
+
         auto result = UPDATE_NOT_COMPLETE;
         auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET;
 
@@ -182,7 +186,6 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
     cTarget->setHStretch(updated.updatedValue_.y);
 
     return (updated.updateComplete_) ? STRETCH_MET : UPDATE_NOT_COMPLETE;
-
 }
 
 bool AnimationController::cap(float *cur, float target, float dv) {
@@ -238,7 +241,8 @@ UpdateData<vec3> AnimationController::updateVector(vec3 original, vec3 desired, 
     return UpdateData<vec3>(current, updateResult);
 }
 
-UpdateData<string> AnimationController::updateString(string original, string desired, string current, KeyFrame *keyFrame) {
+UpdateData<string> AnimationController::updateString(string original, string desired,
+    string current, KeyFrame *keyFrame) {
     // Do the delta math (per line??)
     auto timeMet = false;
     // Math will be different than vectors, transformations will NOT be anything crazy
@@ -268,7 +272,8 @@ int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
     // Check if the target is a text object
     if (target->type() != ObjectType::TEXT_OBJECT) {
         // This is horrible, log the error and assert
-        fprintf(stderr, "AnimationController::updateText: Attempting to update non-text object %s!\n",
+        fprintf(stderr,
+            "AnimationController::updateText: Attempting to update non-text object %s!\n",
             target->getObjectName().c_str());
         assert(false);
     }
@@ -282,7 +287,6 @@ int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
     cTarget->setMessage(result.updatedValue_);
 
     return result.updateComplete_ ? TEXT_MET : UPDATE_NOT_COMPLETE;
-
 }
 
 int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {

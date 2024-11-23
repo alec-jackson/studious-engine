@@ -8,7 +8,10 @@
  * @copyright Copyright (c) 2024
  * 
  */
-
+#include <string>
+#include <iostream>
+#include <vector>
+#include <cstdio>
 #include <OpenGlGfxController.hpp>
 
 /**

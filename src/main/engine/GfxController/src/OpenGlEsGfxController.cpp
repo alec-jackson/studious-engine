@@ -8,7 +8,10 @@
  * @copyright Copyright (c) 2024
  * 
  */
-
+#include <string>
+#include <iostream>
+#include <vector>
+#include <cstdio>
 #include <OpenGlEsGfxController.hpp>
 
 /**
@@ -284,12 +287,8 @@ GfxResult<int> OpenGlEsGfxController::getShaderVariable(unsigned int programId, 
  * 
  */
 void OpenGlEsGfxController::updateOpenGl() {
-    //glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glCullFace(GL_BACK);
-    //glDepthFunc(GL_LESS);
     glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     auto error = glGetError();

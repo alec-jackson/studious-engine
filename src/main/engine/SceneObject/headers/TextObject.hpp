@@ -9,10 +9,10 @@
  *
  */
 #pragma once
+#include <ft2build.h>
 #include <string>
 #include <vector>
 #include <GameObject.hpp>
-#include <ft2build.h> //NOLINT
 #include FT_FREETYPE_H
 
 /**
@@ -64,7 +64,6 @@ class TextObject : public SceneObject {
 
     unsigned int modelMatId_;
     unsigned int cutoffId_;
-    unsigned int resolutionId_;
     unsigned int projectionId_;
 
     mat4 modelMat_;

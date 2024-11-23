@@ -8,7 +8,10 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <cstdio>
+#include <iostream>
+#include <string>
+#include <vector>
 #include <GameInstance.hpp>
 
 /*
@@ -242,7 +245,7 @@ int GameInstance::updateObjects() {
             // Send the current screen resolution to the camera
             cObj->setResolution(this->getResolution());
             cObj->update();
-        } 
+        }
     }
     return 0;
 }
@@ -258,7 +261,6 @@ int GameInstance::updateWindow() {
     SDL_GL_SwapWindow(window);
     // Retrieve the current window resolution
     SDL_GetWindowSize(window, &width_, &height_);
-    printf("GameInstance::updateWindow: Current resolution %d, %d\n", width_, height_);
     return 0;
 }
 
@@ -316,8 +318,8 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
     return sprite;
 }
 
-UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
-    string objectName) {
+UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
+    unsigned int programId, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     auto ui = new UiObject(spritePath, position, scale, wScale, hScale, programId, objectName,
         ObjectType::UI_OBJECT, gfxController_);
@@ -358,7 +360,6 @@ int GameInstance::removeSceneObject(string objectName) {
 
     // Free the memory for the deleted object
     destroySceneObject(target);
-    
     return 0;
 }
 

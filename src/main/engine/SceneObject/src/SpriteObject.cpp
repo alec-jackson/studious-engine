@@ -8,7 +8,10 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <string>
+#include <cstdio>
+#include <iostream>
+#include <vector>
 #include <SpriteObject.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
@@ -27,7 +30,6 @@ void SpriteObject::initializeShaderVars() {
     auto projectionId = gfxController_->getShaderVariable(programId_, "projection").get();
     gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
-
 }
 
 void SpriteObject::initializeSprite() {

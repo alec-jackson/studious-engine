@@ -8,8 +8,9 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
 #include <gtest/gtest.h>
+#include <string>
+#include <vector>
 #include <iostream>
 #include <ModelImportTests.hpp>
 #define PI 3.14159265

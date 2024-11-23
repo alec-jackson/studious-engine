@@ -8,7 +8,9 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <cstdio>
+#include <vector>
+#include <string>
 #include <TextObject.hpp>
 
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
@@ -32,25 +34,23 @@ void TextObject::initializeShaderVars() {
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     cutoffId_ = gfxController_->getShaderVariable(programId_, "cutoff").get();
     gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
-    resolutionId_ = gfxController_->getShaderVariable(programId_, "resolution").get();
-    gfxController_->sendFloatVector(resolutionId_, 1, glm::value_ptr(resolution_));
 }
 
 void TextObject::initializeText() {
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
-        std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+        fprintf(stderr, "TextObject::initializeText: Could not init FreeType Library\n");
         throw std::runtime_error("Failed to initialize FreeType Library");
     }
     FT_Face face;
     if (FT_New_Face(ft, fontPath_.c_str(), 0, &face)) {
-        std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+        fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load font\n");
         throw std::runtime_error("Failed to load font");
     } else {
         FT_Set_Pixel_Sizes(face, 0, 48);
         for (unsigned char c = 0; c < 128; c++) {
             if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-                cout << "ERROR::FREETYTPE: Failed to load Glyph\n";
+                fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load glyph\n");
                 continue;
             }
             unsigned int textureId;
@@ -86,7 +86,6 @@ void TextObject::createMessage() {
     auto spacing = 0.5f;
     // Use textures to create each character as an independent object
     for (auto character : message_) {
-        
         Character ch = characters[character];
         float xpos = x + ch.Bearing.x * scale;
         float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
@@ -103,7 +102,6 @@ void TextObject::createMessage() {
         unsigned int vbo;
         gfxController_->generateBuffer(&vbo);
         gfxController_->bindBuffer(vbo);
-        
         // update VBO for each character
         vector<float> vertices = {
             xpos,     ypos + h,   0.0f, 0.0f,
@@ -133,16 +131,12 @@ TextObject::~TextObject() {
 void TextObject::render() {
     // Update model matrices
     translateMatrix_ = glm::translate(mat4(1.0f), position);
-    //mat4 projection = ortho(0.0f, resolution_.x, 0.0f, resolution_.y);
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
-    gfxController_->sendFloatVector(resolutionId_, 1, glm::value_ptr(resolution_));
-    //gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(projection));
-    printf("TextObject::render: Resolution %f, %f\n", resolution_.x, resolution_.y);
     /// @todo optimize this...
     auto textColorId = gfxController_->getShaderVariable(programId_, "textColor").get();
     gfxController_->sendFloatVector(textColorId, 1, glm::value_ptr(textColor_));

@@ -8,6 +8,9 @@
  * @copyright Copyright (c) 2024
  * 
  */
+#include <vector>
+#include <string>
+#include <iostream>
 #include <ColliderObject.hpp>
 
 /** @todo Update - this is the old struct info

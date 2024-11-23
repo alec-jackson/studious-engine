@@ -8,6 +8,10 @@
  * @copyright Copyright (c) 2024
  * 
  */
+#include <string>
+#include <iostream>
+#include <vector>
+#include <cstdio>
 #include <DummyGfxController.hpp>
 
 GfxResult<unsigned int> DummyGfxController::generateBuffer(unsigned int *bufferId) {

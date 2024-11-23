@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
 #include <gtest/gtest.h>
 #include <iostream>
+#include <string>
 #include <JsonParserTests.hpp>
 using std::cout;
 using std::endl;

@@ -8,7 +8,9 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <string>
+#include <cstdio>
+#include <iostream>
 #include <config.hpp>
 
 /*
@@ -34,7 +36,9 @@ int loadConfig(configData* config, string filename) {
                 if (buf[i] == '=') {
                     int start = i + 1;
                     i++;
-                    while (isdigit(buf[i])) { i++; }
+                    while (isdigit(buf[i])) {
+                        i++;
+                    }
                     int end = i + 1;
                     int dif = end - start;
                     if (dif > 10) {
