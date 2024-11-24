@@ -346,7 +346,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
         auto writeTime = i == nLines - 1 ? tweakedTypeTime : typeTime;
         string builtString = "";
         auto ogSize = lsplit.size();
-        for (auto i = 0; i < ogSize; ++i) {
+        for (unsigned int i = 0; i < ogSize; ++i) {
             builtString += lsplit.front() + " ";
             lsplit.pop();
             auto proportionaltime = writeTime / ogSize;

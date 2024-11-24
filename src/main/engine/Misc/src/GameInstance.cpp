@@ -114,7 +114,7 @@ int GameInstance::getControllersConnected() {
 
  (void) playSound does not return any value.
 */
-int GameInstance::playSound(int soundIndex, int loop, int volume) {
+int GameInstance::playSound(unsigned int soundIndex, int loop, int volume) {
     int channel = -1;
     if (audioInitialized_) {
         assert(soundIndex < sound.size());
