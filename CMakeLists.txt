@@ -73,10 +73,6 @@ add_executable(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
-add_executable(gtest_JsonParserTests
-  src/main/utilities/test/src/JsonParserTests.cpp
-)
-
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
@@ -90,10 +86,6 @@ add_executable(gtest_PolygonTests
 )
 
 target_include_directories(gtest_ModelImportTests
-  PRIVATE src/main/utilities/test/headers
-)
-
-target_include_directories(gtest_JsonParserTests
   PRIVATE src/main/utilities/test/headers
 )
 
@@ -138,18 +130,12 @@ target_link_libraries(
 )
 
 target_link_libraries(
-  gtest_JsonParserTests
-  GTest::gtest_main
-)
-
-target_link_libraries(
   gtest_PolygonTests
   GTest::gtest_main
 )
 
 gtest_discover_tests(gtest_PolygonTests)
 gtest_discover_tests(gtest_ModelImportTests)
-gtest_discover_tests(gtest_JsonParserTests)
 
 # Project include dirs
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)

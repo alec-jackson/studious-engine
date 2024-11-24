@@ -53,13 +53,6 @@ void UiObject::generateVertexBase(float *vertexData, int triIdx, float x, float 
             x2, y2, tX2, tY2,
             x2, y, tX2, tY
     };
-    cout << "UiObject::generateVertex: " << endl;
-    for (unsigned int i = 0; i < vertices.size(); ++i) {
-        printf("%f, ", vertices[i]);
-        if (i % 4 == 3) {
-            cout << endl;
-        }
-    }
     // Convert triangle index to vertexData offset
     // 2 triangles, 3 vertices per tri, 4 points per vertex
     auto offset = triIdx * 2 * 3 * 4;
@@ -82,7 +75,6 @@ float *UiObject::generateVertices(float x, float y, float iFx, float iFy) {
             auto x2 = x + (iFx * j);
             auto x1 = x + (iFx * (j - 1));
             auto idx = (j - 1) + (i - 1) * 3;
-            printf("UiObject::generateVertices: Generating vertexData for idx %d\n", idx);
             generateVertexBase(vertexData, idx, x1, y1, x2, y2);
         }
     }

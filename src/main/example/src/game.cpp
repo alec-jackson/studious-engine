@@ -18,7 +18,6 @@
 #include <string>
 #include <vector>
 #include <game.hpp>
-#include <JsonParser.hpp>
 #ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
 #else
