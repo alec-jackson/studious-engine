@@ -15,7 +15,7 @@
 #include <cassert>
 #include <string>
 #include <functional>
-#include <mutex>
+#include <mutex> // NOLINT
 #include <SceneObject.hpp>
 
 // Update return values

@@ -42,7 +42,8 @@ enum GameState {
 enum QuestionType {
     MUSIC,
     TRIVIA,
-    IMAGE
+    IMAGE,
+    MINIGAME
 };
 
 struct GameLogicInfo {

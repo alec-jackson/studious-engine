@@ -867,6 +867,20 @@ bool messageHidden() {
     return res;
 }
 
+bool volumeRamp(double volumeRampTime, int direction, unsigned int soundIndex) {
+    static double currentRampTime;
+    auto result = false;
+    currentRampTime += deltaTime;
+    if (currentRampTime > volumeRampTime) {
+        currentRampTime = 0;
+        result = true;
+    }
+    auto volFrac = currentRampTime / volumeRampTime;
+    game.currentVolume = game.maxSongVolume - game.maxSongVolume * volFrac;
+    currentGame->changeVolume(0, game.currentVolume);
+    return result;
+}
+
 /*
  (int) mainLoop starts rendering objects in the current GameInstance to the
  main SDL window. The methods called from the currentGame object render parts
@@ -897,6 +911,7 @@ int mainLoop(gameInfo* gamein) {
      * * Name that tune.
      * * General trivia question.
      * * Name that image.
+     * * Minigame
      */
     auto songStarted = false;
     GameLogicInfo game;
