@@ -129,6 +129,18 @@ int GameInstance::playSound(unsigned int soundIndex, int loop, int volume) {
     return channel;
 }
 
+void GameInstance::playSound(const char *soundPath, int volume) {
+    // Make sure the volume is within the acceptable range
+    assert(volume >= 0);
+    assert(volume <= 128);
+    
+    // Load the sound
+    auto soundIndex = loadSound(soundPath);
+
+    // Play the sound
+    playSound(soundIndex, 0, volume);
+}
+
 void GameInstance::changeVolume(int soundIndex, int volume) {
     if (audioInitialized_) {
         Mix_VolumeChunk(sound[soundIndex], volume);
@@ -466,6 +478,13 @@ void GameInstance::initAudio() {
         }
     }
     audioInitialized_ = true;
+}
+
+// Returns the index of the newly loaded sound
+uint GameInstance::loadSound(const char *songPath) {
+    assert(songPath != nullptr);
+    sound.push_back(Mix_LoadWAV(songPath));
+    return sound.size() - 1;
 }
 
 /*

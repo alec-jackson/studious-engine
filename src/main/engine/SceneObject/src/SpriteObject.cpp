@@ -16,7 +16,8 @@
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
-    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath } {
+    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath },
+    tint_ { vec4(0) } {
     printf("SpriteObject::SpriteObject: Creating sprite %s\n", objectName.c_str());
     initializeShaderVars();
     initializeSprite();
@@ -30,6 +31,7 @@ void SpriteObject::initializeShaderVars() {
     auto projectionId = gfxController_->getShaderVariable(programId_, "projection").get();
     gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
+    tintId_ = gfxController_->getShaderVariable(programId_, "tint").get();
 }
 
 void SpriteObject::initializeSprite() {
@@ -82,7 +84,9 @@ void SpriteObject::render() {
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
+    // Send shader variables
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
+    gfxController_->sendFloatVector(tintId_, 1, glm::value_ptr(tint_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);
     gfxController_->bindTexture(textureId_);

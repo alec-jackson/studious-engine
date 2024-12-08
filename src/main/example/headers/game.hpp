@@ -36,7 +36,9 @@ enum GameState {
     SHOWCASE,
     WAITING,
     CONFIRMING,
-    CONFIRM_CHAT
+    CONFIRM_CHAT,
+    DAMAGE_CHECK,
+    QUESTION_CLEANUP
 };
 
 enum QuestionType {
@@ -55,18 +57,31 @@ struct GameLogicInfo {
     int prevOption = 0;
     float currentVolume = 50.0f;
     float maxSongVolume = 50.0f;
-    float songTimePass = 1.0f;
+    float songTimePass = 12.0f;
     float volumeRampSeconds = 2.0f;
     float currentVolumeRampSeconds = 0.0f;
     int songChannel = -1;
 };
 
 struct GameQuestions {
-    string responses[4];
+    string options[4];
     string question;
     QuestionType type;
+    float showcaseTime;
+    float volume;
     string answer;
     string correctResponse;
     string wrongResponse;
     string mediaData;
+    vector<string> getOptions() { return vector<string>(options, options + 4); }
+};
+
+enum AudioDirection {
+    LOUDER,
+    QUIETER
+};
+
+struct TeamStats {
+    int teamHealth;
+    int paf;  // Phone a friend
 };

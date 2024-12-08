@@ -70,7 +70,7 @@ KeyFrame *AnimationController::createKeyFrame(int type, vec3 pos, vec3 stretch, 
     return keyframe;
 }
 
-int AnimationController::addKeyframe(SceneObject *target, KeyFrame *keyFrame) {
+int AnimationController::addKeyFrame(SceneObject *target, KeyFrame *keyFrame) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto targetName = target->getObjectName();
     // Check if the target object exists in the keyframestore
@@ -94,6 +94,8 @@ int AnimationController::addKeyframe(SceneObject *target, KeyFrame *keyFrame) {
 }
 
 void AnimationController::update() {
+    // Noop 
+    //return;
     // Lock the controller
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     vector<string> deferredDelete;

@@ -95,6 +95,8 @@ class GameInstance {
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
     int playSound(unsigned int soundIndex, int loop, int volume);
+    void playSound(const char *soundPath, int volume);
+    uint loadSound(const char *songPath);
     void changeVolume(int soundIndex, int volume);
     void stopSound(int channel);
     void changeWindowMode(int mode);

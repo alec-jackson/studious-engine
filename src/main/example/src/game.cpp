@@ -25,7 +25,7 @@
 #endif
 #include <AnimationController.hpp>
 
-#define GAME_QUESTION_SIZE 1
+#define GAME_QUESTION_SIZE 2
 
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
@@ -61,6 +61,16 @@ vector<string> soundList = {
     "src/resources/sfx/Song Snippet 1.mp3",
     "src/resources/sfx/Accept SFX.mp3",
 };  // A list of gameSounds to load
+
+vector<string> hurtSounds = {
+    "src/resources/sfx/Hurt 1.mp3",
+    "src/resources/sfx/Hurt 2.mp3",
+    "src/resources/sfx/Hurt 3.mp3",
+    "src/resources/sfx/Hurt 4.mp3",
+    "src/resources/sfx/Hurt 5.mp3",
+    "src/resources/sfx/Hurt 6.mp3",
+    "src/resources/sfx/Hurt 7.mp3"
+};  // A list of sounds that can play when you take damage
 
 // Lists of embedded/core shaders
 #ifndef GFX_EMBEDDED
@@ -107,16 +117,46 @@ const char *textBoxImage =
 const char *sgrunty =
     "src/resources/images/Scuffed Grunty.png";
 
+const char *honeycombFull =
+    "src/resources/images/Honeycomb.png";
+
+const char *team1 =
+    "src/resources/images/Team 1.png";
+
 GameQuestions gameQuestions[GAME_QUESTION_SIZE] = {
 {
-    {"Hello", "World", "Test", "Question"},
-    "This is a test questions",
+    {"Mark", "Felix", "Alan", "Shrek"},
+    "Hee-hee-hee! Hear that tune, it's quite a mystery, whose theme song could it be?",
     QuestionType::MUSIC,
-    "World",
-    "That is the correct answer",
-    "That is the wrong answer",
-    "Path to song"
+    12.0f,
+    100.0f,
+    "Felix",
+    "Well, well, well, you got it right, but don't think I'm impressed! That's the correct answer, much to my distress! Humph!",
+    "Guffaw, fool! That answer's wrong, oh boo-hoo! Sucks to be you, my dear—better luck next time, too!",
+    "src/resources/sfx/Song Snippet 1.mp3"
+},
+{
+    {"Lethal Company", "Fortnite", "Minecraft", "Metroid Prime"},
+    "Hee hee hee, I'll have some fun, With a quiz that will stun! What video game is this tune from? Tell me now, don't be dumb!",
+    QuestionType::MUSIC,
+    12.0f,
+    128.0f,
+    "Lethal Company",
+    "Grrr! That is the correct answer, you really know your video games! How dare you outsmart me!",
+    "Hee hee hee, you got that wrong! Have you ever touched a video game before? Shame on you!",
+    "src/resources/sfx/Song Snippet 2.mp3"
 }};
+
+const float BG_VOLUME = 50.0f;
+const float BG_RAMP_SECONDS = 2.0f;
+const int MAX_HEALTH = 5;
+
+TeamStats teamStats[3] = {
+    {MAX_HEALTH - 1, 1},  // 0 = Team 1
+    {MAX_HEALTH, 1},  // 1 = Team 2
+    {MAX_HEALTH, 1}   // 2 = Team 3
+};
+
 
 TextObject *fps_counter;
 TextObject *collDebugText;
@@ -124,6 +164,7 @@ TextObject *pressUText;
 std::atomic<int> optionsReady(0);
 std::atomic<int> wordsSpoken(0);
 std::atomic<int> uiElementsReset(0);
+std::atomic<int> healthShown(0);
 int wordCount;
 double deltaTime = 0.0f;
 int WORDS_PER_LINE = 8;  // Arbitrary
@@ -153,6 +194,241 @@ int main(int argc, char **argv) {
     currentGame.startGame(config);
     errorNum = runtime(&currentGame);
     return errorNum;
+}
+
+void playRandomHurtSound(GameInstance *currentGame) {
+    printf("PLAYING RANDOM HURT SOUND!!!\n");
+    // Grab a random hurt sound from the hurt sfx
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    // Calculate random number between 2-4
+    std::uniform_int_distribution<> dis(0, hurtSounds.size() - 1);
+
+    int random_number = dis(gen);
+    assert(random_number >= 0 && random_number < hurtSounds.size());
+    
+    // Play the hurt sound determined with the random number
+    currentGame->playSound(hurtSounds.at(random_number).c_str(), 128);
+}
+
+vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, GameInstance *currentGame) {
+    printf("showTeamHealth: Entry - teamNumber %d\n", teamNumber);
+    float hcDisplacement = 60.0f;
+    float startingX = -90.0f;
+    float leftEndX = 440.0f;
+    vector<SceneObject *> objectCache;
+
+    float endStretch = 320.0f;
+    float startStretch = -50.0f;
+    float endBox = 355.0f;
+    vec3 boxPos = vec3(-140.0f, 425.0f, 0.0f);
+    vec3 boxStretch = vec3(startStretch, startStretch, 0.0f);
+
+    // Grab the current health for this team
+    assert(teamNumber > 0);
+    assert(teamNumber < (sizeof(teamStats) / sizeof(TeamStats)));
+
+    auto currentHealth = teamStats[teamNumber - 1].teamHealth;
+
+    // Team 1 Image
+    vec3 t1EndPos = vec3(380.0f, 410.0f, 0.0f);
+    vec3 t1StartPos = vec3(-90.0f, 410.0f, 0.0f);
+
+
+    // Create textbox for healthbar backdrop
+    auto box = currentGame->createUi(textBoxImage,
+        boxPos,
+        0.7f,
+        startStretch,
+        -50.0f,
+        gfxController.getProgramId(4).get(),
+    "healthbg");
+
+    renderer->addSceneObject(box);
+
+    auto t1 = currentGame->createSprite(team1,
+        t1StartPos,
+        0.40f,
+        gfxController.getProgramId(3).get(),
+        "team1");
+
+    // Programatically create health bar icons
+    for (int i = 0; i < MAX_HEALTH; ++i) {
+        auto honeyComb = currentGame->createSprite(
+            honeycombFull,
+            vec3(startingX, 400.0f, 0.0f),
+            0.45f,
+            gfxController.getProgramId(3).get(),
+            "hc" + std::to_string(i));
+
+        // Based in the team's current health, change the tint of each honeycomb
+        if (i > currentHealth - 1) {
+            honeyComb->setTint(vec3(-0.5));
+        }
+        objectCache.push_back(honeyComb);
+    }
+
+    // Add honeycomb objects to renderer in reverse order (for correct rendering)
+    for (int i = objectCache.size() - 1; i >= 0; --i) {
+        renderer->addSceneObject(objectCache.at(i));
+    }
+
+    // Add team object last (top render)
+    renderer->addSceneObject(t1);
+
+    // Add the background box and team image after honeycombs in objectCache
+    objectCache.push_back(box);
+    objectCache.push_back(t1);
+
+    // Create animations for each health icon
+    float leftReachTime = 0.7f;
+    float deltaSlideTime = 0.1f;
+    float maxDeltaSlide = 0.0f;
+    auto i = 0;
+    // Increment atomic count when health icons done animating
+    auto cb = []() {
+        healthShown++;
+    };
+
+    // Add the team object as a 'before' honeycomb for consistency
+    {
+        // Create the initial slide to the right keyframe
+        auto kf0 = AnimationController::createKeyFrame(
+            UPDATE_POS,
+            t1EndPos,
+            vec3(0),
+            "",
+            leftReachTime);
+
+        auto postSlideTime = (i * deltaSlideTime);
+
+        auto kf1 = AnimationController::createKeyFrameCb(
+            UPDATE_POS,
+            t1EndPos,
+            vec3(0),
+            "",
+            cb,
+            postSlideTime);
+        // Create a kf1 based on the deltaSlideTime and displacement
+        // Add the keyframes to the animation controller
+        animationController.addKeyFrame(t1, kf0);
+        animationController.addKeyFrame(t1, kf1);
+        ++i;
+        maxDeltaSlide = postSlideTime;
+    }
+
+    // Iterate through each honeycomb object and create animations for them
+    for (auto hc : objectCache) {
+        auto destination = hc->getPosition();
+        destination.x = leftEndX;
+        // Create the initial slide to the right keyframe
+        auto kf0 = AnimationController::createKeyFrame(
+            UPDATE_POS,
+            destination,
+            vec3(0),
+            "",
+            leftReachTime);
+
+        auto displacement = (i * hcDisplacement);
+        auto postSlideTime = (i * deltaSlideTime);
+        // Update the destination with the displacement
+        destination.x += displacement;
+
+        auto kf1 = AnimationController::createKeyFrameCb(
+            UPDATE_POS,
+            destination,
+            vec3(0),
+            "",
+            cb,
+            postSlideTime);
+        // Create a kf1 based on the deltaSlideTime and displacement
+        // Add the keyframes to the animation controller
+        animationController.addKeyFrame(hc, kf0);
+        animationController.addKeyFrame(hc, kf1);
+        ++i;
+        maxDeltaSlide = postSlideTime;
+    }
+
+    boxPos.x = endBox;
+    // Create keyframes for textbox with timing from health icons
+    auto kfbox = AnimationController::createKeyFrame(
+        UPDATE_POS,
+        boxPos,
+        vec3(0),
+        "",
+        leftReachTime);
+
+    boxStretch.x = endStretch;
+    auto kf1box = AnimationController::createKeyFrameCb(
+        UPDATE_STRETCH,
+        vec3(0),
+        boxStretch,
+        "",
+        cb,
+        maxDeltaSlide);
+
+    animationController.addKeyFrame(box, kfbox);
+    animationController.addKeyFrame(box, kf1box);
+
+    return objectCache;
+}
+
+void hideTeamHealth(vector<SceneObject *> objectCache) {
+    // This is kind of backwards, but I am copying constants from showTeamHealth for now
+    float hcDisplacement = 60.0f;
+    float startingX = -90.0f;
+    float leftEndX = 440.0f;
+    vector<SceneObject *> objectCache;
+
+    float endStretch = 320.0f;
+    float startStretch = -50.0f;
+    float endBox = 355.0f;
+    vec3 boxPos = vec3(-140.0f, 425.0f, 0.0f);
+    vec3 boxStretch = vec3(startStretch, startStretch, 0.0f);
+    // Callback to help determine when animation is complete
+    auto cb = []() {
+        healthShown++;
+    };
+    // The object cache should have the following objects in order
+    // Honeycombs (0 - MAX_HEALTH)
+    // background box
+    // team image
+    // So there HAS TO BE MAX_HEALTH + 2 objects in the cache total
+    assert(objectCache.size() == MAX_HEALTH + 2);
+
+    // Iterate through honeycomb objects and reverse their keyframes
+    // Iterate through each honeycomb object and create animations for them
+    for (int i = 0; i < MAX_HEALTH; ++i) {
+        auto hc = objectCache.at(i);
+        auto destination = hc->getPosition();
+        destination.x = leftEndX;
+        // Create the initial slide to the right keyframe
+        auto kf0 = AnimationController::createKeyFrame(
+            UPDATE_POS,
+            destination,
+            vec3(0),
+            "",
+            leftReachTime);
+
+        auto displacement = (i * hcDisplacement);
+        auto postSlideTime = (i * deltaSlideTime);
+        // Update the destination with the displacement
+        destination.x += displacement;
+
+        auto kf1 = AnimationController::createKeyFrameCb(
+            UPDATE_POS,
+            destination,
+            vec3(0),
+            "",
+            cb,
+            postSlideTime);
+        // Create a kf1 based on the deltaSlideTime and displacement
+        // Add the keyframes to the animation controller
+        animationController.addKeyFrame(hc, kf0);
+        animationController.addKeyFrame(hc, kf1);
+        ++i;
+        maxDeltaSlide = postSlideTime;
+    }
 }
 
 queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameInstance *currentGame) {
@@ -239,7 +515,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
 
     KeyFrame *k0 = AnimationController::createKeyFrameCb(
         UPDATE_NONE,
-        box->getPosition(),
+        box->getPosition(),  ///@todo change these to vec3(0)
         box->getStretch(),
         "",
         cbTextNoise,
@@ -282,13 +558,13 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
     renderer->addSceneObject(box);
     renderer->addSceneObject(grunty);
 
-    animationController.addKeyframe(box, k0);
-    animationController.addKeyframe(box, k1);
-    animationController.addKeyframe(box, k2);
+    animationController.addKeyFrame(box, k0);
+    animationController.addKeyFrame(box, k1);
+    animationController.addKeyFrame(box, k2);
 
-    animationController.addKeyframe(grunty, gk0);
-    animationController.addKeyframe(grunty, gk1);
-    animationController.addKeyframe(grunty, gk2);
+    animationController.addKeyFrame(grunty, gk0);
+    animationController.addKeyFrame(grunty, gk1);
+    animationController.addKeyFrame(grunty, gk2);
 
     queue<TextObject *>textLines;
     auto textBoxId = 0;  // Make sure textbox names are UNIQUE
@@ -342,7 +618,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
             text,
             textShiftTime);
 
-        animationController.addKeyframe(textBox, kf);
+        animationController.addKeyFrame(textBox, kf);
         auto writeTime = i == nLines - 1 ? tweakedTypeTime : typeTime;
         string builtString = "";
         auto ogSize = lsplit.size();
@@ -358,7 +634,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
                 builtString,
                 cbVoice,
                 proportionaltime);
-            animationController.addKeyframe(textBox, kf);
+            animationController.addKeyFrame(textBox, kf);
         }
 
         textShiftTime += writeTime;
@@ -374,7 +650,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
                 topLine,
                 text,
                 typeTime);
-            animationController.addKeyframe(textBox, kf);
+            animationController.addKeyFrame(textBox, kf);
         } else if (i != nLines - 1) {
             // If NOT last and NOT first - perform SHIFT
             curPos += shift;
@@ -385,7 +661,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
                 topLine,
                 text,
                 wipeTime);
-            animationController.addKeyframe(textBox, kf);
+            animationController.addKeyFrame(textBox, kf);
         }
 
         // If second to last, DONE
@@ -400,7 +676,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
                 topLine,
                 text,
                 typeTime);
-            animationController.addKeyframe(textBox, kf);
+            animationController.addKeyFrame(textBox, kf);
         }
 
         // And wipe!
@@ -411,7 +687,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
             topLine,
             text,
             wipeTime);
-        animationController.addKeyframe(textBox, kf);
+        animationController.addKeyFrame(textBox, kf);
     }
 
     return generatedObjects;
@@ -473,11 +749,11 @@ void hideMessage(queue<SceneObject *> objects, GameInstance *currentGame) {
         cbElementResetG,
         0.3f);
 
-    animationController.addKeyframe(box, k1);
-    animationController.addKeyframe(box, k2);
+    animationController.addKeyFrame(box, k1);
+    animationController.addKeyFrame(box, k2);
 
-    animationController.addKeyframe(grunty, gk0);
-    animationController.addKeyframe(grunty, gk1);
+    animationController.addKeyFrame(grunty, gk0);
+    animationController.addKeyFrame(grunty, gk1);
 
     // Will need to perform cleanup in callbacks...
 
@@ -576,7 +852,7 @@ void hideOptions(vector<SceneObject *> objects, GameLogicInfo *game) {
                     pafStretchStart,
                     "",
                     0.3f);
-                animationController.addKeyframe(object, kf);
+                animationController.addKeyFrame(object, kf);
 
                 kf = AnimationController::createKeyFrameCb(
                     UPDATE_POS,
@@ -585,7 +861,7 @@ void hideOptions(vector<SceneObject *> objects, GameLogicInfo *game) {
                     "",
                     objectCleanupCb,
                     0.2f);
-                animationController.addKeyframe(object, kf);
+                animationController.addKeyFrame(object, kf);
             } else {
                 auto startStretch = vec3(-50.0f, -50.0f, 0.0f);
                 auto endShift = vec3(440.0f, 0.0f, 0.0f);
@@ -595,7 +871,7 @@ void hideOptions(vector<SceneObject *> objects, GameLogicInfo *game) {
                     startStretch,
                     "",
                     0.3f);
-                animationController.addKeyframe(object, kf);
+                animationController.addKeyFrame(object, kf);
                 kf = AnimationController::createKeyFrameCb(
                     UPDATE_POS,
                     object->getPosition() - endShift,
@@ -603,7 +879,7 @@ void hideOptions(vector<SceneObject *> objects, GameLogicInfo *game) {
                     "",
                     objectCleanupCb,
                     0.2f);
-                animationController.addKeyframe(object, kf);
+                animationController.addKeyFrame(object, kf);
             }
         } else {
             // Just delete the text objects
@@ -673,9 +949,9 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
             "",
             0.3f);
 
-        animationController.addKeyframe(box, k0);
-        animationController.addKeyframe(box, k1);
-        animationController.addKeyframe(box, k2);
+        animationController.addKeyFrame(box, k0);
+        animationController.addKeyFrame(box, k1);
+        animationController.addKeyFrame(box, k2);
 
         // Draw option text on the button
         auto textBox = currentGame->createText("",
@@ -705,8 +981,8 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
             incrementOptCb,
             0.3f);
 
-        animationController.addKeyframe(textBox, t0);
-        animationController.addKeyframe(textBox, t1);
+        animationController.addKeyFrame(textBox, t0);
+        animationController.addKeyFrame(textBox, t1);
     }
 
     auto endPafButton = vec3(1030.0f, 400.0f, 0.0f);
@@ -746,9 +1022,9 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         "",
         0.3f);
 
-    animationController.addKeyframe(pafBox, k0);
-    animationController.addKeyframe(pafBox, k1);
-    animationController.addKeyframe(pafBox, k2);
+    animationController.addKeyFrame(pafBox, k0);
+    animationController.addKeyFrame(pafBox, k1);
+    animationController.addKeyFrame(pafBox, k2);
     auto textPosStartPaf = vec3(1060.0f, 300.0f, 0.0f);
 
     // Draw the text on the box
@@ -781,8 +1057,8 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         incrementOptCb,
         0.3f);
 
-    animationController.addKeyframe(textBox, t0);
-    animationController.addKeyframe(textBox, t1);
+    animationController.addKeyFrame(textBox, t0);
+    animationController.addKeyFrame(textBox, t1);
     return uiElements;
 }
 
@@ -858,7 +1134,16 @@ bool doneSpeaking() {
 // Return true if the answer is correct for the question
 bool checkAnswer(int currentQuestion, string answer) {
     assert(currentQuestion < GAME_QUESTION_SIZE);
-    return gameQuestions->answer.compare(answer) == 0;
+    return gameQuestions[currentQuestion].answer.compare(answer) == 0;
+}
+
+bool doneHealthDisplay(int maxHealth) {
+    bool result = false;
+    if (maxHealth + 2 == healthShown) {
+        result = true;
+        healthShown = 0;
+    }
+    return result;
 }
 
 bool messageHidden() {
@@ -867,18 +1152,67 @@ bool messageHidden() {
     return res;
 }
 
-bool volumeRamp(double volumeRampTime, int direction, unsigned int soundIndex) {
+bool playSong(string songPath, float songTime, float volume, GameInstance *game) {
+    // Load the song and start playing it
+    static bool isPlaying;
+    static int songChannel;
+    auto songCompleted = false;
+    if (isPlaying == false) {
+        auto soundIndex = game->loadSound(songPath.c_str());
+        songChannel = game->playSound(soundIndex, 0, volume);
+        isPlaying = true;
+    }
+    if (gameTimer(songTime)) {
+        isPlaying = false;
+        game->stopSound(songChannel);
+        songCompleted = true;
+    }
+    return songCompleted;
+}
+
+bool volumeRamp(float maxVolume, double volumeRampTime, AudioDirection direction, unsigned int soundIndex, GameInstance *game) {
     static double currentRampTime;
     auto result = false;
     currentRampTime += deltaTime;
     if (currentRampTime > volumeRampTime) {
-        currentRampTime = 0;
+        currentRampTime = volumeRampTime;
         result = true;
     }
     auto volFrac = currentRampTime / volumeRampTime;
-    game.currentVolume = game.maxSongVolume - game.maxSongVolume * volFrac;
-    currentGame->changeVolume(0, game.currentVolume);
+    auto currentVolume = direction == AudioDirection::QUIETER ? maxVolume - maxVolume * volFrac : maxVolume * volFrac;
+    game->changeVolume(soundIndex, currentVolume);
+    if (result) {
+        currentRampTime = 0.0f;
+    }
     return result;
+}
+
+bool showcaseHandler(const GameQuestions &cq, GameInstance *game) {
+    static bool showcaseStarted;
+    auto completedShowcase = false;
+    switch (cq.type) {
+        case QuestionType::MUSIC:
+            // Ramp the volume before starting the showcase
+            if (!showcaseStarted) {
+                showcaseStarted = volumeRamp(BG_VOLUME, BG_RAMP_SECONDS, AudioDirection::QUIETER, 0, game);
+            } else {
+                completedShowcase = playSong(cq.mediaData, cq.showcaseTime, cq.volume, game);
+            }
+            // Do some minor showcase cleanup
+            if (completedShowcase) {
+                // Restore background music
+                game->changeVolume(0, 50.0f);
+            }
+            break;
+        default:
+            printf("showcaseHandler: Unsupported question type %d\n", cq.type);
+            break;
+    }
+    // Reset flags on completion
+    if (completedShowcase) {
+        showcaseStarted = false;
+    }
+    return completedShowcase;
 }
 
 /*
@@ -898,13 +1232,6 @@ int mainLoop(gameInfo* gamein) {
     int error = 0;
     vector<double> times;
     string currentPhrase;
-    // Going to just make the entire game in the main loop
-    vector<string> options = {
-        "Answer 1",
-        "Answer 2",
-        "Answer 3",
-        "Answer 4"
-    };
 
     /**
      * Types of QUESTIONS we can be asked:
@@ -913,7 +1240,6 @@ int mainLoop(gameInfo* gamein) {
      * * Name that image.
      * * Minigame
      */
-    auto songStarted = false;
     GameLogicInfo game;
     game.currentGame = currentGame;
     int selectionHandlerResult;
@@ -968,24 +1294,9 @@ int mainLoop(gameInfo* gamein) {
                 if (doneSpeaking()) gameState = SHOWCASE;
                 break;
             case SHOWCASE:
-                if (game.currentVolume > 0.0f) {
-                    game.currentVolumeRampSeconds += deltaTime;
-                    auto volFrac = game.currentVolumeRampSeconds / game.volumeRampSeconds;
-                    game.currentVolume = game.maxSongVolume - game.maxSongVolume * volFrac;
-                    currentGame->changeVolume(0, game.currentVolume);
-                } else if (!songStarted) {
-                    // Start playing the jesus song
-                    game.songChannel = currentGame->playSound(6, 0, 100);
-                    songStarted = true;
-                } else {
-                    if (gameTimer(game.songTimePass)) {
-                        songStarted = false;
-                        currentGame->stopSound(game.songChannel);
-                        uiObjects = drawOptions(options, gamein);
-                        currentGame->changeVolume(0, game.maxSongVolume);
-                        game.currentVolume = game.maxSongVolume;
-                        gameState = ANSWERING;
-                    }
+                if (showcaseHandler(gameQuestions[currentQuestion], gamein->currentGame)) {
+                    uiObjects = drawOptions(gameQuestions[currentQuestion].getOptions(), gamein);
+                    gameState = ANSWERING;
                 }
                 break;
             case ANSWERING:
@@ -1002,11 +1313,9 @@ int mainLoop(gameInfo* gamein) {
                         assert(obj != nullptr);
                         texts.push_back(static_cast<TextObject *>(obj));
                     }
-
                     for (auto sel : texts) {
                         sel->setColor(dimColor);
                     }
-
                     // Brighten the selected one
                     texts.at(game.currentOption)->setColor(brightColor);
                     if (selectionHandlerResult != -1) {
@@ -1018,7 +1327,7 @@ int mainLoop(gameInfo* gamein) {
                         if (selectionHandlerResult == 4) {
                             answer = "PHONE A FRIEND";
                         } else {
-                            answer = options[selectionHandlerResult];
+                            answer = gameQuestions[currentQuestion].options[selectionHandlerResult];
                         }
                         printf("mainLoop: User answered %s\n", answer.c_str());
                     }
@@ -1034,12 +1343,40 @@ int mainLoop(gameInfo* gamein) {
                     chatObjectCache = showMessage(gameQuestions[currentQuestion].wrongResponse,
                         gamein->gameCamera, gamein->currentGame);
                 }
+                // Also need to show the health bar for each team
+                showTeamHealth(1, gamein->gameCamera, gamein->currentGame);
+                if (doneHealthDisplay(MAX_HEALTH)) {
+                    playRandomHurtSound(gamein->currentGame);
+                }
                 gameState = CONFIRM_CHAT;
                 break;
             case CONFIRM_CHAT:
-                if (doneSpeaking()) {
+                if (doneSpeaking() && doneHealthDisplay(MAX_HEALTH)) {
                     // Sleep for a few seconds -> make a function for that
                     printf("Finished speaking final phrase\n");
+                }
+                if (wordCount == 0) {
+                    if (gameTimer(1.0f)) {
+                        // Hurt the team if the answer is wrong
+                        if (!checkAnswer(currentQuestion, answer)) {
+                            playRandomHurtSound(gamein->currentGame);
+                        }
+                        gameState = DAMAGE_CHECK;
+                    }
+                }
+                break;
+            case DAMAGE_CHECK:
+                if (gameTimer(2.0f)) {
+                    // Sleep for 2 seconds before hiding message
+                    hideMessage(chatObjectCache, gamein->currentGame);
+                    gameState = QUESTION_CLEANUP;
+                }
+                break;
+            case QUESTION_CLEANUP:
+                if (messageHidden()) {
+                    // GO back to waiting, choose next question
+                    currentQuestion++;
+                    gameState = WAITING;
                 }
                 break;
             default:

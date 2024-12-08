@@ -29,13 +29,22 @@ class SpriteObject : public SceneObject {
     void initializeSprite();
     void initializeShaderVars();
 
+    // Getters
+    inline vec3 getTint() { return tint_; }
+
+    // Setters
+    inline void setTint(vec3 tint) { tint_ = tint; }
+
  private:
     string spritePath_;
 
     unsigned int textureId_;
     unsigned int modelMatId_;
+    unsigned int tintId_;
+
     unsigned int vao_;
     unsigned int vbo_;
 
     mat4 modelMat_;
+    vec3 tint_;
 };
