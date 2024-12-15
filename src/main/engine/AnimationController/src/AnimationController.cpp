@@ -108,6 +108,8 @@ void AnimationController::update() {
         if (currentKf->isNew) {
             currentKf->isNew = false;
             currentKf->pos.original = target->getPosition();
+            currentKf->rotation.original = target->getRotation();
+            currentKf->scale.original = target->getScale();
             // Use stretch if UI object
             if (currentKf->type & UPDATE_STRETCH) {
                 assert(target->type() == ObjectType::UI_OBJECT);
@@ -122,7 +124,7 @@ void AnimationController::update() {
         }
 
         auto result = UPDATE_NOT_COMPLETE;
-        auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET;
+        auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET;
 
         // Update the time passed since keyframe has started
         currentKf->currentTime += deltaTime;
@@ -131,6 +133,8 @@ void AnimationController::update() {
         result |= updateStretch(target, currentKf);
         result |= updateText(target, currentKf);
         result |= updateTime(target, currentKf);
+        result |= updateRotation(target, currentKf);
+        result |= updateScale(target, currentKf);
         // Only remove the keyframe when all updates are done...
         if (result == done) {
             printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
@@ -164,6 +168,38 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
     target->setPosition(result.updatedValue_);
 
     return (result.updateComplete_) ? POSITION_MET : UPDATE_NOT_COMPLETE;
+}
+
+int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame) {
+    // Only update if the keyframe type has POSITION
+    if (!(keyFrame->type & UPDATE_ROTATION)) {
+        return ROTATION_MET;
+    }
+    auto result = updateVector(
+        keyFrame->rotation.original,
+        keyFrame->rotation.desired,
+        target->getRotation(),
+        keyFrame);
+
+    target->setRotation(result.updatedValue_);
+
+    return (result.updateComplete_) ? ROTATION_MET : UPDATE_NOT_COMPLETE;
+}
+
+int AnimationController::updateScale(SceneObject *target, KeyFrame *keyFrame) {
+    // Only update if the keyframe type has POSITION
+    if (!(keyFrame->type & UPDATE_SCALE)) {
+        return SCALE_MET;
+    }
+    auto result = updateFloat(
+        keyFrame->scale.original,
+        keyFrame->scale.desired,
+        target->getScale(),
+        keyFrame);
+
+    target->setScale(result.updatedValue_);
+
+    return (result.updateComplete_) ? SCALE_MET : UPDATE_NOT_COMPLETE;
 }
 
 int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) {
@@ -241,6 +277,28 @@ UpdateData<vec3> AnimationController::updateVector(vec3 original, vec3 desired, 
     }
     updateResult = (matchedPos == NUM_AXIS && timeMet);
     return UpdateData<vec3>(current, updateResult);
+}
+
+UpdateData<float> AnimationController::updateFloat(float original, float desired, float current, KeyFrame *keyFrame) {
+    // Caps the position when the position differs than the target
+    auto matched = false;
+    auto timeMet = 0;
+    auto updateResult = false;
+    // Translation delta is time per frame * totalTime
+    auto tD = desired - original;
+
+    auto timeScalar = static_cast<float>(deltaTime) / keyFrame->targetTime;
+    current += (tD * timeScalar);
+
+    // Perform position locking when max time is met...
+    if (keyFrame->currentTime >= keyFrame->targetTime) {
+        current = desired;
+        timeMet = 1;
+    }
+    // Perform float capping
+    if (cap(&current, desired, tD)) matched = true;
+    updateResult = (matched && timeMet);
+    return UpdateData<float>(current, updateResult);
 }
 
 UpdateData<string> AnimationController::updateString(string original, string desired,

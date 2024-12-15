@@ -322,10 +322,10 @@ TextObject *GameInstance::createText(string message, vec3 position, float scale,
 }
 
 SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
-    string objectName) {
+    SpriteAnchor anchor, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     auto sprite = new SpriteObject(spritePath, position, scale, programId, objectName,
-        ObjectType::GAME_OBJECT, gfxController_);
+        ObjectType::GAME_OBJECT, anchor, gfxController_);
     sceneObjects_.push_back(sprite);
     return sprite;
 }

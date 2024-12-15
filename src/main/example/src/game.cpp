@@ -25,8 +25,6 @@
 #endif
 #include <AnimationController.hpp>
 
-#define GAME_QUESTION_SIZE 2
-
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
  Currently, the below global vectors are used for loading in sound effect files,
@@ -123,30 +121,6 @@ const char *honeycombFull =
 const char *team1 =
     "src/resources/images/Team 1.png";
 
-GameQuestions gameQuestions[GAME_QUESTION_SIZE] = {
-{
-    {"Mark", "Felix", "Alan", "Shrek"},
-    "Hee-hee-hee! Hear that tune, it's quite a mystery, whose theme song could it be?",
-    QuestionType::MUSIC,
-    12.0f,
-    100.0f,
-    "Felix",
-    "Well, well, well, you got it right, but don't think I'm impressed! That's the correct answer, much to my distress! Humph!",
-    "Guffaw, fool! That answer's wrong, oh boo-hoo! Sucks to be you, my dear—better luck next time, too!",
-    "src/resources/sfx/Song Snippet 1.mp3"
-},
-{
-    {"Lethal Company", "Fortnite", "Minecraft", "Metroid Prime"},
-    "Hee hee hee, I'll have some fun, With a quiz that will stun! What video game is this tune from? Tell me now, don't be dumb!",
-    QuestionType::MUSIC,
-    12.0f,
-    128.0f,
-    "Lethal Company",
-    "Grrr! That is the correct answer, you really know your video games! How dare you outsmart me!",
-    "Hee hee hee, you got that wrong! Have you ever touched a video game before? Shame on you!",
-    "src/resources/sfx/Song Snippet 2.mp3"
-}};
-
 const float BG_VOLUME = 50.0f;
 const float BG_RAMP_SECONDS = 2.0f;
 const int MAX_HEALTH = 5;
@@ -161,10 +135,13 @@ TeamStats teamStats[3] = {
 TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
+// This is kind of bad, but I am going to store showcase images as a global
+SpriteObject *showcaseImage = nullptr;
 std::atomic<int> optionsReady(0);
 std::atomic<int> wordsSpoken(0);
 std::atomic<int> uiElementsReset(0);
 std::atomic<int> healthShown(0);
+std::atomic<int> healthHidden(0);
 int wordCount;
 double deltaTime = 0.0f;
 int WORDS_PER_LINE = 8;  // Arbitrary
@@ -206,7 +183,6 @@ void playRandomHurtSound(GameInstance *currentGame) {
 
     int random_number = dis(gen);
     assert(random_number >= 0 && random_number < hurtSounds.size());
-    
     // Play the hurt sound determined with the random number
     currentGame->playSound(hurtSounds.at(random_number).c_str(), 128);
 }
@@ -215,7 +191,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
     printf("showTeamHealth: Entry - teamNumber %d\n", teamNumber);
     float hcDisplacement = 60.0f;
     float startingX = -90.0f;
-    float leftEndX = 440.0f;
+    float leftEndX = 500.0f;
     vector<SceneObject *> objectCache;
 
     float endStretch = 320.0f;
@@ -232,7 +208,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
 
     // Team 1 Image
     vec3 t1EndPos = vec3(380.0f, 410.0f, 0.0f);
-    vec3 t1StartPos = vec3(-90.0f, 410.0f, 0.0f);
+    vec3 t1StartPos = vec3(-150.0f, 410.0f, 0.0f);
 
 
     // Create textbox for healthbar backdrop
@@ -250,6 +226,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
         t1StartPos,
         0.40f,
         gfxController.getProgramId(3).get(),
+        SpriteAnchor::BOTTOM_LEFT,
         "team1");
 
     // Programatically create health bar icons
@@ -259,6 +236,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
             vec3(startingX, 400.0f, 0.0f),
             0.45f,
             gfxController.getProgramId(3).get(),
+            SpriteAnchor::BOTTOM_LEFT,
             "hc" + std::to_string(i));
 
         // Based in the team's current health, change the tint of each honeycomb
@@ -276,10 +254,6 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
     // Add team object last (top render)
     renderer->addSceneObject(t1);
 
-    // Add the background box and team image after honeycombs in objectCache
-    objectCache.push_back(box);
-    objectCache.push_back(t1);
-
     // Create animations for each health icon
     float leftReachTime = 0.7f;
     float deltaSlideTime = 0.1f;
@@ -290,32 +264,18 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
         healthShown++;
     };
 
-    // Add the team object as a 'before' honeycomb for consistency
-    {
-        // Create the initial slide to the right keyframe
-        auto kf0 = AnimationController::createKeyFrame(
-            UPDATE_POS,
-            t1EndPos,
-            vec3(0),
-            "",
-            leftReachTime);
+    // Create the initial slide to the right keyframe
+    auto kf0 = AnimationController::createKeyFrameCb(
+        UPDATE_POS,
+        t1EndPos,
+        vec3(0),
+        "",
+        cb,
+        leftReachTime);
 
-        auto postSlideTime = (i * deltaSlideTime);
-
-        auto kf1 = AnimationController::createKeyFrameCb(
-            UPDATE_POS,
-            t1EndPos,
-            vec3(0),
-            "",
-            cb,
-            postSlideTime);
-        // Create a kf1 based on the deltaSlideTime and displacement
-        // Add the keyframes to the animation controller
-        animationController.addKeyFrame(t1, kf0);
-        animationController.addKeyFrame(t1, kf1);
-        ++i;
-        maxDeltaSlide = postSlideTime;
-    }
+    // Create a kf1 based on the deltaSlideTime and displacement
+    // Add the keyframes to the animation controller
+    animationController.addKeyFrame(t1, kf0);
 
     // Iterate through each honeycomb object and create animations for them
     for (auto hc : objectCache) {
@@ -330,7 +290,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
             leftReachTime);
 
         auto displacement = (i * hcDisplacement);
-        auto postSlideTime = (i * deltaSlideTime);
+        auto postSlideTime = ((i + 1) * deltaSlideTime);
         // Update the destination with the displacement
         destination.x += displacement;
 
@@ -370,7 +330,29 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
     animationController.addKeyFrame(box, kfbox);
     animationController.addKeyFrame(box, kf1box);
 
+    // Add the background box and team image after honeycombs in objectCache
+    objectCache.push_back(box);
+    objectCache.push_back(t1);
+
     return objectCache;
+}
+
+void updateHealthIndicator(vector<SceneObject *> objectCache, int health) {
+    // Color in honeycombs based on health
+    assert(health <= MAX_HEALTH);
+    // Iterate through honeycomb objects and reverse their keyframes
+    // Iterate through each honeycomb object and create animations for them
+    for (int i = 0; i < MAX_HEALTH; ++i) {
+        auto hc = objectCache.at(i);
+        // Cast to sprite object
+        auto chc = static_cast<SpriteObject *>(hc);
+        // Set the tint
+        if (i + 1 > health) {
+            chc->setTint(vec3(-0.5f));
+        } else {
+            chc->setTint(vec3(0.0f));
+        }
+    }
 }
 
 void hideTeamHealth(vector<SceneObject *> objectCache) {
@@ -378,16 +360,23 @@ void hideTeamHealth(vector<SceneObject *> objectCache) {
     float hcDisplacement = 60.0f;
     float startingX = -90.0f;
     float leftEndX = 440.0f;
-    vector<SceneObject *> objectCache;
 
     float endStretch = 320.0f;
     float startStretch = -50.0f;
     float endBox = 355.0f;
     vec3 boxPos = vec3(-140.0f, 425.0f, 0.0f);
     vec3 boxStretch = vec3(startStretch, startStretch, 0.0f);
+
+    float leftReachTime = 0.7f;
+    float deltaSlideTime = 0.1f;
+    float maxDeltaSlide = 0.0f;
+
+    // Team 1 Image
+    vec3 t1EndPos = vec3(380.0f, 410.0f, 0.0f);
+    vec3 t1StartPos = vec3(-150.0f, 410.0f, 0.0f);
     // Callback to help determine when animation is complete
     auto cb = []() {
-        healthShown++;
+        healthHidden++;
     };
     // The object cache should have the following objects in order
     // Honeycombs (0 - MAX_HEALTH)
@@ -401,34 +390,91 @@ void hideTeamHealth(vector<SceneObject *> objectCache) {
     for (int i = 0; i < MAX_HEALTH; ++i) {
         auto hc = objectCache.at(i);
         auto destination = hc->getPosition();
-        destination.x = leftEndX;
-        // Create the initial slide to the right keyframe
+        // We will need to subtract displacement from destination
+        auto displacement = (i * hcDisplacement);
+        destination.x -= displacement;  // Should be zero for first hc
+
+        // The initial sleep time is based on the postSlideTime for other hcs
+        auto postSlideTime = (i * deltaSlideTime);
+        auto sleepSlideTime = ((MAX_HEALTH - 1) * deltaSlideTime) - postSlideTime;
+        // Create the initial slide to the left keyframe
         auto kf0 = AnimationController::createKeyFrame(
             UPDATE_POS,
             destination,
             vec3(0),
             "",
-            leftReachTime);
+            postSlideTime);
 
-        auto displacement = (i * hcDisplacement);
-        auto postSlideTime = (i * deltaSlideTime);
-        // Update the destination with the displacement
-        destination.x += displacement;
+        // The next keyframe is the sleep time
+        auto kf1 = AnimationController::createKeyFrame(
+            UPDATE_NONE,
+            vec3(0),
+            vec3(0),
+            "",
+            sleepSlideTime);
 
-        auto kf1 = AnimationController::createKeyFrameCb(
+        // Then ultimately the slide to the left frame (original start)
+        destination.x = startingX;
+        auto kf2 = AnimationController::createKeyFrameCb(
             UPDATE_POS,
             destination,
             vec3(0),
             "",
             cb,
-            postSlideTime);
-        // Create a kf1 based on the deltaSlideTime and displacement
+            leftReachTime);
         // Add the keyframes to the animation controller
         animationController.addKeyFrame(hc, kf0);
         animationController.addKeyFrame(hc, kf1);
-        ++i;
-        maxDeltaSlide = postSlideTime;
+        animationController.addKeyFrame(hc, kf2);
     }
+    maxDeltaSlide = ((MAX_HEALTH - 1) * deltaSlideTime);
+
+    // Grab the box from the objectCache
+    auto box = objectCache.at(MAX_HEALTH);
+
+    // Reverse the background health image animation
+    // Shrink the text box and hide it
+    auto kfbox = AnimationController::createKeyFrame(
+        UPDATE_STRETCH,
+        vec3(0),
+        boxStretch,
+        "",
+        maxDeltaSlide);
+
+    boxStretch.x = endStretch;
+    auto kf1box = AnimationController::createKeyFrameCb(
+        UPDATE_POS,
+        boxPos,
+        vec3(0),
+        "",
+        cb,
+        leftReachTime);
+
+    animationController.addKeyFrame(box, kfbox);
+    animationController.addKeyFrame(box, kf1box);
+
+    // Grab the team image from the objectCache
+    auto teamImage = objectCache.at(MAX_HEALTH + 1);
+
+    // Hide the team image with the same timing as everything else
+    auto teamKf = AnimationController::createKeyFrame(
+        UPDATE_NONE,
+        vec3(0),
+        vec3(0),
+        "",
+        maxDeltaSlide);
+
+    auto teamKf1 = AnimationController::createKeyFrameCb(
+        UPDATE_POS,
+        t1StartPos,
+        vec3(0),
+        "",
+        cb,
+        leftReachTime);
+
+    // Add the keyframes for the team image
+    animationController.addKeyFrame(teamImage, teamKf);
+    animationController.addKeyFrame(teamImage, teamKf1);
 }
 
 queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameInstance *currentGame) {
@@ -488,7 +534,11 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
     wordCount = words.size();
     printf("Number of words: %lu\n", words.size());
     // Number of text lines = number of text boxes
-    auto nLines = words.empty() ? 0 : (static_cast<int>(words.size()) / WORDS_PER_LINE) + 1;
+    auto nLines = words.empty() ? 0 : (static_cast<int>(words.size()) / WORDS_PER_LINE);
+    if (words.size() > 0 && words.size() % WORDS_PER_LINE != 0) {
+        nLines += 1; // Add an extra line to avoid word size / WORDS_PER_LINE = 0 (trunc)
+    }
+    printf("Number of lines: %d\n", nLines);
     assert(nLines > 0);
 
     auto cbTextNoise = [currentGame]() {
@@ -500,6 +550,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
         vec3(-240.0f, 190.0f, 0.0f),
         0.45f,
         gfxController.getProgramId(3).get(),
+        SpriteAnchor::BOTTOM_LEFT,
     "grunty");
 
     auto box = currentGame->createUi(textBoxImage,
@@ -797,7 +848,10 @@ int runtime(GameInstance *currentGame) {
         vec3(-300.0f, 900.0f, 0.0f),
         1.0f,
         gfxController.getProgramId(3).get(),
+        SpriteAnchor::BOTTOM_LEFT,
         "Backdrop");
+    // Set the backdrop to the lowest priority for rendering
+    backdrop->setRenderPriority(RenderPriority::LOW);
 
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
@@ -1146,6 +1200,24 @@ bool doneHealthDisplay(int maxHealth) {
     return result;
 }
 
+bool doneHealthHide(int maxHealth, GameInstance *game, vector<SceneObject *> objectCache) {
+    bool result = false;
+    if (maxHealth + 2 == healthHidden) {
+        result = true;
+        healthHidden = 0;
+
+        // Perform object cleanup here...
+        for (auto obj : objectCache) {
+            game->removeSceneObject(obj->getObjectName());
+        }
+        // Clear vector
+        objectCache.clear();
+    }
+    int healthHideVal = healthHidden;
+    printf("Healthhidden: %d\n", healthHideVal);
+    return result;
+}
+
 bool messageHidden() {
     auto res = uiElementsReset == 2;
     if (res) uiElementsReset = 0;
@@ -1187,7 +1259,7 @@ bool volumeRamp(float maxVolume, double volumeRampTime, AudioDirection direction
     return result;
 }
 
-bool showcaseHandler(const GameQuestions &cq, GameInstance *game) {
+bool showcaseHandler(const GameQuestions &cq, GameInstance *game, CameraObject *renderer) {
     static bool showcaseStarted;
     auto completedShowcase = false;
     switch (cq.type) {
@@ -1202,6 +1274,43 @@ bool showcaseHandler(const GameQuestions &cq, GameInstance *game) {
             if (completedShowcase) {
                 // Restore background music
                 game->changeVolume(0, 50.0f);
+            }
+            break;
+        case QuestionType::TRIVIA:
+            // Don't need to do anything here...
+            completedShowcase = true;
+            break;
+        case QuestionType::IMAGE:
+            if (!showcaseStarted) {
+                auto endPos = vec3(500.0f, 200.0f, 0.0f);
+                showcaseStarted = true;
+                // Draw the image on the screen
+                showcaseImage = game->createSprite(
+                    cq.mediaData,
+                    vec3(650.0f, 400.0f, 0.0f),
+                    0.00,
+                    gfxController.getProgramId(3).get(),
+                    SpriteAnchor::CENTER,
+                    "showcaseImage");
+                // Set the showcase image to medium priority
+                showcaseImage->setRenderPriority(RenderPriority::MEDIUM);
+                renderer->addSceneObject(showcaseImage);
+                showcaseImage->setRotation(vec3(0.0f, 0.0f, 45.0f));
+
+                // Create keyframes manually
+                auto kf0 = AnimationController::createKeyFrame(
+                    UPDATE_ROTATION | UPDATE_SCALE,
+                    endPos,
+                    vec3(0),
+                    "",
+                    0.7f);
+                kf0->rotation.desired = vec3(0.0f, 0.0f, 360.0f);
+                kf0->scale.desired = 0.80f;
+
+                animationController.addKeyFrame(showcaseImage, kf0);
+
+            } else if (gameTimer(cq.showcaseTime)) {
+                completedShowcase = true;
             }
             break;
         default:
@@ -1245,8 +1354,15 @@ int mainLoop(gameInfo* gamein) {
     int selectionHandlerResult;
     vector<SceneObject *> uiObjects;
     queue<SceneObject *>chatObjectCache;
-    int currentQuestion = 0;
+    vector<SceneObject *> healthCache;
+    int currentQuestion = 4;
     string answer = "";
+    // showcaseImage cleanup can be run in callback
+    auto showcaseImageCleanupCb = [&gamein]() {
+        gamein->currentGame->removeSceneObject(showcaseImage->getObjectName());
+        showcaseImage = nullptr;
+    };
+    KeyFrame *tempKf;
     while (running) {
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
@@ -1294,7 +1410,7 @@ int mainLoop(gameInfo* gamein) {
                 if (doneSpeaking()) gameState = SHOWCASE;
                 break;
             case SHOWCASE:
-                if (showcaseHandler(gameQuestions[currentQuestion], gamein->currentGame)) {
+                if (showcaseHandler(gameQuestions[currentQuestion], gamein->currentGame, gamein->gameCamera)) {
                     uiObjects = drawOptions(gameQuestions[currentQuestion].getOptions(), gamein);
                     gameState = ANSWERING;
                 }
@@ -1343,11 +1459,23 @@ int mainLoop(gameInfo* gamein) {
                     chatObjectCache = showMessage(gameQuestions[currentQuestion].wrongResponse,
                         gamein->gameCamera, gamein->currentGame);
                 }
-                // Also need to show the health bar for each team
-                showTeamHealth(1, gamein->gameCamera, gamein->currentGame);
-                if (doneHealthDisplay(MAX_HEALTH)) {
-                    playRandomHurtSound(gamein->currentGame);
+                // Remove the showcase image at this time - we shouldn't need any special protections here because
+                // the image is pretty low risk...
+                if (showcaseImage != nullptr) {
+                    // Can probably use constants for transformations and timing later
+                    tempKf = AnimationController::createKeyFrameCb(
+                        UPDATE_ROTATION | UPDATE_SCALE,
+                        vec3(0),
+                        vec3(0),
+                        "",
+                        showcaseImageCleanupCb,
+                        0.7f);
+                    tempKf->scale.desired = 0.0f;
+                    tempKf->rotation.desired = vec3(0.0f);
+                    animationController.addKeyFrame(showcaseImage, tempKf);
                 }
+                // Also need to show the health bar for each team
+                healthCache = showTeamHealth(1, gamein->gameCamera, gamein->currentGame);
                 gameState = CONFIRM_CHAT;
                 break;
             case CONFIRM_CHAT:
@@ -1360,6 +1488,10 @@ int mainLoop(gameInfo* gamein) {
                         // Hurt the team if the answer is wrong
                         if (!checkAnswer(currentQuestion, answer)) {
                             playRandomHurtSound(gamein->currentGame);
+                            // Damage the current team
+                            teamStats[0].teamHealth--;
+                            // Update the health indicator
+                            updateHealthIndicator(healthCache, teamStats[0].teamHealth);
                         }
                         gameState = DAMAGE_CHECK;
                     }
@@ -1369,6 +1501,13 @@ int mainLoop(gameInfo* gamein) {
                 if (gameTimer(2.0f)) {
                     // Sleep for 2 seconds before hiding message
                     hideMessage(chatObjectCache, gamein->currentGame);
+                    gameState = HEALTH_HIDE;
+                    hideTeamHealth(healthCache);
+                }
+                break;
+            case HEALTH_HIDE:
+                // We can't directly AND the wait calls, so we add an extra state
+                if (doneHealthHide(MAX_HEALTH, gamein->currentGame, healthCache)) {
                     gameState = QUESTION_CLEANUP;
                 }
                 break;

@@ -24,6 +24,8 @@
 #define STRETCH_MET 2
 #define TEXT_MET 4
 #define TIME_MET 8
+#define ROTATION_MET 16
+#define SCALE_MET 32
 
 // Update Types
 #define UPDATE_NONE 0
@@ -31,12 +33,14 @@
 #define UPDATE_STRETCH 2
 #define UPDATE_TEXT 4
 #define UPDATE_TIME 8
+#define UPDATE_ROTATION 16
+#define UPDATE_SCALE 32
 
 // MISC
 #define CAP_POS 1
 #define CAP_NEG 2
 #define NUM_AXIS 3
-#define UPDATE_TYPES 5
+#define UPDATE_TYPES 7
 #define ANIMATION_COMPLETE_CB std::function<void(void)> callback
 
 extern double deltaTime;
@@ -60,6 +64,8 @@ typedef struct KeyFrame {
     AnimationData<vec3> pos;
     AnimationData<vec3> stretch;
     AnimationData<string> text;
+    AnimationData<vec3> rotation;
+    AnimationData<float> scale;
     float targetTime;
     float currentTime = 0.0f;
     int type;
@@ -78,6 +84,8 @@ class AnimationController {
     int addKeyFrame(SceneObject *target, KeyFrame *keyFrame);
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
+    int updateRotation(SceneObject *target, KeyFrame *keyFrame);
+    int updateScale(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
@@ -86,6 +94,7 @@ class AnimationController {
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
+    UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
  private:
     map<string, KeyFrames> keyFrameStore_;
     std::mutex controllerLock_;

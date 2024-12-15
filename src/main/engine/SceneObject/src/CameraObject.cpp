@@ -11,6 +11,7 @@
 #include <string>
 #include <cstdio>
 #include <algorithm>
+#include <vector>
 #include <CameraObject.hpp>
 
 CameraObject::CameraObject(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
@@ -44,6 +45,10 @@ void CameraObject::update() {
         target_ = new GameObject(gfxController_);
     }
     render();
+    // Higher priority object renders are deferred
+    vector<SceneObject *> lowDefer;
+    vector<SceneObject *> mediumDefer;
+    vector<SceneObject *> highDefer;
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
         // Send the current screen res to each object
         /// @todo Maybe use a global variable for resolution?
@@ -64,8 +69,34 @@ void CameraObject::update() {
         }
         // Send the VP matrix for the camera to its gameobjects
         // Render the game objects
-        (*it)->update();
+        switch ((*it)->getRenderPriority()) {
+            case RenderPriority::HIGH:
+                highDefer.push_back(*it);
+                break;
+            case RenderPriority::MEDIUM:
+                mediumDefer.push_back(*it);
+                break;
+            case RenderPriority::LOW:
+                lowDefer.push_back(*it);
+                break;
+            default:
+                fprintf(stderr, "CameraObject::update: Bad render priority received! %d\n",
+                    (*it)->getRenderPriority());
+                assert(0);
+                break;
+        }
     }
+    auto renderLoop = [](vector<SceneObject *> objs) {
+        for (auto obj : objs) {
+            obj->update();
+        }
+    };
+    // Render low priority objects first
+    renderLoop(lowDefer);
+    // Then medium...
+    renderLoop(mediumDefer);
+    // Then high on top of all of those
+    renderLoop(highDefer);
 }
 
 void CameraObject::addSceneObject(SceneObject *sceneObject) {

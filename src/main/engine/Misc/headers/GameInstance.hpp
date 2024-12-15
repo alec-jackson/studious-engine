@@ -84,7 +84,7 @@ class GameInstance {
     TextObject *createText(string message, vec3 position, float scale, string fontPath, unsigned int programId,
         string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
-        string objectName);
+        SpriteAnchor anchor, string objectName);
     UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
         unsigned int programId, string objectName);
     int getWidth();

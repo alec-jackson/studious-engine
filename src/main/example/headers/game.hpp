@@ -38,6 +38,7 @@ enum GameState {
     CONFIRMING,
     CONFIRM_CHAT,
     DAMAGE_CHECK,
+    HEALTH_HIDE,
     QUESTION_CLEANUP
 };
 
@@ -57,7 +58,7 @@ struct GameLogicInfo {
     int prevOption = 0;
     float currentVolume = 50.0f;
     float maxSongVolume = 50.0f;
-    float songTimePass = 12.0f;
+    float songTimePass = 1.0f;
     float volumeRampSeconds = 2.0f;
     float currentVolumeRampSeconds = 0.0f;
     int songChannel = -1;

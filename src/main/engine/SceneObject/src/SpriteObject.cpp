@@ -15,9 +15,9 @@
 #include <SpriteObject.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
-        string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
+        string objectName, ObjectType type, SpriteAnchor anchor, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath },
-    tint_ { vec4(0) } {
+    tint_ { vec4(0) }, anchor_ { anchor } {
     printf("SpriteObject::SpriteObject: Creating sprite %s\n", objectName.c_str());
     initializeShaderVars();
     initializeSprite();
@@ -49,8 +49,23 @@ void SpriteObject::initializeSprite() {
     gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
     gfxController_->generateMipMap();
 
+    // Perform anchor points here
     auto x = 0.0f, y = 0.0f;
-    auto x2 = x + (texture->w * scale), y2 = y - (texture->h * scale);
+    switch (anchor_) {
+        case BOTTOM_LEFT:
+            x = 0.0f;
+            y = 0.0f;
+            break;
+        case CENTER:
+            x = -1 * ((texture->w) / 2.0f);
+            y = (texture->h) / 2.0f;
+            break;
+        default:
+            fprintf(stderr, "SpriteObject::initializeSprite: Unsupported anchor type %d\n", anchor_);
+            assert(false);
+            break;
+    }
+    auto x2 = x + (texture->w), y2 = y - (texture->h);
     // Use textures to create each character as an independent object
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
@@ -80,7 +95,12 @@ SpriteObject::~SpriteObject() {
 
 void SpriteObject::render() {
     translateMatrix_ = glm::translate(mat4(1.0f), position);
-    modelMat_ = translateMatrix_;
+    rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
+            vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
+            vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
+            vec3(0, 0, 1));
+    scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
+    modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);

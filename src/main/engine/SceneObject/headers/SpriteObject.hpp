@@ -15,12 +15,17 @@
 #include <SceneObject.hpp>
 #include <ColliderObject.hpp>
 
+enum SpriteAnchor {
+    CENTER,
+    BOTTOM_LEFT
+};
+
 class SpriteObject : public SceneObject {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
     explicit SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
-        string objectName, ObjectType type, GfxController *gfxController);
+        string objectName, ObjectType type, SpriteAnchor anchor, GfxController *gfxController);
     ~SpriteObject() override;
 
     // Render method
@@ -44,6 +49,8 @@ class SpriteObject : public SceneObject {
 
     unsigned int vao_;
     unsigned int vbo_;
+
+    SpriteAnchor anchor_;
 
     mat4 modelMat_;
     vec3 tint_;
