@@ -118,20 +118,22 @@ const char *sgrunty =
 const char *honeycombFull =
     "src/resources/images/Honeycomb.png";
 
-const char *team1 =
-    "src/resources/images/Team 1.png";
-
 const float BG_VOLUME = 50.0f;
 const float BG_RAMP_SECONDS = 2.0f;
 const int MAX_HEALTH = 5;
 
-TeamStats teamStats[3] = {
-    {MAX_HEALTH - 1, 1},  // 0 = Team 1
-    {MAX_HEALTH, 1},  // 1 = Team 2
-    {MAX_HEALTH, 1}   // 2 = Team 3
+#define TEAM_COUNT 3
+
+TeamStats teamStats[TEAM_COUNT] = {
+    {MAX_HEALTH - 1, 1, "src/resources/images/Team 1.png"},  // 0 = Team 1
+    {MAX_HEALTH, 1, "src/resources/images/Team 2.png"},  // 1 = Team 2
+    {MAX_HEALTH, 1, "src/resources/images/Team 3.png"}   // 2 = Team 3
 };
 
+#include <GameQuestions.hpp>
 
+string pafMessage = "You want to phone a friend? Go ahead, blindly trust your end! You have twenty seconds to discuss, time is ticking, don't make a fuss!";
+int pafTime = 5.0f;
 TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
@@ -142,6 +144,8 @@ std::atomic<int> wordsSpoken(0);
 std::atomic<int> uiElementsReset(0);
 std::atomic<int> healthShown(0);
 std::atomic<int> healthHidden(0);
+std::atomic<int> pafShown(0);
+std::atomic<int> pafHidden(0);
 int wordCount;
 double deltaTime = 0.0f;
 int WORDS_PER_LINE = 8;  // Arbitrary
@@ -187,8 +191,9 @@ void playRandomHurtSound(GameInstance *currentGame) {
     currentGame->playSound(hurtSounds.at(random_number).c_str(), 128);
 }
 
-vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, GameInstance *currentGame) {
+vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, GameInstance *currentGame, int shift=0) {
     printf("showTeamHealth: Entry - teamNumber %d\n", teamNumber);
+    float verticalShift = 150.0f * shift;
     float hcDisplacement = 60.0f;
     float startingX = -90.0f;
     float leftEndX = 500.0f;
@@ -197,19 +202,18 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
     float endStretch = 320.0f;
     float startStretch = -50.0f;
     float endBox = 355.0f;
-    vec3 boxPos = vec3(-140.0f, 425.0f, 0.0f);
+    vec3 boxPos = vec3(-140.0f, 465.0f + verticalShift, 0.0f);
     vec3 boxStretch = vec3(startStretch, startStretch, 0.0f);
 
     // Grab the current health for this team
-    assert(teamNumber > 0);
+    assert(teamNumber >= 0);
     assert(teamNumber < (sizeof(teamStats) / sizeof(TeamStats)));
 
-    auto currentHealth = teamStats[teamNumber - 1].teamHealth;
+    auto currentHealth = teamStats[teamNumber].teamHealth;
 
-    // Team 1 Image
-    vec3 t1EndPos = vec3(380.0f, 410.0f, 0.0f);
-    vec3 t1StartPos = vec3(-150.0f, 410.0f, 0.0f);
-
+    // Team image positions
+    vec3 teamEndPos = vec3(380.0f, 450.0f + verticalShift, 0.0f);
+    vec3 teamStartPos = vec3(-150.0f, 450.0f + verticalShift, 0.0f);
 
     // Create textbox for healthbar backdrop
     auto box = currentGame->createUi(textBoxImage,
@@ -218,26 +222,26 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
         startStretch,
         -50.0f,
         gfxController.getProgramId(4).get(),
-    "healthbg");
+    "healthbg" + std::to_string(teamNumber));
 
     renderer->addSceneObject(box);
 
-    auto t1 = currentGame->createSprite(team1,
-        t1StartPos,
+    auto teamSprite = currentGame->createSprite(teamStats[teamNumber].imagePath,
+        teamStartPos,
         0.40f,
         gfxController.getProgramId(3).get(),
         SpriteAnchor::BOTTOM_LEFT,
-        "team1");
+        "team" + std::to_string(teamNumber));
 
     // Programatically create health bar icons
     for (int i = 0; i < MAX_HEALTH; ++i) {
         auto honeyComb = currentGame->createSprite(
             honeycombFull,
-            vec3(startingX, 400.0f, 0.0f),
+            vec3(startingX, 440.0f + verticalShift, 0.0f),
             0.45f,
             gfxController.getProgramId(3).get(),
             SpriteAnchor::BOTTOM_LEFT,
-            "hc" + std::to_string(i));
+            "hc" + std::to_string(i) + " " + std::to_string(teamNumber));
 
         // Based in the team's current health, change the tint of each honeycomb
         if (i > currentHealth - 1) {
@@ -252,7 +256,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
     }
 
     // Add team object last (top render)
-    renderer->addSceneObject(t1);
+    renderer->addSceneObject(teamSprite);
 
     // Create animations for each health icon
     float leftReachTime = 0.7f;
@@ -267,7 +271,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
     // Create the initial slide to the right keyframe
     auto kf0 = AnimationController::createKeyFrameCb(
         UPDATE_POS,
-        t1EndPos,
+        teamEndPos,
         vec3(0),
         "",
         cb,
@@ -275,7 +279,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
 
     // Create a kf1 based on the deltaSlideTime and displacement
     // Add the keyframes to the animation controller
-    animationController.addKeyFrame(t1, kf0);
+    animationController.addKeyFrame(teamSprite, kf0);
 
     // Iterate through each honeycomb object and create animations for them
     for (auto hc : objectCache) {
@@ -332,7 +336,7 @@ vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, Gam
 
     // Add the background box and team image after honeycombs in objectCache
     objectCache.push_back(box);
-    objectCache.push_back(t1);
+    objectCache.push_back(teamSprite);
 
     return objectCache;
 }
@@ -359,21 +363,17 @@ void hideTeamHealth(vector<SceneObject *> objectCache) {
     // This is kind of backwards, but I am copying constants from showTeamHealth for now
     float hcDisplacement = 60.0f;
     float startingX = -90.0f;
-    float leftEndX = 440.0f;
 
-    float endStretch = 320.0f;
-    float startStretch = -50.0f;
-    float endBox = 355.0f;
-    vec3 boxPos = vec3(-140.0f, 425.0f, 0.0f);
-    vec3 boxStretch = vec3(startStretch, startStretch, 0.0f);
+    float endStretch = -50.0f;
+    float endBox = -140.0f;
+    vec3 boxStretch = vec3(endStretch, endStretch, 0.0f);
 
     float leftReachTime = 0.7f;
     float deltaSlideTime = 0.1f;
     float maxDeltaSlide = 0.0f;
 
-    // Team 1 Image
-    vec3 t1EndPos = vec3(380.0f, 410.0f, 0.0f);
-    vec3 t1StartPos = vec3(-150.0f, 410.0f, 0.0f);
+    // Team image positions
+    float teamEnd = -150.0f;
     // Callback to help determine when animation is complete
     auto cb = []() {
         healthHidden++;
@@ -432,6 +432,9 @@ void hideTeamHealth(vector<SceneObject *> objectCache) {
     // Grab the box from the objectCache
     auto box = objectCache.at(MAX_HEALTH);
 
+    auto boxPos = box->getPosition();
+    boxPos.x = endBox;
+
     // Reverse the background health image animation
     // Shrink the text box and hide it
     auto kfbox = AnimationController::createKeyFrame(
@@ -441,7 +444,6 @@ void hideTeamHealth(vector<SceneObject *> objectCache) {
         "",
         maxDeltaSlide);
 
-    boxStretch.x = endStretch;
     auto kf1box = AnimationController::createKeyFrameCb(
         UPDATE_POS,
         boxPos,
@@ -455,6 +457,8 @@ void hideTeamHealth(vector<SceneObject *> objectCache) {
 
     // Grab the team image from the objectCache
     auto teamImage = objectCache.at(MAX_HEALTH + 1);
+    auto teamPos = teamImage->getPosition();
+    teamPos.x = teamEnd;
 
     // Hide the team image with the same timing as everything else
     auto teamKf = AnimationController::createKeyFrame(
@@ -466,7 +470,7 @@ void hideTeamHealth(vector<SceneObject *> objectCache) {
 
     auto teamKf1 = AnimationController::createKeyFrameCb(
         UPDATE_POS,
-        t1StartPos,
+        teamPos,
         vec3(0),
         "",
         cb,
@@ -942,7 +946,7 @@ void hideOptions(vector<SceneObject *> objects, GameLogicInfo *game) {
     }
 }
 
-vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
+vector<SceneObject *> drawOptions(vector<string> options, int team, gameInfo *gamein) {
     vector<SceneObject *>uiElements;
     auto currentGame = gamein->currentGame;
     auto shift = vec3(0.0f, 130.0f, 0.0f);
@@ -1039,6 +1043,9 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
         animationController.addKeyFrame(textBox, t1);
     }
 
+    // Return early if team does not have paf
+    if (!teamStats[team].paf) return uiElements;
+
     auto endPafButton = vec3(1030.0f, 400.0f, 0.0f);
     auto midPafButton = vec3(1130.0f, 300.0f, 0.0f);
     auto startPafButton = vec3(1280.0f, 300.0f, 0.0f);
@@ -1093,7 +1100,6 @@ vector<SceneObject *> drawOptions(vector<string> options, gameInfo *gamein) {
     uiElements.push_back(textBox);
 
     gamein->gameCamera->addSceneObject(textBox);
-    uiElements.push_back(textBox);
 
     // Start writing text after 2.0f seconds
     auto t0 = AnimationController::createKeyFrame(
@@ -1120,19 +1126,26 @@ bool debounceCheck(GameLogicInfo *game) {
     return game->currentDebounce > game->debounceSeconds;
 }
 
-int selectionHandler(GameLogicInfo *game) {
+int selectionHandler(GameLogicInfo *game, vector<SceneObject *> optionCache, int team) {
     int result = -1;
+    bool hasPaf = teamStats[team].paf;
+    int numOptions = optionCache.size() / 2;
+    int numOptionsExcludePaf = numOptions - (hasPaf ? 1 : 0);
+    assert(numOptions > 0);
+    printf("selectionHandler: currentOption %d, numOptions: %d, numOptionsExcludePaf: %d\n",
+        game->currentOption, numOptions, numOptionsExcludePaf);
+    // numOptions = 5 w/ paf
     if (game->currentGame->getKeystate()[SDL_SCANCODE_W] && debounceCheck(game)) {
         // "up" action
-        // Change the selected option up to 3
-        if (game->currentOption < 3) {
+        // Change the selected option up to numOptionsExcludePaf - 1 (size to index)
+        if (game->currentOption < numOptionsExcludePaf - 1) {
             game->currentOption++;
             game->currentGame->playSound(5, 0, 50);
         }
         game->currentDebounce = 0.0f;
     } else if (game->currentGame->getKeystate()[SDL_SCANCODE_S] && debounceCheck(game)) {
         // "up" action
-        // Change the selected option up to 3
+        // Don't go below index 0
         if (game->currentOption > 0) {
             game->currentOption--;
             game->currentGame->playSound(5, 0, 50);
@@ -1141,16 +1154,16 @@ int selectionHandler(GameLogicInfo *game) {
     } else if (game->currentGame->getKeystate()[SDL_SCANCODE_D] && debounceCheck(game)) {
         // "right" action
         // Switch to option 4
-        if (game->currentOption != 4) {
+        if (hasPaf && game->currentOption != numOptionsExcludePaf) {
             game->prevOption = game->currentOption;
-            game->currentOption = 4;
+            game->currentOption = numOptionsExcludePaf;
             game->currentGame->playSound(5, 0, 50);
         }
         game->currentDebounce = 0.0f;
     } else if (game->currentGame->getKeystate()[SDL_SCANCODE_A] && debounceCheck(game)) {
         // "left" action
         // Change the selected option back from "PAF"
-        if (game->currentOption == 4) {
+        if (hasPaf && game->currentOption == numOptionsExcludePaf) {
             game->currentOption = game->prevOption;
             game->currentGame->playSound(5, 0, 50);
         }
@@ -1179,7 +1192,6 @@ bool doneSpeaking() {
     auto res = wordsSpoken == wordCount;
     // Check if speaking has completed
     if (res) {
-        wordCount = 0;
         wordsSpoken = 0;
     }
     return res;
@@ -1191,30 +1203,34 @@ bool checkAnswer(int currentQuestion, string answer) {
     return gameQuestions[currentQuestion].answer.compare(answer) == 0;
 }
 
-bool doneHealthDisplay(int maxHealth) {
+bool doneHealthDisplay(vector<SceneObject *> healthCache) {
     bool result = false;
-    if (maxHealth + 2 == healthShown) {
+    int elemCount = healthCache.size();
+    printf("doneHealthDisplay: elemCount: %d, healthShown: %d\n",
+        elemCount, healthShown.load());
+    if (elemCount == healthShown) {
         result = true;
         healthShown = 0;
     }
     return result;
 }
 
-bool doneHealthHide(int maxHealth, GameInstance *game, vector<SceneObject *> objectCache) {
+bool doneHealthHide(GameInstance *game, vector<SceneObject *> healthCache) {
     bool result = false;
-    if (maxHealth + 2 == healthHidden) {
+    int elemCount = healthCache.size();
+    printf("doneHealthHide: elemCount: %d, healthHidden: %d\n",
+        elemCount, healthHidden.load());
+    if (elemCount == healthHidden) {
         result = true;
         healthHidden = 0;
 
         // Perform object cleanup here...
-        for (auto obj : objectCache) {
+        for (auto obj : healthCache) {
             game->removeSceneObject(obj->getObjectName());
         }
         // Clear vector
-        objectCache.clear();
+        healthCache.clear();
     }
-    int healthHideVal = healthHidden;
-    printf("Healthhidden: %d\n", healthHideVal);
     return result;
 }
 
@@ -1255,6 +1271,18 @@ bool volumeRamp(float maxVolume, double volumeRampTime, AudioDirection direction
     game->changeVolume(soundIndex, currentVolume);
     if (result) {
         currentRampTime = 0.0f;
+    }
+    return result;
+}
+
+bool optionsDrawn(vector<SceneObject *> objectCache) {
+    // Options = ui cache size / 2 because each option is a text box and text object
+    auto targetOptions = objectCache.size() / 2;
+    assert(targetOptions > 0);  // We shouldn't ever have zero options...
+    auto result = false;
+    if (optionsReady == targetOptions) {
+        optionsReady = 0;
+        result = true;
     }
     return result;
 }
@@ -1324,6 +1352,131 @@ bool showcaseHandler(const GameQuestions &cq, GameInstance *game, CameraObject *
     return completedShowcase;
 }
 
+bool pafTimerShown(vector<SceneObject *> pafCache) {
+    auto result = false;
+    if (pafShown == pafCache.size()) {
+        pafShown = 0;
+        result = true;
+    }
+    return result;
+}
+
+bool pafTimerHidden(vector<SceneObject *> pafCache, GameInstance *game) {
+    auto result = false;
+    if (pafHidden == pafCache.size()) {
+        pafHidden = 0;
+        result = true;
+
+        // Perform cleanup
+        for (auto obj : pafCache) {
+            game->removeSceneObject(obj->getObjectName());
+        }
+    }
+    return result;
+}
+
+void hidePafTimer(vector<SceneObject *> pafCache, GameInstance *game) {
+    float hideTime = 1.0f;
+    auto startTextPos = vec3(-90.0f, 420.0f, 0.0f);
+    auto startBoxPos = vec3(-140.0f, 500.0f, 0.0f);
+
+    auto cb = []() {
+        pafHidden++;
+    };
+
+    for (auto obj : pafCache) {
+        vec3 pos = vec3(0);
+        if (obj->type() == UI_OBJECT) pos = startBoxPos;
+        if (obj->type() == TEXT_OBJECT) {
+            pos = startTextPos;
+            // Set the timer text to zero
+            auto cobj = static_cast<TextObject *>(obj);
+            cobj->setMessage("0");
+        }
+        auto kf = AnimationController::createKeyFrameCb(
+            UPDATE_POS,
+            pos,
+            vec3(0),
+            "",
+            cb,
+            hideTime);
+
+        animationController.addKeyFrame(obj, kf);
+    }
+}
+
+vector<SceneObject *> createPafTimer(GameInstance *game, CameraObject *renderer) {
+    auto textScale = 1.0f;
+    auto transitionTime = 1.0f;
+    auto fontPath = "src/resources/fonts/Comic Sans MS.ttf";
+    auto textProgramId = gfxController.getProgramId(2).get();
+    vector<SceneObject *> pafCache;
+
+    auto cb = []() {
+        pafShown++;
+    };
+
+    auto endTextPos = vec3(630.0f, 420.0f, 0.0f);
+    auto endBoxPos = vec3(580.0f, 500.0f, 0.0f);
+
+    auto startTextPos = vec3(-50.0f, 420.0f, 0.0f);
+    auto startBoxPos = vec3(-100.0f, 500.0f, 0.0f);
+    // Create the text and UI objects on screen
+    auto pafText = game->createText(
+        std::to_string(pafTime),
+        startTextPos,
+        textScale,
+        fontPath,
+        textProgramId,
+        "pafTimer");
+    pafText->setRenderPriority(RenderPriority::HIGH);
+
+    auto pafBox = game->createUi(textBoxImage,
+        startBoxPos,
+        0.7f,
+        -50.0f,
+        -50.0f,
+        gfxController.getProgramId(4).get(),
+        "pafBoxBg");
+    pafBox->setRenderPriority(RenderPriority::MEDIUM);
+    pafCache.push_back(pafText);
+    pafCache.push_back(pafBox);
+    // Add the created gameobjects to the renderer
+    for (auto obj : pafCache) {
+        renderer->addSceneObject(obj);
+    }
+
+    // Add animation keyframes for timer entry
+    auto boxKf = AnimationController::createKeyFrameCb(
+        UPDATE_POS,
+        endBoxPos,
+        vec3(0),
+        "",
+        cb,
+        transitionTime);
+
+    auto textKf = AnimationController::createKeyFrameCb(
+        UPDATE_POS,
+        endTextPos,
+        vec3(0),
+        "",
+        cb,
+        transitionTime);
+
+    animationController.addKeyFrame(pafBox, boxKf);
+    animationController.addKeyFrame(pafText, textKf);
+    return pafCache;
+}
+
+int getNextTeam(int currentTeam) {
+    // Check which teams are gone
+    for (int i = 0; i < TEAM_COUNT; ++i) {
+        // If a team is dead, don't choose it
+        
+    }
+    return 0;
+}
+
 /*
  (int) mainLoop starts rendering objects in the current GameInstance to the
  main SDL window. The methods called from the currentGame object render parts
@@ -1333,7 +1486,7 @@ bool showcaseHandler(const GameQuestions &cq, GameInstance *game, CameraObject *
  mainLoop closes prematurely, an error code is returned.
 */
 int mainLoop(gameInfo* gamein) {
-    auto gameState = WAITING;
+    auto gameState = BEGIN_ROUND;
     Uint64 begin, end;
     int running = 1;
     double currentTime = 0.0, sampleTime = 1.0;
@@ -1355,7 +1508,8 @@ int mainLoop(gameInfo* gamein) {
     vector<SceneObject *> uiObjects;
     queue<SceneObject *>chatObjectCache;
     vector<SceneObject *> healthCache;
-    int currentQuestion = 4;
+    vector<SceneObject *> tempCache;
+    int currentQuestion = 5;
     string answer = "";
     // showcaseImage cleanup can be run in callback
     auto showcaseImageCleanupCb = [&gamein]() {
@@ -1363,6 +1517,17 @@ int mainLoop(gameInfo* gamein) {
         showcaseImage = nullptr;
     };
     KeyFrame *tempKf;
+
+    // Text dimming for option selection
+    auto dimColor = vec3(0.3f, 0.3f, 0.3f);
+    auto brightColor = vec3(1.0f);
+
+    // PAF timer objects
+    vector<SceneObject *> pafCache;
+    float remainingPafTime = 0.0f;
+
+    // Misc counters
+    int stageCounter = 0;
     while (running) {
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
@@ -1399,6 +1564,62 @@ int mainLoop(gameInfo* gamein) {
          */
 
         switch (gameState) {
+            case BEGIN_ROUND:
+                // Show all team health bars
+                healthCache.clear();
+                // Show each health bar
+                for (int i = 0; i < TEAM_COUNT; ++i) {
+                    tempCache = showTeamHealth(i, gamein->gameCamera, gamein->currentGame, i - 1);
+                    // Insert the tempCache elements into the healthcache
+                    healthCache.insert(healthCache.end(), tempCache.begin(), tempCache.end());
+                }
+
+                // Say some introductory message
+                chatObjectCache = showMessage("It looks like team 1 is behind.", gamein->gameCamera, gamein->currentGame);
+                gameState = BEGIN_ROUND_UI_WAIT;
+                break;
+
+            case BEGIN_ROUND_UI_WAIT:
+                // Wait on the message and all health elements to be drawn
+                if (doneSpeaking()) {
+                    stageCounter++;
+                }
+                if (doneHealthDisplay(healthCache)) {
+                    stageCounter++;
+                }
+                if (stageCounter == 2 && gameTimer(1.5f)) {
+                    // Show the health elements for 1.5 seconds
+                    gameState = BEGIN_ROUND_UI_CLOSE;
+                    printf("HALT");
+                    stageCounter = 0;
+
+                    // Hide all elements
+                    hideMessage(chatObjectCache, gamein->currentGame);
+                    for (int i = 0; i < TEAM_COUNT; ++i) {
+                        // Create subvectors for each team
+                        auto vecSize = healthCache.size() / TEAM_COUNT;
+                        auto subStart = healthCache.begin() + (vecSize * i);
+                        auto subEnd = healthCache.begin() + (vecSize * (i + 1));
+                        auto subVec = vector<SceneObject *> (subStart, subEnd);
+
+                        // Remove health bar by subvector
+                        hideTeamHealth(subVec);
+                    }
+                }
+                break;
+            case BEGIN_ROUND_UI_CLOSE:
+                if (doneHealthHide(gamein->currentGame, healthCache)) {
+                    stageCounter++;
+                }
+                if (messageHidden()) {
+                    stageCounter++;
+                }
+                if (stageCounter == 2) {
+                    // Go to waiting phase
+                    gameState = WAITING;
+                    stageCounter = 0;
+                }
+                break;
             case WAITING:
                 // If nothing is happening (usually waiting for wheel input)
                 chatObjectCache = showMessage(gameQuestions[currentQuestion].question,
@@ -1411,41 +1632,115 @@ int mainLoop(gameInfo* gamein) {
                 break;
             case SHOWCASE:
                 if (showcaseHandler(gameQuestions[currentQuestion], gamein->currentGame, gamein->gameCamera)) {
-                    uiObjects = drawOptions(gameQuestions[currentQuestion].getOptions(), gamein);
-                    gameState = ANSWERING;
+                    uiObjects = drawOptions(gameQuestions[currentQuestion].getOptions(), 0, gamein);
+                    gameState = DISPLAY_OPTIONS;
                 }
+                break;
+            case DISPLAY_OPTIONS:
+                if (optionsDrawn(uiObjects)) gameState = ANSWERING;
                 break;
             case ANSWERING:
                 // "dim" unselected options
-                if (optionsReady == 5) {
-                    selectionHandlerResult = selectionHandler(&game);
-                    auto dimColor = vec3(0.3f, 0.3f, 0.3f);
-                    auto brightColor = vec3(1.0f);
-                    string key = "OptionText";
-                    vector<TextObject *> texts;
-                    // Dim all optiontext objects
-                    for (int i = 0; i < 5; ++i) {
-                        auto obj = currentGame->getSceneObject(key + std::to_string(i));
-                        assert(obj != nullptr);
-                        texts.push_back(static_cast<TextObject *>(obj));
+                selectionHandlerResult = selectionHandler(&game, uiObjects, 0);
+                // Dim unselected options, highlight selected option
+                for (int i = 0; i < (uiObjects.size() / 2); ++i) {
+                    auto obj = currentGame->getSceneObject(string("OptionText") + std::to_string(i));
+                    assert(obj != nullptr);
+                    // Cast the object to TextObject
+                    assert(obj->type() == ObjectType::TEXT_OBJECT);
+                    auto cobj = static_cast<TextObject *>(obj);
+                    if (game.currentOption == i) {
+                        cobj->setColor(brightColor);
+                    } else {
+                        cobj->setColor(dimColor);
                     }
-                    for (auto sel : texts) {
-                        sel->setColor(dimColor);
+                }
+                if (selectionHandlerResult != -1) {
+                    // Perform selection operation
+                    gameState = CONFIRMING;
+                    hideOptions(uiObjects, &game);
+                    hideMessage(chatObjectCache, game.currentGame);
+                    // The last option is PAF IF PAF is active!!!
+                    if (teamStats[0].paf && selectionHandlerResult == (uiObjects.size() / 2) - 1) {
+                        answer = "PHONE A FRIEND";
+                        gameState = PHONE_A_FRIEND;
+                        // Remove paf from teamStats
+                        teamStats[0].paf = 0;
+                        // Revert current selection to zero
+                        game.currentOption = 0;
+                    } else {
+                        answer = gameQuestions[currentQuestion].options[selectionHandlerResult];
                     }
-                    // Brighten the selected one
-                    texts.at(game.currentOption)->setColor(brightColor);
-                    if (selectionHandlerResult != -1) {
-                        // Perform selection operation
-                        gameState = CONFIRMING;
-                        optionsReady = 0;
-                        hideOptions(uiObjects, &game);
-                        hideMessage(chatObjectCache, game.currentGame);
-                        if (selectionHandlerResult == 4) {
-                            answer = "PHONE A FRIEND";
-                        } else {
-                            answer = gameQuestions[currentQuestion].options[selectionHandlerResult];
-                        }
-                        printf("mainLoop: User answered %s\n", answer.c_str());
+                    printf("mainLoop: User answered %s\n", answer.c_str());
+                }
+                break;
+            case PHONE_A_FRIEND:
+                // Wait for the current message to hide
+                if (!messageHidden()) break;
+                chatObjectCache = showMessage(pafMessage, gamein->gameCamera, gamein->currentGame);
+                gameState = PAF_PRECLOCK;
+                break;
+            case PAF_PRECLOCK:
+                if (doneSpeaking()) {
+                    gameState = PAF_ENTRY;
+
+                    // Configure the paf clock objects
+                    pafCache = createPafTimer(gamein->currentGame, gamein->gameCamera);
+                    remainingPafTime = pafTime;
+                }
+                break;
+            case PAF_ENTRY:
+                // Waits for the PAF elements to be drawn
+                if (pafTimerShown(pafCache)) {
+                    gameState = PAF_CLOCK;
+                }
+                break;
+            case PAF_CLOCK:
+                // Start a game timer, and show the active time on-screen
+                if (gameTimer(pafTime)) {
+                    gameState = PAF_EXIT;
+                    hidePafTimer(pafCache, gamein->currentGame);
+                    // Hide the current message
+                    hideMessage(chatObjectCache, gamein->currentGame);
+
+                } else {
+                    // Update the text on the timer object
+                    assert(!pafCache.empty());
+                    assert(pafCache.front()->type() == ObjectType::TEXT_OBJECT);
+                    auto cobj = static_cast<TextObject *>(pafCache.front());
+                    // Change the message to the remaining time
+                    cobj->setMessage(std::to_string(static_cast<int>(remainingPafTime) + 1));
+                    // Don't subtract deltaTime until later to avoid negative numbers
+                    remainingPafTime -= deltaTime;
+                }
+            case PAF_EXIT:
+                // Wait for message to hide
+                if (messageHidden()) {
+                    stageCounter++;
+                }
+                // Wait for paf timer to hide
+                if (pafTimerHidden(pafCache, gamein->currentGame)) {
+                    stageCounter++;
+                }
+
+                // Reset to waiting stage if all elements hidden
+                // Make stage counter global for easier use
+                if (stageCounter == 2) {
+                    gameState = WAITING;
+                    stageCounter = 0;
+                    // Remove the showcase image when we PAF...
+                    if (showcaseImage != nullptr) {
+                        // Can probably use constants for transformations and timing later
+                        tempKf = AnimationController::createKeyFrameCb(
+                            UPDATE_ROTATION | UPDATE_SCALE,
+                            vec3(0),
+                            vec3(0),
+                            "",
+                            showcaseImageCleanupCb,
+                            0.7f);
+                        tempKf->scale.desired = 0.0f;
+                        tempKf->rotation.desired = vec3(0.0f);
+                        animationController.addKeyFrame(showcaseImage, tempKf);
                     }
                 }
                 break;
@@ -1475,15 +1770,19 @@ int mainLoop(gameInfo* gamein) {
                     animationController.addKeyFrame(showcaseImage, tempKf);
                 }
                 // Also need to show the health bar for each team
-                healthCache = showTeamHealth(1, gamein->gameCamera, gamein->currentGame);
+                healthCache = showTeamHealth(0, gamein->gameCamera, gamein->currentGame);
                 gameState = CONFIRM_CHAT;
                 break;
             case CONFIRM_CHAT:
-                if (doneSpeaking() && doneHealthDisplay(MAX_HEALTH)) {
+                if (doneSpeaking()) {
                     // Sleep for a few seconds -> make a function for that
                     printf("Finished speaking final phrase\n");
+                    stageCounter++;
                 }
-                if (wordCount == 0) {
+                if (doneHealthDisplay(healthCache)) {
+                    stageCounter++;
+                }
+                if (stageCounter == 2) {
                     if (gameTimer(1.0f)) {
                         // Hurt the team if the answer is wrong
                         if (!checkAnswer(currentQuestion, answer)) {
@@ -1494,6 +1793,7 @@ int mainLoop(gameInfo* gamein) {
                             updateHealthIndicator(healthCache, teamStats[0].teamHealth);
                         }
                         gameState = DAMAGE_CHECK;
+                        stageCounter = 0;
                     }
                 }
                 break;
@@ -1507,7 +1807,7 @@ int mainLoop(gameInfo* gamein) {
                 break;
             case HEALTH_HIDE:
                 // We can't directly AND the wait calls, so we add an extra state
-                if (doneHealthHide(MAX_HEALTH, gamein->currentGame, healthCache)) {
+                if (doneHealthHide(gamein->currentGame, healthCache)) {
                     gameState = QUESTION_CLEANUP;
                 }
                 break;
@@ -1515,7 +1815,7 @@ int mainLoop(gameInfo* gamein) {
                 if (messageHidden()) {
                     // GO back to waiting, choose next question
                     currentQuestion++;
-                    gameState = WAITING;
+                    gameState = BEGIN_ROUND;
                 }
                 break;
             default:

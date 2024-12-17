@@ -31,10 +31,19 @@ struct gameInfo {
 };
 
 enum GameState {
+    BEGIN_ROUND,
+    BEGIN_ROUND_UI_WAIT,
+    BEGIN_ROUND_UI_CLOSE,
     CHATTING,
+    DISPLAY_OPTIONS,
     ANSWERING,
     SHOWCASE,
     WAITING,
+    PHONE_A_FRIEND,
+    PAF_PRECLOCK,
+    PAF_ENTRY,
+    PAF_CLOCK,
+    PAF_EXIT,
     CONFIRMING,
     CONFIRM_CHAT,
     DAMAGE_CHECK,
@@ -85,4 +94,5 @@ enum AudioDirection {
 struct TeamStats {
     int teamHealth;
     int paf;  // Phone a friend
+    string imagePath;
 };
