@@ -125,8 +125,8 @@ const int MAX_HEALTH = 5;
 #define TEAM_COUNT 3
 
 TeamStats teamStats[TEAM_COUNT] = {
-    {MAX_HEALTH - 1, 1, "src/resources/images/Team 1.png"},  // 0 = Team 1
-    {MAX_HEALTH, 1, "src/resources/images/Team 2.png"},  // 1 = Team 2
+    {MAX_HEALTH - 4, 1, "src/resources/images/Team 1.png"},  // 0 = Team 1
+    {MAX_HEALTH - 3, 1, "src/resources/images/Team 2.png"},  // 1 = Team 2
     {MAX_HEALTH, 1, "src/resources/images/Team 3.png"}   // 2 = Team 3
 };
 
@@ -139,13 +139,13 @@ TextObject *collDebugText;
 TextObject *pressUText;
 // This is kind of bad, but I am going to store showcase images as a global
 SpriteObject *showcaseImage = nullptr;
-std::atomic<int> optionsReady(0);
+std::atomic<unsigned int> optionsReady(0);
 std::atomic<int> wordsSpoken(0);
 std::atomic<int> uiElementsReset(0);
 std::atomic<int> healthShown(0);
 std::atomic<int> healthHidden(0);
-std::atomic<int> pafShown(0);
-std::atomic<int> pafHidden(0);
+std::atomic<unsigned int> pafShown(0);
+std::atomic<unsigned int> pafHidden(0);
 int wordCount;
 double deltaTime = 0.0f;
 int WORDS_PER_LINE = 8;  // Arbitrary
@@ -185,14 +185,14 @@ void playRandomHurtSound(GameInstance *currentGame) {
     // Calculate random number between 2-4
     std::uniform_int_distribution<> dis(0, hurtSounds.size() - 1);
 
-    int random_number = dis(gen);
+    unsigned int random_number = dis(gen);
     assert(random_number >= 0 && random_number < hurtSounds.size());
     // Play the hurt sound determined with the random number
     currentGame->playSound(hurtSounds.at(random_number).c_str(), 128);
 }
 
-vector<SceneObject *> showTeamHealth(int teamNumber, CameraObject *renderer, GameInstance *currentGame, int shift=0) {
-    printf("showTeamHealth: Entry - teamNumber %d\n", teamNumber);
+vector<SceneObject *> showTeamHealth(unsigned int teamNumber, CameraObject *renderer, GameInstance *currentGame, int shift=0) {
+    printf("showTeamHealth: Entry - teamNumber %u\n", teamNumber);
     float verticalShift = 150.0f * shift;
     float hcDisplacement = 60.0f;
     float startingX = -90.0f;
@@ -491,7 +491,8 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
     auto textProgramId = gfxController.getProgramId(2).get();
     auto typeTime = 3.0f;  // Seconds to draw lines
     auto wipeTime = 0.5f;  // Seconds to perform text "wiping"
-    auto cutoff = vec3(0.0f, 250.0f, 0.0f);
+    // Need to account for HIGH DPI modes (250.0f for High DPI (mac), 125.0f for normal DPI (everything else))
+    auto cutoff = vec3(0.0f, 125.0f, 0.0f);
     queue<SceneObject *> generatedObjects;
 
     // How many text boxes should be present? 3? Infinite?
@@ -1129,11 +1130,9 @@ bool debounceCheck(GameLogicInfo *game) {
 int selectionHandler(GameLogicInfo *game, vector<SceneObject *> optionCache, int team) {
     int result = -1;
     bool hasPaf = teamStats[team].paf;
-    int numOptions = optionCache.size() / 2;
-    int numOptionsExcludePaf = numOptions - (hasPaf ? 1 : 0);
+    unsigned int numOptions = optionCache.size() / 2;
+    unsigned int numOptionsExcludePaf = numOptions - (hasPaf ? 1 : 0);
     assert(numOptions > 0);
-    printf("selectionHandler: currentOption %d, numOptions: %d, numOptionsExcludePaf: %d\n",
-        game->currentOption, numOptions, numOptionsExcludePaf);
     // numOptions = 5 w/ paf
     if (game->currentGame->getKeystate()[SDL_SCANCODE_W] && debounceCheck(game)) {
         // "up" action
@@ -1206,8 +1205,6 @@ bool checkAnswer(int currentQuestion, string answer) {
 bool doneHealthDisplay(vector<SceneObject *> healthCache) {
     bool result = false;
     int elemCount = healthCache.size();
-    printf("doneHealthDisplay: elemCount: %d, healthShown: %d\n",
-        elemCount, healthShown.load());
     if (elemCount == healthShown) {
         result = true;
         healthShown = 0;
@@ -1218,8 +1215,6 @@ bool doneHealthDisplay(vector<SceneObject *> healthCache) {
 bool doneHealthHide(GameInstance *game, vector<SceneObject *> healthCache) {
     bool result = false;
     int elemCount = healthCache.size();
-    printf("doneHealthHide: elemCount: %d, healthHidden: %d\n",
-        elemCount, healthHidden.load());
     if (elemCount == healthHidden) {
         result = true;
         healthHidden = 0;
@@ -1467,14 +1462,62 @@ vector<SceneObject *> createPafTimer(GameInstance *game, CameraObject *renderer)
     animationController.addKeyFrame(pafText, textKf);
     return pafCache;
 }
-
-int getNextTeam(int currentTeam) {
+vector<unsigned int> getTeams() {
+    vector<unsigned int> eligibleTeams;
     // Check which teams are gone
-    for (int i = 0; i < TEAM_COUNT; ++i) {
+    for (unsigned int i = 0; i < TEAM_COUNT; ++i) {
         // If a team is dead, don't choose it
-        
+        if (teamStats[i].teamHealth == 0) {
+            // Ignore this team
+            printf("Team %d is dead, not selecting...\n", i);
+        } else {
+            eligibleTeams.push_back(i);
+        }
     }
-    return 0;
+    return eligibleTeams;
+}
+
+unsigned int getNextTeam(unsigned int currentTeam) {
+    // Get the teams that are still alive
+    auto teams = getTeams();
+    // Add a guard to return early if we only have one team left
+    if (teams.size() == 1) {
+        return teams.front();
+    }
+    // currentTeam is either 0, 1 or 2
+    auto desiredNextTeam = currentTeam + 1 < TEAM_COUNT ? currentTeam + 1 : 0;
+    auto desiredTeamExists = false;
+    // Check if the desired team exists
+    for (auto team : teams) {
+        if (team == desiredNextTeam) {
+            desiredTeamExists = true;
+            break;
+        }
+    }
+    // If the desired team doesn't exist, then grab the one after it
+    if (!desiredTeamExists) {
+        auto firstTeam = teams.front();
+        auto foundNextTeam = false;
+        for (auto team : teams) {
+            if (team > currentTeam) {
+                foundNextTeam = true;
+                desiredNextTeam = team;
+                break;
+            }
+        }
+        // If no greater team exist, then wrap around using first team...
+        if (!foundNextTeam)
+            desiredNextTeam = firstTeam;
+    }
+    // Make sure we're not returning the original team queried
+    assert(currentTeam != desiredNextTeam);
+
+    return desiredNextTeam;
+}
+
+unsigned int numberOfTeamsRemaining() {
+    auto teams = getTeams();
+    return teams.size();
 }
 
 /*
@@ -1509,7 +1552,7 @@ int mainLoop(gameInfo* gamein) {
     queue<SceneObject *>chatObjectCache;
     vector<SceneObject *> healthCache;
     vector<SceneObject *> tempCache;
-    int currentQuestion = 5;
+    int currentQuestion = 0;
     string answer = "";
     // showcaseImage cleanup can be run in callback
     auto showcaseImageCleanupCb = [&gamein]() {
@@ -1528,6 +1571,9 @@ int mainLoop(gameInfo* gamein) {
 
     // Misc counters
     int stageCounter = 0;
+
+    // Team tracking
+    unsigned int currentTeam = 0;
     while (running) {
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
@@ -1643,7 +1689,7 @@ int mainLoop(gameInfo* gamein) {
                 // "dim" unselected options
                 selectionHandlerResult = selectionHandler(&game, uiObjects, 0);
                 // Dim unselected options, highlight selected option
-                for (int i = 0; i < (uiObjects.size() / 2); ++i) {
+                for (unsigned int i = 0; i < (uiObjects.size() / 2); ++i) {
                     auto obj = currentGame->getSceneObject(string("OptionText") + std::to_string(i));
                     assert(obj != nullptr);
                     // Cast the object to TextObject
@@ -1661,11 +1707,11 @@ int mainLoop(gameInfo* gamein) {
                     hideOptions(uiObjects, &game);
                     hideMessage(chatObjectCache, game.currentGame);
                     // The last option is PAF IF PAF is active!!!
-                    if (teamStats[0].paf && selectionHandlerResult == (uiObjects.size() / 2) - 1) {
+                    if (teamStats[currentTeam].paf && selectionHandlerResult == static_cast<int>((uiObjects.size() / 2) - 1)) {
                         answer = "PHONE A FRIEND";
                         gameState = PHONE_A_FRIEND;
                         // Remove paf from teamStats
-                        teamStats[0].paf = 0;
+                        teamStats[currentTeam].paf = 0;
                         // Revert current selection to zero
                         game.currentOption = 0;
                     } else {
@@ -1770,7 +1816,7 @@ int mainLoop(gameInfo* gamein) {
                     animationController.addKeyFrame(showcaseImage, tempKf);
                 }
                 // Also need to show the health bar for each team
-                healthCache = showTeamHealth(0, gamein->gameCamera, gamein->currentGame);
+                healthCache = showTeamHealth(currentTeam, gamein->gameCamera, gamein->currentGame);
                 gameState = CONFIRM_CHAT;
                 break;
             case CONFIRM_CHAT:
@@ -1788,9 +1834,9 @@ int mainLoop(gameInfo* gamein) {
                         if (!checkAnswer(currentQuestion, answer)) {
                             playRandomHurtSound(gamein->currentGame);
                             // Damage the current team
-                            teamStats[0].teamHealth--;
+                            teamStats[currentTeam].teamHealth--;
                             // Update the health indicator
-                            updateHealthIndicator(healthCache, teamStats[0].teamHealth);
+                            updateHealthIndicator(healthCache, teamStats[currentTeam].teamHealth);
                         }
                         gameState = DAMAGE_CHECK;
                         stageCounter = 0;
@@ -1816,6 +1862,16 @@ int mainLoop(gameInfo* gamein) {
                     // GO back to waiting, choose next question
                     currentQuestion++;
                     gameState = BEGIN_ROUND;
+                    // Check for a winner
+                    auto teamsLeft = numberOfTeamsRemaining();
+                    if (teamsLeft == 1) {
+                        // There is a winner
+                        chatObjectCache = showMessage("This is a surprise, we have a winner! I haven't yet even had my dinner!", gamein->gameCamera, gamein->currentGame);
+                        gameState = HEALTH_HIDE;
+                    } else {
+                        // If multiple teams still exist, choose the next one
+                        currentTeam = getNextTeam(currentTeam);
+                    }
                 }
                 break;
             default:

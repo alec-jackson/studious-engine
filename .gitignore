@@ -27,6 +27,7 @@ latex/
 
 # Tests #
 gtest_*
+Testing/
 
 # Misc Game Engine Files #
 GameQuestions.hpp

@@ -63,7 +63,7 @@ struct GameLogicInfo {
     GameState currentState = WAITING;
     float currentDebounce = 0.0f;
     float debounceSeconds = 0.3f;
-    int currentOption = 0;
+    unsigned int currentOption = 0;
     int prevOption = 0;
     float currentVolume = 50.0f;
     float maxSongVolume = 50.0f;
