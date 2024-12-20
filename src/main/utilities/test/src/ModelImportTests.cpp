@@ -24,6 +24,7 @@ class ModelImportTest: public ::testing::Test {
         modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0);
     }
     void TearDown() override {
+        delete modelImport;
     }
     vector<string> texturePathStage;
     vector<int> texturePatternStage;

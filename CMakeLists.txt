@@ -55,6 +55,7 @@ add_executable(${PROJECT_NAME}
   src/main/example/src/game.cpp
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
+  src/main/utilities/src/GifLoader.cpp
   src/main/engine/Misc/src/GameInstance.cpp
   src/main/engine/SceneObject/src/GameObject.cpp
   src/main/engine/SceneObject/src/SpriteObject.cpp
@@ -85,11 +86,20 @@ add_executable(gtest_PolygonTests
   src/main/utilities/src/Polygon.cpp
 )
 
+add_executable(gtest_GifLoaderTests
+  src/main/utilities/test/src/GifLoaderTests.cpp
+  src/main/utilities/src/GifLoader.cpp
+)
+
 target_include_directories(gtest_ModelImportTests
   PRIVATE src/main/utilities/test/headers
 )
 
 target_include_directories(gtest_PolygonTests
+  PRIVATE src/main/utilities/test/headers
+)
+
+target_include_directories(gtest_GifLoaderTests
   PRIVATE src/main/utilities/test/headers
 )
 
@@ -134,8 +144,14 @@ target_link_libraries(
   GTest::gtest_main
 )
 
+target_link_libraries(
+  gtest_GifLoaderTests
+  GTest::gtest_main
+)
+
 gtest_discover_tests(gtest_PolygonTests)
 gtest_discover_tests(gtest_ModelImportTests)
+gtest_discover_tests(gtest_GifLoaderTests)
 
 # Project include dirs
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
