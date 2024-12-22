@@ -50,9 +50,8 @@ void GifLoader::loadGif() {
         // Make sure we have a global color table...
         assert(globalColorTableFlag_ == 1);
         // Calculate the size of the global color table
-        auto gctSize = 1 << (colorResolution_ + 1);
+        auto gctSize = 1 << (globalColorTableSize_ + 1);
         gctSize *= 3;
-        assert(gctSize == 768);
         // Delete this when the object is destroyed
         globalColorTable_ = new byte[gctSize];
         for (int i = 0; i < gctSize; ++i) {
@@ -88,6 +87,9 @@ void GifLoader::loadGif() {
         // If a lct is used, we would parse it here :)
         assert(im.localColorTableFlag == false);
 
+        // Start reading image data
+        parseImageData(inputFile);
+
     } else {
         printf("Failed to open file\n");
     }
@@ -97,18 +99,25 @@ void GifLoader::loadGif() {
 }
 
 void GifLoader::parseImageData(std::ifstream &inputFile) {
+    // Fail the tests
+    pixelAspectRatio_ = 1;
      // Actually parse image data now...
     char lzwMinByte;
     inputFile.get(lzwMinByte);
     byte lzwMin = lzwMinByte;
 
+    printf("GifLoader::lzwMin: %u\n", lzwMin);
     // Subblock loop
-    char subblockSize;
-    inputFile.get(subblockSize);
-    while (subblockSize != 0x00) {
+    char subblockSizeByte;
+    inputFile.get(subblockSizeByte);
+    byte subblockSize = subblockSizeByte;
+
+    printf("GifLoader::parseImageData: subblock size: %u\n", subblockSize);
+    // 
+    //while (subblockSize != 0x00) {
         // Read image data from subblock...
         
-    }
+    //}
 }
 
 void GifLoader::unpackImageDescriptor(const byte *id, Image *im) {
@@ -204,7 +213,7 @@ unsigned int GifLoader::processExtension(std::ifstream &inputFile) {
     char extensionLabel;
     inputFile.get(extensionLabel);
     
-    printf("GifLoader::processExtension: Processing extension %02x\n", extensionLabel);
+    printf("GifLoader::processExtension: Processing extension %02x\n", (byte)extensionLabel);
 
     if ((byte)extensionLabel != 0xF9) {
         printf("GifLabeL::processExtension: Ignoring non-graphics control extension\n");

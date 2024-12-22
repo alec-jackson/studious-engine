@@ -6,6 +6,7 @@ using std::cout;
 using std::endl;
 
 string imagePath = "../src/resources/images/Shrek.gif";
+string testImage = "../src/resources/images/giflib-logo.gif";
 
 /*
 // Test Fixtures
@@ -24,6 +25,7 @@ class GifLoaderTest: public ::testing::Test {
 /**
  * @brief When parsing proper OBJ data, vertex data is properly built in polygon
  */
+/*
 TEST(GifLoaderTest, WhenOpenShrek_ThenTestValuesAsExpected) {
     // Preparation / Action
     auto gifLoader = GifLoader(imagePath);
@@ -52,8 +54,44 @@ TEST(GifLoaderTest, WhenOpenShrek_ThenTestValuesAsExpected) {
     ASSERT_TRUE(image.interlaceFlag);
     ASSERT_FALSE(image.sortFlag);
     ASSERT_EQ(0x00, image.lctSize);
+}*/
+
+/**
+ * @brief When parsing proper OBJ data, vertex data is properly built in polygon
+ */
+TEST(GifLoaderTest, WhenOpenTestImage_ThenPropertiesCorrect) {
+    // Preparation / Action
+    auto gifLoader = GifLoader(testImage);
+
+    // Validation
+    ASSERT_EQ(GifVersion::GIF89a, gifLoader.getVersion());
+    ASSERT_EQ(50, gifLoader.getCanvasWidth());
+    ASSERT_EQ(50, gifLoader.getCanvasHeight());
+
+    ASSERT_EQ(1, gifLoader.getGlobalColorTableFlag());
+    ASSERT_EQ(7, gifLoader.getColorResolution());
+    ASSERT_EQ(0, gifLoader.getSortFlag());
+    ASSERT_EQ(6, gifLoader.getGlobalColorTableSize());
+    ASSERT_EQ(0, gifLoader.getBackgroundColorIndex());
+    ASSERT_EQ(0, gifLoader.getPixelAspectRatio());
+
+    // Validate GCE variables
+    ASSERT_EQ(0x04, gifLoader.getGceBlockSize());
+    ASSERT_EQ(0x00, gifLoader.getGceDelayTime());
+    ASSERT_EQ(0, gifLoader.getGceTransparentColorIndex());
+
+    // Validate the first image
+    auto image = gifLoader.getImages().front();
+
+    ASSERT_FALSE(image.localColorTableFlag);
+    ASSERT_FALSE(image.interlaceFlag);
+    ASSERT_FALSE(image.sortFlag);
+    ASSERT_EQ(0x00, image.lctSize);
 }
 
+TEST(GifLoaderTest, WhenLzwCompressionRun_ThenTablesCorrect) {
+
+}
 
 /**
  * @brief Launches google test suite defined in file

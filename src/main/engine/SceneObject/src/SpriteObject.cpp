@@ -15,7 +15,7 @@
 #include <SpriteObject.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
-        string objectName, ObjectType type, SpriteAnchor anchor, GfxController *gfxController): SceneObject(position,
+        string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath },
     anchor_ { anchor }, tint_ { vec4(0) } {
     printf("SpriteObject::SpriteObject: Creating sprite %s\n", objectName.c_str());

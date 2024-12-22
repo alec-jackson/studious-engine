@@ -125,8 +125,8 @@ const int MAX_HEALTH = 5;
 #define TEAM_COUNT 3
 
 TeamStats teamStats[TEAM_COUNT] = {
-    {MAX_HEALTH - 4, 1, "src/resources/images/Team 1.png"},  // 0 = Team 1
-    {MAX_HEALTH - 3, 1, "src/resources/images/Team 2.png"},  // 1 = Team 2
+    {MAX_HEALTH, 1, "src/resources/images/Team 1.png"},  // 0 = Team 1
+    {MAX_HEALTH, 1, "src/resources/images/Team 2.png"},  // 1 = Team 2
     {MAX_HEALTH, 1, "src/resources/images/Team 3.png"}   // 2 = Team 3
 };
 
@@ -222,6 +222,7 @@ vector<SceneObject *> showTeamHealth(unsigned int teamNumber, CameraObject *rend
         startStretch,
         -50.0f,
         gfxController.getProgramId(4).get(),
+        ObjectAnchor::BOTTOM_LEFT,
     "healthbg" + std::to_string(teamNumber));
 
     renderer->addSceneObject(box);
@@ -230,7 +231,7 @@ vector<SceneObject *> showTeamHealth(unsigned int teamNumber, CameraObject *rend
         teamStartPos,
         0.40f,
         gfxController.getProgramId(3).get(),
-        SpriteAnchor::BOTTOM_LEFT,
+        ObjectAnchor::BOTTOM_LEFT,
         "team" + std::to_string(teamNumber));
 
     // Programatically create health bar icons
@@ -240,7 +241,7 @@ vector<SceneObject *> showTeamHealth(unsigned int teamNumber, CameraObject *rend
             vec3(startingX, 440.0f + verticalShift, 0.0f),
             0.45f,
             gfxController.getProgramId(3).get(),
-            SpriteAnchor::BOTTOM_LEFT,
+            ObjectAnchor::BOTTOM_LEFT,
             "hc" + std::to_string(i) + " " + std::to_string(teamNumber));
 
         // Based in the team's current health, change the tint of each honeycomb
@@ -492,7 +493,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
     auto typeTime = 3.0f;  // Seconds to draw lines
     auto wipeTime = 0.5f;  // Seconds to perform text "wiping"
     // Need to account for HIGH DPI modes (250.0f for High DPI (mac), 125.0f for normal DPI (everything else))
-    auto cutoff = vec3(0.0f, 125.0f, 0.0f);
+    auto cutoff = vec3(0.0f, 250.0f, 0.0f);
     queue<SceneObject *> generatedObjects;
 
     // How many text boxes should be present? 3? Infinite?
@@ -555,7 +556,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
         vec3(-240.0f, 190.0f, 0.0f),
         0.45f,
         gfxController.getProgramId(3).get(),
-        SpriteAnchor::BOTTOM_LEFT,
+        ObjectAnchor::BOTTOM_LEFT,
     "grunty");
 
     auto box = currentGame->createUi(textBoxImage,
@@ -564,6 +565,7 @@ queue<SceneObject *> showMessage(string message, CameraObject *renderer, GameIns
         -50.0f,
         -50.0f,
         gfxController.getProgramId(4).get(),
+        ObjectAnchor::BOTTOM_LEFT,
     "textbox");
 
     generatedObjects.push(grunty);
@@ -853,7 +855,7 @@ int runtime(GameInstance *currentGame) {
         vec3(-300.0f, 900.0f, 0.0f),
         1.0f,
         gfxController.getProgramId(3).get(),
-        SpriteAnchor::BOTTOM_LEFT,
+        ObjectAnchor::BOTTOM_LEFT,
         "Backdrop");
     // Set the backdrop to the lowest priority for rendering
     backdrop->setRenderPriority(RenderPriority::LOW);
@@ -980,6 +982,7 @@ vector<SceneObject *> drawOptions(vector<string> options, int team, gameInfo *ga
             startStretch.x,
             startStretch.y,
             gfxController.getProgramId(4).get(),
+            ObjectAnchor::BOTTOM_LEFT,
             "option" + std::to_string(currentOptionIndex));
         currentShift += shift;
         gamein->gameCamera->addSceneObject(box);
@@ -1058,6 +1061,7 @@ vector<SceneObject *> drawOptions(vector<string> options, int team, gameInfo *ga
         pafStretchStart.x,
         pafStretchStart.y,
         gfxController.getProgramId(4).get(),
+        ObjectAnchor::BOTTOM_LEFT,
         "option" + std::to_string(currentOptionIndex));
     gamein->gameCamera->addSceneObject(pafBox);
     uiElements.push_back(pafBox);
@@ -1313,7 +1317,7 @@ bool showcaseHandler(const GameQuestions &cq, GameInstance *game, CameraObject *
                     vec3(650.0f, 400.0f, 0.0f),
                     0.00,
                     gfxController.getProgramId(3).get(),
-                    SpriteAnchor::CENTER,
+                    ObjectAnchor::CENTER,
                     "showcaseImage");
                 // Set the showcase image to medium priority
                 showcaseImage->setRenderPriority(RenderPriority::MEDIUM);
@@ -1432,6 +1436,7 @@ vector<SceneObject *> createPafTimer(GameInstance *game, CameraObject *renderer)
         -50.0f,
         -50.0f,
         gfxController.getProgramId(4).get(),
+        ObjectAnchor::BOTTOM_LEFT,
         "pafBoxBg");
     pafBox->setRenderPriority(RenderPriority::MEDIUM);
     pafCache.push_back(pafText);
@@ -1461,6 +1466,99 @@ vector<SceneObject *> createPafTimer(GameInstance *game, CameraObject *renderer)
     animationController.addKeyFrame(pafBox, boxKf);
     animationController.addKeyFrame(pafText, textKf);
     return pafCache;
+}
+
+// Hide the current team when the question is answered
+void hideTeamIcon(GameInstance *currentGame, vector<SceneObject *> teamIconCache) {
+    // Create keyframes to hide the team health
+    auto shiftTime = 0.5f;
+    auto leftShift = -160;
+
+    // Undo the right shift
+    for (auto obj : teamIconCache) {
+        auto pos = obj->getPosition();
+        auto objName = obj->getObjectName();
+        pos.x += leftShift;
+
+        // Delete the gameobject cache when the animation completes
+        auto cb = [currentGame, objName]() {
+            currentGame->removeSceneObject(objName);
+        };
+        // Get the current object position
+        auto kf = AnimationController::createKeyFrameCb(
+            UPDATE_POS,
+            pos,
+            vec3(0),
+            "",
+            cb,
+            shiftTime);
+
+        animationController.addKeyFrame(obj, kf);
+    }
+}
+
+// Show the current team after the team health is displayed
+vector<SceneObject *> showTeamIcon(GameInstance *currentGame, CameraObject *renderer, int team) {
+    auto rightShift = 160;
+    auto shiftTime = 0.3f;
+    auto sleepTime = 1.0f;
+    auto boxPos = vec3(0, 300, 0);
+    //boxPos.x += rightShift;
+    auto startStretch = vec3(0, 0, 0);
+    auto teamPos = vec3(-63, 365, 0);
+    //teamPos.x += rightShift;
+    auto bgScale = 0.5f;
+
+    vector<SceneObject *> teamIconCache;
+
+    // Create textbox for healthbar backdrop
+    auto teambg = currentGame->createUi(textBoxImage,
+        boxPos,
+        bgScale,
+        startStretch.x,
+        startStretch.y,
+        gfxController.getProgramId(4).get(),
+        ObjectAnchor::CENTER,
+        "teambg" + std::to_string(team));
+
+    // Grab the current team image (small)
+    auto teamSprite = currentGame->createSprite(teamStats[team].imagePath,
+        teamPos,
+        0.40f,
+        gfxController.getProgramId(3).get(),
+        ObjectAnchor::CENTER,
+        "team" + std::to_string(team));
+
+    teamIconCache.push_back(teambg);
+    teamIconCache.push_back(teamSprite);
+
+    // Add all of the objects to the renderer
+    for (auto obj : teamIconCache) {
+        // Create shift keyframe for each object
+        auto targetPos = obj->getPosition();
+        targetPos.x += rightShift;
+
+        auto sleep_kf = AnimationController::createKeyFrame(
+            UPDATE_NONE,
+            vec3(0),
+            vec3(0),
+            "",
+            sleepTime);
+
+        auto kf = AnimationController::createKeyFrame(
+            UPDATE_POS,
+            targetPos,
+            vec3(0),
+            "",
+            shiftTime);
+
+        animationController.addKeyFrame(obj, sleep_kf);
+        animationController.addKeyFrame(obj, kf);
+
+        renderer->addSceneObject(obj);
+    }
+
+    return teamIconCache;
 }
 vector<unsigned int> getTeams() {
     vector<unsigned int> eligibleTeams;
@@ -1552,7 +1650,8 @@ int mainLoop(gameInfo* gamein) {
     queue<SceneObject *>chatObjectCache;
     vector<SceneObject *> healthCache;
     vector<SceneObject *> tempCache;
-    int currentQuestion = 0;
+    vector<SceneObject *> teamIconCache;
+    int currentQuestion = 5;
     string answer = "";
     // showcaseImage cleanup can be run in callback
     auto showcaseImageCleanupCb = [&gamein]() {
@@ -1621,7 +1720,7 @@ int mainLoop(gameInfo* gamein) {
                 }
 
                 // Say some introductory message
-                chatObjectCache = showMessage("It looks like team 1 is behind.", gamein->gameCamera, gamein->currentGame);
+                chatObjectCache = showMessage("Game summary text placeholder.", gamein->gameCamera, gamein->currentGame);
                 gameState = BEGIN_ROUND_UI_WAIT;
                 break;
 
@@ -1670,6 +1769,7 @@ int mainLoop(gameInfo* gamein) {
                 // If nothing is happening (usually waiting for wheel input)
                 chatObjectCache = showMessage(gameQuestions[currentQuestion].question,
                     gamein->gameCamera, gamein->currentGame);
+                teamIconCache = showTeamIcon(gamein->currentGame, gamein->gameCamera, currentTeam);
                 gameState = CHATTING;
                 break;
             case CHATTING:
@@ -1678,7 +1778,7 @@ int mainLoop(gameInfo* gamein) {
                 break;
             case SHOWCASE:
                 if (showcaseHandler(gameQuestions[currentQuestion], gamein->currentGame, gamein->gameCamera)) {
-                    uiObjects = drawOptions(gameQuestions[currentQuestion].getOptions(), 0, gamein);
+                    uiObjects = drawOptions(gameQuestions[currentQuestion].getOptions(), currentTeam, gamein);
                     gameState = DISPLAY_OPTIONS;
                 }
                 break;
@@ -1687,7 +1787,7 @@ int mainLoop(gameInfo* gamein) {
                 break;
             case ANSWERING:
                 // "dim" unselected options
-                selectionHandlerResult = selectionHandler(&game, uiObjects, 0);
+                selectionHandlerResult = selectionHandler(&game, uiObjects, currentTeam);
                 // Dim unselected options, highlight selected option
                 for (unsigned int i = 0; i < (uiObjects.size() / 2); ++i) {
                     auto obj = currentGame->getSceneObject(string("OptionText") + std::to_string(i));
@@ -1706,6 +1806,7 @@ int mainLoop(gameInfo* gamein) {
                     gameState = CONFIRMING;
                     hideOptions(uiObjects, &game);
                     hideMessage(chatObjectCache, game.currentGame);
+                    hideTeamIcon(gamein->currentGame, teamIconCache);
                     // The last option is PAF IF PAF is active!!!
                     if (teamStats[currentTeam].paf && selectionHandlerResult == static_cast<int>((uiObjects.size() / 2) - 1)) {
                         answer = "PHONE A FRIEND";
@@ -1713,10 +1814,10 @@ int mainLoop(gameInfo* gamein) {
                         // Remove paf from teamStats
                         teamStats[currentTeam].paf = 0;
                         // Revert current selection to zero
-                        game.currentOption = 0;
                     } else {
                         answer = gameQuestions[currentQuestion].options[selectionHandlerResult];
                     }
+                    game.currentOption = 0;
                     printf("mainLoop: User answered %s\n", answer.c_str());
                 }
                 break;

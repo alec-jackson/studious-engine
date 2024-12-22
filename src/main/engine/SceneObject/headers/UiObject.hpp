@@ -15,12 +15,13 @@
 #include <SceneObject.hpp>
 #include <ColliderObject.hpp>
 
+///@todo Merge UiObjet and SpriteObject together... probably
 class UiObject : public SceneObject {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
     explicit UiObject(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
-        string objectName, ObjectType type, GfxController *gfxController);
+        string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController);
     ~UiObject() override;
 
     // Render method
@@ -52,6 +53,8 @@ class UiObject : public SceneObject {
 
     float wScale_;
     float hScale_;
+
+    ObjectAnchor anchor_;
 
     mat4 modelMat_;
 };

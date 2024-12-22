@@ -26,6 +26,11 @@ enum RenderPriority {
     LOW
 };
 
+enum ObjectAnchor {
+    CENTER,
+    BOTTOM_LEFT
+};
+
 class SceneObject {
  public:
     // Constructors
