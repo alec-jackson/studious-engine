@@ -2,11 +2,17 @@
 
 precision mediump float;
 
+attribute vec4 vertex; // <vec2 pos, vec2 tex>
 varying vec2 TexCoords;
-uniform sampler2D text;
-uniform vec3 textColor;
+
+uniform mat4 projection;
+uniform mat4 model;
+uniform vec3 resolution;
 
 void main() {
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture2D(text, TexCoords).r);
-    gl_FragColor = vec4(textColor, 1.0) * sampled;
+    // Scale vertex points with resolution
+    float vx = resolution.x * vertex.x;
+    float vy = resolution.y * vertex.y;
+    gl_Position = projection * model * vec4(vx, vy, 0.0, 1.0);
+    TexCoords = vertex.zw;
 }

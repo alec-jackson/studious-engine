@@ -94,12 +94,16 @@ vector<string> vertShaders = {
 vector<string> fragShaders = {
     "src/main/shaders/es/gameObject.frag",
     "src/main/shaders/es/colliderObject.frag",
-    "src/main/shaders/es/textObject.frag"
+    "src/main/shaders/es/textObject.frag",
+    "src/main/shaders/es/spriteObject.frag",
+    "src/main/shaders/es/uiObject.frag"
 };  // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
     "src/main/shaders/es/gameObject.vert",
     "src/main/shaders/es/colliderObject.vert",
-    "src/main/shaders/es/textObject.vert"
+    "src/main/shaders/es/textObject.vert",
+    "src/main/shaders/es/spriteObject.vert",
+    "src/main/shaders/es/uiObject.vert"
 };  // Contains collider renderer and basic object renderer.
 #endif
 
