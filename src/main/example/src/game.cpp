@@ -1651,7 +1651,7 @@ int mainLoop(gameInfo* gamein) {
     vector<SceneObject *> healthCache;
     vector<SceneObject *> tempCache;
     vector<SceneObject *> teamIconCache;
-    int currentQuestion = 5;
+    int currentQuestion = 11;
     string answer = "";
     // showcaseImage cleanup can be run in callback
     auto showcaseImageCleanupCb = [&gamein]() {
@@ -1962,17 +1962,20 @@ int mainLoop(gameInfo* gamein) {
                 if (messageHidden()) {
                     // GO back to waiting, choose next question
                     currentQuestion++;
-                    gameState = BEGIN_ROUND;
                     // Check for a winner
                     auto teamsLeft = numberOfTeamsRemaining();
+                    auto doNewRound = false;
                     if (teamsLeft == 1) {
                         // There is a winner
                         chatObjectCache = showMessage("This is a surprise, we have a winner! I haven't yet even had my dinner!", gamein->gameCamera, gamein->currentGame);
                         gameState = HEALTH_HIDE;
                     } else {
+                        auto lastTeam = currentTeam;
                         // If multiple teams still exist, choose the next one
                         currentTeam = getNextTeam(currentTeam);
+                        doNewRound = lastTeam > currentTeam;
                     }
+                    gameState = doNewRound ? BEGIN_ROUND : WAITING;
                 }
                 break;
             default:

@@ -107,17 +107,74 @@ void GifLoader::parseImageData(std::ifstream &inputFile) {
     byte lzwMin = lzwMinByte;
 
     printf("GifLoader::lzwMin: %u\n", lzwMin);
-    // Subblock loop
-    char subblockSizeByte;
-    inputFile.get(subblockSizeByte);
-    byte subblockSize = subblockSizeByte;
 
-    printf("GifLoader::parseImageData: subblock size: %u\n", subblockSize);
-    // 
-    //while (subblockSize != 0x00) {
-        // Read image data from subblock...
-        
-    //}
+    char readByte;
+    std::vector<byte> data;
+    // Subblock loop
+    while (inputFile.get(readByte)) {
+        // This outer loop will check for the subblockSize
+        byte subblockSize = readByte;
+        printf("GifLoader::parseImageData: subblock size: %u\n", subblockSize);
+        // If the subblockSize is zero, then we break early because we're done reading data
+        if (subblockSize == 0x00) break;
+
+        // Otherwise, start another loop to read the entire subblock
+        for (byte i = 0; i < subblockSize; ++i) {
+            inputFile.get(readByte);
+            // Add the read byte to the data array
+            data.push_back(readByte);
+        }
+
+        lzwDecompression(lzwMin, data);
+    }
+    printf("IMAGE DATA START\n");
+    for (auto i : data) {
+        printf("%02x ", i);
+    }
+    printf("\nIMAGE DATA END\n");
+}
+
+void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
+    // Generate the code table using the lzw min
+    int numberOfColors = 1 << lzwMin;
+    for (int i = 0; i < numberOfColors; ++i) {
+        colorCodeTable_.push_back(std::to_string(i));
+    }
+    // Add the Clear Code and End of Information Code
+    colorCodeTable_.push_back("CC");
+    colorCodeTable_.push_back("EOIC");
+
+    auto grabBits = [&data](unsigned int bitSize, unsigned int addr) {
+        // Ensure bitsize is 12 or below
+        assert(bitSize <= 12);
+        // Shift by address - determine number of bytes we need
+        auto divAddr = addr / 8;
+        auto remAddr = addr % 8;
+
+        // Grab an entire integer from the data array (bounds check please)
+        unsigned int result = 0;
+        unsigned int dataSize = data.size();
+        for (unsigned int i = 0; i < 4; ++i) {
+            auto elem = (3 - i) + divAddr;
+            // Check if the data array has an element at i + divAddr
+            if (elem >= dataSize) {
+                printf("End of array reached, not adding to result");
+                assert(i > 0);
+                continue;
+            }
+            // Add to the current result (32 bits)
+            result <<= 8;
+            result += data.at(elem);
+        }
+        // First we want to downshift the result by remAddr
+        result >>= remAddr;
+        // Then we just mask the number of bits we want and return it
+        return result & ((1 << bitSize) - 1);
+    };
+
+    // Frick
+    printf("GifLoader::grabBits: %u\n", grabBits(3, 0));
+    // #4 #1 #6 #6 #2 #9 #9 #7 #8 #10 #2 #12 #1 #14 #15 #6 #0 #21 #0 #10 #7 #22 #23 #18 #26 #7 #10 #29 #13 #24 #12 #18 #16 #36 #12 #5
 }
 
 void GifLoader::unpackImageDescriptor(const byte *id, Image *im) {

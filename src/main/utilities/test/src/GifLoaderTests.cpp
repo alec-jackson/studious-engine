@@ -6,7 +6,7 @@ using std::cout;
 using std::endl;
 
 string imagePath = "../src/resources/images/Shrek.gif";
-string testImage = "../src/resources/images/giflib-logo.gif";
+string testImage = "../src/resources/images/sample_1.gif";
 
 /*
 // Test Fixtures
@@ -65,13 +65,13 @@ TEST(GifLoaderTest, WhenOpenTestImage_ThenPropertiesCorrect) {
 
     // Validation
     ASSERT_EQ(GifVersion::GIF89a, gifLoader.getVersion());
-    ASSERT_EQ(50, gifLoader.getCanvasWidth());
-    ASSERT_EQ(50, gifLoader.getCanvasHeight());
+    ASSERT_EQ(10, gifLoader.getCanvasWidth());
+    ASSERT_EQ(10, gifLoader.getCanvasHeight());
 
     ASSERT_EQ(1, gifLoader.getGlobalColorTableFlag());
-    ASSERT_EQ(7, gifLoader.getColorResolution());
+    ASSERT_EQ(1, gifLoader.getColorResolution());
     ASSERT_EQ(0, gifLoader.getSortFlag());
-    ASSERT_EQ(6, gifLoader.getGlobalColorTableSize());
+    ASSERT_EQ(1, gifLoader.getGlobalColorTableSize());
     ASSERT_EQ(0, gifLoader.getBackgroundColorIndex());
     ASSERT_EQ(0, gifLoader.getPixelAspectRatio());
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <map>
 
 #define GIF_HEADER_BLOCK_SIZE 6
 #define GIF_LOGICAL_SCREEN_DESCRIPTOR_SIZE 7
@@ -42,6 +43,7 @@ public:
     void processGraphicsControlExtension(std::ifstream &inputFile);
     void unpackImageDescriptor(const byte *id, Image *im);
     void parseImageData(std::ifstream &inputFile);
+    void lzwDecompression(byte lzwMin, std::vector<byte> data);
 
     inline GifVersion getVersion() { return version_; }
     inline unsigned short getCanvasWidth() { return canvasWidth_; }
@@ -81,4 +83,5 @@ private:
 
     byte *globalColorTable_ = nullptr;
     vector<Image> images_;
+    vector<string> colorCodeTable_;
 };
