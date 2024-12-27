@@ -10,6 +10,10 @@
  * @copyright Copyright (c) 2023
  * 
  */
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <random>
 #include <atomic>
 #include <queue>
@@ -120,20 +124,20 @@ const char *honeycombFull =
 
 const float BG_VOLUME = 50.0f;
 const float BG_RAMP_SECONDS = 2.0f;
-const int MAX_HEALTH = 5;
+const int MAX_HEALTH = 3;
 
 #define TEAM_COUNT 3
 
 TeamStats teamStats[TEAM_COUNT] = {
-    {MAX_HEALTH, 1, "src/resources/images/Team 1.png"},  // 0 = Team 1
-    {MAX_HEALTH, 1, "src/resources/images/Team 2.png"},  // 1 = Team 2
+    {0, 1, "src/resources/images/Team 1.png"},  // 0 = Team 1
+    {0, 1, "src/resources/images/Team 2.png"},  // 1 = Team 2
     {MAX_HEALTH, 1, "src/resources/images/Team 3.png"}   // 2 = Team 3
 };
 
 #include <GameQuestions.hpp>
 
 string pafMessage = "You want to phone a friend? Go ahead, blindly trust your end! You have twenty seconds to discuss, time is ticking, don't make a fuss!";
-int pafTime = 5.0f;
+int pafTime = 20.0f;
 TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
@@ -149,6 +153,8 @@ std::atomic<unsigned int> pafHidden(0);
 int wordCount;
 double deltaTime = 0.0f;
 int WORDS_PER_LINE = 8;  // Arbitrary
+bool hasActiveController = false;
+SDL_GameController *gameController1 = NULL;
 #ifdef GFX_EMBEDDED
 OpenGlEsGfxController gfxController = OpenGlEsGfxController();
 #else
@@ -158,6 +164,7 @@ AnimationController animationController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
+void configureJoySticks();
 
 int main(int argc, char **argv) {
     int errorNum;
@@ -191,6 +198,41 @@ void playRandomHurtSound(GameInstance *currentGame) {
     currentGame->playSound(hurtSounds.at(random_number).c_str(), 128);
 }
 
+vector<string> getLocalIPv4Address() {
+    struct ifaddrs *interfaces = nullptr;
+    struct ifaddrs *ifa = nullptr;
+    void *tempAddrPtr = nullptr;
+    char addressBuffer[INET_ADDRSTRLEN];
+    vector<string> interfacesAdds;
+
+    // Get the list of network interfaces
+    if (getifaddrs(&interfaces) == -1) {
+        perror("getifaddrs");
+        return interfacesAdds;
+    }
+    interfacesAdds.push_back("Please connect a controller");
+    // Iterate over the network interfaces
+    for (ifa = interfaces; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr == nullptr) continue;
+
+        // Check if the address is IPv4
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            // Get the address
+            tempAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+            inet_ntop(AF_INET, tempAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+
+            // Print the address
+            std::cout << "Interface: " << ifa->ifa_name << " | Address: " << addressBuffer << std::endl;
+            interfacesAdds.push_back(string(ifa->ifa_name) + ": " + string(addressBuffer));
+        }
+    }
+
+    // Free the memory allocated for the network interfaces list
+    freeifaddrs(interfaces);
+
+    return interfacesAdds;
+}
+
 vector<SceneObject *> showTeamHealth(unsigned int teamNumber, CameraObject *renderer, GameInstance *currentGame, int shift=0) {
     printf("showTeamHealth: Entry - teamNumber %u\n", teamNumber);
     float verticalShift = 150.0f * shift;
@@ -199,7 +241,7 @@ vector<SceneObject *> showTeamHealth(unsigned int teamNumber, CameraObject *rend
     float leftEndX = 500.0f;
     vector<SceneObject *> objectCache;
 
-    float endStretch = 320.0f;
+    float endStretch = 20.0f + (MAX_HEALTH * hcDisplacement);
     float startStretch = -50.0f;
     float endBox = 355.0f;
     vec3 boxPos = vec3(-140.0f, 465.0f + verticalShift, 0.0f);
@@ -1137,8 +1179,31 @@ int selectionHandler(GameLogicInfo *game, vector<SceneObject *> optionCache, int
     unsigned int numOptions = optionCache.size() / 2;
     unsigned int numOptionsExcludePaf = numOptions - (hasPaf ? 1 : 0);
     assert(numOptions > 0);
+    // Input
+    auto dp_up = game->currentGame->getKeystate()[SDL_SCANCODE_W];
+    auto dp_down = game->currentGame->getKeystate()[SDL_SCANCODE_S];
+    auto dp_left = game->currentGame->getKeystate()[SDL_SCANCODE_A];
+    auto dp_right = game->currentGame->getKeystate()[SDL_SCANCODE_D];
+    auto dp_select = game->currentGame->getKeystate()[SDL_SCANCODE_RETURN];
+
+    // updateHasActiveController if needed
+    configureJoySticks();
+
+    // Add controller inputs
+    if (hasActiveController) {
+        dp_up = dp_up || SDL_GameControllerGetButton(gameController1,
+            SDL_CONTROLLER_BUTTON_DPAD_UP);
+        dp_down = dp_down || SDL_GameControllerGetButton(gameController1,
+            SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+        dp_left = dp_left || SDL_GameControllerGetButton(gameController1,
+            SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+        dp_right = dp_right || SDL_GameControllerGetButton(gameController1,
+            SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+        dp_select = dp_select || SDL_GameControllerGetButton(gameController1,
+            SDL_CONTROLLER_BUTTON_A);
+    }
     // numOptions = 5 w/ paf
-    if (game->currentGame->getKeystate()[SDL_SCANCODE_W] && debounceCheck(game)) {
+    if (dp_up && debounceCheck(game)) {
         // "up" action
         // Change the selected option up to numOptionsExcludePaf - 1 (size to index)
         if (game->currentOption < numOptionsExcludePaf - 1) {
@@ -1146,15 +1211,15 @@ int selectionHandler(GameLogicInfo *game, vector<SceneObject *> optionCache, int
             game->currentGame->playSound(5, 0, 50);
         }
         game->currentDebounce = 0.0f;
-    } else if (game->currentGame->getKeystate()[SDL_SCANCODE_S] && debounceCheck(game)) {
-        // "up" action
+    } else if (dp_down && debounceCheck(game)) {
+        // "down" action
         // Don't go below index 0
         if (game->currentOption > 0) {
             game->currentOption--;
             game->currentGame->playSound(5, 0, 50);
         }
         game->currentDebounce = 0.0f;
-    } else if (game->currentGame->getKeystate()[SDL_SCANCODE_D] && debounceCheck(game)) {
+    } else if (dp_right && debounceCheck(game)) {
         // "right" action
         // Switch to option 4
         if (hasPaf && game->currentOption != numOptionsExcludePaf) {
@@ -1163,7 +1228,7 @@ int selectionHandler(GameLogicInfo *game, vector<SceneObject *> optionCache, int
             game->currentGame->playSound(5, 0, 50);
         }
         game->currentDebounce = 0.0f;
-    } else if (game->currentGame->getKeystate()[SDL_SCANCODE_A] && debounceCheck(game)) {
+    } else if (dp_left && debounceCheck(game)) {
         // "left" action
         // Change the selected option back from "PAF"
         if (hasPaf && game->currentOption == numOptionsExcludePaf) {
@@ -1171,7 +1236,7 @@ int selectionHandler(GameLogicInfo *game, vector<SceneObject *> optionCache, int
             game->currentGame->playSound(5, 0, 50);
         }
         game->currentDebounce = 0.0f;
-    } else if (game->currentGame->getKeystate()[SDL_SCANCODE_RETURN] && debounceCheck(game)) {
+    } else if (dp_select && debounceCheck(game)) {
         // "SELECT" action
         result = game->currentOption;
         game->currentGame->playSound(ACCEPT_SFX_NUM, 0, 100);
@@ -1201,9 +1266,8 @@ bool doneSpeaking() {
 }
 
 // Return true if the answer is correct for the question
-bool checkAnswer(int currentQuestion, string answer) {
-    assert(currentQuestion < GAME_QUESTION_SIZE);
-    return gameQuestions[currentQuestion].answer.compare(answer) == 0;
+bool checkAnswer(string correctAnswer, string answer) {
+    return correctAnswer.compare(answer) == 0;
 }
 
 bool doneHealthDisplay(vector<SceneObject *> healthCache) {
@@ -1618,6 +1682,33 @@ unsigned int numberOfTeamsRemaining() {
     return teams.size();
 }
 
+void configureJoySticks() {
+    static int wasConfigured;
+    static int lastJoyNum;
+    auto numJoySticks = 0;
+
+    numJoySticks = SDL_NumJoysticks();
+    // If the configuration has changed...
+    if (wasConfigured && lastJoyNum != numJoySticks) {
+        wasConfigured = 0;
+    }
+    // Then we re-configure the controller (to handle disconnects)
+    if (!wasConfigured) {
+        // Attempt to configure joysticks here
+        for (int i = 0; i < numJoySticks; i++) {
+            if (SDL_IsGameController(i)) {
+                printf("NumJoysticks: %d, curController: %d\n", numJoySticks, i);
+                gameController1 = SDL_GameControllerOpen(i);
+                if (gameController1 != 0) {
+                    hasActiveController = true;
+                    wasConfigured = 1;
+                    lastJoyNum = numJoySticks;
+                }
+            }
+        }
+    }
+}
+
 /*
  (int) mainLoop starts rendering objects in the current GameInstance to the
  main SDL window. The methods called from the currentGame object render parts
@@ -1627,7 +1718,7 @@ unsigned int numberOfTeamsRemaining() {
  mainLoop closes prematurely, an error code is returned.
 */
 int mainLoop(gameInfo* gamein) {
-    auto gameState = BEGIN_ROUND;
+    auto gameState = BOOTUP_SCREEN;
     Uint64 begin, end;
     int running = 1;
     double currentTime = 0.0, sampleTime = 1.0;
@@ -1651,7 +1742,7 @@ int mainLoop(gameInfo* gamein) {
     vector<SceneObject *> healthCache;
     vector<SceneObject *> tempCache;
     vector<SceneObject *> teamIconCache;
-    int currentQuestion = 11;
+    GameQuestions currentQuestion;
     string answer = "";
     // showcaseImage cleanup can be run in callback
     auto showcaseImageCleanupCb = [&gamein]() {
@@ -1670,9 +1761,29 @@ int mainLoop(gameInfo* gamein) {
 
     // Misc counters
     int stageCounter = 0;
+    int configured = 0;
+    int pafSkip = 0;
 
     // Team tracking
     unsigned int currentTeam = 0;
+
+    // Configs
+    vector<string> addrs;
+    vector<SceneObject *> addrCache;
+
+    // Now... Attempt to load ALL questions into a vector
+    vector<GameQuestions> questions;
+    for (int i = 0; i < GAME_QUESTION_SIZE; ++i) {
+        // Shuffle options before inserting
+        auto curQues = gameQuestions[i];
+        auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::shuffle(curQues.options.begin(), curQues.options.end(), std::default_random_engine(seed));
+        questions.push_back(curQues);
+    }
+
+    // Now shuffle all of the questions around...
+    auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::shuffle(questions.begin(), questions.end(), std::default_random_engine(seed));
     while (running) {
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
@@ -1709,6 +1820,65 @@ int mainLoop(gameInfo* gamein) {
          */
 
         switch (gameState) {
+            case BOOTUP_SCREEN:
+                if (configured == 0 && hasActiveController) {
+                    gameState = BEGIN_ROUND;
+                    break;
+                }
+                if (!configured) {
+                    // Set the background to be black
+                    auto bd = currentGame->getSceneObject("Backdrop");
+                    assert(bd != nullptr);
+                    // Add a dark tint to the backdrop
+                    auto cbd = (SpriteObject *)bd;
+                    cbd->setTint(vec3(-0.5f));
+
+                    configured = 1;
+                    addrs = getLocalIPv4Address();
+                    const auto topLine = vec3(380.0f, 500.0f, 0.0f);
+                    auto downShift = 60.0f;
+                    auto textScale = 0.8f;  // Good for 720p
+                    auto fontPath = "src/resources/fonts/Comic Sans MS.ttf";
+                    auto textProgramId = gfxController.getProgramId(2).get();
+                    auto textBoxId = 0;
+                    // Loop through addrs and draw them on screen
+                    for (auto addr : addrs) {
+                        auto pos = topLine;
+                        pos.y -= (downShift * textBoxId);
+                        if (textBoxId > 0) pos.x += downShift * 2;
+                        auto text = currentGame->createText(addr,
+                            pos,
+                            textScale,
+                            fontPath,
+                            textProgramId,
+                            "AddrText" + std::to_string(textBoxId++));
+                        // Add the text to the renderer
+                        gamein->gameCamera->addSceneObject(text);
+
+                        // Add text to the cache
+                        addrCache.push_back(text);
+                    }
+                } else {
+                    // Check the number of controllers connected
+                    // Initialize new controller here
+                    configureJoySticks();
+                }
+                if (hasActiveController) {
+                    // Do some cleanup here
+                    for (auto obj : addrCache) {
+                        currentGame->removeSceneObject(obj->getObjectName());
+                    }
+                    gameState = BEGIN_ROUND;
+
+                    // Undo tint
+                    // Set the background to be black
+                    auto bd = currentGame->getSceneObject("Backdrop");
+                    assert(bd != nullptr);
+                    // Add a dark tint to the backdrop
+                    auto cbd = (SpriteObject *)bd;
+                    cbd->setTint(vec3(0.0f));
+                }
+                break;
             case BEGIN_ROUND:
                 // Show all team health bars
                 healthCache.clear();
@@ -1766,8 +1936,17 @@ int mainLoop(gameInfo* gamein) {
                 }
                 break;
             case WAITING:
+                // Keep the current question for a paf skip
+                if (!pafSkip) {
+                    // Pop the front question off to ask!
+                    currentQuestion = questions.front();
+                    // Remove the front question
+                    questions.erase(questions.begin());
+                } else {
+                    pafSkip = 0;
+                }
                 // If nothing is happening (usually waiting for wheel input)
-                chatObjectCache = showMessage(gameQuestions[currentQuestion].question,
+                chatObjectCache = showMessage(currentQuestion.question,
                     gamein->gameCamera, gamein->currentGame);
                 teamIconCache = showTeamIcon(gamein->currentGame, gamein->gameCamera, currentTeam);
                 gameState = CHATTING;
@@ -1777,8 +1956,8 @@ int mainLoop(gameInfo* gamein) {
                 if (doneSpeaking()) gameState = SHOWCASE;
                 break;
             case SHOWCASE:
-                if (showcaseHandler(gameQuestions[currentQuestion], gamein->currentGame, gamein->gameCamera)) {
-                    uiObjects = drawOptions(gameQuestions[currentQuestion].getOptions(), currentTeam, gamein);
+                if (showcaseHandler(currentQuestion, gamein->currentGame, gamein->gameCamera)) {
+                    uiObjects = drawOptions(currentQuestion.options, currentTeam, gamein);
                     gameState = DISPLAY_OPTIONS;
                 }
                 break;
@@ -1815,13 +1994,15 @@ int mainLoop(gameInfo* gamein) {
                         teamStats[currentTeam].paf = 0;
                         // Revert current selection to zero
                     } else {
-                        answer = gameQuestions[currentQuestion].options[selectionHandlerResult];
+                        // The answer may be shuffled, so 
+                        answer = currentQuestion.options[selectionHandlerResult];
                     }
                     game.currentOption = 0;
                     printf("mainLoop: User answered %s\n", answer.c_str());
                 }
                 break;
             case PHONE_A_FRIEND:
+                pafSkip = 1;
                 // Wait for the current message to hide
                 if (!messageHidden()) break;
                 chatObjectCache = showMessage(pafMessage, gamein->gameCamera, gamein->currentGame);
@@ -1894,11 +2075,11 @@ int mainLoop(gameInfo* gamein) {
             case CONFIRMING:
                 // Wait for grunty dialoge to dismiss
                 if (!messageHidden()) break;
-                if (checkAnswer(currentQuestion, answer)) {
-                    chatObjectCache = showMessage(gameQuestions[currentQuestion].correctResponse,
+                if (checkAnswer(currentQuestion.answer, answer)) {
+                    chatObjectCache = showMessage(currentQuestion.correctResponse,
                         gamein->gameCamera, gamein->currentGame);
                 } else {
-                    chatObjectCache = showMessage(gameQuestions[currentQuestion].wrongResponse,
+                    chatObjectCache = showMessage(currentQuestion.wrongResponse,
                         gamein->gameCamera, gamein->currentGame);
                 }
                 // Remove the showcase image at this time - we shouldn't need any special protections here because
@@ -1932,7 +2113,7 @@ int mainLoop(gameInfo* gamein) {
                 if (stageCounter == 2) {
                     if (gameTimer(1.0f)) {
                         // Hurt the team if the answer is wrong
-                        if (!checkAnswer(currentQuestion, answer)) {
+                        if (!checkAnswer(currentQuestion.answer, answer)) {
                             playRandomHurtSound(gamein->currentGame);
                             // Damage the current team
                             teamStats[currentTeam].teamHealth--;
@@ -1961,14 +2142,51 @@ int mainLoop(gameInfo* gamein) {
             case QUESTION_CLEANUP:
                 if (messageHidden()) {
                     // GO back to waiting, choose next question
-                    currentQuestion++;
                     // Check for a winner
                     auto teamsLeft = numberOfTeamsRemaining();
                     auto doNewRound = false;
                     if (teamsLeft == 1) {
+                        auto teams = getTeams();
+                        for (auto i : teams) {
+                            tempCache = showTeamHealth(i, gamein->gameCamera, gamein->currentGame, i - 1);
+                            // Insert the tempCache elements into the healthcache
+                            healthCache.insert(healthCache.end(), tempCache.begin(), tempCache.end());
+                        }
+                        // Which team won?
+                        auto winningTeam = teams.front();
+                        string winningMessage = "LOL";
+                        switch (winningTeam) {
+                            case 0:
+                              winningMessage = "Well, well, well Team 1 has won. I hope you all have had some fun!";
+                              break;
+                            case 1:
+                              winningMessage = "Looks like team 2 has won these rounds. You really showed up all these clowns!";
+                              break;
+                            case 2:
+                              winningMessage = "Everyone, it looks like the winner is team 3! They will be taking home the victory!";
+                              break;
+                            default:
+                              winningMessage = "This is awkward, I must confess. This game appears to be a mess! This statement you should never see, the default case has been hit you see!";
+                              break;
+                        }
                         // There is a winner
-                        chatObjectCache = showMessage("This is a surprise, we have a winner! I haven't yet even had my dinner!", gamein->gameCamera, gamein->currentGame);
+                        chatObjectCache = showMessage(winningMessage, gamein->gameCamera, gamein->currentGame);
                         gameState = HEALTH_HIDE;
+                        break;
+                    } else if (questions.empty()) {
+                        chatObjectCache = showMessage(
+                            "Well this result is unexpected! More than one team is left uncontested! I'm not really sure what happens now, maybe you all can take a bow!",
+                            gamein->gameCamera,
+                            gamein->currentGame);
+                        // get the teams still alive
+                        auto teams = getTeams();
+                        for (auto i : teams) {
+                            tempCache = showTeamHealth(i, gamein->gameCamera, gamein->currentGame, i - 1);
+                            // Insert the tempCache elements into the healthcache
+                            healthCache.insert(healthCache.end(), tempCache.begin(), tempCache.end());
+                        }
+                        gameState = HEALTH_HIDE;
+                        break;
                     } else {
                         auto lastTeam = currentTeam;
                         // If multiple teams still exist, choose the next one
@@ -1984,6 +2202,8 @@ int mainLoop(gameInfo* gamein) {
                 break;
         }
     }
+    // Cleanup controller if needed
+    SDL_GameControllerClose(gameController1);
     return 0;
 }
 

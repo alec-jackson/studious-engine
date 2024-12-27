@@ -40,7 +40,7 @@ void GameInstance::startGame(const configData &config) {
     initWindow(config);
     initAudio();
     // Comment out playSound to disable music
-    playSound(0, 1, 50);
+    playSound(0, -1, 50);
     initController();
     initApplication(vertShaders_, fragShaders_);
     keystate = SDL_GetKeyboardState(NULL);

@@ -31,6 +31,7 @@ struct gameInfo {
 };
 
 enum GameState {
+    BOOTUP_SCREEN,
     BEGIN_ROUND,
     BEGIN_ROUND_UI_WAIT,
     BEGIN_ROUND_UI_CLOSE,
@@ -74,7 +75,7 @@ struct GameLogicInfo {
 };
 
 struct GameQuestions {
-    string options[4];
+    vector<string> options;
     string question;
     QuestionType type;
     float showcaseTime;
@@ -83,7 +84,6 @@ struct GameQuestions {
     string correctResponse;
     string wrongResponse;
     string mediaData;
-    vector<string> getOptions() { return vector<string>(options, options + 4); }
 };
 
 enum AudioDirection {
