@@ -7,6 +7,7 @@ using std::endl;
 
 string imagePath = "../src/resources/images/Shrek.gif";
 string testImage = "../src/resources/images/sample_1.gif";
+string animatedImage = "../src/resources/images/sample_2_animation.gif";
 
 /*
 // Test Fixtures
@@ -73,7 +74,7 @@ TEST(GifLoaderTest, WhenOpenTestImage_ThenPropertiesCorrect) {
     ASSERT_EQ(0, gifLoader.getSortFlag());
     ASSERT_EQ(1, gifLoader.getGlobalColorTableSize());
     ASSERT_EQ(0, gifLoader.getBackgroundColorIndex());
-    ASSERT_EQ(0, gifLoader.getPixelAspectRatio());
+    ASSERT_EQ(1, gifLoader.getPixelAspectRatio());
 
     // Validate GCE variables
     ASSERT_EQ(0x04, gifLoader.getGceBlockSize());
@@ -89,8 +90,63 @@ TEST(GifLoaderTest, WhenOpenTestImage_ThenPropertiesCorrect) {
     ASSERT_EQ(0x00, image.lctSize);
 }
 
-TEST(GifLoaderTest, WhenLzwCompressionRun_ThenTablesCorrect) {
+TEST(GifLoaderTest, WhenImageLoaded_ThenRawImageDataAsExpected) {
+    // Preparation / Action
+    auto gifLoader = GifLoader(testImage);
 
+    // Validate the raw image data
+    auto image = gifLoader.getImage(0);
+    //auto imageData = image.imageData;
+
+    // Validate the first image
+    ASSERT_EQ(10, image.imageWidth);
+    ASSERT_EQ(10, image.imageHeight);
+
+    // Validate the raw image data
+    auto imageSize = image.imageWidth * image.imageHeight;
+    ASSERT_EQ(100, imageSize);
+
+    auto checkCount = 0;
+    for (int i = 0; i < imageSize * 3; i++) {
+        ASSERT_EQ(referenceImageData[i], image.imageData[i]);
+        checkCount++;
+    }
+
+    ASSERT_EQ(300, checkCount);
+}
+
+TEST(GifLoaderTest, WhenAnimatedImageLoaded_ThenMultipleImagesPresent) {
+    // Preparation / Action
+    auto gifLoader = GifLoader(animatedImage);
+
+    // Validate the raw image data
+    auto images = gifLoader.getImages();
+    ASSERT_EQ(3, images.size());
+
+    // Validate that the first image has the expected height and width
+    auto firstImage = images.at(0);
+    ASSERT_EQ(11, firstImage.imageWidth);
+    ASSERT_EQ(29, firstImage.imageHeight);
+
+    // Validate that the second and third images have a cropped width and height
+    auto secondImage = images.at(1);
+    auto thirdImage = images.at(2);
+    ASSERT_EQ(7, secondImage.imageWidth);
+    ASSERT_EQ(16, secondImage.imageHeight);
+
+    ASSERT_EQ(7, thirdImage.imageWidth);
+    ASSERT_EQ(16, thirdImage.imageHeight);
+
+    // Make sure the additional images do not start at origin
+    ASSERT_EQ(2, secondImage.imageLeft);
+    ASSERT_EQ(11, secondImage.imageTop);
+
+    ASSERT_EQ(2, thirdImage.imageLeft);
+    ASSERT_EQ(2, thirdImage.imageTop);
+
+    // Validate the first image starts at origin
+    ASSERT_EQ(0, firstImage.imageLeft);
+    ASSERT_EQ(0, firstImage.imageTop);
 }
 
 /**

@@ -10,8 +10,6 @@
  */
 
 #pragma once
-#include <vector>
-#include <string>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
 #include <GameInstance.hpp>
@@ -24,75 +22,8 @@
 gameInfo struct currently used to temporarily send camera and character data
 to a function to handle input.
 */
-struct gameInfo {
+typedef struct gameInfo {
     bool *isDone;
     CameraObject *gameCamera;
     GameInstance *currentGame;
-};
-
-enum GameState {
-    BOOTUP_SCREEN,
-    BEGIN_ROUND,
-    BEGIN_ROUND_UI_WAIT,
-    BEGIN_ROUND_UI_CLOSE,
-    CHATTING,
-    DISPLAY_OPTIONS,
-    ANSWERING,
-    SHOWCASE,
-    WAITING,
-    PHONE_A_FRIEND,
-    PAF_PRECLOCK,
-    PAF_ENTRY,
-    PAF_CLOCK,
-    PAF_EXIT,
-    CONFIRMING,
-    CONFIRM_CHAT,
-    DAMAGE_CHECK,
-    HEALTH_HIDE,
-    QUESTION_CLEANUP
-};
-
-enum QuestionType {
-    MUSIC,
-    TRIVIA,
-    IMAGE,
-    MINIGAME
-};
-
-struct GameLogicInfo {
-    GameInstance *currentGame;
-    GameState currentState = WAITING;
-    float currentDebounce = 0.0f;
-    float debounceSeconds = 0.3f;
-    unsigned int currentOption = 0;
-    int prevOption = 0;
-    float currentVolume = 50.0f;
-    float maxSongVolume = 50.0f;
-    float songTimePass = 1.0f;
-    float volumeRampSeconds = 2.0f;
-    float currentVolumeRampSeconds = 0.0f;
-    int songChannel = -1;
-};
-
-struct GameQuestions {
-    vector<string> options;
-    string question;
-    QuestionType type;
-    float showcaseTime;
-    float volume;
-    string answer;
-    string correctResponse;
-    string wrongResponse;
-    string mediaData;
-};
-
-enum AudioDirection {
-    LOUDER,
-    QUIETER
-};
-
-struct TeamStats {
-    int teamHealth;
-    int paf;  // Phone a friend
-    string imagePath;
-};
+} gameInfo;

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <SpriteObject.hpp>
+#include <GifLoader.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,
@@ -36,12 +37,25 @@ void SpriteObject::initializeShaderVars() {
 
 void SpriteObject::initializeSprite() {
     cout << "SpriteObject::initializeSprite with path " << spritePath_ << endl;
-    SDL_Surface *texture = IMG_Load(spritePath_.c_str());
-    auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
+    Image texture;
+    TexFormat textureFormat = TexFormat::RGB;
+    // Check if the image is a GIF file, if so we process it in a special way
+    if (spritePath_.find(".gif") != string::npos) {
+        printf("SpriteObject::initializeSprite: Loading GIF file %s\n", spritePath_.c_str());
+        GifLoader gif(spritePath_);
+        // Just load a single image for now
+        texture = gif.getImage(0);
+    } else {
+        SDL_Surface *sdlTexture = IMG_Load(spritePath_.c_str());
+        textureFormat = sdlTexture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
+        texture.imageData = static_cast<byte *>(sdlTexture->pixels);
+        texture.imageWidth = sdlTexture->w;
+        texture.imageHeight = sdlTexture->h;
+    }
     // Send texture image to OpenGL
     gfxController_->generateTexture(&textureId_);
     gfxController_->bindTexture(textureId_);
-    gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
+    gfxController_->sendTextureData(texture.imageWidth, texture.imageHeight, textureFormat, texture.imageData);
     gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
     gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
     gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
@@ -57,15 +71,15 @@ void SpriteObject::initializeSprite() {
             y = 0.0f;
             break;
         case CENTER:
-            x = -1 * ((texture->w) / 2.0f);
-            y = (texture->h) / 2.0f;
+            x = -1 * ((texture.imageWidth) / 2.0f);
+            y = (texture.imageHeight) / 2.0f;
             break;
         default:
             fprintf(stderr, "SpriteObject::initializeSprite: Unsupported anchor type %d\n", anchor_);
             assert(false);
             break;
     }
-    auto x2 = x + (texture->w), y2 = y - (texture->h);
+    auto x2 = x + (texture.imageWidth), y2 = y - (texture.imageHeight);
     // Use textures to create each character as an independent object
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);

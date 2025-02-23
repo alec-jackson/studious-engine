@@ -1,3 +1,4 @@
+#include <string>
 #include <GifLoader.hpp>
 #include <iostream>
 #include <fstream>
@@ -59,37 +60,43 @@ void GifLoader::loadGif() {
             inputFile.get(readByte);
             globalColorTable_[i] = readByte;
         }
-        // Now we need to process any annoying extensions that
-        // may exist in the file...
-        //auto extensionSize = 0;
-        // While the next byte is 21, iterate through until it's not
-        char extCode;
-        inputFile.get(extCode);
-        while ((byte)extCode == 0x21) {
-            // Undo the seek
-            inputFile.seekg(-1, std::ios::cur);
-            processExtension(inputFile);
-            // Read the extCode again
+        // Start creating each image
+        while (!inputFile.eof()) {
+            // Now we need to process any annoying extensions that
+            // may exist in the file...
+            //auto extensionSize = 0;
+            // While the next byte is 21, iterate through until it's not
+            char extCode;
             inputFile.get(extCode);
+            if (extCode == 0x3B) {
+                printf("GifLoader::loadGif: End of file reached\n");
+                break;
+            }
+            while ((byte)extCode == 0x21) {
+                // Undo the seek
+                inputFile.seekg(-1, std::ios::cur);
+                processExtension(inputFile);
+                // Read the extCode again
+                inputFile.get(extCode);
+            }
+            inputFile.seekg(-1, std::ios::cur);
+
+            // Read the image descripter header
+            byte imageDescriptorHeader[GIF_IMAGE_DESCRIPTOR_SIZE];
+            for (int i = 0; i < GIF_IMAGE_DESCRIPTOR_SIZE; ++i) {
+                char readByte;
+                inputFile.get(readByte);
+                imageDescriptorHeader[i] = readByte;
+            }
+            Image im;
+            unpackImageDescriptor(imageDescriptorHeader, &im);
+            images_.push_back(im);
+            // If a lct is used, we would parse it here :)
+            assert(im.localColorTableFlag == false);
+
+            // Start reading image data
+            parseImageData(inputFile);
         }
-        inputFile.seekg(-1, std::ios::cur);
-
-        // Read the image descripter header
-        byte imageDescriptorHeader[GIF_IMAGE_DESCRIPTOR_SIZE];
-        for (int i = 0; i < GIF_IMAGE_DESCRIPTOR_SIZE; ++i) {
-            char readByte;
-            inputFile.get(readByte);
-            imageDescriptorHeader[i] = readByte;
-        }
-        Image im;
-        unpackImageDescriptor(imageDescriptorHeader, &im);
-        images_.push_back(im);
-        // If a lct is used, we would parse it here :)
-        assert(im.localColorTableFlag == false);
-
-        // Start reading image data
-        parseImageData(inputFile);
-
     } else {
         printf("Failed to open file\n");
     }
@@ -134,16 +141,26 @@ void GifLoader::parseImageData(std::ifstream &inputFile) {
     printf("\nIMAGE DATA END\n");
 }
 
-void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
+int GifLoader::initializeColorCodeTable(byte lzwMin) {
+    // Clear out the color code table to reset it
+    colorCodeTable_.clear();
     // Generate the code table using the lzw min
     int numberOfColors = 1 << lzwMin;
     for (int i = 0; i < numberOfColors; ++i) {
         colorCodeTable_.push_back(std::to_string(i));
     }
+
     // Add the Clear Code and End of Information Code
     colorCodeTable_.push_back("CC");
     colorCodeTable_.push_back("EOIC");
 
+    return numberOfColors;
+}
+
+void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
+    auto numberOfColors = initializeColorCodeTable(lzwMin);
+    auto clearCodeIndex = numberOfColors;
+    auto endOfInfoIndex = numberOfColors + 1;
     auto grabBits = [&data](unsigned int bitSize, unsigned int addr) {
         // Ensure bitsize is 12 or below
         assert(bitSize <= 12);
@@ -158,8 +175,8 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
             auto elem = (3 - i) + divAddr;
             // Check if the data array has an element at i + divAddr
             if (elem >= dataSize) {
-                printf("End of array reached, not adding to result");
-                assert(i > 0);
+                //printf("End of array reached, not adding to result\n");
+                assert(i < 3);
                 continue;
             }
             // Add to the current result (32 bits)
@@ -171,17 +188,128 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
         // Then we just mask the number of bits we want and return it
         return result & ((1 << bitSize) - 1);
     };
+    vector<string> outputCodes;
+    auto currentBitSize = lzwMin + 1;
+    auto address = 0;
+    auto currentRead = 0;
+    auto currentCode = grabBits(currentBitSize, address);
+    string nextCode;
+    bool impartialOutput = false;
+    bool initialRead = false;
+    currentRead++;
+    // The first code we process should be the clear code
+    assert(currentCode == clearCodeIndex);
+    while (currentCode != endOfInfoIndex) {
+        printf("GifLoader::lzwDecompression: Processing code: %u\n", currentCode);
+        // Process the current code
+        if (currentCode == clearCodeIndex) {
+            printf("GifLoader::lzwDecompression: Found clear code\n");
+            // Reset the color code table
+            initializeColorCodeTable(lzwMin);
+        } else {
+            // Perform code processing here
+            // Read value
+            assert(currentCode < colorCodeTable_.size()); // This should always be true -- we just write partial values
+            auto decodedValue = colorCodeTable_.at(currentCode);
+            if (initialRead) {
+                // Modify the tail end of the colorCodeTable with the first char of decoded val
+                auto lastCode = colorCodeTable_.back();
+                lastCode += std::string(";") + decodedValue.substr(0, 1);
+                colorCodeTable_[colorCodeTable_.size() - 1] = lastCode;
+                if (impartialOutput) {
+                    impartialOutput = false;
+                    // Update the partial output to make it whole
+                    outputCodes[outputCodes.size() - 1] = lastCode;
+                    
+                }
+                // Update the decoded value
+                decodedValue = colorCodeTable_.at(currentCode);
+            }
+            // We write the code to the table as impartial ALWAYS - will finish this later
+            colorCodeTable_.push_back(decodedValue);
+            // If the currentCode is the last entry in the color table, then we're doing an impartial output
+            if (currentCode == colorCodeTable_.size() - 2) {
+                impartialOutput = false;
+            }
+            outputCodes.push_back(decodedValue);
+            initialRead = true;
+        }
+        currentRead++;
+        // Increment address
+        address += currentBitSize;
+        if (currentRead > (1 << (currentBitSize - 1))) {
+            currentBitSize++;
+            currentRead = 1;
+        }
+        // read the next code at the start of the next loop
+        currentCode = grabBits(currentBitSize, address);
+        //printf("GifLoader::lzwDecompression: Read code size: %d, address: %d, code: %u\n", currentBitSize, address, currentCode);
+    }
 
-    // Frick
-    printf("GifLoader::grabBits: %u\n", grabBits(3, 0));
+    // We need to simultaneously load data from the file as we decode using lzw
+    // Issue bits to decode stream
+
     // #4 #1 #6 #6 #2 #9 #9 #7 #8 #10 #2 #12 #1 #14 #15 #6 #0 #21 #0 #10 #7 #22 #23 #18 #26 #7 #10 #29 #13 #24 #12 #18 #16 #36 #12 #5
+
+    // Now convert the raw output to pixel data using the gct
+    processColorOutputForImage(outputCodes);
+}
+
+void GifLoader::processColorOutputForImage(std::vector<string> &outputData) {
+    Image &im = images_.back();
+    bool fullImageFlush = false;
+    //auto width = im.imageWidth;
+    //auto height = im.imageHeight;
+    // Check if this is a partial image flush or not
+    // The image should be width * height
+    if (im.imageTop == 0 && im.imageLeft == 0) {
+        // This is a full image - do normal stuff
+        fullImageFlush = true;
+    }
+    if (fullImageFlush == true) {
+        printf("Full image flush detected\n");
+    }
+    // Ensure we have a previous full image to use as a reference
+    //assert(images_.size() > 1);
+    im.imageData = new byte[im.imageWidth * im.imageHeight * 3];
+    int currentColor = 0;
+    auto processOutput = [&] (string &outString) {
+        auto out = std::stoi(outString);
+        // Copy the three corresponding color bytes from the gct into the image data
+        memcpy(&im.imageData[currentColor * 3], &globalColorTable_[out * 3], sizeof(byte) * 3);
+        currentColor++;
+    };
+    for (auto out : outputData) {
+        assert(out.empty() == false);
+        string s;
+        for (auto c : out) {
+            if (c == ';') {
+                // Process the output string
+                processOutput(s);
+                // clear string
+                s.clear();
+            } else {
+                s += c;
+            }
+        }
+        assert(s.empty() == false);
+        // Process the output string s here again
+        processOutput(s);
+    }
+    printf("GifLoader::processColorOutputForImage: Complete!\n");
+    for (int i = 0; i < im.imageWidth * im.imageHeight; ++i) {
+        //printf("GifLoader::processColorOutputForImage: %02x %02x %02x\n", im.imageData[i * 3], im.imageData[i * 3 + 1], im.imageData[i * 3 + 2]);
+    }
 }
 
 void GifLoader::unpackImageDescriptor(const byte *id, Image *im) {
     // Make sure the first byte is 2C
     assert(id[0] == 0x2C);
 
-    // Bytes 1-4 are obsolete, so we can ignore them
+    // Bytes 1-2 are the image left position
+    im->imageLeft = (id[2] << 8) | id[1];
+    // Bytes 3-4 are the image top position
+    im->imageTop = (id[4] << 8) | id[3];
     // Image width is little endian bytes 5-6
     im->imageWidth = (id[6] << 8) | id[5];
     // Height is bytes 7-8
@@ -216,6 +344,11 @@ GifVersion GifLoader::getVersionFromStr(const byte *str) {
         }
     }
     return gifVersion;
+}
+
+const Image &GifLoader::getImage(int imIndex) const {
+    assert(imIndex >= 0 && imIndex < images_.size());
+    return images_.at(imIndex);
 }
 
 unsigned short GifLoader::getCanvasWidthFromStr(const byte *lsd) {

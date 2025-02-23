@@ -22,10 +22,13 @@ enum GifVersion {
 struct Image {
     unsigned short imageWidth;
     unsigned short imageHeight;
+    unsigned short imageLeft;
+    unsigned short imageTop;
     bool localColorTableFlag;
     bool interlaceFlag;
     bool sortFlag;
     unsigned int lctSize;
+    byte *imageData;
 };
 
 class GifLoader {
@@ -44,6 +47,10 @@ public:
     void unpackImageDescriptor(const byte *id, Image *im);
     void parseImageData(std::ifstream &inputFile);
     void lzwDecompression(byte lzwMin, std::vector<byte> data);
+    void processColorOutputForImage(std::vector<string> &outputData);
+    int initializeColorCodeTable(byte lzwMin);
+
+    const Image &getImage(int imIndex) const;
 
     inline GifVersion getVersion() { return version_; }
     inline unsigned short getCanvasWidth() { return canvasWidth_; }
@@ -58,7 +65,7 @@ public:
     inline byte getGceBlockSize() { return gceBlockSize_; }
     inline unsigned short getGceDelayTime() { return gceDelayTime_; }
     inline byte getGceTransparentColorIndex() { return gceTransparentColorIndex_; }
-    inline vector<Image> getImages() { return images_; }
+    inline const vector<Image> &getImages() const { return images_; }
 private:
     string imagePath_;
 
