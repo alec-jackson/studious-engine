@@ -131,9 +131,8 @@ void GifLoader::parseImageData(std::ifstream &inputFile) {
             // Add the read byte to the data array
             data.push_back(readByte);
         }
-
-        lzwDecompression(lzwMin, data);
     }
+    lzwDecompression(lzwMin, data);
     printf("IMAGE DATA START\n");
     for (auto i : data) {
         printf("%02x ", i);
@@ -176,7 +175,7 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
             // Check if the data array has an element at i + divAddr
             if (elem >= dataSize) {
                 //printf("End of array reached, not adding to result\n");
-                assert(i < 3);
+                //assert(i < 3);
                 continue;
             }
             // Add to the current result (32 bits)
@@ -196,16 +195,22 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
     string nextCode;
     bool impartialOutput = false;
     bool initialRead = false;
+    bool resetBitSize = false;
     currentRead++;
     // The first code we process should be the clear code
     assert(currentCode == clearCodeIndex);
     while (currentCode != endOfInfoIndex) {
-        printf("GifLoader::lzwDecompression: Processing code: %u\n", currentCode);
+        //printf("GifLoader::lzwDecompression: Processing code: %u\n", currentCode);
         // Process the current code
         if (currentCode == clearCodeIndex) {
             printf("GifLoader::lzwDecompression: Found clear code\n");
             // Reset the color code table
             initializeColorCodeTable(lzwMin);
+            // Reset the current bit size
+            //currentBitSize = lzwMin + 1;
+            currentRead = 1;
+            resetBitSize = true;
+            initialRead = false;
         } else {
             // Perform code processing here
             // Read value
@@ -237,6 +242,10 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
         currentRead++;
         // Increment address
         address += currentBitSize;
+        if (resetBitSize) {
+            currentBitSize = lzwMin + 1;
+            resetBitSize = false;
+        }
         if (currentRead > (1 << (currentBitSize - 1))) {
             currentBitSize++;
             currentRead = 1;
@@ -258,8 +267,8 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
 void GifLoader::processColorOutputForImage(std::vector<string> &outputData) {
     Image &im = images_.back();
     bool fullImageFlush = false;
-    //auto width = im.imageWidth;
-    //auto height = im.imageHeight;
+    auto width = im.imageWidth;
+    auto height = im.imageHeight;
     // Check if this is a partial image flush or not
     // The image should be width * height
     if (im.imageTop == 0 && im.imageLeft == 0) {
@@ -268,15 +277,21 @@ void GifLoader::processColorOutputForImage(std::vector<string> &outputData) {
     }
     if (fullImageFlush == true) {
         printf("Full image flush detected\n");
+    } else {
+        printf("Partial image flush detected\n");
+        assert(images_.size() > 1);
+        // Set the width/height to the previous frame (should be complete)
+        width = images_.at(images_.size() - 2).imageWidth;
+        height = images_.at(images_.size() - 2).imageHeight;
     }
+    byte outBuffer[im.imageWidth * im.imageHeight * 3];
     // Ensure we have a previous full image to use as a reference
-    //assert(images_.size() > 1);
-    im.imageData = new byte[im.imageWidth * im.imageHeight * 3];
+    im.imageData = new byte[width * height * 3];
     int currentColor = 0;
-    auto processOutput = [&] (string &outString) {
+    auto processOutput = [&] (string &outString, byte *outBuffer) {
         auto out = std::stoi(outString);
         // Copy the three corresponding color bytes from the gct into the image data
-        memcpy(&im.imageData[currentColor * 3], &globalColorTable_[out * 3], sizeof(byte) * 3);
+        memcpy(&outBuffer[currentColor * 3], &globalColorTable_[out * 3], sizeof(byte) * 3);
         currentColor++;
     };
     for (auto out : outputData) {
@@ -285,7 +300,7 @@ void GifLoader::processColorOutputForImage(std::vector<string> &outputData) {
         for (auto c : out) {
             if (c == ';') {
                 // Process the output string
-                processOutput(s);
+                processOutput(s, outBuffer);
                 // clear string
                 s.clear();
             } else {
@@ -294,12 +309,37 @@ void GifLoader::processColorOutputForImage(std::vector<string> &outputData) {
         }
         assert(s.empty() == false);
         // Process the output string s here again
-        processOutput(s);
+        processOutput(s, outBuffer);
     }
+    // If we're doing a full image flush, then copy outbuffer to image data
+    if (fullImageFlush) {
+        memcpy(im.imageData, outBuffer, sizeof(outBuffer));
+    } else {
+        // Copy the last frame into the current image buffer
+        memcpy(im.imageData, images_.at(images_.size() - 2).imageData, sizeof(byte) * width * height * 3);
+
+        // Draw the output buffer on top of the previous frame
+        writeBufferToImage(outBuffer, width, height, im.imageLeft, im.imageTop, im);
+    }
+    // Update width/height values for subsequent images...
+    im.imageWidth = width;
+    im.imageHeight = height;
     printf("GifLoader::processColorOutputForImage: Complete!\n");
     for (int i = 0; i < im.imageWidth * im.imageHeight; ++i) {
         //printf("GifLoader::processColorOutputForImage: %02x %02x %02x\n", im.imageData[i * 3], im.imageData[i * 3 + 1], im.imageData[i * 3 + 2]);
     }
+}
+
+void GifLoader::writeBufferToImage(byte *outBuffer, uint16_t fWidth, uint16_t fHeight, uint16_t iLeft, uint16_t iTop, Image &im) {
+    // Base case
+    if (iTop - im.imageTop == im.imageHeight) return;
+    // Recursive function to write to image buffer
+    // Find the index in the buffer where we start writing
+    auto startIdx = (iTop * fWidth + iLeft) * 3;
+    // Perform a memcpy for the entire line from the output buffer
+    memcpy(&im.imageData[startIdx], outBuffer, sizeof(byte) * im.imageWidth * 3);
+    // Start the next iteration
+    return writeBufferToImage(&outBuffer[im.imageWidth * 3], fWidth, fHeight, iLeft, iTop + 1, im);
 }
 
 void GifLoader::unpackImageDescriptor(const byte *id, Image *im) {

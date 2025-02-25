@@ -208,7 +208,7 @@ int runtime(GameInstance *currentGame) {
         "fps-text");
 
     auto testSprite = currentGame->createSprite(
-        "src/resources/images/sample_1.gif",
+        "src/resources/images/sample_2_animation.gif",
         vec3(100.0f, 100.0f, 0.0f),
         6.0f,
         gfxController.getProgramId(3).get(),

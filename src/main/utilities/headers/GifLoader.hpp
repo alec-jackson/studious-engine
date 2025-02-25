@@ -11,6 +11,7 @@ using std::string;
 using std::vector;
 
 typedef unsigned char byte;
+typedef unsigned short uint16_t;
 
 enum GifVersion {
     GIFNONE,
@@ -20,10 +21,10 @@ enum GifVersion {
 };
 
 struct Image {
-    unsigned short imageWidth;
-    unsigned short imageHeight;
-    unsigned short imageLeft;
-    unsigned short imageTop;
+    uint16_t imageWidth;
+    uint16_t imageHeight;
+    uint16_t imageLeft;
+    uint16_t imageTop;
     bool localColorTableFlag;
     bool interlaceFlag;
     bool sortFlag;
@@ -49,6 +50,7 @@ public:
     void lzwDecompression(byte lzwMin, std::vector<byte> data);
     void processColorOutputForImage(std::vector<string> &outputData);
     int initializeColorCodeTable(byte lzwMin);
+    void writeBufferToImage(byte *outBuffer, uint16_t fWidth, uint16_t fHeight, uint16_t iLeft, uint16_t iTop, Image &im);
 
     const Image &getImage(int imIndex) const;
 

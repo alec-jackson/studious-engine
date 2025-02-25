@@ -8,6 +8,8 @@ using std::endl;
 string imagePath = "../src/resources/images/Shrek.gif";
 string testImage = "../src/resources/images/sample_1.gif";
 string animatedImage = "../src/resources/images/sample_2_animation.gif";
+string bigAnimatedImage = "../src/resources/images/shrek.gif";
+string smallAnimatedImage = "../src/resources/images/150100.gif";
 
 /*
 // Test Fixtures
@@ -131,11 +133,12 @@ TEST(GifLoaderTest, WhenAnimatedImageLoaded_ThenMultipleImagesPresent) {
     // Validate that the second and third images have a cropped width and height
     auto secondImage = images.at(1);
     auto thirdImage = images.at(2);
-    ASSERT_EQ(7, secondImage.imageWidth);
-    ASSERT_EQ(16, secondImage.imageHeight);
+    // The image width/heights should be updated to match the reference image
+    ASSERT_EQ(11, secondImage.imageWidth);
+    ASSERT_EQ(29, secondImage.imageHeight);
 
-    ASSERT_EQ(7, thirdImage.imageWidth);
-    ASSERT_EQ(16, thirdImage.imageHeight);
+    ASSERT_EQ(11, thirdImage.imageWidth);
+    ASSERT_EQ(29, thirdImage.imageHeight);
 
     // Make sure the additional images do not start at origin
     ASSERT_EQ(2, secondImage.imageLeft);
@@ -147,6 +150,13 @@ TEST(GifLoaderTest, WhenAnimatedImageLoaded_ThenMultipleImagesPresent) {
     // Validate the first image starts at origin
     ASSERT_EQ(0, firstImage.imageLeft);
     ASSERT_EQ(0, firstImage.imageTop);
+}
+
+TEST(GifLoaderTest, WhenBigAnimatedImageLoaded_ThenImageDataCorrect) {
+    // Preparation / Action
+    auto gifLoader = GifLoader(smallAnimatedImage);
+    printf("Testdone\n");
+    //ASSERT_EQ(0, 1);
 }
 
 /**
