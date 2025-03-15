@@ -18,6 +18,8 @@ SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsign
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): GameObject2D(
             spritePath, position, scale, programId, objectName, type, anchor, gfxController), tint_ { vec4(0) } {
     printf("SpriteObject::SpriteObject: Creating sprite %s\n", objectName.c_str());
+    GameObject2D::initializeTextureData();
+    GameObject2D::initializeVertexData();
     initializeShaderVars();
 }
 

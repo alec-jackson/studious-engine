@@ -28,7 +28,7 @@ class GameObject2D : public SceneObject {
     void update() override;
     void initializeTextureData();
     void initializeShaderVars();
-    void initializeVertexData(int bWidth, int bHeight);
+    void initializeVertexData();
 
  protected:
     string texturePath_;
@@ -39,6 +39,9 @@ class GameObject2D : public SceneObject {
 
     unsigned int vao_;
     unsigned int vbo_;
+
+    unsigned int textureWidth_;
+    unsigned int textureHeight_;
 
     ObjectAnchor anchor_;
 

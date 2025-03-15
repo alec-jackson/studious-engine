@@ -19,7 +19,6 @@ GameObject2D::GameObject2D(string texturePath, vec3 position, float scale, unsig
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), texturePath_ { texturePath },
     anchor_ { anchor } {
     printf("GameObject2D::GameObject2D: Creating 2D object %s\n", objectName.c_str());
-    initializeTextureData();
 }
 
 /// @todo Resolution is hardcoded to 720p right now. Add functionality to change this on the fly. Will need to re-send
@@ -47,12 +46,13 @@ void GameObject2D::initializeTextureData() {
     gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
     gfxController_->generateMipMap();
 
-    initializeVertexData(texture->w, texture->h);
+    textureWidth_ = texture->w;
+    textureHeight_ = texture->h;
 
     SDL_FreeSurface(texture);
 }
 
-void GameObject2D::initializeVertexData(int bWidth, int bHeight) {
+void GameObject2D::initializeVertexData() {
     // Perform anchor points here
     auto x = 0.0f, y = 0.0f;
     switch (anchor_) {
@@ -61,15 +61,15 @@ void GameObject2D::initializeVertexData(int bWidth, int bHeight) {
             y = 0.0f;
             break;
         case CENTER:
-            x = -1 * ((bWidth) / 2.0f);
-            y = (bHeight) / 2.0f;
+            x = -1 * ((textureWidth_) / 2.0f);
+            y = (textureHeight_) / 2.0f;
             break;
         default:
             fprintf(stderr, "GameObject2D::initializeVertexData: Unsupported anchor type %d\n", anchor_);
             assert(false);
             break;
     }
-    auto x2 = x + (bWidth), y2 = y - (bHeight);
+    auto x2 = x + (textureWidth_), y2 = y - (textureHeight_);
     // Use textures to create each character as an independent object
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);

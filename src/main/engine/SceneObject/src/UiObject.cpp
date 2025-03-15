@@ -15,24 +15,21 @@
 #include <UiObject.hpp>
 
 UiObject::UiObject(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
-        string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,
-        vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), spritePath_ { spritePath },
-        wScale_ { wScale }, hScale_ { hScale }, anchor_ { anchor } {
+        string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): GameObject2D(
+            spritePath, position, scale, programId, objectName, type, anchor, gfxController),
+        wScale_ { wScale }, hScale_ { hScale } {
     printf("UiObject::UiObject: Creating sprite %s\n", objectName.c_str());
+    GameObject2D::initializeTextureData();
+    initializeVertexData();
     initializeShaderVars();
-    initializeSprite();
 }
 
 /// @todo Resolution is hardcoded to 720p right now. Add functionality to change this on the fly. Will need to re-send
 /// projection matrix.
 void UiObject::initializeShaderVars() {
-    mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
-    gfxController_->setProgram(programId_);
-    auto projectionId = gfxController_->getShaderVariable(programId_, "projection").get();
-    gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
+    GameObject2D::initializeShaderVars();
     wScaleId_ = gfxController_->getShaderVariable(programId_, "wScale").get();
     hScaleId_ = gfxController_->getShaderVariable(programId_, "hScale").get();
-    modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
@@ -78,25 +75,10 @@ float *UiObject::generateVertices(float x, float y, float iFx, float iFy) {
             generateVertexBase(vertexData, idx, x1, y1, x2, y2);
         }
     }
-
     return vertexData;
 }
 
-void UiObject::initializeSprite() {
-    cout << "UiObject::initializeSprite with path " << spritePath_ << endl;
-    SDL_Surface *texture = IMG_Load(spritePath_.c_str());
-    auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
-    // Send texture image to OpenGL
-    gfxController_->generateTexture(&textureId_);
-    gfxController_->bindTexture(textureId_);
-    gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
-    gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
-    gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
-    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
-    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
-    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
-    gfxController_->generateMipMap();
-
+void UiObject::initializeVertexData() {
     // Perform anchor points here
     auto x = 0.0f, y = 0.0f;
     switch (anchor_) {
@@ -105,26 +87,26 @@ void UiObject::initializeSprite() {
             y = 0.0f;
             break;
         case CENTER:
-            x = -1 * ((texture->w) / 2.0f);
-            y = (texture->h) / 2.0f;
+            x = -1 * ((textureWidth_) / 2.0f);
+            y = (textureHeight_) / 2.0f;
             break;
         default:
-            fprintf(stderr, "SpriteObject::initializeSprite: Unsupported anchor type %d\n", anchor_);
+            fprintf(stderr, "UiObject::initializeVertexData: Unsupported anchor type %d\n", anchor_);
             assert(false);
             break;
     }
-    auto incrementFactorX = (texture->w * scale / 3.0f);
-    auto incrementFactorY = (texture->h * scale / 3.0f);
+    auto incrementFactorX = (textureWidth_ * scale / 3.0f);
+    auto incrementFactorY = (textureHeight_ * scale / 3.0f);
     // Use textures to create each character as an independent object
-        gfxController_->initVao(&vao_);
-        gfxController_->bindVao(vao_);
-        gfxController_->generateBuffer(&vbo_);
-        gfxController_->bindBuffer(vbo_);
+    gfxController_->initVao(&vao_);
+    gfxController_->bindVao(vao_);
+    gfxController_->generateBuffer(&vbo_);
+    gfxController_->bindBuffer(vbo_);
 
-        vertexData_ = generateVertices(x, y, incrementFactorX, incrementFactorY);
-        // Send VBO data for each character to the currently bound buffer
-        gfxController_->sendBufferData(sizeof(float) * 24 * 9, vertexData_);
-        gfxController_->enableVertexAttArray(0, 4);
+    vertexData_ = generateVertices(x, y, incrementFactorX, incrementFactorY);
+    // Send VBO data for each character to the currently bound buffer
+    gfxController_->sendBufferData(sizeof(float) * 24 * 9, vertexData_);
+    gfxController_->enableVertexAttArray(0, 4);
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
 }

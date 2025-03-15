@@ -12,11 +12,10 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <SceneObject.hpp>
+#include <GameObject2D.hpp>
 #include <ColliderObject.hpp>
 
-///@todo Merge UiObjet and SpriteObject together... probably
-class UiObject : public SceneObject {
+class UiObject : public GameObject2D {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
@@ -27,8 +26,8 @@ class UiObject : public SceneObject {
     // Render method
     void render() override;
     void update() override;
-    void initializeSprite();
     void initializeShaderVars();
+    void initializeVertexData();
     float *generateVertices(float x, float y, float iFx, float iFy);
     void generateVertexBase(float *vertexData, int triIdx, float x, float y, float x2, float y2);
 
@@ -40,21 +39,11 @@ class UiObject : public SceneObject {
     vec3 getStretch();
 
  private:
-    string spritePath_;
-
-    unsigned int textureId_;
     unsigned int wScaleId_;
     unsigned int hScaleId_;
-    unsigned int modelMatId_;
-    unsigned int vao_;
-    unsigned int vbo_;
 
     float *vertexData_;
 
     float wScale_;
     float hScale_;
-
-    ObjectAnchor anchor_;
-
-    mat4 modelMat_;
 };
