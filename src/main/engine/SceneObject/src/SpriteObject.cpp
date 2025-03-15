@@ -13,7 +13,6 @@
 #include <iostream>
 #include <vector>
 #include <SpriteObject.hpp>
-#include <GifLoader.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,
@@ -37,37 +36,18 @@ void SpriteObject::initializeShaderVars() {
 
 void SpriteObject::initializeSprite() {
     cout << "SpriteObject::initializeSprite with path " << spritePath_ << endl;
-    vector<Image> textures;
-    TexFormat textureFormat = TexFormat::RGB;
-    // Check if the image is a GIF file, if so we process it in a special way
-    if (spritePath_.find(".gif") != string::npos) {
-        printf("SpriteObject::initializeSprite: Loading GIF file %s\n", spritePath_.c_str());
-        GifLoader gif(spritePath_);
-        // Just load a single image for now
-        textures = gif.getImages();
-    } else {
-        SDL_Surface *sdlTexture = IMG_Load(spritePath_.c_str());
-        textureFormat = sdlTexture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
-        auto texture = Image();
-        texture.imageData = static_cast<byte *>(sdlTexture->pixels);
-        texture.imageWidth = sdlTexture->w;
-        texture.imageHeight = sdlTexture->h;
-        textures.push_back(texture);
-    }
-    // Send all texture data to OpenGL
-    for (int i = 0; i < textures.size(); ++i) {
-        unsigned int textureId;
-        gfxController_->generateTexture(&textureId);
-        gfxController_->bindTexture(textureId);
-        gfxController_->sendTextureData(textures[i].imageWidth, textures[i].imageHeight, textureFormat, textures[i].imageData);
-        gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
-        gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
-        gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
-        gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
-        gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
-        gfxController_->generateMipMap();
-        textureIds_.push_back(textureId);
-    }
+    SDL_Surface *texture = IMG_Load(spritePath_.c_str());
+    auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
+    // Send texture image to OpenGL
+    gfxController_->generateTexture(&textureId_);
+    gfxController_->bindTexture(textureId_);
+    gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
+    gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
+    gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
+    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
+    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
+    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
+    gfxController_->generateMipMap();
 
     // Perform anchor points here
     auto x = 0.0f, y = 0.0f;
@@ -77,15 +57,15 @@ void SpriteObject::initializeSprite() {
             y = 0.0f;
             break;
         case CENTER:
-            x = -1 * ((textures.front().imageWidth) / 2.0f);
-            y = (textures.front().imageHeight) / 2.0f;
+            x = -1 * ((texture->w) / 2.0f);
+            y = (texture->h) / 2.0f;
             break;
         default:
             fprintf(stderr, "SpriteObject::initializeSprite: Unsupported anchor type %d\n", anchor_);
             assert(false);
             break;
     }
-    auto x2 = x + (textures.front().imageWidth), y2 = y - (textures.front().imageHeight);
+    auto x2 = x + (texture->w), y2 = y - (texture->h);
     // Use textures to create each character as an independent object
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
@@ -114,9 +94,6 @@ SpriteObject::~SpriteObject() {
 }
 
 void SpriteObject::render() {
-    static int animationFrame;
-    const int pacingCount = 10;
-    static int currentPace;
     translateMatrix_ = glm::translate(mat4(1.0f), position);
     rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
@@ -132,18 +109,10 @@ void SpriteObject::render() {
     gfxController_->sendFloatVector(tintId_, 1, glm::value_ptr(tint_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);
-    gfxController_->bindTexture(textureIds_.at(animationFrame));
+    gfxController_->bindTexture(textureId_);
     gfxController_->drawTriangles(6);
     gfxController_->bindVao(0);
     gfxController_->bindTexture(0);
-    currentPace++;
-    if (currentPace == pacingCount) {
-        currentPace = 0;
-        animationFrame++;
-    }
-    if (animationFrame >= textureIds_.size()) {
-        animationFrame = 0;
-    }
 }
 
 void SpriteObject::update() {

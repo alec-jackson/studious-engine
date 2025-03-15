@@ -38,6 +38,7 @@ class SpriteObject : public SceneObject {
  private:
     string spritePath_;
 
+    unsigned int textureId_;
     unsigned int modelMatId_;
     unsigned int tintId_;
 
@@ -48,5 +49,4 @@ class SpriteObject : public SceneObject {
 
     mat4 modelMat_;
     vec3 tint_;
-    std::vector<unsigned int> textureIds_;
 };

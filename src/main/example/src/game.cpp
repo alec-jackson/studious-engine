@@ -16,6 +16,7 @@
 #else
 #include <OpenGlEsGfxController.hpp>
 #endif
+#include <AnimationController.hpp>
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
  Currently, the below global vectors are used for loading in sound effect files,
@@ -47,13 +48,15 @@ vector<string> fragShaders = {
     "src/main/shaders/core/gameObject.frag",
     "src/main/shaders/core/colliderObject.frag",
     "src/main/shaders/core/textObject.frag",
-    "src/main/shaders/core/spriteObject.frag"
+    "src/main/shaders/core/spriteObject.frag",
+    "src/main/shaders/core/uiObject.frag"
 };  // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
     "src/main/shaders/core/gameObject.vert",
     "src/main/shaders/core/colliderObject.vert",
     "src/main/shaders/core/textObject.vert",
-    "src/main/shaders/core/spriteObject.vert"
+    "src/main/shaders/core/spriteObject.vert",
+    "src/main/shaders/core/uiObject.vert"
 };  // Contains collider renderer and basic object renderer.
 #else
 vector<string> fragShaders = {
@@ -87,6 +90,7 @@ OpenGlEsGfxController gfxController = OpenGlEsGfxController();
 #else
 OpenGlGfxController gfxController = OpenGlGfxController();
 #endif
+AnimationController animationController;
 
 double deltaTime = 0.0f;
 
@@ -208,13 +212,22 @@ int runtime(GameInstance *currentGame) {
         "fps-text");
 
     auto testSprite = currentGame->createSprite(
-        "src/resources/images/sample_2_animation.gif",
-        vec3(100.0f, 100.0f, 0.0f),
-        6.0f,
+        "src/resources/images/JTIconNoBackground.png",
+        vec3(1250.0f, 50.0f, 0.0f),
+        0.1f,
         gfxController.getProgramId(3).get(),
         ObjectAnchor::CENTER,
-        "test-sprite"
-    );
+        "test-sprite");
+
+    auto testUi = currentGame->createUi(
+        "src/resources/images/Message Bubble UI.png", // image path
+        vec3(150.0f, 100.0f, 0.0f), // Position
+        0.5f, // Scale
+        1.0f, // Width
+        1.0f, // Height
+        gfxController.getProgramId(4).get(), // Shader pair
+        ObjectAnchor::CENTER, // Anchor
+        "uiBubble"); // UI Bubble
 
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
@@ -238,7 +251,8 @@ int runtime(GameInstance *currentGame) {
         contactText,
         fpsText,
         pressUText,
-        testSprite
+        testSprite,
+        testUi
     };
 
     // Add all objects to active camera
@@ -298,6 +312,7 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
+        animationController.update();
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);
