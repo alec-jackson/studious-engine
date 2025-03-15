@@ -1,10 +1,18 @@
-#include <string>
+/**
+ * @file GifLoader.cpp
+ * @brief GifLoader class implementation
+ * @author Christian Galvez
+ * @copyright Copyright (c) 2025
+ */
 #include <GifLoader.hpp>
-#include <iostream>
-#include <fstream>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <memory>
 
 const char *versionStrings[] = {
     "NO_GIF_ERROR",
@@ -64,7 +72,7 @@ void GifLoader::loadGif() {
         while (!inputFile.eof()) {
             // Now we need to process any annoying extensions that
             // may exist in the file...
-            //auto extensionSize = 0;
+            // auto extensionSize = 0;
             // While the next byte is 21, iterate through until it's not
             char extCode;
             inputFile.get(extCode);
@@ -174,8 +182,8 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
             auto elem = (3 - i) + divAddr;
             // Check if the data array has an element at i + divAddr
             if (elem >= dataSize) {
-                //printf("End of array reached, not adding to result\n");
-                //assert(i < 3);
+                // printf("End of array reached, not adding to result\n");
+                // assert(i < 3);
                 continue;
             }
             // Add to the current result (32 bits)
@@ -200,21 +208,22 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
     // The first code we process should be the clear code
     assert(currentCode == clearCodeIndex);
     while (currentCode != endOfInfoIndex) {
-        //printf("GifLoader::lzwDecompression: Processing code: %u\n", currentCode);
+        // printf("GifLoader::lzwDecompression: Processing code: %u\n", currentCode);
         // Process the current code
         if (currentCode == clearCodeIndex) {
             printf("GifLoader::lzwDecompression: Found clear code\n");
             // Reset the color code table
             initializeColorCodeTable(lzwMin);
             // Reset the current bit size
-            //currentBitSize = lzwMin + 1;
+            // currentBitSize = lzwMin + 1;
             currentRead = 1;
             resetBitSize = true;
             initialRead = false;
         } else {
             // Perform code processing here
             // Read value
-            assert(currentCode < colorCodeTable_.size()); // This should always be true -- we just write partial values
+            // This should always be true -- we just write partial values
+            assert(currentCode < colorCodeTable_.size());
             auto decodedValue = colorCodeTable_.at(currentCode);
             if (initialRead) {
                 // Modify the tail end of the colorCodeTable with the first char of decoded val
@@ -225,7 +234,6 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
                     impartialOutput = false;
                     // Update the partial output to make it whole
                     outputCodes[outputCodes.size() - 1] = lastCode;
-                    
                 }
                 // Update the decoded value
                 decodedValue = colorCodeTable_.at(currentCode);
@@ -252,19 +260,16 @@ void GifLoader::lzwDecompression(byte lzwMin, vector<byte> data) {
         }
         // read the next code at the start of the next loop
         currentCode = grabBits(currentBitSize, address);
-        //printf("GifLoader::lzwDecompression: Read code size: %d, address: %d, code: %u\n", currentBitSize, address, currentCode);
     }
 
     // We need to simultaneously load data from the file as we decode using lzw
     // Issue bits to decode stream
 
-    // #4 #1 #6 #6 #2 #9 #9 #7 #8 #10 #2 #12 #1 #14 #15 #6 #0 #21 #0 #10 #7 #22 #23 #18 #26 #7 #10 #29 #13 #24 #12 #18 #16 #36 #12 #5
-
     // Now convert the raw output to pixel data using the gct
     processColorOutputForImage(outputCodes);
 }
 
-void GifLoader::processColorOutputForImage(std::vector<string> &outputData) {
+void GifLoader::processColorOutputForImage(const std::vector<string> &outputData) {
     Image &im = images_.back();
     bool fullImageFlush = false;
     auto width = im.imageWidth;
@@ -284,7 +289,7 @@ void GifLoader::processColorOutputForImage(std::vector<string> &outputData) {
         width = images_.at(images_.size() - 2).imageWidth;
         height = images_.at(images_.size() - 2).imageHeight;
     }
-    byte outBuffer[im.imageWidth * im.imageHeight * 3];
+    std::unique_ptr<byte[]> outBuffer(new byte[im.imageWidth * im.imageHeight * 3]);
     // Ensure we have a previous full image to use as a reference
     im.imageData = new byte[width * height * 3];
     int currentColor = 0;
@@ -319,27 +324,25 @@ void GifLoader::processColorOutputForImage(std::vector<string> &outputData) {
         memcpy(im.imageData, images_.at(images_.size() - 2).imageData, sizeof(byte) * width * height * 3);
 
         // Draw the output buffer on top of the previous frame
-        writeBufferToImage(outBuffer, width, height, im.imageLeft, im.imageTop, im);
+        writeBufferToImage(outBuffer, width, height, im.imageLeft, im.imageTop, &im);
     }
     // Update width/height values for subsequent images...
     im.imageWidth = width;
     im.imageHeight = height;
     printf("GifLoader::processColorOutputForImage: Complete!\n");
-    for (int i = 0; i < im.imageWidth * im.imageHeight; ++i) {
-        //printf("GifLoader::processColorOutputForImage: %02x %02x %02x\n", im.imageData[i * 3], im.imageData[i * 3 + 1], im.imageData[i * 3 + 2]);
-    }
 }
 
-void GifLoader::writeBufferToImage(byte *outBuffer, uint16_t fWidth, uint16_t fHeight, uint16_t iLeft, uint16_t iTop, Image &im) {
+void GifLoader::writeBufferToImage(byte *outBuffer, uint16_t fWidth, uint16_t fHeight, uint16_t iLeft,
+    uint16_t iTop, Image *im) {
     // Base case
-    if (iTop - im.imageTop == im.imageHeight) return;
+    if (iTop - im->imageTop == im->imageHeight) return;
     // Recursive function to write to image buffer
     // Find the index in the buffer where we start writing
     auto startIdx = (iTop * fWidth + iLeft) * 3;
     // Perform a memcpy for the entire line from the output buffer
-    memcpy(&im.imageData[startIdx], outBuffer, sizeof(byte) * im.imageWidth * 3);
+    memcpy(&im->imageData[startIdx], outBuffer, sizeof(byte) * im->imageWidth * 3);
     // Start the next iteration
-    return writeBufferToImage(&outBuffer[im.imageWidth * 3], fWidth, fHeight, iLeft, iTop + 1, im);
+    return writeBufferToImage(&outBuffer[im->imageWidth * 3], fWidth, fHeight, iLeft, iTop + 1, im);
 }
 
 void GifLoader::unpackImageDescriptor(const byte *id, Image *im) {
@@ -391,8 +394,8 @@ const Image &GifLoader::getImage(int imIndex) const {
     return images_.at(imIndex);
 }
 
-unsigned short GifLoader::getCanvasWidthFromStr(const byte *lsd) {
-    unsigned short width = 0;
+uint16_t GifLoader::getCanvasWidthFromStr(const byte *lsd) {
+    uint16_t width = 0;
     // Sanity check
     if (lsd == nullptr) return width;
     // The canvas width is stored in the first two bytes (little endian)
@@ -400,8 +403,8 @@ unsigned short GifLoader::getCanvasWidthFromStr(const byte *lsd) {
     return width;
 }
 
-unsigned short GifLoader::getCanvasHeightFromStr(const byte *lsd) {
-    unsigned short height = 0;
+uint16_t GifLoader::getCanvasHeightFromStr(const byte *lsd) {
+    uint16_t height = 0;
     // Sanity check
     if (lsd == nullptr) return height;
     // Canvas height is stored in bytes 2 and 3 (starting at zero)
@@ -442,7 +445,6 @@ unsigned int GifLoader::processExtension(std::ifstream &inputFile) {
 
     char extensionLabel;
     inputFile.get(extensionLabel);
-    
     printf("GifLoader::processExtension: Processing extension %02x\n", (byte)extensionLabel);
 
     if ((byte)extensionLabel != 0xF9) {
@@ -460,8 +462,10 @@ unsigned int GifLoader::processExtension(std::ifstream &inputFile) {
     printf("GifLoader::processExtension: blockSize = %u\n", blockSize);
 
     // use the block size to read the next name
-    char appId[(int)blockSize + 1];
-    appId[(int)blockSize] = '\0';
+    // I think the int cast here is to prevent overflows, but I can't remember now...
+    // Might be causing the rendering issue - investigate later if desired
+    std::unique_ptr<char[]> appId(new char[static_cast<int>(blockSize) + 1]);
+    appId[static_cast<int>(blockSize)] = '\0';
 
     for (int i = 0; i < blockSize; ++i) {
         char readByte;
@@ -492,7 +496,7 @@ unsigned int GifLoader::processExtension(std::ifstream &inputFile) {
             byteCount++;
         }
         printf("GifLoader::processExtension: Extension data is %d bytes long\n", byteCount);
-        char debugData[byteCount + 1];
+        std::unique_ptr<char[]> debugData(new char[byteCount + 1]);
         debugData[byteCount] = 0;
         // Seek backwards
         inputFile.seekg(-1 * byteCount, std::ios::cur);
@@ -504,15 +508,14 @@ unsigned int GifLoader::processExtension(std::ifstream &inputFile) {
 
         printf("GifLoader::processExtension: Extension data = %s\n", debugData);
     }
-    
+
     // Make sure the next byte we read is the terminator
     char terminator;
     inputFile.get(terminator);
     printf("GifLoader::processExtension: Final char is %02x\n", terminator);
-    //assert(terminator == 0x00);
-    
+    // assert(terminator == 0x00);
 
-    //assert(terminator == '\0');
+    // assert(terminator == '\0');
     printf("IgnoreExtensionFlag: %u\n", ignoreExtension);
     return 0;
 }
@@ -547,6 +550,7 @@ void GifLoader::processGraphicsControlExtension(std::ifstream &inputFile) {
     char blockTerminator;
     inputFile.get(blockTerminator);
 
+    // NOLINTNEXTLINE
     printf("GifLoader::processGraphicsControlExtension: blockSize: %02x, packedField: %02x, delayTime: %02x %02x, tci: %02x, blockTerm: %02x\n",
         blockSize,
         packedField,

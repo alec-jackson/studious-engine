@@ -10,6 +10,9 @@
  * @copyright Copyright (c) 2023
  * 
  */
+#include <string>
+#include <vector>
+#include <iostream>
 #include <game.hpp>
 #ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
@@ -220,14 +223,14 @@ int runtime(GameInstance *currentGame) {
         "test-sprite");
 
     auto testUi = currentGame->createUi(
-        "src/resources/images/Message Bubble UI.png", // image path
-        vec3(150.0f, 100.0f, 0.0f), // Position
-        0.5f, // Scale
-        100.0f, // Width
-        0.0f, // Height
-        gfxController.getProgramId(4).get(), // Shader pair
-        ObjectAnchor::CENTER, // Anchor
-        "uiBubble"); // UI Bubble
+        "src/resources/images/Message Bubble UI.png",   // image path
+        vec3(150.0f, 100.0f, 0.0f),                     // Position
+        0.5f,                                           // Scale
+        100.0f,                                         // Width
+        0.0f,                                           // Height
+        gfxController.getProgramId(4).get(),            // Shader pair
+        ObjectAnchor::CENTER,                           // Anchor
+        "uiBubble");                                    // UI Bubble
 
     auto testText = currentGame->createText(
         "Textbox Example",

@@ -94,8 +94,6 @@ int AnimationController::addKeyFrame(SceneObject *target, KeyFrame *keyFrame) {
 }
 
 void AnimationController::update() {
-    // Noop 
-    //return;
     // Lock the controller
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     vector<string> deferredDelete;

@@ -133,7 +133,7 @@ void GameInstance::playSound(const char *soundPath, int volume) {
     // Make sure the volume is within the acceptable range
     assert(volume >= 0);
     assert(volume <= 128);
-    
+
     // Load the sound
     auto soundIndex = loadSound(soundPath);
 

@@ -122,8 +122,8 @@ void UiObject::render() {
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
-    //scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
-    //modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
+    // scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
+    // modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     // We wont do scale normally for now due to a bug
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);

@@ -1,7 +1,14 @@
+/**
+ * @file GifLoader.hpp
+ * @author Christian Galvez
+ * @brief GifLoader class for loading in GIF images as animations (image sequences). Experimental and not currently supported.
+ * @copyright Copyright (c) 2025
+ */
 #pragma once
 #include <string>
 #include <vector>
 #include <map>
+#include <cstdint>
 
 #define GIF_HEADER_BLOCK_SIZE 6
 #define GIF_LOGICAL_SCREEN_DESCRIPTOR_SIZE 7
@@ -11,7 +18,6 @@ using std::string;
 using std::vector;
 
 typedef unsigned char byte;
-typedef unsigned short uint16_t;
 
 enum GifVersion {
     GIFNONE,
@@ -33,12 +39,12 @@ struct Image {
 };
 
 class GifLoader {
-public:
+ public:
     explicit inline GifLoader(string imagePath) : imagePath_ { imagePath } { loadGif(); }
     void loadGif();
     GifVersion getVersionFromStr(const byte *versionStr);
-    unsigned short getCanvasWidthFromStr(const byte *lsd);
-    unsigned short getCanvasHeightFromStr(const byte *lsd);
+    uint16_t getCanvasWidthFromStr(const byte *lsd);
+    uint16_t getCanvasHeightFromStr(const byte *lsd);
     byte getPackedFieldFromStr(const byte *lsd);
     byte getBackgroundColorIndexFromStr(const byte *lsd);
     byte getPixelAspectRatioFromStr(const byte *lsd);
@@ -48,15 +54,16 @@ public:
     void unpackImageDescriptor(const byte *id, Image *im);
     void parseImageData(std::ifstream &inputFile);
     void lzwDecompression(byte lzwMin, std::vector<byte> data);
-    void processColorOutputForImage(std::vector<string> &outputData);
+    void processColorOutputForImage(const std::vector<string> &outputData);
     int initializeColorCodeTable(byte lzwMin);
-    void writeBufferToImage(byte *outBuffer, uint16_t fWidth, uint16_t fHeight, uint16_t iLeft, uint16_t iTop, Image &im);
+    void writeBufferToImage(byte *outBuffer, uint16_t fWidth, uint16_t fHeight, uint16_t iLeft,
+        uint16_t iTop, Image *im);
 
     const Image &getImage(int imIndex) const;
 
     inline GifVersion getVersion() { return version_; }
-    inline unsigned short getCanvasWidth() { return canvasWidth_; }
-    inline unsigned short getCanvasHeight() { return canvasHeight_; }
+    inline uint16_t getCanvasWidth() { return canvasWidth_; }
+    inline uint16_t getCanvasHeight() { return canvasHeight_; }
     inline unsigned int getGlobalColorTableFlag() { return globalColorTableFlag_; }
     inline unsigned int getColorResolution() { return colorResolution_; }
     inline unsigned int getSortFlag() { return sortFlag_; }
@@ -65,14 +72,15 @@ public:
     inline byte getPixelAspectRatio() { return pixelAspectRatio_; }
 
     inline byte getGceBlockSize() { return gceBlockSize_; }
-    inline unsigned short getGceDelayTime() { return gceDelayTime_; }
+    inline uint16_t getGceDelayTime() { return gceDelayTime_; }
     inline byte getGceTransparentColorIndex() { return gceTransparentColorIndex_; }
     inline const vector<Image> &getImages() const { return images_; }
-private:
+
+ private:
     string imagePath_;
 
-    unsigned short canvasWidth_;
-    unsigned short canvasHeight_;
+    uint16_t canvasWidth_;
+    uint16_t canvasHeight_;
 
     // Don't need to be ints
     unsigned int globalColorTableFlag_;
@@ -82,7 +90,7 @@ private:
 
     // GCE variables
     byte gceBlockSize_;
-    unsigned short gceDelayTime_;
+    uint16_t gceDelayTime_;
     byte gceTransparentColorIndex_;
 
     byte backgroundColorIndex_;

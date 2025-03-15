@@ -1,15 +1,22 @@
+/**
+ * @file GifLoaderTests.cpp
+ * @brief Test suite for GifLoader class functionality.
+ * @author Christian Galvez
+ * @copyright Copyright (c) 2025
+ */
 #include <GifLoaderTests.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <cstdio>
 
 using std::cout;
 using std::endl;
 
-string imagePath = "../src/resources/images/Shrek.gif";
-string testImage = "../src/resources/images/sample_1.gif";
-string animatedImage = "../src/resources/images/sample_2_animation.gif";
-string bigAnimatedImage = "../src/resources/images/shrek.gif";
-string smallAnimatedImage = "../src/resources/images/150100.gif";
+const char *imagePath = "../src/resources/images/Shrek.gif";
+const char *testImage = "../src/resources/images/sample_1.gif";
+const char *animatedImage = "../src/resources/images/sample_2_animation.gif";
+const char *bigAnimatedImage = "../src/resources/images/shrek.gif";
+const char *smallAnimatedImage = "../src/resources/images/150100.gif";
 
 /*
 // Test Fixtures
@@ -98,7 +105,7 @@ TEST(GifLoaderTest, WhenImageLoaded_ThenRawImageDataAsExpected) {
 
     // Validate the raw image data
     auto image = gifLoader.getImage(0);
-    //auto imageData = image.imageData;
+    // auto imageData = image.imageData;
 
     // Validate the first image
     ASSERT_EQ(10, image.imageWidth);
@@ -156,7 +163,7 @@ TEST(GifLoaderTest, WhenBigAnimatedImageLoaded_ThenImageDataCorrect) {
     // Preparation / Action
     auto gifLoader = GifLoader(smallAnimatedImage);
     printf("Testdone\n");
-    //ASSERT_EQ(0, 1);
+    // ASSERT_EQ(0, 1);
 }
 
 /**
