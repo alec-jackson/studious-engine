@@ -12,27 +12,35 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <GameObject2D.hpp>
+#include <SceneObject.hpp>
 #include <ColliderObject.hpp>
 
-class SpriteObject : public GameObject2D {
+class GameObject2D : public SceneObject {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
-    explicit SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
+    explicit GameObject2D(string texturePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController);
-    ~SpriteObject() override;
-    void initializeShaderVars();
+    ~GameObject2D() override;
 
+    // Render method
     void render() override;
     void update() override;
+    void initializeTextureData();
+    void initializeShaderVars();
+    void initializeVertexData(int bWidth, int bHeight);
 
-    // Getters
-    inline vec3 getTint() { return tint_; }
+ protected:
+    string texturePath_;
 
-    // Setters
-    inline void setTint(vec3 tint) { tint_ = tint; }
+    unsigned int textureId_;
+    unsigned int modelMatId_;
+    unsigned int tintId_;
 
- private:
-    vec3 tint_;
+    unsigned int vao_;
+    unsigned int vbo_;
+
+    ObjectAnchor anchor_;
+
+    mat4 modelMat_;
 };
