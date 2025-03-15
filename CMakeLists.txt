@@ -74,6 +74,7 @@ add_executable(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
+IF($(GTest_FOUND))
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
@@ -137,6 +138,7 @@ target_link_libraries(
 
 gtest_discover_tests(gtest_PolygonTests)
 gtest_discover_tests(gtest_ModelImportTests)
+ENDIF($(GTest_FOUND))
 
 # Project include dirs
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
