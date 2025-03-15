@@ -223,11 +223,19 @@ int runtime(GameInstance *currentGame) {
         "src/resources/images/Message Bubble UI.png", // image path
         vec3(150.0f, 100.0f, 0.0f), // Position
         0.5f, // Scale
-        1.0f, // Width
-        1.0f, // Height
+        100.0f, // Width
+        0.0f, // Height
         gfxController.getProgramId(4).get(), // Shader pair
         ObjectAnchor::CENTER, // Anchor
         "uiBubble"); // UI Bubble
+
+    auto testText = currentGame->createText(
+        "Textbox Example",
+        vec3(45.0f, 155.0f, 0.0f),
+        0.6f,
+        "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(),
+        "test-text");
 
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
@@ -252,7 +260,8 @@ int runtime(GameInstance *currentGame) {
         fpsText,
         pressUText,
         testSprite,
-        testUi
+        testUi,
+        testText
     };
 
     // Add all objects to active camera
