@@ -60,8 +60,6 @@ class GameObject: public SceneObject {
 
     int textureCoordId;
 
-    bool cleanModel_ = false;
-
     float luminance;
     float rollOff;
 

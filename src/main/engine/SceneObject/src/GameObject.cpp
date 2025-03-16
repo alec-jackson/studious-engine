@@ -58,8 +58,7 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
 
 GameObject::GameObject(GfxController *gfxController) :
     SceneObject(ObjectType::GAME_OBJECT, "EmptyModel", gfxController) {
-    model = new Polygon();
-    cleanModel_ = true;
+    model = nullptr;
 }
 
 /**
@@ -173,6 +172,7 @@ void GameObject::update() {
  * models connected to it, which can have their own textures, etc.
  */
 void GameObject::render() {
+    if (model == nullptr) return;
     // Send GameObject to render method
     // Draw each shape individually
     for (int i = 0; i < model->numberOfObjects; i++) {
@@ -208,6 +208,7 @@ void GameObject::render() {
     }
 
 void GameObject::deleteTextures() {
+    if (model == nullptr) return;
     cout << "GameObject::deleteTextures" << endl;
     for (int i = 0; i < model->numberOfObjects; i++) {
         if (hasTexture[i]) {
@@ -216,3 +217,4 @@ void GameObject::deleteTextures() {
         }
     }
 }
+

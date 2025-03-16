@@ -12,10 +12,10 @@
 using std::cout;
 using std::endl;
 
-const char *imagePath = "../src/resources/images/Shrek.gif";
+const char *imagePath = "../src/resources/images/dne.gif";
 const char *testImage = "../src/resources/images/sample_1.gif";
 const char *animatedImage = "../src/resources/images/sample_2_animation.gif";
-const char *bigAnimatedImage = "../src/resources/images/shrek.gif";
+const char *bigAnimatedImage = "../src/resources/images/dne.gif";
 const char *smallAnimatedImage = "../src/resources/images/150100.gif";
 
 /*
