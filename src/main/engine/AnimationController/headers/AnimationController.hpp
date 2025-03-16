@@ -89,8 +89,8 @@ class AnimationController {
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
-    static KeyFrame *createKeyFrameCb(int type, vec3 pos, vec3 stretch, string text, ANIMATION_COMPLETE_CB, float time);
-    static KeyFrame *createKeyFrame(int type, vec3 pos, vec3 stretch, string text, float time);
+    static KeyFrame *createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
+    static KeyFrame *createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);

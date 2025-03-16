@@ -176,6 +176,26 @@ int runtime(GameInstance *currentGame) {
     auto wolfObject = currentGame->createGameObject(&wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
 
+    // Make the wolf spin :)
+    auto kf = AnimationController::createKeyFrame(
+        UPDATE_ROTATION,        // Rotate
+        10.0f);                 // Spin for 30 seconds
+
+    kf->rotation.desired = vec3(0.0f, 0.0f, 720.0f);
+    auto kf1 = AnimationController::createKeyFrame(
+        UPDATE_ROTATION,        // Rotate
+        5.0f);                 // Spin for 30 seconds
+
+    kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
+    auto kf2 = AnimationController::createKeyFrame(
+        UPDATE_ROTATION,        // Rotate
+        5.0f);                 // Spin for 30 seconds
+
+    kf2->rotation.desired = vec3(360.0f, 360.0f, 720.0f);
+    animationController.addKeyFrame(wolfObject, kf);
+    animationController.addKeyFrame(wolfObject, kf1);
+    animationController.addKeyFrame(wolfObject, kf2);
+
     wolfObject->createCollider(gfxController.getProgramId(1).get());
     wolfRef = wolfObject;
 
@@ -304,7 +324,6 @@ int mainLoop(gameInfo* gamein) {
     int running = 1, collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
-    double deltaTime;
     int error = 0;
     vector<double> times;
     while (running) {

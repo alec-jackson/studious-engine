@@ -16,53 +16,15 @@
 #include <UiObject.hpp>
 #include <TextObject.hpp>
 
-KeyFrame *AnimationController::createKeyFrameCb(int type, vec3 pos, vec3 stretch, string text,
-    ANIMATION_COMPLETE_CB, float time) {
-    auto keyframe = new KeyFrame();
-    for (int i = 0; i < UPDATE_TYPES; ++i) {
-        auto typeMask = (type & (1 << (i)));
-        switch (typeMask) {
-            case UPDATE_POS:
-                keyframe->pos.desired = pos;
-                break;
-            case UPDATE_STRETCH:
-                keyframe->stretch.desired = stretch;
-                break;
-            case UPDATE_TEXT:
-                keyframe->text.desired = text;
-                break;
-            case UPDATE_NONE:
-            default:
-                break;
-        }
-    }
-    keyframe->targetTime = time;
-    keyframe->currentTime = 0.0f;
-    keyframe->type = type;
+KeyFrame *AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
+    auto keyframe = createKeyFrame(type, time);
     keyframe->callback = callback;
     keyframe->hasCb = true;
     return keyframe;
 }
 
-KeyFrame *AnimationController::createKeyFrame(int type, vec3 pos, vec3 stretch, string text, float time) {
+KeyFrame *AnimationController::createKeyFrame(int type, float time) {
     auto keyframe = new KeyFrame();
-    for (int i = 0; i < UPDATE_TYPES; ++i) {
-        auto typeMask = (type & (1 << (i)));
-        switch (typeMask) {
-            case UPDATE_POS:
-                keyframe->pos.desired = pos;
-                break;
-            case UPDATE_STRETCH:
-                keyframe->stretch.desired = stretch;
-                break;
-            case UPDATE_TEXT:
-                keyframe->text.desired = text;
-                break;
-            case UPDATE_NONE:
-            default:
-                break;
-        }
-    }
     keyframe->targetTime = time;
     keyframe->currentTime = 0.0f;
     keyframe->type = type;
@@ -140,7 +102,7 @@ void AnimationController::update() {
             entry.second.kQueue.pop();
             // Call the callback associated with the keyframe
             if (currentKf->hasCb) currentKf->callback();
-            free(currentKf);
+            delete(currentKf);
             if (entry.second.kQueue.empty())
                 deferredDelete.push_back(entry.first);
         }
