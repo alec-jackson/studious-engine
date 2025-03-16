@@ -21,14 +21,17 @@ CameraObject::CameraObject(GameObject *target, vec3 offset, float cameraAngle, f
 
 /// @todo: Figure out what the destructor should do
 CameraObject::~CameraObject() {
-    if (cleanTarget_) delete target_;
 }
 
-/// @todo: Change NULL checks to nullptr
 void CameraObject::render() {
     /// @todo Add field to modify target offset
-    mat4 viewMatrix = lookAt(target_->getPosition(offset_), target_->getPosition(vec3(0.0f, 0.01f, 0.0f)),
-        vec3(0, 1, 0));
+    vec3 eye = vec3(0);
+    vec3 center = vec3(0.0f, 0.01f, 0.0f);
+    if (target_ != nullptr) {
+        eye = target_->getPosition(offset_);
+        center = target_->getPosition(center);
+    }
+    mat4 viewMatrix = lookAt(eye, center, vec3(0, 1, 0));
     mat4 orthographicMatrix = ortho(0.0f, 800.0f, 0.0f, 600.0f, nearClipping_, farClipping_);
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
@@ -39,11 +42,6 @@ void CameraObject::render() {
 void CameraObject::update() {
     // Update aspect ratio
     setAspectRatio(resolution_.x / resolution_.y);
-    // Support target as being nullptr
-    if (target_ == nullptr) {
-        cleanTarget_ = true;
-        target_ = new GameObject(gfxController_);
-    }
     render();
     // Higher priority object renders are deferred
     vector<SceneObject *> lowDefer;
