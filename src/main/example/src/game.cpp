@@ -179,22 +179,17 @@ int runtime(GameInstance *currentGame) {
     // Make the wolf spin :)
     auto kf = AnimationController::createKeyFrame(
         UPDATE_ROTATION,        // Rotate
-        10.0f);                 // Spin for 30 seconds
+        5.0f);                 // Spin for 5 seconds
 
     kf->rotation.desired = vec3(0.0f, 0.0f, 720.0f);
     auto kf1 = AnimationController::createKeyFrame(
-        UPDATE_ROTATION,        // Rotate
-        5.0f);                 // Spin for 30 seconds
+        UPDATE_ROTATION | UPDATE_POS,   // Rotate and move
+        5.0f);                          // seconds
 
     kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
-    auto kf2 = AnimationController::createKeyFrame(
-        UPDATE_ROTATION,        // Rotate
-        5.0f);                 // Spin for 30 seconds
-
-    kf2->rotation.desired = vec3(360.0f, 360.0f, 720.0f);
+    kf1->pos.desired = wolfObject->getPosition() + vec3(0.07f, 0.0f, 0.05f);
     animationController.addKeyFrame(wolfObject, kf);
     animationController.addKeyFrame(wolfObject, kf1);
-    animationController.addKeyFrame(wolfObject, kf2);
 
     wolfObject->createCollider(gfxController.getProgramId(1).get());
     wolfRef = wolfObject;
