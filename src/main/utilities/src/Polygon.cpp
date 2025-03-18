@@ -8,7 +8,8 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <vector>
+#include <iostream>
 #include <Polygon.hpp>
 
 using std::cout;

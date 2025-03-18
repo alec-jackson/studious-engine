@@ -11,11 +11,24 @@
 #include <common.hpp>
 #include <GfxController.hpp>
 
+/// @todo Add SceneObject grouping for shared model changes
 enum ObjectType {
     UNDEFINED,
     TEXT_OBJECT,
     CAMERA_OBJECT,
-    GAME_OBJECT
+    GAME_OBJECT,
+    UI_OBJECT
+};
+
+enum RenderPriority {
+    HIGH,
+    MEDIUM,
+    LOW
+};
+
+enum ObjectAnchor {
+    CENTER,
+    BOTTOM_LEFT
 };
 
 class SceneObject {
@@ -32,7 +45,9 @@ class SceneObject {
     inline void setVpMatrix(mat4 vpMatrix) { vpMatrix_ = vpMatrix; }
     inline void setPosition(vec3 position) { this->position = position; }
     inline void setRotation(vec3 rotation) { this->rotation = rotation; }
+    inline void setResolution(vec3 resolution) { this->resolution_ = resolution; }
     inline void setScale(float scale) { this->scale = scale ; }
+    inline void setRenderPriority(RenderPriority renderPriority) { this->renderPriority_ = renderPriority; }
 
     // Getter methods
     inline const mat4 &vpMatrix() const { return vpMatrix_; }
@@ -42,6 +57,9 @@ class SceneObject {
     inline vec3 getPosition() const { return this->position; }
     inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
     inline vec3 getRotation() const { return this->rotation; }
+    inline float getScale() const { return this->scale; }
+    inline RenderPriority getRenderPriority() const { return this->renderPriority_; }
+    inline vec3 getResolution() const { return this->resolution_; }
     inline string getObjectName() const { return this->objectName; }
     inline ObjectType type() const { return type_; }
 
@@ -57,12 +75,15 @@ class SceneObject {
 
     vec3 position;
     vec3 rotation;
+    vec3 resolution_;
 
     const string objectName;
     float scale;
     unsigned int programId_;
     unsigned int vao_;
     ObjectType type_;
+
+    RenderPriority renderPriority_ = RenderPriority::HIGH;
 
     GfxController *gfxController_;
 };

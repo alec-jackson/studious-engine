@@ -11,6 +11,9 @@
 
 #pragma once
 #include <game.hpp>
+#include <AnimationController.hpp>
+extern AnimationController animationController;
+extern double deltaTime;
 void rotateShape(void *gameInfoStruct, void *target);
 float convertNegToDeg(float degree);
 float angleOfPoint(vec3 p1, vec3 p2);

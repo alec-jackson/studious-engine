@@ -9,10 +9,10 @@
  *
  */
 #pragma once
+#include <ft2build.h>
 #include <string>
 #include <vector>
 #include <GameObject.hpp>
-#include <ft2build.h> //NOLINT
 #include FT_FREETYPE_H
 
 /**
@@ -39,9 +39,13 @@ class TextObject : public SceneObject {
 
     // Setters
     void setMessage(string message);
+    inline void setCutoff(vec3 cutoff) { cutoff_ = cutoff; }
+    inline void setColor(vec3 color) { textColor_ = color; }
 
     // Getters
     inline string getMessage() { return this->message_; }
+    inline vec3 getCutoff() { return cutoff_; }
+    inline vec3 getColor() { return textColor_; }
 
     // Render method
     void render() override;
@@ -57,4 +61,12 @@ class TextObject : public SceneObject {
     vector<unsigned int> vaos_;
     vector<unsigned int> vbos_;
     map<char, Character> characters;
+
+    unsigned int modelMatId_;
+    unsigned int cutoffId_;
+    unsigned int projectionId_;
+
+    mat4 modelMat_;
+    vec3 cutoff_;
+    vec3 textColor_;
 };

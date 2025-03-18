@@ -8,7 +8,10 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <vector>
+#include <string>
+#include <cstdio>
+#include <iostream>
 #include <ModelImport.hpp>
 
 ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern,

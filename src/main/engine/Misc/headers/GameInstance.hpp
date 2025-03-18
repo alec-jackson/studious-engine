@@ -12,11 +12,14 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
 #include <CameraObject.hpp>
 #include <TextObject.hpp>
+#include <SpriteObject.hpp>
+#include <UiObject.hpp>
 #include <config.hpp>
 
 // Number of samples to use for anti-aliasing
@@ -80,17 +83,27 @@ class GameInstance {
               float nearClipping, float farClipping);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, unsigned int programId,
         string objectName);
+    SpriteObject *createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
+        ObjectAnchor anchor, string objectName);
+    UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
+        unsigned int programId, ObjectAnchor anchor, string objectName);
     int getWidth();
     int getHeight();
+    vec3 getResolution();
     vec3 getDirectionalLight();
     const Uint8 *getKeystate();
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
-    void playSound(int soundIndex, int loop);
+    int playSound(unsigned int soundIndex, int loop, int volume);
+    void playSound(const char *soundPath, int volume);
+    uint loadSound(const char *songPath);
+    void changeVolume(int soundIndex, int volume);
+    void stopSound(int channel);
     void changeWindowMode(int mode);
     void cleanup();
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);
+    int removeSceneObject(string objectName);
     double getDeltaTime();
     int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
     int setDeltaTime(double time);

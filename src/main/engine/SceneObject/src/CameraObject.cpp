@@ -8,9 +8,11 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
-#include <CameraObject.hpp>
+#include <string>
+#include <cstdio>
 #include <algorithm>
+#include <vector>
+#include <CameraObject.hpp>
 
 CameraObject::CameraObject(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
@@ -21,11 +23,15 @@ CameraObject::CameraObject(GameObject *target, vec3 offset, float cameraAngle, f
 CameraObject::~CameraObject() {
 }
 
-/// @todo: Change NULL checks to nullptr
 void CameraObject::render() {
     /// @todo Add field to modify target offset
-    mat4 viewMatrix = lookAt(target_->getPosition(offset_), target_->getPosition(vec3(0.0f, 0.01f, 0.0f)),
-        vec3(0, 1, 0));
+    vec3 eye = vec3(0);
+    vec3 center = vec3(0.0f, 0.01f, 0.0f);
+    if (target_ != nullptr) {
+        eye = target_->getPosition(offset_);
+        center = target_->getPosition(center);
+    }
+    mat4 viewMatrix = lookAt(eye, center, vec3(0, 1, 0));
     mat4 orthographicMatrix = ortho(0.0f, 800.0f, 0.0f, 600.0f, nearClipping_, farClipping_);
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
@@ -34,11 +40,21 @@ void CameraObject::render() {
 }
 
 void CameraObject::update() {
+    // Update aspect ratio
+    setAspectRatio(resolution_.x / resolution_.y);
     render();
+    // Higher priority object renders are deferred
+    vector<SceneObject *> lowDefer;
+    vector<SceneObject *> mediumDefer;
+    vector<SceneObject *> highDefer;
     for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
+        // Send the current screen res to each object
+        /// @todo Maybe use a global variable for resolution?
+        (*it)->setResolution(resolution_);
         // Check if the object is ORTHO or PERSPECTIVE
         switch ((*it)->type()) {
             case GAME_OBJECT:
+            case UI_OBJECT:
                 (*it)->setVpMatrix(vpMatrixPerspective_);
                 break;
             case TEXT_OBJECT:
@@ -51,8 +67,34 @@ void CameraObject::update() {
         }
         // Send the VP matrix for the camera to its gameobjects
         // Render the game objects
-        (*it)->update();
+        switch ((*it)->getRenderPriority()) {
+            case RenderPriority::HIGH:
+                highDefer.push_back(*it);
+                break;
+            case RenderPriority::MEDIUM:
+                mediumDefer.push_back(*it);
+                break;
+            case RenderPriority::LOW:
+                lowDefer.push_back(*it);
+                break;
+            default:
+                fprintf(stderr, "CameraObject::update: Bad render priority received! %d\n",
+                    (*it)->getRenderPriority());
+                assert(0);
+                break;
+        }
     }
+    auto renderLoop = [](vector<SceneObject *> objs) {
+        for (auto obj : objs) {
+            obj->update();
+        }
+    };
+    // Render low priority objects first
+    renderLoop(lowDefer);
+    // Then medium...
+    renderLoop(mediumDefer);
+    // Then high on top of all of those
+    renderLoop(highDefer);
 }
 
 void CameraObject::addSceneObject(SceneObject *sceneObject) {

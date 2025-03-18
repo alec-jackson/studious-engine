@@ -10,12 +10,16 @@
  * @copyright Copyright (c) 2023
  * 
  */
+#include <string>
+#include <vector>
+#include <iostream>
 #include <game.hpp>
 #ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
 #else
 #include <OpenGlEsGfxController.hpp>
 #endif
+#include <AnimationController.hpp>
 /*
  IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
  Currently, the below global vectors are used for loading in sound effect files,
@@ -46,12 +50,16 @@ vector<string> soundList = {
 vector<string> fragShaders = {
     "src/main/shaders/core/gameObject.frag",
     "src/main/shaders/core/colliderObject.frag",
-    "src/main/shaders/core/textObject.frag"
+    "src/main/shaders/core/textObject.frag",
+    "src/main/shaders/core/spriteObject.frag",
+    "src/main/shaders/core/uiObject.frag"
 };  // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
     "src/main/shaders/core/gameObject.vert",
     "src/main/shaders/core/colliderObject.vert",
-    "src/main/shaders/core/textObject.vert"
+    "src/main/shaders/core/textObject.vert",
+    "src/main/shaders/core/spriteObject.vert",
+    "src/main/shaders/core/uiObject.vert"
 };  // Contains collider renderer and basic object renderer.
 #else
 vector<string> fragShaders = {
@@ -85,6 +93,9 @@ OpenGlEsGfxController gfxController = OpenGlEsGfxController();
 #else
 OpenGlGfxController gfxController = OpenGlGfxController();
 #endif
+AnimationController animationController;
+
+double deltaTime = 0.0f;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -165,12 +176,27 @@ int runtime(GameInstance *currentGame) {
     auto wolfObject = currentGame->createGameObject(&wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
 
+    // Make the wolf spin :)
+    auto kf = AnimationController::createKeyFrame(
+        UPDATE_ROTATION,        // Rotate
+        5.0f);                 // Spin for 5 seconds
+
+    kf->rotation.desired = vec3(0.0f, 0.0f, 720.0f);
+    auto kf1 = AnimationController::createKeyFrame(
+        UPDATE_ROTATION | UPDATE_POS,   // Rotate and move
+        5.0f);                          // seconds
+
+    kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
+    kf1->pos.desired = wolfObject->getPosition() + vec3(0.07f, 0.0f, 0.05f);
+    animationController.addKeyFrame(wolfObject, kf);
+    animationController.addKeyFrame(wolfObject, kf1);
+
     wolfObject->createCollider(gfxController.getProgramId(1).get());
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
     auto engineText = currentGame->createText(
-        "Studious Engine 2024",                 // Message
+        "Studious Engine 2025",                 // Message
         vec3(25.0f, 25.0f, 0.0f),               // Position
         1.0f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
@@ -203,6 +229,32 @@ int runtime(GameInstance *currentGame) {
         gfxController.getProgramId(2).get(),
         "fps-text");
 
+    auto testSprite = currentGame->createSprite(
+        "src/resources/images/JTIconNoBackground.png",
+        vec3(1250.0f, 50.0f, 0.0f),
+        0.1f,
+        gfxController.getProgramId(3).get(),
+        ObjectAnchor::CENTER,
+        "test-sprite");
+
+    auto testUi = currentGame->createUi(
+        "src/resources/images/Message Bubble UI.png",   // image path
+        vec3(150.0f, 100.0f, 0.0f),                     // Position
+        0.5f,                                           // Scale
+        100.0f,                                         // Width
+        0.0f,                                           // Height
+        gfxController.getProgramId(4).get(),            // Shader pair
+        ObjectAnchor::CENTER,                           // Anchor
+        "uiBubble");                                    // UI Bubble
+
+    auto testText = currentGame->createText(
+        "Textbox Example",
+        vec3(45.0f, 155.0f, 0.0f),
+        0.6f,
+        "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(),
+        "test-text");
+
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
 
@@ -224,7 +276,10 @@ int runtime(GameInstance *currentGame) {
         engineText,
         contactText,
         fpsText,
-        pressUText
+        pressUText,
+        testSprite,
+        testUi,
+        testText
     };
 
     // Add all objects to active camera
@@ -264,7 +319,6 @@ int mainLoop(gameInfo* gamein) {
     int running = 1, collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
-    double deltaTime;
     int error = 0;
     vector<double> times;
     while (running) {
@@ -284,6 +338,7 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
+        animationController.update();
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         currentGame->setDeltaTime(deltaTime);

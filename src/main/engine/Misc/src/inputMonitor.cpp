@@ -8,7 +8,8 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
+#include <iostream>
+#include <vector>
 #include <inputMonitor.hpp>
 // Analog joystick dead zone
 const int JOYSTICK_DEAD_ZONE = 4000;

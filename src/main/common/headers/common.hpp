@@ -18,6 +18,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <queue>
 #include <thread>  //NOLINT
 #include <mutex>  //NOLINT
 #include <fstream>
@@ -40,6 +41,7 @@
 
 using glm::ivec2;
 using glm::vec3;
+using glm::vec2;
 using glm::vec4;
 
 using glm::mat4;
@@ -55,6 +57,7 @@ using std::endl;
 using std::vector;
 using std::string;
 using std::map;
+using std::queue;
 using std::to_string;
 
 using std::mutex;

@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
 #include <gtest/gtest.h>
+#include <vector>
 #include <iostream>
 #include <PolygonTests.hpp>
 
@@ -56,7 +56,7 @@ Polygon createTestPolygon() {
 bool vectorEquals(vector<float> expectedVertices, vector<float> actualVertices) {
     auto result = true;
     if (expectedVertices.size() != actualVertices.size()) return false;
-    for (int i = 0; i < expectedVertices.size(); i++) {
+    for (unsigned int i = 0; i < expectedVertices.size(); i++) {
         if (expectedVertices[i] != actualVertices[i]) result = false;
     }
     return result;
