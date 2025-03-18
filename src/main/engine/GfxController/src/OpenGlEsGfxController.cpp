@@ -76,8 +76,8 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendBufferData(size_t size, void 
     return GFX_OK(unsigned int);
 }
 
-unsigned char *OpenGlEsGfxController::convertToRgba(size_t size, unsigned char *data) {
-    unsigned char *convertedData = new unsigned char[size * 3];
+std::shared_ptr<uint8_t[]> OpenGlEsGfxController::convertToRgba(size_t size, uint8_t *data) {
+    std::shared_ptr <uint8_t[]> convertedData(new uint8_t[size * 3], std::default_delete<uint8_t[]>());
     // Converts the single color texture to use the RGBA format
     for (size_t i = 0; i < size; i++) {
         convertedData[i * 3] = data[i];
@@ -99,7 +99,7 @@ unsigned char *OpenGlEsGfxController::convertToRgba(size_t size, unsigned char *
 GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int width, unsigned int height,
     TexFormat format, void *data) {
     auto texFormat = GL_RGB;
-    unsigned char *convertedData = nullptr;
+    std::shared_ptr<uint8_t[]> convertedData;
     switch (format) {
         case RGBA:
             texFormat = GL_RGBA;
@@ -109,15 +109,14 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int widt
             break;
         case BITMAP:
             texFormat = GL_RGB;
-            convertedData = convertToRgba(width * height, static_cast<unsigned char *>(data));
+            convertedData = convertToRgba(width * height, static_cast<uint8_t *>(data));
             break;
         default:
             fprintf(stderr, "OpenGlEsGfxController::sendTextureData: Unknown texture format %d\n", format);
             return GFX_FAILURE(unsigned int);
     }
-    if (convertedData != nullptr) {
-        glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, convertedData);
-        delete[] convertedData;
+    if (convertedData.use_count() > 0) {
+        glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, convertedData.get());
     } else {
         glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, data);
     }
@@ -156,21 +155,6 @@ GfxResult<unsigned int> OpenGlEsGfxController::generateTexture(unsigned int *tex
         return GFX_FAILURE(unsigned int);
     }
     return GFX_OK(unsigned int);
-}
-
-/**
- * @brief Cleans up OpenGL artifacts. Currently a WIP.
- * 
- * @return GfxResult<int> OK result containing the number of deleted programs.
- */
-GfxResult<int> OpenGlEsGfxController::cleanup() {
-    auto deletedPrograms = 0;
-    for (auto it = programIdList_.begin(); it != programIdList_.end(); ++it) {
-        glDeleteProgram(*it);
-        deletedPrograms++;
-    }
-    // glDeleteVertexArrays(1, &vertexArrayId_);
-    return GfxResult<int>(GfxApiResult::OK, deletedPrograms);
 }
 
 /**

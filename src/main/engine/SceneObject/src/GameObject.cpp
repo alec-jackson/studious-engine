@@ -133,11 +133,7 @@ void GameObject::configureOpenGl() {
  * @brief GameObject destructor
  */
 GameObject::~GameObject() {
-    /// @todo: Run cleanup methods here
-    cout << "Destroying gameobject" << objectName << endl;
-    // Delete collider
-    if (collider_ != nullptr) delete collider_;
-    deleteTextures();
+    printf("GameObject::~GameObject\n");
 }
 
 /**
@@ -147,8 +143,8 @@ GameObject::~GameObject() {
  */
 ColliderObject *GameObject::getCollider(void) {
     // Update collider before returning it
-    collider_->updateCollider();
-    return collider_;
+    collider_.get()->updateCollider();
+    return collider_.get();
 }
 
 /**
@@ -159,7 +155,7 @@ ColliderObject *GameObject::getCollider(void) {
 void GameObject::createCollider(int programId) {
     printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
     auto colliderName = objectName + "-Collider";
-    collider_ = new ColliderObject(this->getModel(), programId, translateMatrix_, scaleMatrix_, vpMatrix_,
+    collider_ = std::make_shared<ColliderObject>(this->getModel(), programId, translateMatrix_, scaleMatrix_, vpMatrix_,
         ObjectType::GAME_OBJECT, colliderName, gfxController_);
 }
 
@@ -204,17 +200,6 @@ void GameObject::render() {
         gfxController_->drawTriangles(model->pointCount[i] * 3);
         gfxController_->bindVao(0);
     }
-    if (collider_ != nullptr) collider_->update();
+    if (collider_.use_count() > 0) collider_.get()->update();
     }
-
-void GameObject::deleteTextures() {
-    if (model == nullptr) return;
-    cout << "GameObject::deleteTextures" << endl;
-    for (int i = 0; i < model->numberOfObjects; i++) {
-        if (hasTexture[i]) {
-            gfxController_->deleteTextures(&textureId);
-            hasTexture[i] = false;
-        }
-    }
-}
 

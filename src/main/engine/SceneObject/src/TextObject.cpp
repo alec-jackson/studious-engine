@@ -53,7 +53,7 @@ void TextObject::initializeText() {
                 fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load glyph\n");
                 continue;
             }
-            unsigned int textureId;
+            unsigned int textureId = 0;
             // Generate OpenGL textures for Freetype font rasterizations
             gfxController_->generateTexture(&textureId);
             gfxController_->bindTexture(textureId);

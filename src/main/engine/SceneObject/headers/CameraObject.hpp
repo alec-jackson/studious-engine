@@ -12,6 +12,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <memory>
 #include <common.hpp>
 #include <GameObject.hpp>
 
@@ -35,7 +36,7 @@ class CameraObject : public SceneObject {
     void render() override;
     void update() override;
     void addSceneObject(SceneObject *gameObject);
-    void removeSceneObject(SceneObject *gameObject);
+    void removeSceneObject(string objectName);
 
  private:
     GameObject *target_;

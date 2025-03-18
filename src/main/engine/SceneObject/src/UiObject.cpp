@@ -35,7 +35,8 @@ void UiObject::initializeShaderVars() {
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
 }
 
-void UiObject::generateVertexBase(float *vertexData, int triIdx, float x, float y, float x2, float y2) {
+void UiObject::generateVertexBase
+    (std::shared_ptr<float[]> vertexData, int triIdx, float x, float y, float x2, float y2) {
     auto dT = (1.0f/3.0f);
     auto tX = (triIdx % 3) * dT;  // 0.33 target...
     auto tY = (triIdx / 3) * dT;
@@ -60,9 +61,9 @@ void UiObject::generateVertexBase(float *vertexData, int triIdx, float x, float 
     }
 }
 
-float *UiObject::generateVertices(float x, float y, float iFx, float iFy) {
+std::shared_ptr<float[]> UiObject::generateVertices(float x, float y, float iFx, float iFy) {
     // Allocate memory for vertex data
-    float *vertexData = new float[24 * 9];
+    std::shared_ptr<float[]> vertexData(new float[24 * 9], std::default_delete<float[]>());
 
     // Create the triangles from top left to right
     for (int i = 1; i < 4; ++i) {
@@ -105,13 +106,12 @@ void UiObject::initializeVertexData() {
 
     vertexData_ = generateVertices(x, y, incrementFactorX, incrementFactorY);
     // Send VBO data for each character to the currently bound buffer
-    gfxController_->sendBufferData(sizeof(float) * 24 * 9, vertexData_);
+    gfxController_->sendBufferData(sizeof(float) * 24 * 9, vertexData_.get());
     gfxController_->enableVertexAttArray(0, 4);
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
 }
 
-/// @todo Do something useful here
 UiObject::~UiObject() {
 }
 

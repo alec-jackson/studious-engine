@@ -12,27 +12,28 @@
 #include <vector>
 #include <string>
 #include <cstdio>
+#include <memory>
 #include <AnimationController.hpp>
 #include <UiObject.hpp>
 #include <TextObject.hpp>
 
-KeyFrame *AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
+std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
     auto keyframe = createKeyFrame(type, time);
-    keyframe->callback = callback;
-    keyframe->hasCb = true;
+    keyframe.get()->callback = callback;
+    keyframe.get()->hasCb = true;
     return keyframe;
 }
 
-KeyFrame *AnimationController::createKeyFrame(int type, float time) {
-    auto keyframe = new KeyFrame();
-    keyframe->targetTime = time;
-    keyframe->currentTime = 0.0f;
-    keyframe->type = type;
-    keyframe->hasCb = false;
+std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float time) {
+    auto keyframe = std::make_shared<KeyFrame>();
+    keyframe.get()->targetTime = time;
+    keyframe.get()->currentTime = 0.0f;
+    keyframe.get()->type = type;
+    keyframe.get()->hasCb = false;
     return keyframe;
 }
 
-int AnimationController::addKeyFrame(SceneObject *target, KeyFrame *keyFrame) {
+int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto targetName = target->getObjectName();
     // Check if the target object exists in the keyframestore
@@ -44,11 +45,11 @@ int AnimationController::addKeyFrame(SceneObject *target, KeyFrame *keyFrame) {
         // Make sure we do not have duplicate SceneObject names in the store
         assert(it->second.target == target);
         // Add the keyFrame to the object's keyframe queue
-        it->second.kQueue.push(keyFrame);
+        it->second.kQueue.push(keyFrame.get());
         kfQueueSize = it->second.kQueue.size();
     } else {
         // If the object has no keyframestore, add it
-        keyFrameStore_[target->getObjectName()].kQueue.push(keyFrame);
+        keyFrameStore_[target->getObjectName()].kQueue.push(keyFrame.get());
         keyFrameStore_[target->getObjectName()].target = target;
         kfQueueSize = 1;
     }
@@ -102,7 +103,6 @@ void AnimationController::update() {
             entry.second.kQueue.pop();
             // Call the callback associated with the keyframe
             if (currentKf->hasCb) currentKf->callback();
-            delete(currentKf);
             if (entry.second.kQueue.empty())
                 deferredDelete.push_back(entry.first);
         }

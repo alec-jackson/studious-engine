@@ -12,6 +12,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 #include <GameObject2D.hpp>
 #include <ColliderObject.hpp>
 
@@ -28,8 +29,8 @@ class UiObject : public GameObject2D {
     void update() override;
     void initializeShaderVars();
     void initializeVertexData();
-    float *generateVertices(float x, float y, float iFx, float iFy);
-    void generateVertexBase(float *vertexData, int triIdx, float x, float y, float x2, float y2);
+    std::shared_ptr<float[]> generateVertices(float x, float y, float iFx, float iFy);
+    void generateVertexBase(std::shared_ptr<float[]> vertexData, int triIdx, float x, float y, float x2, float y2);
 
     // Set scale methods
     void setHStretch(float scale);
@@ -42,7 +43,7 @@ class UiObject : public GameObject2D {
     unsigned int wScaleId_;
     unsigned int hScaleId_;
 
-    float *vertexData_;
+    std::shared_ptr<float[]> vertexData_;
 
     float wScale_;
     float hScale_;
