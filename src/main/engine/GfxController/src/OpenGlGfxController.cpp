@@ -141,21 +141,6 @@ GfxResult<unsigned int> OpenGlGfxController::generateTexture(unsigned int *textu
 }
 
 /**
- * @brief Cleans up OpenGL artifacts. Currently a WIP.
- * 
- * @return GfxResult<int> OK result containing the number of deleted programs.
- */
-GfxResult<int> OpenGlGfxController::cleanup() {
-    auto deletedPrograms = 0;
-    for (auto it = programIdList_.begin(); it != programIdList_.end(); ++it) {
-        glDeleteProgram(*it);
-        deletedPrograms++;
-    }
-    // glDeleteVertexArrays(1, &vertexArrayId_);
-    return GfxResult<int>(GfxApiResult::OK, deletedPrograms);
-}
-
-/**
  * @brief Gets a programId for a specific index in the programIdList.
  * 
  * @param index in the programId list
