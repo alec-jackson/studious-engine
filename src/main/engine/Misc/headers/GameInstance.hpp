@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <memory>
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>

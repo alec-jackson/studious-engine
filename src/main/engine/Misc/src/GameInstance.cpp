@@ -266,8 +266,8 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
     string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createGameObject: Creating GameObject %lu\n", sceneObjects_.size());
-    auto gameObject = std::make_shared<GameObject>(characterModel, position, rotation, scale, objectName, ObjectType::GAME_OBJECT,
-        gfxController_);
+    auto gameObject = std::make_shared<GameObject>(characterModel, position, rotation,
+        scale, objectName, ObjectType::GAME_OBJECT, gfxController_);
     gameObject.get()->setDirectionalLight(directionalLight);
     gameObject.get()->setLuminance(luminance);
     sceneObjects_.push_back(gameObject);
@@ -279,8 +279,8 @@ CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, float 
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createCamera: Creating CameraObject %lu\n", sceneObjects_.size());
     auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
-    auto gameCamera = std::make_shared<CameraObject>(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping,
-        ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
+    auto gameCamera = std::make_shared<CameraObject>(target, offset, cameraAngle,
+        aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
     sceneObjects_.push_back(gameCamera);
     return gameCamera.get();
 }
@@ -289,8 +289,8 @@ TextObject *GameInstance::createText(string message, vec3 position, float scale,
     unsigned int programId, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createText: Creating TextObject %lu\n", sceneObjects_.size());
-    auto text = std::make_shared<TextObject>(message, position, scale, fontPath, programId, objectName, ObjectType::TEXT_OBJECT,
-        gfxController_);
+    auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
+        programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
     sceneObjects_.push_back(text);
     return text.get();
 }

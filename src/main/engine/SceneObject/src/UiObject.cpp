@@ -35,7 +35,8 @@ void UiObject::initializeShaderVars() {
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
 }
 
-void UiObject::generateVertexBase(std::shared_ptr<float[]> vertexData, int triIdx, float x, float y, float x2, float y2) {
+void UiObject::generateVertexBase
+    (std::shared_ptr<float[]> vertexData, int triIdx, float x, float y, float x2, float y2) {
     auto dT = (1.0f/3.0f);
     auto tX = (triIdx % 3) * dT;  // 0.33 target...
     auto tY = (triIdx / 3) * dT;

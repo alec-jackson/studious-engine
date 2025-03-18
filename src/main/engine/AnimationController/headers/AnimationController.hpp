@@ -16,6 +16,7 @@
 #include <string>
 #include <functional>
 #include <mutex> // NOLINT
+#include <memory>
 #include <SceneObject.hpp>
 
 // Update return values

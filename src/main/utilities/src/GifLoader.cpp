@@ -321,7 +321,8 @@ void GifLoader::processColorOutputForImage(const std::vector<string> &outputData
         memcpy(im.imageData.get(), outBuffer.get(), sizeof(outBuffer));
     } else {
         // Copy the last frame into the current image buffer
-        memcpy(im.imageData.get(), images_.at(images_.size() - 2).imageData.get(), sizeof(uint8_t) * width * height * 3);
+        memcpy(im.imageData.get(), images_.at(images_.size() - 2).imageData.get(),
+            sizeof(uint8_t) * width * height * 3);
 
         // Draw the output buffer on top of the previous frame
         writeBufferToImage(outBuffer.get(), width, height, im.imageLeft, im.imageTop, &im);
