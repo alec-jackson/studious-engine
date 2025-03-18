@@ -12,6 +12,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <memory>
 #include <Polygon.hpp>
 #include <SceneObject.hpp>
 #include <GfxController.hpp>
@@ -36,7 +37,7 @@ class ColliderObject : public SceneObject {
     vec4 minPoints_;
     vec4 center_;
     vec4 originalCenter_;
-    Polygon *poly_ = nullptr;
+    std::shared_ptr<Polygon> poly_;
     Polygon *target_;
     // Create references to translate/scale matrices
     const mat4 &translateMatrix_;

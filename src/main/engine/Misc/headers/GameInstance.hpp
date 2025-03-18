@@ -51,7 +51,7 @@ class GameInstance {
     SDL_Event event;
     SDL_GLContext mainContext;
     vector<Mix_Chunk *> sound;
-    vector<SceneObject *> sceneObjects_;
+    vector<std::shared_ptr<SceneObject>> sceneObjects_;
     vector<string> soundList_;
     vector<string> vertShaders_;
     vector<string> fragShaders_;
@@ -63,7 +63,7 @@ class GameInstance {
     vec3 directionalLight;
     float luminance;
     int width_, height_;
-    int audioID, controllersConnected;
+    int audioID, controllersConnected = 0;
     mutex sceneLock_;
     bool audioInitialized_ = false;
 
@@ -75,8 +75,8 @@ class GameInstance {
  public:
     GameInstance(vector<string> soundList, vector<string> vertShaders,
         vector<string> fragShaders, GfxController *gfxController, int width, int height);
+    ~GameInstance();
     void startGame(const configData &config);
-    void stopGame();
     GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
     CameraObject *createCamera(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
@@ -100,7 +100,6 @@ class GameInstance {
     void changeVolume(int soundIndex, int volume);
     void stopSound(int channel);
     void changeWindowMode(int mode);
-    void cleanup();
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);
     int removeSceneObject(string objectName);

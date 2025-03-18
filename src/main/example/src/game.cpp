@@ -301,8 +301,6 @@ int runtime(GameInstance *currentGame) {
     mainLoop(&currentGameInfo);
     isDone = true;
     rotThread.join();
-    cout << "Running cleanup\n";
-    currentGame->cleanup();
     return 0;
 }
 

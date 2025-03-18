@@ -42,7 +42,6 @@ class GameObject: public SceneObject {
     float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
 
     // Other methods
-    void deleteTextures();  /// @todo: DEPRECATED - Use destructor for this now...
     void createCollider(int programId);
     void configureOpenGl();
 
@@ -68,5 +67,5 @@ class GameObject: public SceneObject {
     vec3 directionalLight;
     vec3 velocity;
 
-    ColliderObject *collider_ = nullptr;
+    std::shared_ptr<ColliderObject> collider_;
 };

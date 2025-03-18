@@ -80,15 +80,15 @@ void ColliderObject::update() {
 }
 
 void ColliderObject::render() {
-    if (poly_->numberOfObjects > 0) {
-        gfxController_->setProgram(poly_->programId);
+    if (poly_.get()->numberOfObjects > 0) {
+        gfxController_->setProgram(poly_.get()->programId);
         gfxController_->polygonRenderMode(RenderMode::LINE);
         gfxController_->setCapability(GfxCapability::CULL_FACE, false);
         mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         // HINT: Render loops should really just be (bind Vao, draw triangles)
         gfxController_->bindVao(vao_);
-        gfxController_->drawTriangles(poly_->pointCount[0]);
+        gfxController_->drawTriangles(poly_.get()->pointCount[0]);
     }
 }
 
@@ -162,9 +162,9 @@ void ColliderObject::createCollider(unsigned int programId) {
         min[0], min[1], max[2]
     };
     auto pointCount = colliderVertices.size() / 3;
-    poly_ = new Polygon(pointCount, programId, colliderVertices);
-    gfxController_->generateBuffer(&poly_->shapeBufferId[0]);
-    gfxController_->bindBuffer(poly_->shapeBufferId[0]);
+    poly_ = std::make_shared<Polygon>(pointCount, programId, colliderVertices);
+    gfxController_->generateBuffer(&poly_.get()->shapeBufferId[0]);
+    gfxController_->bindBuffer(poly_.get()->shapeBufferId[0]);
     gfxController_->sendBufferData(sizeof(float) * colliderVertices.size(), &colliderVertices[0]);
     gfxController_->enableVertexAttArray(0, 3);
     // Set the correct center points
@@ -182,7 +182,6 @@ void ColliderObject::createCollider(unsigned int programId) {
 }
 
 ColliderObject::~ColliderObject() {
-    delete poly_;
 }
 
 float ColliderObject::getColliderVertices(vector<float> vertices, int axis,

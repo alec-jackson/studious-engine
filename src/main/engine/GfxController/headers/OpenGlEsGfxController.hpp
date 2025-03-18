@@ -14,6 +14,8 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <cstdint>
+#include <memory>
 #include <GfxController.hpp>
 #include <Polygon.hpp>
 #include <common.hpp>
@@ -59,7 +61,7 @@ class OpenGlEsGfxController : public GfxController {
     void clear(GfxClearMode clearMode);
     void update();
     void updateOpenGl();
-    unsigned char *convertToRgba(size_t size, unsigned char *data);
+    std::shared_ptr<uint8_t[]> convertToRgba(size_t size, uint8_t *data);
 
  private:
     vector<unsigned int> programIdList_;

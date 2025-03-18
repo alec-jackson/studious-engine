@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdio>
+#include <algorithm>
 #include <OpenGlGfxController.hpp>
 
 /**
@@ -30,6 +31,7 @@ GfxResult<unsigned int> OpenGlGfxController::generateBuffer(unsigned int *buffer
         fprintf(stderr, "OpenGlGfxController::generateBuffer: Error %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
+    vboList_.push_back(*bufferId);
     return GFX_OK(unsigned int);
 }
 
@@ -134,6 +136,7 @@ GfxResult<unsigned int> OpenGlGfxController::generateTexture(unsigned int *textu
         fprintf(stderr, "OpenGlGfxController::generateTexture: Error: %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
+    textureIdList_.push_back(*textureId);
     return GFX_OK(unsigned int);
 }
 
@@ -490,6 +493,7 @@ GfxResult<unsigned int> OpenGlGfxController::initVao(unsigned int *vao) {
 #ifdef VERBOSE_LOGS
     printf("OpenGlGfxController::initVao: Created vao %d\n", *vao);
 #endif
+    vaoList_.push_back(*vao);
     return GFX_OK(unsigned int);
 }
 
@@ -506,6 +510,7 @@ GfxResult<unsigned int> OpenGlGfxController::deleteTextures(unsigned int *tId) {
         fprintf(stderr, "OpenGlGfxController::deleteTextures: Error %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
+    textureIdList_.erase(std::remove(textureIdList_.begin(), textureIdList_.end(), *tId), textureIdList_.end());
     return GFX_OK(unsigned int);
 }
 
@@ -678,6 +683,9 @@ void OpenGlGfxController::deleteBuffer(unsigned int *bufferId) {
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::deleteBuffer: Error %d\n", error);
+    } else {
+        // Remove the buffer from the vboList
+        vboList_.erase(std::remove(vboList_.begin(), vboList_.end(), *bufferId), vboList_.end());
     }
 }
 
@@ -691,6 +699,37 @@ void OpenGlGfxController::deleteVao(unsigned int *vao) {
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::deleteVao: Error %d\n", error);
+    } else {
+        // Remove the VAO from the vaoList
+        vaoList_.erase(std::remove(vaoList_.begin(), vaoList_.end(), *vao), vaoList_.end());
     }
 }
 
+OpenGlGfxController::OpenGlGfxController() {
+    printf("OpenGlGfxController::OpenGlGfxController\n");
+}
+
+OpenGlGfxController::~OpenGlGfxController() {
+    printf("OpenGlGfxController::~OpenGlGfxController\n");
+    /* Delete active VAOs */
+    for (auto vao : vaoList_) {
+        glDeleteVertexArrays(1, &vao);
+    }
+    /* Delete active VBOs */
+    for (auto vbo : vboList_) {
+        glDeleteBuffers(1, &vbo);
+    }
+    /* Delete textures */
+    for (auto textureId : textureIdList_) {
+        glDeleteTextures(1, &textureId);
+    }
+    /* Delete Shader Programs */
+    for (auto programId : programIdList_) {
+        glDeleteProgram(programId);
+    }
+
+    vaoList_.clear();
+    vboList_.clear();
+    textureIdList_.clear();
+    programIdList_.clear();
+}
