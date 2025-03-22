@@ -44,6 +44,13 @@ void ColliderObject::updateCollider() {
     }
 }
 
+/**
+ * @brief Checks if this collider is colliding or about to collide with another collider
+ * 
+ * @param object other collider to check collision with
+ * @param moving the current object's translation 
+ * @return int -1 if error, 0 for no collision, 1 for colliding, 2 for about to collide
+ */
 int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
     int matching = 0;  // Number of axis that have collided
     if (object == nullptr) {
