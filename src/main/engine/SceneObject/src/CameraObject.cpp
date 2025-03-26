@@ -101,6 +101,11 @@ void CameraObject::addSceneObject(SceneObject *sceneObject) {
     sceneObjects_.push_back(sceneObject);
 }
 
-void CameraObject::removeSceneObject(SceneObject *gameObject) {
-    sceneObjects_.erase(remove(sceneObjects_.begin(), sceneObjects_.end(), gameObject), sceneObjects_.end());
+void CameraObject::removeSceneObject(string objectName) {
+    auto objectIt = std::find_if(sceneObjects_.begin(), sceneObjects_.end(),
+        [objectName](SceneObject *obj) {
+            return obj->getObjectName().compare(objectName) == 0;
+        });
+
+    sceneObjects_.erase(objectIt);
 }

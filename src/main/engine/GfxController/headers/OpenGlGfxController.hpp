@@ -21,6 +21,8 @@
 
 class OpenGlGfxController : public GfxController {
  public:
+    OpenGlGfxController();
+    ~OpenGlGfxController();
     GfxResult<int> init();
     GfxResult<unsigned int> generateBuffer(unsigned int *bufferId);
     GfxResult<unsigned int> generateTexture(unsigned int *textureId);
@@ -56,4 +58,9 @@ class OpenGlGfxController : public GfxController {
 
  private:
     vector<unsigned int> programIdList_;
+
+    /* Objects tracked internally to free when closing */
+    vector<unsigned int> vaoList_;
+    vector<unsigned int> vboList_;
+    vector<unsigned int> textureIdList_;
 };

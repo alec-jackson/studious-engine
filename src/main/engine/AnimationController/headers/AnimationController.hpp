@@ -16,6 +16,7 @@
 #include <string>
 #include <functional>
 #include <mutex> // NOLINT
+#include <memory>
 #include <SceneObject.hpp>
 
 // Update return values
@@ -81,7 +82,7 @@ typedef struct KeyFrames {
 
 class AnimationController {
  public:
-    int addKeyFrame(SceneObject *target, KeyFrame *keyFrame);
+    int addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame);
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateRotation(SceneObject *target, KeyFrame *keyFrame);
@@ -89,8 +90,8 @@ class AnimationController {
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
-    static KeyFrame *createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
-    static KeyFrame *createKeyFrame(int type, float time);
+    static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
+    static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);

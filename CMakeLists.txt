@@ -63,6 +63,7 @@ add_executable(${PROJECT_NAME}
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/CameraObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/utilities/src/GifLoader.cpp
   src/main/engine/Misc/src/inputMonitor.cpp
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp

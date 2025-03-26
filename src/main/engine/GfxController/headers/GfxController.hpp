@@ -91,7 +91,6 @@ class GfxController {
     virtual GfxResult<unsigned int> sendTextureData(unsigned int width, unsigned int height, TexFormat format,
         void *data) = 0;
     virtual GfxResult<int>  getShaderVariable(unsigned int, const char *) = 0;
-    virtual GfxResult<int>  cleanup() = 0;
     virtual GfxResult<unsigned int> getProgramId(uint) = 0;
     virtual GfxResult<unsigned int> setProgram(unsigned int) = 0;
     virtual GfxResult<unsigned int> loadShaders(string, string) = 0;
