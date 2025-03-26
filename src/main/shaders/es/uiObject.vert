@@ -3,6 +3,7 @@
 precision mediump float;
 
 attribute vec4 vertex; // <vec2 pos, vec2 tex>
+attribute float vertexIndex;
 varying vec2 TexCoords;
 varying float TriDex;
 varying vec4 tipColor;
@@ -13,6 +14,10 @@ uniform float hScale;
 uniform float wScale;
 
 vec4 modifiedPos;
+
+int mod(int x, int y) {
+    return x - y * int(float(x) / float(y));
+}
 
 int getCorner(int vertexIdx) {
     // This is going to be nasty, so this should be cleaned at some point...
@@ -34,25 +39,16 @@ int getCorner(int vertexIdx) {
         2
 
     */
-    switch (vertexIdx) {
-        case 0:
-        case 3:
-            return 0;
-        case 1:
-            return 1;
-        case 2:
-        case 4:
-            return 2;
-        case 5:
-            return 3;
-        default:
-            return -1;
-    }
+    if (vertexIdx == 0 || vertexIdx == 3) return 0;
+    if (vertexIdx == 1) return 1;
+    if (vertexIdx == 2 || vertexIdx == 4) return 2;
+    if (vertexIdx == 5) return 3;
+    return -1;
 }
 
 int stretchTriangle(int index, float horizontalScale, float verticalScale) {
     int square = index / 6;
-    int vertIdx = index % 6;
+    int vertIdx = mod(index, 6);
     int corner = getCorner(vertIdx);
     /* Triangle corner topology
     0-----3
@@ -74,53 +70,31 @@ int stretchTriangle(int index, float horizontalScale, float verticalScale) {
     // Apply scale factor depending on location (horizontal)
     float x = vertex.x;
     float y = vertex.y;
-    switch (square) {
-        case 1:
-        case 4:
-        case 7:
-            if (corner == 2 || corner == 3) x += horizontalScale;
-            break;
-        case 2:
-        case 5:
-        case 8:
-            x += horizontalScale;
-            break;
-        case 0:
-        case 3:
-        case 6:
-        default:
-            // Don't do anything here either
-            break;
+    if (square == 1 || square == 4 || square == 7) {
+        if (corner == 2 || corner == 3) x += horizontalScale;
+    } else if (square == 2 || square == 5 || square == 8) {
+        x += horizontalScale;
+    } else {
+        // Don't do anything here
     }
 
     // Apply scale factor depending on location (vertical)
-    switch (square) {
-        case 3:
-        case 4:
-        case 5:
-            if (corner == 1 || corner == 2) y -= verticalScale;
-            break;
-        case 6:
-        case 7:
-        case 8:
-            y -= verticalScale;
-            break;
-        case 0:
-        case 1:
-        case 2:
-        default:
-            // Don't do anything here either
-            break;
+    if (square == 3 || square == 4 || square == 5) {
+        if (corner == 1 || corner == 2) y -= verticalScale;
+    } else if (square == 6 || square == 7 || square == 8) {
+        y -= verticalScale;
+    } else {
+        // Don't do anything here
     }
 
-    tipColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    tipColor = vec4(1.0, 1.0, 1.0, 1.0);
     modifiedPos = vec4(x, y, 0.0, 1.0);
     
     return square;
 }
 
 void main() {
-    int triangle = stretchTriangle(gl_VertexID, wScale, hScale);
+    int triangle = stretchTriangle(int(vertexIndex), wScale, hScale);
     gl_Position = projection * model * modifiedPos;
     TexCoords = vertex.zw;
     TriDex = float(triangle);

@@ -204,6 +204,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::loadShaders(string vertexShader, 
         vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
         cerr << vertexShader << ": " << &errorLog[0] << "\n";
+        exit(-1);
     }
     file.close();
     success = GL_FALSE;
@@ -226,6 +227,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::loadShaders(string vertexShader, 
         vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
         cerr << fragmentShader << ": " << &errorLog[0] << "\n";
+        exit(-1);
     }
     file.close();
     unsigned int programId = glCreateProgram();
@@ -238,6 +240,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::loadShaders(string vertexShader, 
         vector<char> errorLog(logLength + 1);
         glGetProgramInfoLog(programId, logLength, NULL, &errorLog[0]);
         cerr << &errorLog[0] << "\n";
+        exit(-1);
     }
     glDetachShader(programId, vertexShaderID);
     glDetachShader(programId, fragmentShaderID);

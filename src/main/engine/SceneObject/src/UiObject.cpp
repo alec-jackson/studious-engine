@@ -30,6 +30,7 @@ void UiObject::initializeShaderVars() {
     GameObject2D::initializeShaderVars();
     wScaleId_ = gfxController_->getShaderVariable(programId_, "wScale").get();
     hScaleId_ = gfxController_->getShaderVariable(programId_, "hScale").get();
+    vertexIndexId_ = gfxController_->getShaderVariable(programId_, "vertexIndex").get();
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
@@ -105,9 +106,19 @@ void UiObject::initializeVertexData() {
     gfxController_->bindBuffer(vbo_);
 
     vertexData_ = generateVertices(x, y, incrementFactorX, incrementFactorY);
-    // Send VBO data for each character to the currently bound buffer
     gfxController_->sendBufferData(sizeof(float) * 24 * 9, vertexData_.get());
     gfxController_->enableVertexAttArray(0, 4);
+
+    // Generate the vertex index buffer and send it
+    vertexIndexData_ = std::shared_ptr<float[]>(new float[24 * 3], std::default_delete<float[]>());
+    for (int i = 0; i < 24 * 3; ++i) {
+        vertexIndexData_[i] = i;
+    }
+
+    gfxController_->generateBuffer(&vertexIndexVbo_);
+    gfxController_->bindBuffer(vertexIndexVbo_);
+    gfxController_->sendBufferData(sizeof(float) * 24 * 9, vertexIndexData_.get());
+    gfxController_->enableVertexAttArray(1, 1);
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
 }
