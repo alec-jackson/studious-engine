@@ -66,15 +66,15 @@ vector<string> fragShaders = {
     "src/main/shaders/es/gameObject.frag",
     "src/main/shaders/es/colliderObject.frag",
     "src/main/shaders/es/textObject.frag",
-    "src/main/shaders/es/spriteObject.frag"
-    //"src/main/shaders/es/uiObject.frag"
+    "src/main/shaders/es/spriteObject.frag",
+    "src/main/shaders/es/uiObject.frag"
 };  // Contains collider renderer and basic object renderer.
 vector<string> vertShaders = {
     "src/main/shaders/es/gameObject.vert",
     "src/main/shaders/es/colliderObject.vert",
     "src/main/shaders/es/textObject.vert",
-    "src/main/shaders/es/spriteObject.vert"
-    //"src/main/shaders/es/uiObject.vert"
+    "src/main/shaders/es/spriteObject.vert",
+    "src/main/shaders/es/uiObject.vert"
 };  // Contains collider renderer and basic object renderer.
 #endif
 
@@ -241,7 +241,6 @@ int runtime(GameInstance *currentGame) {
         ObjectAnchor::CENTER,
         "test-sprite");
 
-    /*
     auto testUi = currentGame->createUi(
         "src/resources/images/Message Bubble UI.png",   // image path
         vec3(150.0f, 100.0f, 0.0f),                     // Position
@@ -251,7 +250,6 @@ int runtime(GameInstance *currentGame) {
         gfxController.getProgramId(4).get(),            // Shader pair
         ObjectAnchor::CENTER,                           // Anchor
         "uiBubble");                                    // UI Bubble
-    */
     auto testText = currentGame->createText(
         "Textbox Example",
         vec3(45.0f, 155.0f, 0.0f),
@@ -283,7 +281,7 @@ int runtime(GameInstance *currentGame) {
         fpsText,
         pressUText,
         testSprite,
-        //testUi,
+        testUi,
         testText
     };
 
