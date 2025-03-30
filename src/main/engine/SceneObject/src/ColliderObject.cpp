@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <memory>
 #include <ColliderObject.hpp>
 
 /** @todo Update - this is the old struct info

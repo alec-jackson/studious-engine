@@ -12,6 +12,7 @@
 #include <vector>
 #include <cstdio>
 #include <iostream>
+#include <memory>
 #include <UiObject.hpp>
 
 UiObject::UiObject(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,

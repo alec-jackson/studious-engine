@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdio>
+#include <memory>
 #include <OpenGlEsGfxController.hpp>
 
 /**
