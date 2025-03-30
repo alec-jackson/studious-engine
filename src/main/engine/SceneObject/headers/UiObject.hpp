@@ -42,8 +42,11 @@ class UiObject : public GameObject2D {
  private:
     unsigned int wScaleId_;
     unsigned int hScaleId_;
+    unsigned int vertexIndexId_;
+    unsigned int vertexIndexVbo_;
 
     std::shared_ptr<float[]> vertexData_;
+    std::shared_ptr<float[]> vertexIndexData_;
 
     float wScale_;
     float hScale_;
