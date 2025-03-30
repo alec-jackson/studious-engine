@@ -26,6 +26,8 @@
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
 
+extern double deltaTime;
+
 /*
  controllerReadout is used for getting input from a controller. This struct
  will be used in conjunction with SDL_GameControllerGetAxis to get input from
@@ -58,7 +60,6 @@ class GameInstance {
     vector<string> fragShaders_;
     vector<string> texturePathStage_;
     vector<string> texturePath_;
-    double deltaTime;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
     vec3 directionalLight;
@@ -104,9 +105,7 @@ class GameInstance {
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);
     int removeSceneObject(string objectName);
-    double getDeltaTime();
     int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
-    int setDeltaTime(double time);
     void setLuminance(float luminanceValue);
     void basicCollision(GameInstance* gameInstance);
     bool isWindowOpen();

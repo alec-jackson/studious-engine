@@ -342,7 +342,6 @@ int mainLoop(gameInfo* gamein) {
         animationController.update();
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
-        currentGame->setDeltaTime(deltaTime);
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;
