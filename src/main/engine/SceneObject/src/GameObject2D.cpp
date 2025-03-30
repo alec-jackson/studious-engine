@@ -76,7 +76,7 @@ void GameObject2D::initializeVertexData() {
     gfxController_->generateBuffer(&vbo_);
     gfxController_->bindBuffer(vbo_);
     // update VBO for each character
-    vector<float> vertices = {
+    vertices_ = {
         x, y, 0.0f, 0.0f,
         x, y2, 0.0f, 1.0f,
         x2, y2, 1.0f, 1.0f,
@@ -87,7 +87,7 @@ void GameObject2D::initializeVertexData() {
     };
 
     // Send VBO data for each character to the currently bound buffer
-    gfxController_->sendBufferData(sizeof(float) * vertices.size(), &vertices[0]);
+    gfxController_->sendBufferData(sizeof(float) * vertices_.size(), &vertices_[0]);
     gfxController_->enableVertexAttArray(0, 4);
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
@@ -103,5 +103,13 @@ void GameObject2D::render() {
 
 void GameObject2D::update() {
     render();
+}
+
+void GameObject2D::createCollider(int programId) {
+    printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
+    auto colliderName = objectName + "-Collider";
+    Polygon tempPoly(vertices_.size(), programId, vertices_);
+    collider_ = std::make_shared<ColliderObject>(&tempPoly, programId, translateMatrix_, scaleMatrix_, vpMatrix_,
+        ObjectType::GAME_OBJECT, colliderName, gfxController_);
 }
 

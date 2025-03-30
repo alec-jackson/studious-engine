@@ -52,7 +52,7 @@ find_package(Freetype REQUIRED)
 find_package(GTest CONFIG)
 
 add_executable(${PROJECT_NAME}
-  src/main/example/src/game.cpp
+  src/main/example/vgame/vgame.cpp
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/GameInstance.cpp
