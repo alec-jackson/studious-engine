@@ -29,9 +29,12 @@ class GameObject2D : public SceneObject {
     void initializeTextureData();
     void initializeShaderVars();
     void initializeVertexData();
+    void createCollider(int programId);
 
  protected:
     string texturePath_;
+    vector<float> vertices_;
+    std::shared_ptr<ColliderObject> collider_;
 
     unsigned int textureId_;
     unsigned int modelMatId_;
