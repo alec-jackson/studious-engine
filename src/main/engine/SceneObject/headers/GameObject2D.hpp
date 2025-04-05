@@ -12,6 +12,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 #include <SceneObject.hpp>
 #include <ColliderObject.hpp>
 

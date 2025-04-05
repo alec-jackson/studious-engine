@@ -364,7 +364,7 @@ int GameInstance::getCollision(GameObject *object1, GameObject *object2,
  * 2D version of the same function defined above.
  */
 int GameInstance::getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving) {
-    return object1->getCollider()->getCollision(object2->getCollider(), moving); 
+    return object1->getCollider()->getCollision(object2->getCollider(), moving);
 }
 
 /*

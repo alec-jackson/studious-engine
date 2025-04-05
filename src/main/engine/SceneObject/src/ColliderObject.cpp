@@ -38,9 +38,10 @@ ColliderObject::ColliderObject(Polygon *target, unsigned int programId, mat4 *tr
 /**
  * @brief Constructor for 2D collider objects.
  */
-ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, mat4 *translateMatrix, mat4 *scaleMatrix,
-    mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) : SceneObject(type, objectName, gfxController),
-    pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix }, pVpMatrix_ { vpMatrix } {
+ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, mat4 *translateMatrix,
+    mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
+    SceneObject(type, objectName, gfxController), pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix },
+    pVpMatrix_ { vpMatrix } {
     // Separate vertex data from vertTexData
     assert(vertTexData.size() % 4 == 0);
     vector<float> vertices;
