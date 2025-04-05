@@ -12,6 +12,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 #include <SceneObject.hpp>
 #include <ColliderObject.hpp>
 
@@ -23,18 +24,26 @@ class GameObject2D : public SceneObject {
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController);
     ~GameObject2D() override;
 
+    // Getter methods
+    ColliderObject *getCollider();
+
     // Render method
     void render() override;
     void update() override;
     void initializeTextureData();
     void initializeShaderVars();
     void initializeVertexData();
+    void createCollider(int programId);
+
 
  protected:
     string texturePath_;
+    std::shared_ptr<ColliderObject> collider_;
+    vector<float> vertTexData_;
 
     unsigned int textureId_;
     unsigned int modelMatId_;
+    unsigned int projectionId_;
     unsigned int tintId_;
 
     unsigned int vao_;

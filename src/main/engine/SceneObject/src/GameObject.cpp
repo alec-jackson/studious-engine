@@ -156,8 +156,8 @@ ColliderObject *GameObject::getCollider(void) {
 void GameObject::createCollider(int programId) {
     printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
     auto colliderName = objectName + "-Collider";
-    collider_ = std::make_shared<ColliderObject>(this->getModel(), programId, translateMatrix_, scaleMatrix_, vpMatrix_,
-        ObjectType::GAME_OBJECT, colliderName, gfxController_);
+    collider_ = std::make_shared<ColliderObject>(this->getModel(), programId, &translateMatrix_, &scaleMatrix_,
+        &vpMatrix_, ObjectType::GAME_OBJECT_2D, colliderName, gfxController_);
 }
 
 void GameObject::update() {

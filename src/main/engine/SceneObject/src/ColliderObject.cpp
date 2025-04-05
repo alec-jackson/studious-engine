@@ -28,17 +28,41 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(Polygon *target, unsigned int programId, const mat4 &translateMatrix,
-    const mat4 &scaleMatrix, const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
-    SceneObject(type, objectName, gfxController), target_ { target }, translateMatrix_ { translateMatrix },
-    scaleMatrix_ { scaleMatrix }, vpMatrix_ { vpMatrix } {
+ColliderObject::ColliderObject(Polygon *target, unsigned int programId, mat4 *translateMatrix,
+    mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
+    SceneObject(type, objectName, gfxController), target_ { target }, pTranslateMatrix_ { translateMatrix },
+    pScaleMatrix_ { scaleMatrix }, pVpMatrix_ { vpMatrix } {
+    createCollider(programId);
+}
+
+/**
+ * @brief Constructor for 2D collider objects.
+ */
+ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, mat4 *translateMatrix,
+    mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
+    SceneObject(type, objectName, gfxController), pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix },
+    pVpMatrix_ { vpMatrix } {
+    // Separate vertex data from vertTexData
+    assert(vertTexData.size() % 4 == 0);
+    vector<float> vertices;
+    for (int i = 0; i < vertTexData.size(); ++i) {
+        if (i % 4 == 3) continue;
+        if (i % 4 == 2) {
+            // Add a zero to the Z axis for 2D objects
+            vertices.push_back(0.0);
+            continue;
+        }
+        vertices.push_back(vertTexData.at(i));
+    }
+    Polygon tempPoly(vertices.size(), programId, vertices);
+    target_ = &tempPoly;
     createCollider(programId);
 }
 
 void ColliderObject::updateCollider() {
     // Update center position with model matrix
-    center_ = translateMatrix_ * scaleMatrix_ * originalCenter_;
-    vec4 minOffset = translateMatrix_ * scaleMatrix_ * minPoints_;
+    center_ = (*pTranslateMatrix_) * (*pScaleMatrix_) * originalCenter_;
+    vec4 minOffset = (*pTranslateMatrix_) * (*pScaleMatrix_) * minPoints_;
     // Use rescaled edge points to calculate offset on the fly!
     for (int i = 0; i < 4; i++) {
         offset_[i] = center_[i] - minOffset[i];
@@ -85,7 +109,7 @@ void ColliderObject::render() {
         gfxController_->setProgram(poly_.get()->programId);
         gfxController_->polygonRenderMode(RenderMode::LINE);
         gfxController_->setCapability(GfxCapability::CULL_FACE, false);
-        mat4 MVP = vpMatrix_ * translateMatrix_ * scaleMatrix_;
+        mat4 MVP = (*pVpMatrix_) * (*pTranslateMatrix_) * (*pScaleMatrix_);
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         // HINT: Render loops should really just be (bind Vao, draw triangles)
         gfxController_->bindVao(vao_);

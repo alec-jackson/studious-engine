@@ -17,7 +17,8 @@ enum ObjectType {
     TEXT_OBJECT,
     CAMERA_OBJECT,
     GAME_OBJECT,
-    UI_OBJECT
+    UI_OBJECT,
+    GAME_OBJECT_2D
 };
 
 enum RenderPriority {

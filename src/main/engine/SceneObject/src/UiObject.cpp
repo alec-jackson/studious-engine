@@ -144,6 +144,7 @@ void UiObject::render() {
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
+    gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);
     gfxController_->bindTexture(textureId_);

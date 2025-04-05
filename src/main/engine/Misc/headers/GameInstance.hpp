@@ -105,7 +105,9 @@ class GameInstance {
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);
     int removeSceneObject(string objectName);
+    /* NOTE - getCollision functions are for convenience and will be deprecated with the physics controller */
     int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
+    int getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving);
     void setLuminance(float luminanceValue);
     void basicCollision(GameInstance* gameInstance);
     bool isWindowOpen();

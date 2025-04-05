@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <GameObject2D.hpp>
 
 GameObject2D::GameObject2D(string texturePath, vec3 position, float scale, unsigned int programId,
@@ -21,13 +22,9 @@ GameObject2D::GameObject2D(string texturePath, vec3 position, float scale, unsig
     printf("GameObject2D::GameObject2D: Creating 2D object %s\n", objectName.c_str());
 }
 
-/// @todo Resolution is hardcoded to 720p right now. Add functionality to change this on the fly. Will need to re-send
-/// projection matrix.
 void GameObject2D::initializeShaderVars() {
-    mat4 projection = ortho(0.0f, static_cast<float>(1280), 0.0f, static_cast<float>(720));
     gfxController_->setProgram(programId_);
-    auto projectionId = gfxController_->getShaderVariable(programId_, "projection").get();
-    gfxController_->sendFloatMatrix(projectionId, 1, glm::value_ptr(projection));
+    projectionId_ = gfxController_->getShaderVariable(programId_, "projection").get();
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
 }
 
@@ -81,7 +78,7 @@ void GameObject2D::initializeVertexData() {
     gfxController_->bindBuffer(vbo_);
     // update VBO for each character
     // UV coordinate origin STARTS in the TOP left, NOT BOTTOM LEFT!!!
-    vector<float> vertices = {
+    vertTexData_ = {
         x, y2, 0.0f, 0.0f,
         x, y, 0.0f, 1.0f,
         x2, y2, 1.0f, 0.0f,
@@ -92,7 +89,7 @@ void GameObject2D::initializeVertexData() {
     };
 
     // Send VBO data for each character to the currently bound buffer
-    gfxController_->sendBufferData(sizeof(float) * vertices.size(), &vertices[0]);
+    gfxController_->sendBufferData(sizeof(float) * vertTexData_.size(), &vertTexData_[0]);
     gfxController_->enableVertexAttArray(0, 4);
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
@@ -110,3 +107,22 @@ void GameObject2D::update() {
     render();
 }
 
+/**
+ * @brief Creates a collider for this game object
+ * 
+ * @param programId Program used to render the collider (collider shaders)
+ */
+void GameObject2D::createCollider(int programId) {
+    printf("GameObject2D::createCollider: Creating collider for object %s\n", objectName.c_str());
+    auto colliderName = objectName + "-Collider";
+    collider_ = std::make_shared<ColliderObject>(vertTexData_, programId, &translateMatrix_, &scaleMatrix_, &vpMatrix_,
+        ObjectType::GAME_OBJECT, colliderName, gfxController_);
+}
+
+/**
+ * @brief Get the collider for the 2D Game Object
+ */
+ColliderObject *GameObject2D::getCollider() {
+    collider_.get()->updateCollider();
+    return collider_.get();
+}
