@@ -62,28 +62,33 @@ void GameObject2D::initializeVertexData() {
             break;
         case CENTER:
             x = -1 * ((textureWidth_) / 2.0f);
-            y = (textureHeight_) / 2.0f;
+            y = -1 * ((textureHeight_) / 2.0f);
+            break;
+        case TOP_LEFT:
+            y = -1.0f * textureHeight_;
+            x = 0.0f;
             break;
         default:
             fprintf(stderr, "GameObject2D::initializeVertexData: Unsupported anchor type %d\n", anchor_);
             assert(false);
             break;
     }
-    auto x2 = x + (textureWidth_), y2 = y - (textureHeight_);
+    auto x2 = x + (textureWidth_), y2 = y + (textureHeight_);
     // Use textures to create each character as an independent object
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
     gfxController_->generateBuffer(&vbo_);
     gfxController_->bindBuffer(vbo_);
     // update VBO for each character
+    // UV coordinate origin STARTS in the TOP left, NOT BOTTOM LEFT!!!
     vector<float> vertices = {
-        x, y, 0.0f, 0.0f,
-        x, y2, 0.0f, 1.0f,
-        x2, y2, 1.0f, 1.0f,
+        x, y2, 0.0f, 0.0f,
+        x, y, 0.0f, 1.0f,
+        x2, y2, 1.0f, 0.0f,
 
-        x, y, 0.0f, 0.0f,
-        x2, y2, 1.0f, 1.0f,
-        x2, y, 1.0f, 0.0f
+        x2, y2, 1.0f, 0.0f,
+        x, y, 0.0f, 1.0f,
+        x2, y, 1.0f, 1.0f
     };
 
     // Send VBO data for each character to the currently bound buffer

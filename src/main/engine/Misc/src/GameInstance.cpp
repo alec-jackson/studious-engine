@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 #include <GameInstance.hpp>
 
 /*
@@ -250,18 +251,6 @@ int GameInstance::updateWindow() {
     return 0;
 }
 
-/*
- (int) setDeltaTime takes a (double) time and sets the current GameInstance's
- deltaTime value to that time value. This time value should only ever be the
- amount of time in seconds passed since the last rendered frame.
-
- (int) setDeltaTime returns 0 upon success.
-*/
-int GameInstance::setDeltaTime(double time) {
-    deltaTime = time;
-    return 0;
-}
-
 GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
     string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
@@ -347,14 +336,6 @@ int GameInstance::removeSceneObject(string objectName) {
 
     sceneObjects_.erase(objectIt);
     return 0;
-}
-
-/*
- (double) getDeltaTime returns the amount of time in second since the last
- rendered frame.
-*/
-double GameInstance::getDeltaTime() {
-    return deltaTime;
 }
 
 /*

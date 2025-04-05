@@ -28,7 +28,8 @@ enum RenderPriority {
 
 enum ObjectAnchor {
     CENTER,
-    BOTTOM_LEFT
+    BOTTOM_LEFT,
+    TOP_LEFT
 };
 
 class SceneObject {
