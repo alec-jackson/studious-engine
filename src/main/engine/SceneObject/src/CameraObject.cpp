@@ -32,11 +32,11 @@ void CameraObject::render() {
         center = target_->getPosition(center);
     }
     mat4 viewMatrix = lookAt(eye, center, vec3(0, 1, 0));
-    mat4 orthographicMatrix = ortho(0.0f, 800.0f, 0.0f, 600.0f, nearClipping_, farClipping_);
+    mat4 orthographicMatrix = ortho(0.0f, 1280.0f, 0.0f, 720.0f);
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
     vpMatrixPerspective_ = projectionMatrix * viewMatrix;
-    vpMatrixOrthographic_ = orthographicMatrix * viewMatrix;
+    vpMatrixOrthographic_ = orthographicMatrix;
 }
 
 void CameraObject::update() {
@@ -54,9 +54,10 @@ void CameraObject::update() {
         // Check if the object is ORTHO or PERSPECTIVE
         switch ((*it)->type()) {
             case GAME_OBJECT:
-            case UI_OBJECT:
                 (*it)->setVpMatrix(vpMatrixPerspective_);
                 break;
+            case UI_OBJECT:
+            case GAME_OBJECT_2D:
             case TEXT_OBJECT:
                 (*it)->setVpMatrix(vpMatrixOrthographic_);
                 break;

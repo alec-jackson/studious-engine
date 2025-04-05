@@ -288,7 +288,7 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
     ObjectAnchor anchor, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     auto sprite = std::make_shared<SpriteObject>(spritePath, position, scale, programId, objectName,
-        ObjectType::GAME_OBJECT, anchor, gfxController_);
+        ObjectType::GAME_OBJECT_2D, anchor, gfxController_);
     sceneObjects_.push_back(sprite);
     return sprite.get();
 }
@@ -358,6 +358,13 @@ int GameInstance::removeSceneObject(string objectName) {
 int GameInstance::getCollision(GameObject *object1, GameObject *object2,
     vec3 moving) {
     return object1->getCollider()->getCollision(object2->getCollider(), moving);
+}
+
+/**
+ * 2D version of the same function defined above.
+ */
+int GameInstance::getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving) {
+    return object1->getCollider()->getCollision(object2->getCollider(), moving); 
 }
 
 /*

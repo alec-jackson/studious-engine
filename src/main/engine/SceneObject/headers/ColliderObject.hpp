@@ -20,8 +20,10 @@
 
 class ColliderObject : public SceneObject {
  public:
-    ColliderObject(Polygon *target, unsigned int programId, const mat4 &translateMatrix, const mat4 &scaleMatrix,
-        const mat4 &vpMatrix, ObjectType type, string objectName, GfxController *gfxController);
+    ColliderObject(Polygon *target, unsigned int programId, mat4 *translateMatrix, mat4 *scaleMatrix,
+        mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController);
+    ColliderObject(const vector<float> &vertTexData, unsigned int programId, mat4 *translateMatrix, mat4 *scaleMatrix,
+        mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController);
     void updateCollider();
     void render() override;
     void update() override;
@@ -39,10 +41,10 @@ class ColliderObject : public SceneObject {
     vec4 originalCenter_;
     std::shared_ptr<Polygon> poly_;
     Polygon *target_;
-    // Create references to translate/scale matrices
-    const mat4 &translateMatrix_;
-    const mat4 &scaleMatrix_;
-    const mat4 &vpMatrix_;
+    // Use pointers to the parent object's transform matrices
+    mat4 *pTranslateMatrix_;
+    mat4 *pScaleMatrix_;
+    mat4 *pVpMatrix_;
     int mvpId_;
 };
 

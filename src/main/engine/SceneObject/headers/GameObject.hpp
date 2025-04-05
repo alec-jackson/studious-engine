@@ -40,7 +40,6 @@ class GameObject: public SceneObject {
     // Special Getters
     inline Polygon *getModel() { return model; }
     ColliderObject *getCollider();
-    float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
 
     // Other methods
     void createCollider(int programId);
@@ -52,13 +51,8 @@ class GameObject: public SceneObject {
  private:
     Polygon *model;  // Change this to a proper class at some point
 
-    unsigned int VAO;  /// @todo: Why do we have this?
-
-    unsigned int vpId, modelId, textureId, textCoordsId,
-        hasTextureId, directionalLightId, luminanceId, rollOffId,
-        collider_shaderId;  /// @todo: Organize these into another class
-
-    int textureCoordId;
+    unsigned int vpId, modelId,
+        hasTextureId, directionalLightId, luminanceId, rollOffId;
 
     float luminance;
     float rollOff;
@@ -66,7 +60,6 @@ class GameObject: public SceneObject {
     vector<int> hasTexture;
     vector<unsigned int> vaos_;  // Temporary?
     vec3 directionalLight;
-    vec3 velocity;
 
     std::shared_ptr<ColliderObject> collider_;
 };

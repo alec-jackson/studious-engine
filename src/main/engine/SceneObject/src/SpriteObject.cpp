@@ -48,12 +48,14 @@ void SpriteObject::render() {
     // Send shader variables
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     gfxController_->sendFloatVector(tintId_, 1, glm::value_ptr(tint_));
+    gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);
     gfxController_->bindTexture(textureId_);
     gfxController_->drawTriangles(6);
     gfxController_->bindVao(0);
     gfxController_->bindTexture(0);
+    if (collider_.use_count() > 0) collider_.get()->update();
 }
 
 void SpriteObject::update() {
