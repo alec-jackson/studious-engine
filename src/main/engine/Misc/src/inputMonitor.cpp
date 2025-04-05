@@ -62,7 +62,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
         // Assume that the target is the origin
         auto charPos = character->getPosition();
         auto cameraPos = currentGameInfo->gameCamera->getOffset();
-        float multiplier = 1.0f * deltaTime * 120.0f;
+        float multiplier = 1.0f;
         float speed = 0.3f;
         // y over x
         float angle = angleOfPoint(cameraPos, charPos);
@@ -229,7 +229,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
             float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
 
             if (controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
-                multiplier *= (static_cast<float>(controllerLeftStateY)) / INT16_MAX;
+                multiplier = (static_cast<float>(controllerLeftStateY)) / INT16_MAX;
             }
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
@@ -239,13 +239,13 @@ void rotateShape(void *gameInfoStruct, void *target) {
             float xSpeed = sin(angles[1] * (PI / 180)) * speed;
             float ySpeed = cos(angles[1] * (PI / 180)) * speed;
             if (controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
-                multiplier *= (static_cast<float>(controllerLeftStateY * -1)) / INT16_MAX;
+                multiplier = (static_cast<float>(controllerLeftStateY * -1)) / INT16_MAX;
             }
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
         }
         if ((currentGame->getKeystate()[SDL_SCANCODE_SPACE] || buttonCheckA) && pos[1] == 0) {
-            fallspeed = -0.003f * deltaTime * 120.0f;
+            fallspeed = -0.003f;
             // pos[1] += 0.05f;
         }
         if (currentGame->getKeystate()[SDL_SCANCODE_E]) {
@@ -261,7 +261,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
             float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
 
             if (controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
-                multiplier *= (static_cast<float>(controllerLeftStateX * -1)) / INT16_MAX;
+                multiplier = (static_cast<float>(controllerLeftStateX * -1)) / INT16_MAX;
             }
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
@@ -272,7 +272,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
             float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
 
             if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
-                multiplier *= static_cast<float>(controllerLeftStateX) / INT16_MAX;
+                multiplier = static_cast<float>(controllerLeftStateX) / INT16_MAX;
             }
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
