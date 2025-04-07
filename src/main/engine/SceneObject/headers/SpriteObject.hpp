@@ -41,5 +41,5 @@ class SpriteObject : public GameObject2D {
  private:
     vec3 tint_;
     Image imageBank_;
-    int currentFrame_;
+    uint currentFrame_;
 };
