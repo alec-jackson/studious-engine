@@ -45,7 +45,7 @@ ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int pr
     // Separate vertex data from vertTexData
     assert(vertTexData.size() % 4 == 0);
     vector<float> vertices;
-    for (int i = 0; i < vertTexData.size(); ++i) {
+    for (uint i = 0; i < vertTexData.size(); ++i) {
         if (i % 4 == 3) continue;
         if (i % 4 == 2) {
             // Add a zero to the Z axis for 2D objects
