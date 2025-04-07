@@ -8,9 +8,10 @@
  * @copyright Copyright (c) 2023
  * 
  */
+#include <gtest/gtest.h>
 #include <vector>
 #include <memory>
-#include <gtest/gtest.h>
+#include <iostream>
 #include <MockGfxController.hpp>
 #include <SpriteObjectTests.hpp>
 
@@ -115,7 +116,7 @@ TEST_F(GivenASpriteObject, WhenSplitGridCalled_ThenImagesSplitSuccessfully) {
             actualFrames.push_back(frameData);
             return GFX_OK(unsigned int);
         });
-    
+
     SpriteObject sprite(testSpritePath, vec3(0.0f, 0.0f, 0.0f), 1.0f, 1, "testSprite", ObjectType::GAME_OBJECT_2D,
         ObjectAnchor::CENTER, &mockGfxController_);
 

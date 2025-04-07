@@ -110,7 +110,7 @@ void SpriteObject::splitGrid(int width, int height, int frameCount) {
         auto imageRow = image->w * height * (i / numHorizontal);
         for (int j = 0; j < height; ++j) {
             /* Select the row of images in the sprite grid */
-            
+
             auto imageStart = (image->w * j) + imageRow + ((i % numHorizontal) * width);
             memcpy(&data.get()[j * width * pixelSize], &packedData.get()[imageStart * pixelSize], width * pixelSize);
         }
@@ -140,5 +140,5 @@ void SpriteObject::splitGrid(int width, int height, int frameCount) {
     /* GfxController will handle garbage collection of old data */
     GameObject2D::initializeVertexData();
 
-    currentFrame_ = 0; // Set the current frame to zero as the default
+    currentFrame_ = 0;  // Set the current frame to zero as the default
 }

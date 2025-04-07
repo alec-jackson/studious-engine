@@ -10,10 +10,12 @@
  */
 #pragma once
 #include <gmock/gmock.h>
+#include <string>
+#include <vector>
 #include <GfxController.hpp>
 
 class MockGfxController : public GfxController {
-public:
+ public:
     MOCK_METHOD(GfxResult<int>, init, (), (override));
     MOCK_METHOD(GfxResult<unsigned int>, generateBuffer, (unsigned int *), (override));
     MOCK_METHOD(GfxResult<unsigned int>, generateTexture, (unsigned int *), (override));

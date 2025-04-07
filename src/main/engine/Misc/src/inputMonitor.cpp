@@ -291,7 +291,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (currentGame->getKeystate()[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
         }
-        
+
         if (currentGame->getKeystate()[SDL_SCANCODE_U] && !uPressed) {
             uPressed = true;
             if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
