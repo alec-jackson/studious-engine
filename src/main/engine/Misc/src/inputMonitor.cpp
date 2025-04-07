@@ -37,6 +37,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
         pos = vec3(0);
     float fallspeed = 0;
     bool trackMouse = false;
+    bool uPressed = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
     if (numJoySticks < 1) {
@@ -290,18 +291,18 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (currentGame->getKeystate()[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
         }
-        /// @todo Input is VERY primitive right now... The sleep will make this action feel sluggish,
-        /// but it prevents key spamming
-        if (currentGame->getKeystate()[SDL_SCANCODE_U]) {
+        
+        if (currentGame->getKeystate()[SDL_SCANCODE_U] && !uPressed) {
+            uPressed = true;
             if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
                 SDL_SetRelativeMouseMode(SDL_TRUE);
                 trackMouse = true;
-                sleep(1);
             } else {
                 SDL_SetRelativeMouseMode(SDL_FALSE);
                 trackMouse = false;
-                sleep(1);
             }
+        } else if (!currentGame->getKeystate()[SDL_SCANCODE_U] && uPressed) {
+            uPressed = false;
         }
         // Set character rotation based on joysticks
         // Left rotation

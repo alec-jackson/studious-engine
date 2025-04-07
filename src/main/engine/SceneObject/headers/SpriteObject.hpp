@@ -14,6 +14,7 @@
 #include <vector>
 #include <GameObject2D.hpp>
 #include <ColliderObject.hpp>
+#include <Image.hpp>
 
 class SpriteObject : public GameObject2D {
  public:
@@ -27,12 +28,18 @@ class SpriteObject : public GameObject2D {
     void render() override;
     void update() override;
 
+    // Animation Specific Functions
+    void splitGrid(int width, int height, int frameCount);
+
     // Getters
     inline vec3 getTint() { return tint_; }
 
     // Setters
     inline void setTint(vec3 tint) { tint_ = tint; }
+    inline void setCurrentFrame(int frame) { currentFrame_ = frame; }
 
  private:
     vec3 tint_;
+    Image imageBank_;
+    int currentFrame_;
 };
