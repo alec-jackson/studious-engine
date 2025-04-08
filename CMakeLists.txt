@@ -51,8 +51,21 @@ find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(GTest CONFIG)
 
+# Add additional games here :)
+if (MAIN_TARGET STREQUAL "default")
+  set(MAIN_FILE 
+    src/main/example/src/game.cpp
+  )
+elseif (MAIN_TARGET STREQUAL "chris_2d")
+  set(MAIN_FILE 
+    src/main/example/2dDemo/game.cpp
+  )
+else()
+  message(FATAL_ERROR "Unknown main target: ${MAIN_TARGET}. Please ensure the MAIN_TARGET is valid!")
+endif()
+
 add_executable(${PROJECT_NAME}
-  src/main/example/src/game.cpp
+  ${MAIN_FILE}
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/GameInstance.cpp

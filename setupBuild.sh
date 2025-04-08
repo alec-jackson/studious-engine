@@ -6,6 +6,7 @@ embeddedBuild=false
 debugBuild=false
 runTests=false
 singleJob=false
+target=default
 while [ $# -ne 0 ]; do
     arg="$1"
     case "$arg" in
@@ -27,12 +28,18 @@ while [ $# -ne 0 ]; do
         -s)
             singleJob=true
             ;;
+        -target)
+            shift
+            target="$1"
+            ;;
         *)
             echo "Unsupported arg $arg"
             ;;
     esac
     shift
 done
+
+echo "Target: $target"
 
 if { [ "$cleanBuild" == true ]; } && [ -d build ]; then
     echo "Performing clean build"
@@ -55,6 +62,8 @@ if [ "$embeddedBuild" == true ]; then
     echo "Building EMBEDDED TARGET"
     ARGS="$ARGS -DGFX_EMBEDDED=1"
 fi
+# Add the selected target to the args
+ARGS="$ARGS -DMAIN_TARGET=$target"
 cmake ${ARGS} ..
 
 # Build Project
