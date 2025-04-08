@@ -44,6 +44,10 @@ std::shared_ptr<uint8_t[]> GameObject2D::packSurface(SDL_Surface *texture) {
 void GameObject2D::initializeTextureData() {
     cout << "GameObject2D::initializeTextureData with path " << texturePath_ << endl;
     SDL_Surface *texture = IMG_Load(texturePath_.c_str());
+    if (texture == nullptr) {
+        fprintf(stderr, "GameObject2D::initializeTextureData: Failed to load texture %s\n", texturePath_.c_str());
+        return;
+    }
     auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
     auto packedData = packSurface(texture);
     // Send texture image to OpenGL
