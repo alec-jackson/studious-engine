@@ -57,7 +57,6 @@ void SpriteObject::render() {
         /* Send the base image if no images are present in the image bank */
         gfxController_->bindTexture(textureId_);
     } else {
-        printf("Current frame is %d\n", currentFrame_);
         assert(currentFrame_ < imageBank_.textureIds.size());
         gfxController_->bindTexture(imageBank_.textureIds.at(currentFrame_));
     }
