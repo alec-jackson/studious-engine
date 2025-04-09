@@ -254,7 +254,7 @@ int GameInstance::updateWindow() {
 GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
     string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
-    printf("GameInstance::createGameObject: Creating GameObject %lu\n", sceneObjects_.size());
+    printf("GameInstance::createGameObject: Creating GameObject %zu\n", sceneObjects_.size());
     auto gameObject = std::make_shared<GameObject>(characterModel, position, rotation,
         scale, objectName, ObjectType::GAME_OBJECT, gfxController_);
     gameObject.get()->setDirectionalLight(directionalLight);
@@ -266,7 +266,7 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
 CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping) {
     std::unique_lock<std::mutex> lock(sceneLock_);
-    printf("GameInstance::createCamera: Creating CameraObject %lu\n", sceneObjects_.size());
+    printf("GameInstance::createCamera: Creating CameraObject %zu\n", sceneObjects_.size());
     auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
     auto gameCamera = std::make_shared<CameraObject>(target, offset, cameraAngle,
         aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
@@ -277,7 +277,7 @@ CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, float 
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
     unsigned int programId, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
-    printf("GameInstance::createText: Creating TextObject %lu\n", sceneObjects_.size());
+    printf("GameInstance::createText: Creating TextObject %zu\n", sceneObjects_.size());
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
         programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
     sceneObjects_.push_back(text);

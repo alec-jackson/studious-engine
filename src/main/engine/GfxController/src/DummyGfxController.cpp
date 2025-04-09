@@ -30,7 +30,7 @@ GfxResult<unsigned int> DummyGfxController::bindBuffer(unsigned int bufferId) {
 }
 
 GfxResult<unsigned int> DummyGfxController::sendBufferData(size_t size, void *data) {
-    printf("GfxController::sendBufferData: size %ld, data %p\n", size, data);
+    printf("GfxController::sendBufferData: size %zu, data %p\n", size, data);
     return GFX_OK(unsigned int);
 }
 
@@ -81,7 +81,7 @@ GfxResult<unsigned int> DummyGfxController::sendFloat(unsigned int variableId, f
 }
 
 GfxResult<unsigned int> DummyGfxController::sendFloatVector(unsigned int variableId, size_t count, float *data) {
-    printf("GfxController::sendFloatVector: variableId=[%u], count=[%lu], data=[%p]\n",
+    printf("GfxController::sendFloatVector: variableId=[%u], count=[%zu], data=[%p]\n",
         variableId,
         count,
         data);
@@ -94,7 +94,7 @@ GfxResult<unsigned int> DummyGfxController::polygonRenderMode(RenderMode mode) {
 }
 
 GfxResult<unsigned int> DummyGfxController::sendFloatMatrix(unsigned int variableId, size_t count, float *data) {
-    printf("GfxController::sendFloatMatrix: variableId=[%u], count=[%lu], data=[%p]\n",
+    printf("GfxController::sendFloatMatrix: variableId=[%u], count=[%zu], data=[%p]\n",
         variableId,
         count,
         data);
@@ -149,7 +149,7 @@ GfxResult<unsigned int> DummyGfxController::generateMipMap() {
 }
 
 GfxResult<unsigned int> DummyGfxController::enableVertexAttArray(unsigned int layout, size_t size) {
-    printf("GfxController::enableVertexAttArray: layout %d, size %ld\n",
+    printf("GfxController::enableVertexAttArray: layout %d, size %zu\n",
         layout, size);
     return GFX_OK(unsigned int);
 }
