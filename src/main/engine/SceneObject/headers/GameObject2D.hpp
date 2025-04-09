@@ -34,7 +34,8 @@ class GameObject2D : public SceneObject {
     void initializeShaderVars();
     void initializeVertexData();
     void createCollider(int programId);
-
+    std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture);
+    void setDimensions(int width, int height);
 
  protected:
     string texturePath_;

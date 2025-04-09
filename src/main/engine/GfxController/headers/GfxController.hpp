@@ -13,8 +13,8 @@
 #include <vector>
 #include <Polygon.hpp>
 
-#define GFX_OK(gType) GfxResult<gType>(GfxApiResult::OK, 0);
-#define GFX_FAILURE(gType) GfxResult<gType>(GfxApiResult::FAILURE, -1);
+#define GFX_OK(gType) GfxResult<gType>(GfxApiResult::OK, 0)
+#define GFX_FAILURE(gType) GfxResult<gType>(GfxApiResult::FAILURE, -1)
 
 enum GfxApiResult {
     OK,

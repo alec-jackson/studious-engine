@@ -28,14 +28,38 @@ void GameObject2D::initializeShaderVars() {
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
 }
 
+/**
+ * @brief Tightly packs texture data stored in an SDL_Surface to remove 4-byte alignment.
+ * 
+ * @param texture Valid SDL_Surface containing image data.
+ * @return std::shared_ptr<uint8_t[]> Buffer containing tightly packed pixel data.
+ */
+std::shared_ptr<uint8_t[]> GameObject2D::packSurface(SDL_Surface *texture) {
+    /* Tightly pack to remove 4 byte alignment on texture */
+    auto pixelSize = texture->format->BytesPerPixel;
+    std::shared_ptr<uint8_t[]> packedData(new uint8_t[texture->w * texture->h * pixelSize],
+        std::default_delete<uint8_t[]>());
+    for (int i = 0; i < texture->h; ++i) {
+        memcpy(&packedData.get()[i * pixelSize * texture->w],
+            &(reinterpret_cast<uint8_t *>(texture->pixels))[i * (texture->pitch)],
+            pixelSize * texture->w);
+    }
+    return packedData;
+}
+
 void GameObject2D::initializeTextureData() {
     cout << "GameObject2D::initializeTextureData with path " << texturePath_ << endl;
     SDL_Surface *texture = IMG_Load(texturePath_.c_str());
+    if (texture == nullptr) {
+        fprintf(stderr, "GameObject2D::initializeTextureData: Failed to load texture %s\n", texturePath_.c_str());
+        return;
+    }
     auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
+    auto packedData = packSurface(texture);
     // Send texture image to OpenGL
     gfxController_->generateTexture(&textureId_);
     gfxController_->bindTexture(textureId_);
-    gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
+    gfxController_->sendTextureData(texture->w, texture->h, textureFormat, packedData.get());
     gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
     gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
     gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
@@ -47,6 +71,19 @@ void GameObject2D::initializeTextureData() {
     textureHeight_ = texture->h;
 
     SDL_FreeSurface(texture);
+}
+
+/**
+ * @brief Updates the dimensions of the sprite. When using the splitGrid function, the image
+ * itself will decrease in size, so we want to account for that. Run this to ensure the pixel
+ * size remains the same after spliting.
+ * 
+ * @param width Width of the new sprite grid frame.
+ * @param height Height of the new sprite grid frame.
+ */
+void GameObject2D::setDimensions(int width, int height) {
+    textureWidth_ = width;
+    textureHeight_ = height;
 }
 
 void GameObject2D::initializeVertexData() {

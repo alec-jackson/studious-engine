@@ -41,7 +41,6 @@
 #define CAP_POS 1
 #define CAP_NEG 2
 #define NUM_AXIS 3
-#define UPDATE_TYPES 7
 #define ANIMATION_COMPLETE_CB std::function<void(void)> callback
 
 extern double deltaTime;
