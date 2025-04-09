@@ -61,7 +61,11 @@ elseif (MAIN_TARGET STREQUAL "chris_2d")
     src/main/example/2dDemo/game.cpp
   )
 else()
-  message(FATAL_ERROR "Unknown main target: ${MAIN_TARGET}. Please ensure the MAIN_TARGET is valid!")
+  message("Unknown main target: ${MAIN_TARGET}. Please ensure the MAIN_TARGET is valid!")
+  message("Defaulting to 'default' target.")
+  set(MAIN_FILE 
+    src/main/example/src/game.cpp
+  )
 endif()
 
 add_executable(${PROJECT_NAME}

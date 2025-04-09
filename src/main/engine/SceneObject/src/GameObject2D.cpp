@@ -28,6 +28,12 @@ void GameObject2D::initializeShaderVars() {
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
 }
 
+/**
+ * @brief Tightly packs texture data stored in an SDL_Surface to remove 4-byte alignment.
+ * 
+ * @param texture Valid SDL_Surface containing image data.
+ * @return std::shared_ptr<uint8_t[]> Buffer containing tightly packed pixel data.
+ */
 std::shared_ptr<uint8_t[]> GameObject2D::packSurface(SDL_Surface *texture) {
     /* Tightly pack to remove 4 byte alignment on texture */
     auto pixelSize = texture->format->BytesPerPixel;
@@ -67,6 +73,14 @@ void GameObject2D::initializeTextureData() {
     SDL_FreeSurface(texture);
 }
 
+/**
+ * @brief Updates the dimensions of the sprite. When using the splitGrid function, the image
+ * itself will decrease in size, so we want to account for that. Run this to ensure the pixel
+ * size remains the same after spliting.
+ * 
+ * @param width Width of the new sprite grid frame.
+ * @param height Height of the new sprite grid frame.
+ */
 void GameObject2D::setDimensions(int width, int height) {
     textureWidth_ = width;
     textureHeight_ = height;

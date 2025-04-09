@@ -70,8 +70,25 @@ void SpriteObject::update() {
     render();
 }
 
+/**
+ * @brief Splits the sprite grid image into multiple equally sized frames. Re-opens the sprite and creates a texture
+ * for each frame inside of the sprite grid. Creates frames in a sprite grid in sequential order from top left to
+ * bottom right. Will assert if the dimensions of the image will not work.
+ * 
+ * If any asserts occur when running this function then something about the passed in image is bad. When this function
+ * is called, the SpriteObject will no longer render itself as the passed in image. Instead, by default it will render
+ * the first frame in the sprite grid and re-size the object itself to the dimensions of the first frame.
+ * 
+ * The image's width must be perfectly divisible by the width of each frame. The same is true for the height. The passed
+ * in frameCount must also be less than or equal to the number of possible frames in the image given the width and height
+ * of each frame.
+ * 
+ * @param width Of each frame in the sprite grid.
+ * @param height Of each frame in the sprite grid.
+ * @param frameCount The number of frames to pull from the sprite grid.
+ */
 void SpriteObject::splitGrid(int width, int height, int frameCount) {
-    // Re-open the image and process it
+    /* Re-open the image and process it */
     auto image = IMG_Load(texturePath_.c_str());
     if (image == nullptr) {
         fprintf(stderr, "SpriteObject::splitGrid: Error - unable to open image %s\n",
@@ -100,9 +117,9 @@ void SpriteObject::splitGrid(int width, int height, int frameCount) {
     imageBank_.width = width;
     imageBank_.height = height;
     auto packedData = GameObject2D::packSurface(image);
+
     /* Grab frames LEFT TO RIGHT from image data */
     for (int i = 0; i < frameCount; ++i) {
-        /* What is the size of each pixel??? */
         data = std::unique_ptr<uint8_t[]>(new uint8_t[width * height * pixelSize]);
         /* This is going to suck, but I can't think of a clever solution.
            Copy each frame line by line... */
@@ -114,7 +131,7 @@ void SpriteObject::splitGrid(int width, int height, int frameCount) {
             memcpy(&data.get()[j * width * pixelSize], &packedData.get()[imageStart * pixelSize], width * pixelSize);
         }
 
-        /* Generate a texture ID with the capture texture data */
+        /* Create a texture for the current frame */
         unsigned int textureId;
 
         gfxController_->generateTexture(&textureId);
@@ -133,7 +150,7 @@ void SpriteObject::splitGrid(int width, int height, int frameCount) {
 
     SDL_FreeSurface(image);
 
-    // Update the dimensions of the SpriteObject
+    /* Update the dimensions of the SpriteObject to match the frame size */
     GameObject2D::setDimensions(width, height);
 
     /* GfxController will handle garbage collection of old data */
