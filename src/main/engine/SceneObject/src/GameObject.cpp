@@ -25,9 +25,9 @@
  * @param objectName Friendly name for the object used to identify it in the scene
  * @param gfxController Graphics controller for rendering the game scene
  */
-GameObject::GameObject(Polygon *characterModel, uint programId, vec3 position, vec3 rotation, float scale,
+GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
     string objectName, ObjectType type, GfxController *gfxController):
-    SceneObject(position, rotation, objectName, scale, programId, type, gfxController),
+    SceneObject(position, rotation, objectName, scale, characterModel->programId, type, gfxController),
     model { characterModel } {
     configureOpenGl();
     luminance = 1.0f;

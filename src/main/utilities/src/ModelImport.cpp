@@ -154,7 +154,7 @@ int ModelImport::buildObject(int objectId) {
             }
         }
     }
-    Polygon newPolygon(triCount, programId_, vertexVbo, textureVbo, normalVbo);
+    auto newPolygon = Polygon(triCount, programId_, vertexVbo, textureVbo, normalVbo);
     polygon_.merge(newPolygon);
     return 0;
 }

@@ -255,7 +255,7 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
     string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createGameObject: Creating GameObject %zu\n", sceneObjects_.size());
-    auto gameObject = std::make_shared<GameObject>(characterModel, characterModel->programId, position, rotation,
+    auto gameObject = std::make_shared<GameObject>(characterModel, position, rotation,
         scale, objectName, ObjectType::GAME_OBJECT, gfxController_);
     gameObject.get()->setDirectionalLight(directionalLight);
     gameObject.get()->setLuminance(luminance);
@@ -383,7 +383,6 @@ void GameInstance::setLuminance(float luminanceValue) {
 */
 void GameInstance::initWindow(const configData &config) {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
-    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
     window = SDL_CreateWindow("Studious Engine Example", SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED, width_, height_,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);

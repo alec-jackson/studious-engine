@@ -1,3 +1,3 @@
-resX=1024
-resY=600
-enableVsync=0
+resX=1280
+resY=720
+enableVsync=1

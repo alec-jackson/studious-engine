@@ -21,7 +21,7 @@
 class GameObject: public SceneObject {
  public:
     // Constructurs
-    explicit GameObject(Polygon *characterModel, uint programId, vec3 position, vec3 rotation, float scale,
+    explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
             string objectName, ObjectType type, GfxController *gfxController);
     explicit GameObject(GfxController *gfxController);
     ~GameObject() override;
