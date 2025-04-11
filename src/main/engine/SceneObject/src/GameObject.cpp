@@ -95,6 +95,7 @@ void GameObject::configureOpenGl() {
             continue;
         }
         SDL_Surface *texture = IMG_Load(model->texturePath_[model->texturePattern_[i]].c_str());
+        cout << "Loading texture: " << model->texturePath_[model->texturePattern_[i]] << "\n";
         if (texture == NULL) {
             cerr << "Failed to create SDL_Surface texture!\n";
             gfxController_->bindVao(0);
@@ -103,7 +104,7 @@ void GameObject::configureOpenGl() {
             continue;
         }
 
-        auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
+        auto textureFormat = texture->format->Amask ? TexFormat::TX_RGBA : TexFormat::TX_RGB;
         // Send texture image to OpenGL
         gfxController_->generateTexture(&model->textureId[i]);
         gfxController_->bindTexture(model->textureId[i]);
@@ -174,7 +175,7 @@ void GameObject::render() {
     // Draw each shape individually
     for (int i = 0; i < model->numberOfObjects; i++) {
         gfxController_->setProgram(programId_);
-        gfxController_->polygonRenderMode(RenderMode::FILL);
+        gfxController_->polygonRenderMode(RenderMode::RM_FILL);
         // Update our model transformation matrices
         translateMatrix_ = glm::translate(mat4(1.0f), position);
         rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),

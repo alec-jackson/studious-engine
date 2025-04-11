@@ -60,7 +60,7 @@ void TextObject::initializeText() {
             gfxController_->sendTextureData(
                 face->glyph->bitmap.width,
                 face->glyph->bitmap.rows,
-                TexFormat::BITMAP,
+                TexFormat::TX_BITMAP,
                 face->glyph->bitmap.buffer);
             gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
             gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
@@ -134,7 +134,7 @@ void TextObject::render() {
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
-    gfxController_->polygonRenderMode(RenderMode::FILL);
+    gfxController_->polygonRenderMode(RenderMode::RM_FILL);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
     /// @todo optimize this...

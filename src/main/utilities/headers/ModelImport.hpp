@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <Polygon.hpp>
+#include <winsup.hpp>
 #define DEFAULT_VECTOR_SIZE 256
 
 using std::ifstream;
