@@ -193,3 +193,4 @@ target_link_libraries(gtest_SpriteObjectTests
 gtest_discover_tests(gtest_SpriteObjectTests)
 endif()
 
+install(TARGETS ${PROJECT_NAME})
