@@ -31,7 +31,7 @@ void GameObject2D::initializeShaderVars() {
 void GameObject2D::initializeTextureData() {
     cout << "GameObject2D::initializeTextureData with path " << texturePath_ << endl;
     SDL_Surface *texture = IMG_Load(texturePath_.c_str());
-    auto textureFormat = texture->format->Amask ? TexFormat::TX_RGBA : TexFormat::TX_RGB;
+    auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
     // Send texture image to OpenGL
     gfxController_->generateTexture(&textureId_);
     gfxController_->bindTexture(textureId_);

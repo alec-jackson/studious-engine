@@ -102,13 +102,13 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int widt
     auto texFormat = GL_RGB;
     std::shared_ptr<uint8_t[]> convertedData;
     switch (format) {
-        case TX_RGBA:
+        case TexFormat::RGBA:
             texFormat = GL_RGBA;
             break;
-        case TX_RGB:
+        case TexFormat::RGB:
             texFormat = GL_RGB;
             break;
-        case TX_BITMAP:
+        case TexFormat::BITMAP:
             texFormat = GL_RGB;
             convertedData = convertToRgba(width * height, static_cast<uint8_t *>(data));
             break;
@@ -363,7 +363,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendFloatVector(unsigned int vari
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
 GfxResult<unsigned int> OpenGlEsGfxController::polygonRenderMode(RenderMode mode) {
-    if (mode != RenderMode::RM_FILL) drawDisabled_ = true;
+    if (mode != RenderMode::FILL) drawDisabled_ = true;
     else
         drawDisabled_ = false;
 #ifdef VERBOSE_LOGS
@@ -489,7 +489,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::bindVao(unsigned int vao) {
 GfxResult<unsigned int> OpenGlEsGfxController::setCapability(GfxCapability capability, bool enabled) {
     auto capabilityId = 0;
     switch (capability) {
-        case CULL_FACE:
+        case GfxCapability::CULL_FACE:
             capabilityId = GL_CULL_FACE;
             break;
         default:
@@ -572,16 +572,16 @@ GfxResult<unsigned int> OpenGlEsGfxController::setTexParam(TexParam param, TexVa
     auto glParam = 0;
     auto glVal = 0;
     switch (param) {
-        case WRAP_MODE_S:
+        case TexParam::WRAP_MODE_S:
             glParam = GL_TEXTURE_WRAP_S;
             break;
-        case WRAP_MODE_T:
+        case TexParam::WRAP_MODE_T:
             glParam = GL_TEXTURE_WRAP_T;
             break;
-        case MINIFICATION_FILTER:
+        case TexParam::MINIFICATION_FILTER:
             glParam = GL_TEXTURE_MIN_FILTER;
             break;
-        case MAGNIFICATION_FILTER:
+        case TexParam::MAGNIFICATION_FILTER:
             glParam = GL_TEXTURE_MAG_FILTER;
             break;
         default:
@@ -590,20 +590,20 @@ GfxResult<unsigned int> OpenGlEsGfxController::setTexParam(TexParam param, TexVa
             return GFX_FAILURE(unsigned int);
     }
     switch (val.type()) {
-        case CLAMP_TO_EDGE:
+        case TexValType::CLAMP_TO_EDGE:
             glVal = GL_CLAMP_TO_EDGE;
             break;
-        case GFX_LINEAR:
+        case TexValType::GFX_LINEAR:
             glVal = GL_LINEAR;
             break;
-        case NEAREST_MIPMAP:
+        case TexValType::NEAREST_MIPMAP:
             printf("OpenGlEsGfxController::setTexParam: NEAREST_MIPMAP unsupported, using NEAREST\n");
             glVal = GL_NEAREST;
             break;
-        case NEAREST_NEIGHBOR:
+        case TexValType::NEAREST_NEIGHBOR:
             glVal = GL_NEAREST;
             break;
-        case CUSTOM:
+        case TexValType::CUSTOM:
             glVal = val.data();
             break;
         default:
@@ -686,10 +686,10 @@ GfxResult<unsigned int> OpenGlEsGfxController::drawTriangles(unsigned int size) 
 void OpenGlEsGfxController::clear(GfxClearMode clearMode) {
     auto clearVal = 0;
     switch (clearMode) {
-        case COLOR:
+        case GfxClearMode::COLOR:
             clearVal = GL_COLOR_BUFFER_BIT;
             break;
-        case DEPTH:
+        case GfxClearMode::DEPTH:
             clearVal = GL_DEPTH_BUFFER_BIT;
             break;
         default:
