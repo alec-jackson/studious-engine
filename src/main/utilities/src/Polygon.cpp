@@ -75,7 +75,7 @@ Polygon::~Polygon() {
     --polyCount;
 }
 
-void Polygon::merge(const Polygon &polygon) {
+void Polygon::merge(Polygon &polygon) {
     // Copy over VBO objects from other polygon
     this->vertices.insert(this->vertices.end(), polygon.vertices.begin(), polygon.vertices.end());
     this->textureCoords.insert(this->textureCoords.end(), polygon.textureCoords.begin(), polygon.textureCoords.end());

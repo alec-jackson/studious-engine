@@ -44,7 +44,7 @@ void SpriteObject::render() {
     modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
-    gfxController_->polygonRenderMode(RenderMode::RM_FILL);
+    gfxController_->polygonRenderMode(RenderMode::FILL);
     // Send shader variables
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     gfxController_->sendFloatVector(tintId_, 1, glm::value_ptr(tint_));

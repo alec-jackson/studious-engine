@@ -102,13 +102,13 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int widt
     auto texFormat = GL_RGB;
     std::shared_ptr<uint8_t[]> convertedData;
     switch (format) {
-        case TX_RGBA:
+        case RGBA:
             texFormat = GL_RGBA;
             break;
-        case TX_RGB:
+        case RGB:
             texFormat = GL_RGB;
             break;
-        case TX_BITMAP:
+        case BITMAP:
             texFormat = GL_RGB;
             convertedData = convertToRgba(width * height, static_cast<uint8_t *>(data));
             break;
@@ -363,7 +363,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendFloatVector(unsigned int vari
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
 GfxResult<unsigned int> OpenGlEsGfxController::polygonRenderMode(RenderMode mode) {
-    if (mode != RenderMode::RM_FILL) drawDisabled_ = true;
+    if (mode != RenderMode::FILL) drawDisabled_ = true;
     else
         drawDisabled_ = false;
 #ifdef VERBOSE_LOGS

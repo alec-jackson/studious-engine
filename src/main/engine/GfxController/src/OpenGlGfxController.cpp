@@ -85,13 +85,13 @@ GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width,
     void *data) {
     auto texFormat = GL_RGB;
     switch (format) {
-        case TX_RGBA:
+        case RGBA:
             texFormat = GL_RGBA;
             break;
-        case TX_RGB:
+        case RGB:
             texFormat = GL_RGB;
             break;
-        case TX_BITMAP:
+        case BITMAP:
             texFormat = GL_RED;  // Just need a single color
             break;
         default:
@@ -345,13 +345,13 @@ GfxResult<unsigned int> OpenGlGfxController::sendFloatVector(unsigned int variab
 GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
     auto result = GFX_OK(unsigned int);
     switch (mode) {
-        case RenderMode::RM_POINT:
+        case RenderMode::POINT:
             glPolygonMode(GL_FRONT, GL_POINT);
             break;
-        case RenderMode::RM_LINE:
+        case RenderMode::LINE:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             break;
-        case RenderMode::RM_FILL:
+        case RenderMode::FILL:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             break;
         default:

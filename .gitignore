@@ -25,14 +25,6 @@ latex/
 # Guilty As Charged #
 .vscode/
 
-# Windows #
-.vs/
-out/
-*.dll
-*.exe
-*.ilk
-*.pdb
-
 # Tests #
 gtest_*
 Testing/

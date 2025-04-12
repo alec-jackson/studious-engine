@@ -12,7 +12,6 @@
 #include <vector>
 #include <string>
 #include <common.hpp>
-#include <winsup.hpp>
 
 class Polygon {
  public:
@@ -20,7 +19,7 @@ class Polygon {
         vector<float> normals);
     Polygon(unsigned int pointCount, unsigned int programId, vector<float> vertices);
     Polygon();
-    void merge(const Polygon&);
+    void merge(Polygon&);
     ~Polygon();
 
     vector<unsigned int> shapeBufferId;  // used for vertex buffer

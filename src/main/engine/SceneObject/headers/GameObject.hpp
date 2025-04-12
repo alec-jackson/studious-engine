@@ -16,7 +16,6 @@
 #include <ModelImport.hpp>
 #include <SceneObject.hpp>
 #include <ColliderObject.hpp>
-#include <winsup.hpp>
 
 class GameObject: public SceneObject {
  public:

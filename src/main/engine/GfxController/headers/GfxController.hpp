@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 #include <Polygon.hpp>
-#include <winsup.hpp>
 
 #define GFX_OK(gType) GfxResult<gType>(GfxApiResult::OK, 0);
 #define GFX_FAILURE(gType) GfxResult<gType>(GfxApiResult::FAILURE, -1);
@@ -23,15 +22,15 @@ enum GfxApiResult {
 };
 
 enum RenderMode {
-    RM_POINT,
-    RM_LINE,
-    RM_FILL
+    POINT,
+    LINE,
+    FILL
 };
 
 enum TexFormat {
-    TX_RGBA,
-    TX_RGB,
-    TX_BITMAP
+    RGBA,
+    RGB,
+    BITMAP
 };
 
 enum TexParam {
