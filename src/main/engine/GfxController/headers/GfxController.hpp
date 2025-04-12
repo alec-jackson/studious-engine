@@ -17,24 +17,24 @@
 #define GFX_OK(gType) GfxResult<gType>(GfxApiResult::OK, 0);
 #define GFX_FAILURE(gType) GfxResult<gType>(GfxApiResult::FAILURE, -1);
 
-enum GfxApiResult {
+enum class GfxApiResult {
     OK,
     FAILURE
 };
 
-enum RenderMode {
-    RM_POINT,
-    RM_LINE,
-    RM_FILL
+enum class RenderMode {
+    POINT,
+    LINE,
+    FILL
 };
 
-enum TexFormat {
-    TX_RGBA,
-    TX_RGB,
-    TX_BITMAP
+enum class TexFormat {
+    RGBA,
+    RGB,
+    BITMAP
 };
 
-enum TexParam {
+enum class TexParam {
     WRAP_MODE_S,
     WRAP_MODE_T,
     MINIFICATION_FILTER,
@@ -42,7 +42,7 @@ enum TexParam {
     MIPMAP_LEVEL
 };
 
-enum TexValType {
+enum class TexValType {
     CLAMP_TO_EDGE,
     GFX_LINEAR,
     NEAREST_MIPMAP,
@@ -61,11 +61,11 @@ class TexVal {
     int data_;
 };
 
-enum GfxCapability {
+enum class GfxCapability {
     CULL_FACE
 };
 
-enum GfxClearMode {
+enum class GfxClearMode {
     DEPTH,
     COLOR
 };

@@ -140,7 +140,7 @@ void UiObject::render() {
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
-    gfxController_->polygonRenderMode(RenderMode::RM_FILL);
+    gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
