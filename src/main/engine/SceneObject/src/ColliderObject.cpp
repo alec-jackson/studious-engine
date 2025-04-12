@@ -13,7 +13,6 @@
 #include <iostream>
 #include <memory>
 #include <ColliderObject.hpp>
-#include <winsup.hpp>
 
 /** @todo Update - this is the old struct info
  * @brief Stores info about a GameObject's internal collider object.

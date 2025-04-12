@@ -12,9 +12,7 @@
 #include <string>
 #include <vector>
 #include <Polygon.hpp>
-#ifdef _WIN32
-typedef unsigned int uint;
-#endif
+#include <winsup.hpp>
 
 #define GFX_OK(gType) GfxResult<gType>(GfxApiResult::OK, 0);
 #define GFX_FAILURE(gType) GfxResult<gType>(GfxApiResult::FAILURE, -1);
