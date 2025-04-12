@@ -146,9 +146,10 @@ int runtime(GameInstance *currentGame) {
 
     player->createCollider(gfxController.getProgramId(1).get());
 
-    auto obstacle = currentGame->createSprite("src/resources/images/rock_texture.jpg",
-        vec3(300, 500, 0), 0.5, gfxController.getProgramId(3).get(), ObjectAnchor::CENTER, "obstacle");
+    auto obstacle = currentGame->createSprite("src/resources/images/test_image.png",
+        vec3(300, 500, 0), 10, gfxController.getProgramId(3).get(), ObjectAnchor::CENTER, "obstacle");
 
+    obstacle->splitGrid(5, 4, 24);
     obstacle->createCollider(gfxController.getProgramId(1).get());
     // Add objects to camera
     vector<SceneObject *> targets = {
@@ -198,6 +199,8 @@ int mainLoop(gameInfo* gamein) {
     float speed = 5.0f;
     vec3 offset;
     vec3 newPos;
+    bool eDown = false;
+    int currentFrame = 0;
     while (running) {
         offset = vec3(0);
         /// @todo Move these calls to a separate thread...
@@ -214,6 +217,14 @@ int mainLoop(gameInfo* gamein) {
         if (currentGame->getKeystate()[SDL_SCANCODE_S]) offset -= vec3(0, speed, 0);
         if (currentGame->getKeystate()[SDL_SCANCODE_D]) offset += vec3(speed, 0, 0);
         if (currentGame->getKeystate()[SDL_SCANCODE_A]) offset -= vec3(speed, 0, 0);
+        if (currentGame->getKeystate()[SDL_SCANCODE_E] && !eDown) {
+            printf("E pressed!\n");
+            eDown = true;
+            currentFrame++;
+            reinterpret_cast<SpriteObject *>(obstaclePtr)->setCurrentFrame(currentFrame % 24);
+        } else if (!currentGame->getKeystate()[SDL_SCANCODE_E] && eDown) {
+            eDown = false;
+        }
         newPos = playerPtr->getPosition(offset);
         playerPtr->setPosition(newPos);
         if (currentGame->getCollision2D(playerPtr, obstaclePtr, vec3(0))) printf("CONTACT TRUE\n");

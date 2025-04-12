@@ -53,8 +53,25 @@ find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(GTest CONFIG)
 
+# Add additional games here :)
+if (MAIN_TARGET STREQUAL "default")
+  set(MAIN_FILE 
+    src/main/example/src/game.cpp
+  )
+elseif (MAIN_TARGET STREQUAL "chris_2d")
+  set(MAIN_FILE 
+    src/main/example/2dDemo/game.cpp
+  )
+else()
+  message("Unknown main target: ${MAIN_TARGET}. Please ensure the MAIN_TARGET is valid!")
+  message("Defaulting to 'default' target.")
+  set(MAIN_FILE 
+    src/main/example/src/game.cpp
+  )
+endif()
+
 add_executable(${PROJECT_NAME}
-  src/main/example/src/game.cpp
+  ${MAIN_FILE}
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/GameInstance.cpp
@@ -77,90 +94,105 @@ add_executable(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
-IF($(GTest_FOUND))
+# Project include dirs
+
+target_include_directories(${PROJECT_NAME}
+  PUBLIC ${SDL2_INCLUDE_DIRS}
+  PUBLIC ${GLEW_INCLUDE_DIRS}
+  PUBLIC ${OPENGL_INCLUDE_DIR}
+  PUBLIC ${FREETYPE_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PROJECT_NAME}
+  PUBLIC SDL2::Main
+  PUBLIC SDL2::Mixer
+  PUBLIC SDL2::Image
+  PUBLIC ${OPENGL_LIBRARIES}
+  PUBLIC ${GLEW_LIBRARIES}
+  PUBLIC Threads::Threads
+  PUBLIC ${FREETYPE_LIBRARIES}
+)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
+if (GTest_FOUND)
+# ======================================== ModelImportTests ========================================
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
 )
 
+target_include_directories(gtest_ModelImportTests
+  PUBLIC ${SDL2_INCLUDE_DIRS}
+  PUBLIC ${GLEW_INCLUDE_DIRS}
+  PUBLIC ${OPENGL_INCLUDE_DIR}
+  PUBLIC ${FREETYPE_INCLUDE_DIRS}
+  PRIVATE src/main/utilities/test/headers
+)
+
+target_link_libraries(gtest_ModelImportTests
+  PUBLIC SDL2::Main
+  PUBLIC SDL2::Mixer
+  PUBLIC SDL2::Image
+  PUBLIC ${OPENGL_LIBRARIES}
+  PUBLIC ${GLEW_LIBRARIES}
+  PUBLIC Threads::Threads
+  PUBLIC ${FREETYPE_LIBRARIES}
+  PUBLIC GTest::gtest_main
+)
+
+gtest_discover_tests(gtest_ModelImportTests)
+
+# ======================================== PolygonTests ========================================
 add_executable(gtest_PolygonTests
   src/main/utilities/test/src/PolygonTests.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/utilities/src/Polygon.cpp
 )
 
-target_include_directories(gtest_ModelImportTests
-  PRIVATE src/main/utilities/test/headers
-)
-
 target_include_directories(gtest_PolygonTests
   PRIVATE src/main/utilities/test/headers
+  PUBLIC ${SDL2_INCLUDE_DIRS}
+  PUBLIC ${GLEW_INCLUDE_DIRS}
+  PUBLIC ${OPENGL_INCLUDE_DIR}
+  PUBLIC ${FREETYPE_INCLUDE_DIRS}
 )
 
-target_include_directories(gtest_ModelImportTests PUBLIC ${SDL2_INCLUDE_DIRS})
-target_include_directories(gtest_ModelImportTests PUBLIC ${GLEW_INCLUDE_DIRS})
-target_include_directories(gtest_ModelImportTests PUBLIC ${OPENGL_INCLUDE_DIR})
-target_include_directories(gtest_ModelImportTests PUBLIC ${FREETYPE_INCLUDE_DIRS})
-#target_include_directories(gtest_ModelImportTests PUBLIC ${SDL2_NET_INCLUDE_DIRS})
-
-target_include_directories(gtest_PolygonTests PUBLIC ${SDL2_INCLUDE_DIRS})
-target_include_directories(gtest_PolygonTests PUBLIC ${GLEW_INCLUDE_DIRS})
-target_include_directories(gtest_PolygonTests PUBLIC ${OPENGL_INCLUDE_DIR})
-target_include_directories(gtest_PolygonTests PUBLIC ${FREETYPE_INCLUDE_DIRS})
-#target_include_directories(gtest_PolygonTests PUBLIC ${SDL2_NET_INCLUDE_DIRS})
-
-target_link_libraries(gtest_ModelImportTests SDL2::Main)
-target_link_libraries(gtest_ModelImportTests SDL2::Mixer)
-target_link_libraries(gtest_ModelImportTests SDL2::Image)
-#target_link_libraries(gtest_ModelImportTests SDL2::Net)
-target_link_libraries(gtest_ModelImportTests ${OPENGL_LIBRARIES})
-
-target_link_libraries(gtest_ModelImportTests ${GLEW_LIBRARIES})
-target_link_libraries(gtest_ModelImportTests Threads::Threads)
-target_link_libraries(gtest_ModelImportTests ${FREETYPE_LIBRARIES})
-
-target_link_libraries(gtest_PolygonTests SDL2::Main)
-target_link_libraries(gtest_PolygonTests SDL2::Mixer)
-target_link_libraries(gtest_PolygonTests SDL2::Image)
-#target_link_libraries(gtest_PolygonTests SDL2::Net)
-target_link_libraries(gtest_PolygonTests ${OPENGL_LIBRARIES})
-target_link_libraries(gtest_PolygonTests ${GLEW_LIBRARIES})
-target_link_libraries(gtest_PolygonTests Threads::Threads)
-target_link_libraries(gtest_PolygonTests ${FREETYPE_LIBRARIES})
-
-target_link_libraries(
-  gtest_ModelImportTests
-  GTest::gtest_main
-)
-
-target_link_libraries(
-  gtest_PolygonTests
-  GTest::gtest_main
+target_link_libraries(gtest_PolygonTests 
+  PUBLIC SDL2::Main
+  PUBLIC SDL2::Mixer
+  PUBLIC SDL2::Image
+  PUBLIC ${OPENGL_LIBRARIES}
+  PUBLIC ${GLEW_LIBRARIES}
+  PUBLIC Threads::Threads
+  PUBLIC ${FREETYPE_LIBRARIES}
+  PUBLIC GTest::gtest_main
 )
 
 gtest_discover_tests(gtest_PolygonTests)
-gtest_discover_tests(gtest_ModelImportTests)
-ENDIF($(GTest_FOUND))
 
-# Project include dirs
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
-target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${FREETYPE_INCLUDE_DIRS})
-#target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_NET_INCLUDE_DIRS})
+# ======================================== SpriteObjectTests ========================================
+add_executable(gtest_SpriteObjectTests
+  src/main/engine/SceneObject/test/src/SpriteObjectTests.cpp
+  src/main/engine/SceneObject/src/SpriteObject.cpp
+  src/main/engine/SceneObject/src/GameObject2D.cpp
+  src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/utilities/src/Polygon.cpp
+)
 
-target_link_libraries(${PROJECT_NAME} SDL2::Main)
-target_link_libraries(${PROJECT_NAME} SDL2::Mixer)
-target_link_libraries(${PROJECT_NAME} SDL2::Image)
-#target_link_libraries(${PROJECT_NAME} SDL2::Net)
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} Threads::Threads)
-target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
+target_include_directories(gtest_SpriteObjectTests
+  PRIVATE src/main/engine/SceneObject/test/headers
+  PRIVATE src/main/engine/SceneObject/headers
+)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(gtest_SpriteObjectTests
+  PUBLIC SDL2::Image
+  GTest::gtest_main
+  GTest::gmock
+)
 
+gtest_discover_tests(gtest_SpriteObjectTests)
+endif()
 
 install(TARGETS ${PROJECT_NAME})
