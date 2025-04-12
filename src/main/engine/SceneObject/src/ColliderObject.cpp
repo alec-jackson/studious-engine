@@ -107,7 +107,7 @@ void ColliderObject::update() {
 void ColliderObject::render() {
     if (poly_.get()->numberOfObjects > 0) {
         gfxController_->setProgram(poly_.get()->programId);
-        gfxController_->polygonRenderMode(RenderMode::LINE);
+        gfxController_->polygonRenderMode(RenderMode::RM_LINE);
         gfxController_->setCapability(GfxCapability::CULL_FACE, false);
         mat4 MVP = (*pVpMatrix_) * (*pTranslateMatrix_) * (*pScaleMatrix_);
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
