@@ -150,8 +150,8 @@ class AnimationController {
 
     // Getters for testing
     inline const std::map<string, KeyFrames> &getKeyFrameStore() { return keyFrameStore_; }
-    inline const std::map<string, AnimationTracks> &getTrackStore() { return trackStore_; }
-    inline const std::map<string, std::shared_ptr<TrackPlayback>> &getActiveTracks() { return activeTracks_; }
+    inline const std::map<string, TrackStoreEntry> &getTrackStore() { return trackStore_; }
+    inline const std::map<string, std::shared_ptr<ActiveTrackEntry>> &getActiveTracks() { return activeTracks_; }
 
  private:
     map<string, KeyFrames> keyFrameStore_;
