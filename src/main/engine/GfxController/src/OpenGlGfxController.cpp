@@ -95,7 +95,8 @@ GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width,
             texFormat = GL_RED;  // Just need a single color
             break;
         default:
-            fprintf(stderr, "OpenGlGfxController::sendTextureData: Unknown texture format %d\n", static_cast<std::underlying_type_t<TexFormat>>(format));
+            fprintf(stderr, "OpenGlGfxController::sendTextureData: Unknown texture format %d\n",
+                static_cast<std::underlying_type_t<TexFormat>>(format));
             return GFX_FAILURE(unsigned int);
     }
     glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, data);
@@ -355,14 +356,16 @@ GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) 
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             break;
         default:
-            fprintf(stderr, "OpenGlGfxController::polygonRenderMode: Unsupported render mode %d", static_cast<std::underlying_type_t<RenderMode>>(mode));
+            fprintf(stderr, "OpenGlGfxController::polygonRenderMode: Unsupported render mode %d",
+                static_cast<std::underlying_type_t<RenderMode>>(mode));
             result = GFX_FAILURE(unsigned int);
             break;
     }
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
-        fprintf(stderr, "OpenGlGfxController::polygonRenderMode: mode %d, Error: %d\n", static_cast<std::underlying_type_t<RenderMode>>(mode), error);
+        fprintf(stderr, "OpenGlGfxController::polygonRenderMode: mode %d, Error: %d\n",
+            static_cast<std::underlying_type_t<RenderMode>>(mode), error);
         return GFX_FAILURE(unsigned int);
     }
     return result;
@@ -652,7 +655,8 @@ void OpenGlGfxController::clear(GfxClearMode clearMode) {
             clearVal = GL_DEPTH_BUFFER_BIT;
             break;
         default:
-            printf("OpenGlGfxController::clear: Unknown clearMode %d\n", static_cast<std::underlying_type_t<GfxClearMode>>(clearMode));
+            printf("OpenGlGfxController::clear: Unknown clearMode %d\n",
+                static_cast<std::underlying_type_t<GfxClearMode>>(clearMode));
             return;
     }
     glClear(clearVal);

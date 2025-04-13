@@ -139,7 +139,8 @@ GfxResult<unsigned int> DummyGfxController::updateBufferData(const vector<float>
 
 GfxResult<unsigned int> DummyGfxController::setTexParam(TexParam param, TexVal val) {
     printf("GfxController::setTexParam: param %d, val %d\n",
-        static_cast<std::underlying_type_t<TexParam>>(param), static_cast<std::underlying_type_t<TexValType>>(val.type()));
+            static_cast<std::underlying_type_t<TexParam>>(param),
+            static_cast<std::underlying_type_t<TexValType>>(val.type()));
     return GFX_OK(unsigned int);
 }
 
