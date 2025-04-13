@@ -1,3 +1,10 @@
+/**
+ * @file AnimationControllerTests.cpp
+ * @brief Unit test suite for the AnimationController class.
+ * @copyright Copyright (c) 2025
+ * @author Christian Galvez
+ * @date 2025-04-13
+ */
 #include <gtest/gtest.h>
 #include <vector>
 #include <memory>
@@ -117,7 +124,8 @@ void GivenAnAnimationController::initMocks() {
 void GivenAnAnimationController::SetUp() {
     initMocks();
     spriteObject_ = std::make_unique<SpriteObject>(
-        testSpritePath, vec3(0, 0, 0), 1.0f, 0, "test object", ObjectType::GAME_OBJECT_2D, ObjectAnchor::TOP_LEFT, &mockGfxController_);
+        testSpritePath, vec3(0, 0, 0), 1.0f, 0, "test object", ObjectType::GAME_OBJECT_2D,
+        ObjectAnchor::TOP_LEFT, &mockGfxController_);
 
     /* Call split grid on the sprite object */
     spriteObject_->splitGrid(width, height, numFrames);
@@ -129,7 +137,6 @@ void GivenAnAnimationController::TearDown() {
 
 class GivenAnAnimationControllerPlaybackParam : public GivenAnAnimationController,
     public ::testing::TestWithParam<std::tuple<int, int>> {
-
  public:
     void SetUp() override {
         GivenAnAnimationController::SetUp();
