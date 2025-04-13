@@ -15,8 +15,6 @@
 #include <memory>
 #include <cmath>
 #include <AnimationController.hpp>
-#include <UiObject.hpp>
-#include <TextObject.hpp>
 
 std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
     auto keyframe = createKeyFrame(type, time);
@@ -34,23 +32,49 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
     return keyframe;
 }
 
+/**
+ * @brief Creates and adds a track configuration to the internal track store. Adding a track to the
+ * track store will not automatically play it. @see AnimationController::playTrack.
+ * @param target The SpriteObject to apply the animation track to.
+ * @param trackName Friendly name of the animation track.
+ * @param trackData The actual track data. Each number in the list corresponds to a frame to set in the SpriteObject's
+ * sprite grid. For example, the trackData { 3, 4, 5 } means that the animation track will first display frame 3, then
+ * 4 and then 5. The speed at which frames are sequentially switched is determined by the supplied fps rate. An empty
+ * vector for trackData is actually legal, and will default to a set of increasing numbers starting from 0 to the
+ * number of available frames in the SpriteObject. For a SpriteObject with 4 frames, the default trackData would look
+ * like { 0, 1, 2, 3 }.
+ * @param fps The framerate the animation should play back.
+ * @note There is no trackData bounds checking at this level. Bounds checking occurs at the SpriteObject level.
+ * 
+ * There are two internal AnimationController maps that are used to store and play track data.
+ * trackStore_ -> This is a map of object name to TrackStoreEntry. A TrackStoreEntry can contain any number of tracks
+ * for a single target.
+ * activeTracks_ -> This is a map of object name to ActiveTrackEntry. An ActiveTrackEntry is just playback information
+ * for a single track from the trackStore_ map. There can only ever be ONE animation track per object EVER!!! This
+ * means if you call AnimationController::playTrack on an object that already has an active track, the previous track
+ * will be stopped and replaced with the new track. Memory is managed through smart pointers, so everything should
+ * clean up on its own.
+ */
 void AnimationController::addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
-    // Make sure the target is not null
-    assert(target != nullptr);
+    if (target == nullptr) {
+        fprintf(stderr, "AnimationController::addTrack: target cannot be null.\n");
+        return;
+    }
     /* If trackData is empty, use all available frames */
     if (trackData.empty()) {
         for (int i = 0; i < target->getBankSize(); ++i) {
             trackData.push_back(i);
         }
     }
-    auto track = std::make_shared<AnimationTrack>(
+
+    auto track = std::make_shared<TrackConfiguration>(
         trackData,
         trackName,
         fps);
 
+    /* Check if the object already contains an entry in the track store */
     auto it = trackStore_.find(target->getObjectName());
-
     if (it != trackStore_.end()) {
         /* If the item exists in the map, add the track to the tracKStore entry */
         it->second.tracks[trackName] = track;
@@ -61,6 +85,13 @@ void AnimationController::addTrack(SpriteObject *target, string trackName, vecto
     }
 }
 
+/**
+ * @brief Plays a track for the given object. The supplied trackName MUST be already defined in the track store to
+ * be played. Otherwise the animation will not start, and an error will be printed.
+ * @param objectName The name of the object to perform animation on.
+ * @param trackName The name of the track to play.
+ * @note Will return early and not play the animation if the object or track do not exist in the track store.
+ */
 void AnimationController::playTrack(string objectName, string trackName) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     /* Check if the animation is still in the active list */
@@ -76,22 +107,27 @@ void AnimationController::playTrack(string objectName, string trackName) {
                 trackName.c_str());
             return;
         }
-        /* If the track is already running, we'll just restart it and fall through */
+        /* If the track is already running, we'll just fall through and restart it */
     }
     /* Check if any tracks are playing, and pause them */
     auto storeit = trackStore_.find(objectName);
     /* Object does not exist in track store */
+    if (storeit == trackStore_.end()) {
+        fprintf(stderr, "AnimationController::playTrack: %s does not exist in the track store.\n",
+            objectName.c_str());
+        return;
+    }
     assert(storeit != trackStore_.end());
     auto objectPtr = storeit->second.target;
     auto it = trackStore_[objectName].tracks.find(trackName);
     /* Track does not exist for the object */
     assert(it != trackStore_[objectName].tracks.end());
     /* @todo Probably do something useful here on RELEASE code for failures */
-    // Create a TrackPlayback and add it to the playing queue
+    // Create a ActiveTrackEntry and add it to the playing queue
     float secondsPerFrame = 1.0 / it->second.get()->targetFps;
     printf("AnimationController::playTrack: Starting track %s\n",
         trackName.c_str());
-    auto tp = std::make_shared<TrackPlayback>(
+    auto tp = std::make_shared<ActiveTrackEntry>(
         it->second,
         secondsPerFrame,
         secondsPerFrame * it->second.get()->trackData.size(),
@@ -405,7 +441,7 @@ int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
     return result;
 }
 
-void AnimationController::updateTrack(std::shared_ptr<TrackPlayback> trackPlayback) {
+void AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback) {
     auto tp = trackPlayback.get();
     auto target = trackPlayback.get()->target;
     auto track = tp->track.get()->trackData;

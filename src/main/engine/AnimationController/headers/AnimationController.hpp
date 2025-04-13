@@ -68,28 +68,38 @@ enum class TrackState {
     RUNNING
 };
 
-struct AnimationTrack {
+/**
+ * @brief Configuration for an animation track.
+ */
+struct TrackConfiguration {
     vector<int> trackData;
     string trackName;
     int targetFps;
-    inline AnimationTrack(vector<int> tD, string tN, int tF) :
+    inline TrackConfiguration(vector<int> tD, string tN, int tF) :
         trackData { tD }, trackName { tN }, targetFps { tF } {};
 };
 
-struct AnimationTracks {
+/**
+ * @brief Contains a set of tracks for a target object.
+ */
+struct TrackStoreEntry {
     SpriteObject *target;
-    std::map<string, std::shared_ptr<AnimationTrack>> tracks;
+    std::map<string, std::shared_ptr<TrackConfiguration>> tracks;
 };
 
-struct TrackPlayback {
+/**
+ * @brief Entry object for the active tracks list. Contains playback information
+ * for an active animation track.
+ */
+struct ActiveTrackEntry {
     TrackState state = TrackState::RUNNING;
-    std::shared_ptr<AnimationTrack> track;
+    std::shared_ptr<TrackConfiguration> track;
     float secondsPerFrame;
     float sequenceTime;
     float currentTime = 0.0f;
     int currentTrackIdx;
     SpriteObject *target;
-    inline TrackPlayback(std::shared_ptr<AnimationTrack> tr, float sPF, float sT, int cTI, SpriteObject *ta) :
+    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, float sPF, float sT, int cTI, SpriteObject *ta) :
         track { tr }, secondsPerFrame { sPF }, sequenceTime { sT }, currentTrackIdx { cTI }, target { ta } {};
 };
 
@@ -123,7 +133,7 @@ class AnimationController {
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
-    void updateTrack(std::shared_ptr<TrackPlayback> trackPlayback);
+    void updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
@@ -135,12 +145,12 @@ class AnimationController {
 
     // Getters for testing
     inline const std::map<string, KeyFrames> &getKeyFrameStore() { return keyFrameStore_; }
-    inline const std::map<string, AnimationTracks> &getTrackStore() { return trackStore_; }
-    inline const std::map<string, std::shared_ptr<TrackPlayback>> &getActiveTracks() { return activeTracks_; }
+    inline const std::map<string, TrackStoreEntry> &getTrackStore() { return trackStore_; }
+    inline const std::map<string, std::shared_ptr<ActiveTrackEntry>> &getActiveTracks() { return activeTracks_; }
 
  private:
     map<string, KeyFrames> keyFrameStore_;
-    map<string, AnimationTracks> trackStore_;
-    map<string, std::shared_ptr<TrackPlayback>> activeTracks_;
+    map<string, TrackStoreEntry> trackStore_;
+    map<string, std::shared_ptr<ActiveTrackEntry>> activeTracks_;
     std::mutex controllerLock_;
 };
