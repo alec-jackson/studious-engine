@@ -24,14 +24,11 @@ SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsign
     initializeShaderVars();
 }
 
-/// @todo Resolution is hardcoded to 720p right now. Add functionality to change this on the fly. Will need to re-send
-/// projection matrix.
 void SpriteObject::initializeShaderVars() {
     GameObject2D::initializeShaderVars();
     tintId_ = gfxController_->getShaderVariable(programId_, "tint").get();
 }
 
-/// @todo Do something useful here
 SpriteObject::~SpriteObject() {
 }
 

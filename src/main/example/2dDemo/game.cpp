@@ -160,7 +160,7 @@ int runtime(GameInstance *currentGame) {
         obstacle,
         "one to four",
         animationTrack,
-        12);
+        1);
     animationController.addTrack(
         obstacle,
         "all frames",
@@ -240,7 +240,7 @@ int mainLoop(gameInfo* gamein) {
         } else if (!currentGame->getKeystate()[SDL_SCANCODE_E] && eDown) {
             printf("E released!\n");
             eDown = false;
-            animationController.playTrack("obstacle", "all frames");
+            animationController.playTrack("obstacle", "one to four");
         }
         newPos = playerPtr->getPosition(offset);
         playerPtr->setPosition(newPos);

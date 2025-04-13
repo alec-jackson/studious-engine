@@ -19,12 +19,12 @@
 class SpriteObject : public GameObject2D {
  public:
     // Constructors
-    /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
     explicit SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController);
     ~SpriteObject() override;
-    void initializeShaderVars();
 
+    // Gfx specific functions
+    void initializeShaderVars();
     void render() override;
     void update() override;
 
@@ -34,6 +34,7 @@ class SpriteObject : public GameObject2D {
     // Getters
     inline vec3 getTint() { return tint_; }
     inline uint getBankSize() { return imageBank_.textureIds.size(); }
+    inline uint getCurrentFrame() { return currentFrame_; }
 
     // Setters
     inline void setTint(vec3 tint) { tint_ = tint; }
