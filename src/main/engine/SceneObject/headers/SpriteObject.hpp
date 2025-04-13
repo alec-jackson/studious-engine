@@ -33,6 +33,7 @@ class SpriteObject : public GameObject2D {
 
     // Getters
     inline vec3 getTint() { return tint_; }
+    inline uint getBankSize() { return imageBank_.textureIds.size(); }
 
     // Setters
     inline void setTint(vec3 tint) { tint_ = tint; }

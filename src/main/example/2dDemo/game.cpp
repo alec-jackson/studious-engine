@@ -146,11 +146,28 @@ int runtime(GameInstance *currentGame) {
 
     player->createCollider(gfxController.getProgramId(1).get());
 
-    auto obstacle = currentGame->createSprite("src/resources/images/test_image.png",
+    auto obstacle = currentGame->createSprite("src/resources/images/dot_image.png",
         vec3(300, 500, 0), 10, gfxController.getProgramId(3).get(), ObjectAnchor::CENTER, "obstacle");
 
     obstacle->splitGrid(5, 4, 24);
     obstacle->createCollider(gfxController.getProgramId(1).get());
+
+    /* Create an animation track for the obstacle */
+    vector<int> animationTrack = {
+        0, 1, 2, 3
+    };
+    animationController.addTrack(
+        obstacle,
+        "one to four",
+        animationTrack,
+        12);
+    animationController.addTrack(
+        obstacle,
+        "all frames",
+        {},
+        12);
+    animationController.playTrack("obstacle", "one to four");
+    animationController.playTrack("obstacle", "all frames");
     // Add objects to camera
     vector<SceneObject *> targets = {
         obstacle,
@@ -200,7 +217,6 @@ int mainLoop(gameInfo* gamein) {
     vec3 offset;
     vec3 newPos;
     bool eDown = false;
-    int currentFrame = 0;
     while (running) {
         offset = vec3(0);
         /// @todo Move these calls to a separate thread...
@@ -220,10 +236,11 @@ int mainLoop(gameInfo* gamein) {
         if (currentGame->getKeystate()[SDL_SCANCODE_E] && !eDown) {
             printf("E pressed!\n");
             eDown = true;
-            currentFrame++;
-            reinterpret_cast<SpriteObject *>(obstaclePtr)->setCurrentFrame(currentFrame % 24);
+            animationController.pauseTrack("obstacle");
         } else if (!currentGame->getKeystate()[SDL_SCANCODE_E] && eDown) {
+            printf("E released!\n");
             eDown = false;
+            animationController.playTrack("obstacle", "all frames");
         }
         newPos = playerPtr->getPosition(offset);
         playerPtr->setPosition(newPos);

@@ -17,7 +17,9 @@
 #include <functional>
 #include <mutex> // NOLINT
 #include <memory>
+#include <vector>
 #include <SceneObject.hpp>
+#include <SpriteObject.hpp>
 
 // Update return values
 #define UPDATE_NOT_COMPLETE 0
@@ -60,7 +62,37 @@ class UpdateData {
     bool updateComplete_;
 };
 
-typedef struct KeyFrame {
+enum class TrackState {
+    PAUSED,
+    RUNNING
+};
+
+struct AnimationTrack {
+    vector<int> trackData;
+    string trackName;
+    int targetFps;
+    inline AnimationTrack(vector<int> tD, string tN, int tF) :
+        trackData { tD }, trackName { tN }, targetFps { tF } {};
+};
+
+struct AnimationTracks {
+    SpriteObject *target;
+    std::map<string, std::shared_ptr<AnimationTrack>> tracks;
+};
+
+struct TrackPlayback {
+    TrackState state = TrackState::RUNNING;
+    std::shared_ptr<AnimationTrack> track;
+    float secondsPerFrame;
+    float sequenceTime;
+    float currentTime = 0.0f;
+    int currentTrackIdx;
+    SpriteObject *target;
+    inline TrackPlayback(std::shared_ptr<AnimationTrack> tr, float sPF, float sT, int cTI, SpriteObject *ta) :
+        track { tr }, secondsPerFrame { sPF }, sequenceTime { sT }, currentTrackIdx { cTI }, target { ta } {};
+};
+
+struct KeyFrame {
     AnimationData<vec3> pos;
     AnimationData<vec3> stretch;
     AnimationData<string> text;
@@ -72,16 +104,17 @@ typedef struct KeyFrame {
     ANIMATION_COMPLETE_CB;
     bool hasCb;
     bool isNew = true;
-} KeyFrame;
+};
 
-typedef struct KeyFrames {
+struct KeyFrames {
     std::queue<KeyFrame *> kQueue;
     SceneObject *target;
-} KeyFrames;
+};
 
 class AnimationController {
  public:
     int addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame);
+    void addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps);
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateRotation(SceneObject *target, KeyFrame *keyFrame);
@@ -89,13 +122,19 @@ class AnimationController {
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
+    void updateTrack(std::shared_ptr<TrackPlayback> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
+    void playTrack(string objectName, string trackName);
+    void pauseTrack(string objectName);
+
  private:
     map<string, KeyFrames> keyFrameStore_;
+    map<string, AnimationTracks> trackStore_;
+    map<string, std::shared_ptr<TrackPlayback>> activeTracks_;
     std::mutex controllerLock_;
 };

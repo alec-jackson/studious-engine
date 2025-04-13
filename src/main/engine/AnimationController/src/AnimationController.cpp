@@ -13,6 +13,7 @@
 #include <string>
 #include <cstdio>
 #include <memory>
+#include <cmath>
 #include <AnimationController.hpp>
 #include <UiObject.hpp>
 #include <TextObject.hpp>
@@ -31,6 +32,84 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
     keyframe.get()->type = type;
     keyframe.get()->hasCb = false;
     return keyframe;
+}
+
+void AnimationController::addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    // Make sure the target is not null
+    assert(target != nullptr);
+    /* If trackData is empty, use all available frames */
+    if (trackData.empty()) {
+        for (int i = 0; i < target->getBankSize(); ++i) {
+            trackData.push_back(i);
+        }
+    }
+    auto track = std::make_shared<AnimationTrack>(
+        trackData,
+        trackName,
+        fps);
+
+    auto it = trackStore_.find(target->getObjectName());
+
+    if (it != trackStore_.end()) {
+        /* If the item exists in the map, add the track to the tracKStore entry */
+        it->second.tracks[trackName] = track;
+    } else {
+        /* If the item doesn't exist, create the entry */
+        trackStore_[target->getObjectName()].target = target;
+        trackStore_[target->getObjectName()].tracks[trackName] = track;
+    }
+}
+
+void AnimationController::playTrack(string objectName, string trackName) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    /* Check if the animation is still in the active list */
+    auto ait = activeTracks_.find(objectName);
+    if (ait != activeTracks_.end()) {
+        auto match = ait->second.get()->track.get()->trackName.compare(trackName);
+        auto &state = ait->second.get()->state;
+        /* If the active track is the same track, let's resume it if paused... */
+        if (!match && state == TrackState::PAUSED) {
+            /* Resume the animation from where it left off if so */
+            ait->second.get()->state = TrackState::RUNNING;
+            printf("AnimationController::playTrack: Resuming previously active track %s\n",
+                trackName.c_str());
+            return;
+        }
+        /* If the track is already running, we'll just restart it and fall through */
+    }
+    /* Check if any tracks are playing, and pause them */
+    auto storeit = trackStore_.find(objectName);
+    /* Object does not exist in track store */
+    assert(storeit != trackStore_.end());
+    auto objectPtr = storeit->second.target;
+    auto it = trackStore_[objectName].tracks.find(trackName);
+    /* Track does not exist for the object */
+    assert(it != trackStore_[objectName].tracks.end());
+    /* @todo Probably do something useful here on RELEASE code for failures */
+    // Create a TrackPlayback and add it to the playing queue
+    float secondsPerFrame = 1.0 / it->second.get()->targetFps;
+    printf("AnimationController::playTrack: Starting track %s\n",
+        trackName.c_str());
+    auto tp = std::make_shared<TrackPlayback>(
+        it->second,
+        secondsPerFrame,
+        secondsPerFrame * it->second.get()->trackData.size(),
+        0,
+        objectPtr);
+    activeTracks_[objectName] = tp;
+}
+
+/* Might want to do something fancy for resume */
+void AnimationController::pauseTrack(string objectName) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    auto it = activeTracks_.find(objectName);
+    if (it != activeTracks_.end()) {
+        it->second.get()->state = TrackState::PAUSED;
+    } else {
+        fprintf(stderr, "AnimationController::pauseTrack: %s has no active animations!",
+            objectName.c_str());
+    }
 }
 
 int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame) {
@@ -111,6 +190,14 @@ void AnimationController::update() {
     // Erase keys in the deferredDelete list
     for (auto item : deferredDelete) {
         keyFrameStore_.erase(item);
+    }
+    /* Update track based animations */
+    for (auto &entry : activeTracks_) {
+        /* Only update the track if it's running */
+        auto state = entry.second.get()->state;
+        if (state == TrackState::RUNNING)
+            /* Update the active track */
+            updateTrack(entry.second);
     }
 }
 
@@ -316,4 +403,21 @@ int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
         result = UPDATE_TIME;
     }
     return result;
+}
+
+void AnimationController::updateTrack(std::shared_ptr<TrackPlayback> trackPlayback) {
+    auto tp = trackPlayback.get();
+    auto target = trackPlayback.get()->target;
+    auto track = tp->track.get()->trackData;
+    /* Update timings and current frame */
+    tp->currentTime += deltaTime;
+    /* Wrap time around sequence time */
+    tp->currentTime = std::fmod(tp->currentTime, tp->sequenceTime);
+    /* Determine current frame based on current time */
+    int trackIdx = (tp->currentTime / tp->sequenceTime) * tp->track.get()->trackData.size();
+    tp->currentTrackIdx = trackIdx;
+    /* Grab the real frame number with the track idx */
+    auto frameNumber = tp->track.get()->trackData.at(trackIdx);
+    /* Set the sprite object's frame number to the frame number calculated */
+    target->setCurrentFrame(frameNumber);
 }
