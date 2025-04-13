@@ -84,7 +84,7 @@ struct TrackConfiguration {
  */
 struct TrackStoreEntry {
     SpriteObject *target;
-    std::map<string, std::shared_ptr<TrackConfiguration>> tracks;
+    std::shared_ptr<TrackConfiguration> track;
 };
 
 /**
@@ -140,7 +140,7 @@ class AnimationController {
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
-    void playTrack(string objectName, string trackName);
+    void playTrack(string trackName);
     void pauseTrack(string objectName);
 
     // Getters for testing

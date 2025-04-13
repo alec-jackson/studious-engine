@@ -73,16 +73,9 @@ void AnimationController::addTrack(SpriteObject *target, string trackName, vecto
         trackName,
         fps);
 
-    /* Check if the object already contains an entry in the track store */
-    auto it = trackStore_.find(target->getObjectName());
-    if (it != trackStore_.end()) {
-        /* If the item exists in the map, add the track to the tracKStore entry */
-        it->second.tracks[trackName] = track;
-    } else {
-        /* If the item doesn't exist, create the entry */
-        trackStore_[target->getObjectName()].target = target;
-        trackStore_[target->getObjectName()].tracks[trackName] = track;
-    }
+    /* Set the track in the track store */
+    trackStore_[trackName].target = target;
+    trackStore_[trackName].track = track;
 }
 
 /**
@@ -92,8 +85,17 @@ void AnimationController::addTrack(SpriteObject *target, string trackName, vecto
  * @param trackName The name of the track to play.
  * @note Will return early and not play the animation if the object or track do not exist in the track store.
  */
-void AnimationController::playTrack(string objectName, string trackName) {
+void AnimationController::playTrack(string trackName) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    /* Check if the requested track exists */
+    auto tsit = trackStore_.find(trackName);
+    if (tsit == trackStore_.end()) {
+        fprintf(stderr, "AnimationController::playTrack: %s does not exist in the track store.\n",
+            trackName.c_str());
+        return;
+    }
+    auto objectPtr = tsit->second.target;
+    auto objectName = objectPtr->getObjectName();
     /* Check if the animation is still in the active list */
     auto ait = activeTracks_.find(objectName);
     if (ait != activeTracks_.end()) {
@@ -109,28 +111,14 @@ void AnimationController::playTrack(string objectName, string trackName) {
         }
         /* If the track is already running, we'll just fall through and restart it */
     }
-    /* Check if any tracks are playing, and pause them */
-    auto storeit = trackStore_.find(objectName);
-    /* Object does not exist in track store */
-    if (storeit == trackStore_.end()) {
-        fprintf(stderr, "AnimationController::playTrack: %s does not exist in the track store.\n",
-            objectName.c_str());
-        return;
-    }
-    assert(storeit != trackStore_.end());
-    auto objectPtr = storeit->second.target;
-    auto it = trackStore_[objectName].tracks.find(trackName);
-    /* Track does not exist for the object */
-    assert(it != trackStore_[objectName].tracks.end());
-    /* @todo Probably do something useful here on RELEASE code for failures */
     // Create a ActiveTrackEntry and add it to the playing queue
-    float secondsPerFrame = 1.0 / it->second.get()->targetFps;
+    float secondsPerFrame = 1.0 / tsit->second.track.get()->targetFps;
     printf("AnimationController::playTrack: Starting track %s\n",
         trackName.c_str());
     auto tp = std::make_shared<ActiveTrackEntry>(
-        it->second,
+        tsit->second.track,
         secondsPerFrame,
-        secondsPerFrame * it->second.get()->trackData.size(),
+        secondsPerFrame * tsit->second.track.get()->trackData.size(),
         0,
         objectPtr);
     activeTracks_[objectName] = tp;

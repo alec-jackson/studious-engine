@@ -158,7 +158,7 @@ TEST_P(GivenAnAnimationControllerPlaybackParam, WhenTrackPlayingAndUpdateCalled_
     animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
 
     /* Action */
-    animationController_.playTrack("test object", "test track");
+    animationController_.playTrack("test track");
     // The middle frame should appear between 33-66% of the animation's cycle
     deltaTime = (1.0 / targetFps) * expectedIdx;
     animationController_.update();
@@ -200,7 +200,7 @@ TEST_F(GivenAnAnimationControllerToTest, WhenPausingARunningAnimation_ThenTrackI
     /* Preparation */
     auto targetFps = 12;
     animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
-    animationController_.playTrack("test object", "test track");
+    animationController_.playTrack("test track");
 
     auto activeTracks = animationController_.getActiveTracks();
     // Make sure the animation is in a running state after adding
@@ -220,7 +220,7 @@ TEST_F(GivenAnAnimationControllerToTest, WhenUpdatingWithPausedAnimation_ThenTra
     auto targetFps = 12;
     auto indexShift = 1;
     animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
-    animationController_.playTrack("test object", "test track");
+    animationController_.playTrack("test track");
     auto activeTracks = animationController_.getActiveTracks();
     EXPECT_EQ(activeTracks["test object"].get()->currentTrackIdx, 0);
 
@@ -240,7 +240,7 @@ TEST_F(GivenAnAnimationControllerToTest, WhenAnimationPausedThenResumed_ThenUpda
     auto targetFps = 12;
     auto indexShift = 1;
     animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
-    animationController_.playTrack("test object", "test track");
+    animationController_.playTrack("test track");
     auto activeTracks = animationController_.getActiveTracks();
     EXPECT_EQ(activeTracks["test object"].get()->currentTrackIdx, 0);
 
@@ -248,7 +248,7 @@ TEST_F(GivenAnAnimationControllerToTest, WhenAnimationPausedThenResumed_ThenUpda
     animationController_.pauseTrack("test object");
     deltaTime = (1.0 / targetFps) * indexShift;  // Shift track idx by 1
     animationController_.update();
-    animationController_.playTrack("test object", "test track");
+    animationController_.playTrack("test track");
     animationController_.update();
 
     /* Validation */
