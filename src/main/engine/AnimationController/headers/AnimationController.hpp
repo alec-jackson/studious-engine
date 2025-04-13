@@ -18,8 +18,9 @@
 #include <mutex> // NOLINT
 #include <memory>
 #include <vector>
-#include <SceneObject.hpp>
 #include <SpriteObject.hpp>
+#include <UiObject.hpp>
+#include <TextObject.hpp>
 
 // Update return values
 #define UPDATE_NOT_COMPLETE 0
