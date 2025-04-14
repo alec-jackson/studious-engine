@@ -62,7 +62,7 @@ void AnimationController::addTrack(SpriteObject *target, string trackName, vecto
     }
     /* If trackData is empty, use all available frames */
     if (trackData.empty()) {
-        for (int i = 0; i < target->getBankSize(); ++i) {
+        for (uint i = 0; i < target->getBankSize(); ++i) {
             trackData.push_back(i);
         }
     }
