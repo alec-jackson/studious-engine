@@ -10,6 +10,8 @@
 #include <memory>
 #include <iostream>
 #include <tuple>
+#include <map>
+#include <string>
 #include <SpriteObject.hpp>
 #include <MockGfxController.hpp>
 #include <AnimationControllerTests.hpp>
@@ -20,6 +22,8 @@ const unsigned int dummyTextureId = 0xDEADBEEF;
 const unsigned int dummyVao = 0xBEEF;
 double deltaTime;
 const vector<int> referenceTrack = { 3, 4, 5, 6, 5, 4 };
+const int targetFps = 12;
+const int indexShift = 1;
 
 const char *testSpritePath = "../src/resources/images/test_image.png";
 /**
@@ -48,6 +52,10 @@ class GivenAnAnimationController {
     void TearDown();
     void initMocks();
  protected:
+    /**
+     * We'll probably want to do something else long term. I'm not mocking SpriteObjects because they are not easily
+     * mocked in their current state.
+    */
     AnimationController animationController_;
     std::unique_ptr<SpriteObject> spriteObject_;
     testing::NiceMock<MockGfxController> mockGfxController_;
@@ -123,6 +131,7 @@ void GivenAnAnimationController::initMocks() {
 
 void GivenAnAnimationController::SetUp() {
     initMocks();
+    /* Real SpriteObject is used for now, but can be mocked later for less required test setup. */
     spriteObject_ = std::make_unique<SpriteObject>(
         testSpritePath, vec3(0, 0, 0), 1.0f, 0, "test object", ObjectType::GAME_OBJECT_2D,
         ObjectAnchor::TOP_LEFT, &mockGfxController_);
@@ -148,11 +157,12 @@ class GivenAnAnimationControllerPlaybackParam : public GivenAnAnimationControlle
 };
 
 /**
- * @brief Ensures that animation playback works as expected.
+ * @brief Ensures that animation playback works as expected. Test parameter is the expected frame and the expected
+ * index. The deltaTime is calculated using the expected index, which should prove that frame pacing is working as
+ * expected as well.
  */
 TEST_P(GivenAnAnimationControllerPlaybackParam, WhenTrackPlayingAndUpdateCalled_ThenExpectedFrameShown) {
     /* Preparation */
-    auto targetFps = 12;
     auto expectedFrame = std::get<0>(GetParam());
     auto expectedIdx = std::get<1>(GetParam());
     animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
@@ -196,64 +206,78 @@ class GivenAnAnimationControllerToTest : public GivenAnAnimationController, publ
     }
 };
 
-TEST_F(GivenAnAnimationControllerToTest, WhenPausingARunningAnimation_ThenTrackIsPaused) {
-    /* Preparation */
-    auto targetFps = 12;
-    animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
-    animationController_.playTrack("test track");
+class GivenAnAnimationControllerToTestRunning : public GivenAnAnimationControllerToTest {
+ public:
+    void SetUp() override {
+        /* Preparation */
+        GivenAnAnimationControllerToTest::SetUp();
+        animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
+        animationController_.playTrack("test track");
+        // Make sure the animation is in a running state after adding
+        validateActiveTracks(1, TrackState::RUNNING, 0);
 
-    auto activeTracks = animationController_.getActiveTracks();
-    // Make sure the animation is in a running state after adding
-    EXPECT_EQ(activeTracks.size(), 1);
-    EXPECT_EQ(activeTracks["test object"].get()->state, TrackState::RUNNING);
+    }
 
+    void TearDown() override {
+        GivenAnAnimationControllerToTest::TearDown();
+    }
+
+    void validateActiveTracks(uint size, TrackState state, int idx) {
+        EXPECT_EQ(activeTracks_.size(), size);
+        EXPECT_EQ(activeTracks_.at("test object").get()->state, state);
+        EXPECT_EQ(activeTracks_.at("test object").get()->currentTrackIdx, idx);
+    }
+ protected:
+    const map<string, std::shared_ptr<ActiveTrackEntry>> &activeTracks_ = animationController_.getActiveTracks();
+};
+
+/**
+ * @brief Ensures that pausing an active animation will indeed pause it, and that the paused animation track
+ * will no longer progress when update() is called.
+ */
+TEST_F(GivenAnAnimationControllerToTestRunning, WhenUpdatingWithPausedAnimation_ThenTrackNotUpdated) {
     /* Action */
-    animationController_.pauseTrack("test object");
-
-    /* Validation */
-    EXPECT_EQ(activeTracks.size(), 1);
-    EXPECT_EQ(activeTracks["test object"].get()->state, TrackState::PAUSED);
-}
-
-TEST_F(GivenAnAnimationControllerToTest, WhenUpdatingWithPausedAnimation_ThenTrackNotUpdated) {
-    /* Preparation */
-    auto targetFps = 12;
-    auto indexShift = 1;
-    animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
-    animationController_.playTrack("test track");
-    auto activeTracks = animationController_.getActiveTracks();
-    EXPECT_EQ(activeTracks["test object"].get()->currentTrackIdx, 0);
-
-    /* Action */
-    animationController_.pauseTrack("test object");
+    animationController_.pauseTrack("test track");
     deltaTime = (1.0 / targetFps) * indexShift;  // Shift track idx by 1
     animationController_.update();
 
     /* Validation */
-    EXPECT_EQ(activeTracks.size(), 1);
-    EXPECT_EQ(activeTracks["test object"].get()->state, TrackState::PAUSED);
-    EXPECT_EQ(activeTracks["test object"].get()->currentTrackIdx, 0);
+    validateActiveTracks(1, TrackState::PAUSED, 0);
 }
 
-TEST_F(GivenAnAnimationControllerToTest, WhenAnimationPausedThenResumed_ThenUpdatesResume) {
-    /* Preparation */
-    auto targetFps = 12;
-    auto indexShift = 1;
-    animationController_.addTrack(spriteObject_.get(), "test track", referenceTrack, targetFps);
-    animationController_.playTrack("test track");
-    auto activeTracks = animationController_.getActiveTracks();
-    EXPECT_EQ(activeTracks["test object"].get()->currentTrackIdx, 0);
-
+/**
+ * @brief Ensures that paused animations that are resumed continue to be updated when update() is called.
+ */
+TEST_F(GivenAnAnimationControllerToTestRunning, WhenAnimationPausedThenResumed_ThenUpdatesResume) {
     /* Action */
-    animationController_.pauseTrack("test object");
+    animationController_.pauseTrack("test track");
     deltaTime = (1.0 / targetFps) * indexShift;  // Shift track idx by 1
     animationController_.update();
     animationController_.playTrack("test track");
     animationController_.update();
 
     /* Validation */
-    EXPECT_EQ(activeTracks.size(), 1);
-    EXPECT_EQ(activeTracks["test object"].get()->state, TrackState::RUNNING);
-    EXPECT_EQ(activeTracks["test object"].get()->currentTrackIdx, indexShift);
+    validateActiveTracks(1, TrackState::RUNNING, indexShift);
+}
+
+/**
+ * @brief Ensures that resumed animations continue where they left off.
+ */
+TEST_F(GivenAnAnimationControllerToTestRunning, WhenPausedInMiddleOfPlayback_ThenResumedInPreviousPlace) {
+    /* Preparation */
+    int framesPassed = 2;
+    deltaTime = (1.0 / targetFps) * indexShift * framesPassed;
+    animationController_.update();
+    /* Make sure the animation updated (sanity check) */
+    EXPECT_EQ(spriteObject_.get()->getCurrentFrame(), referenceTrack.at(framesPassed));
+    EXPECT_EQ(activeTracks_.at("test object").get()->currentTrackIdx, framesPassed);
+
+    /* Action */
+    /* Pause/Play animation */
+    animationController_.pauseTrack("test track");
+    animationController_.playTrack("test track");
+
+    /* Validation - Make sure track is where it left off */
+    validateActiveTracks(1, TrackState::RUNNING, indexShift * framesPassed);
 }
 

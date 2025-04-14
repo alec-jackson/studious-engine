@@ -47,9 +47,8 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
  * @note There is no trackData bounds checking at this level. Bounds checking occurs at the SpriteObject level.
  * 
  * There are two internal AnimationController maps that are used to store and play track data.
- * trackStore_ -> This is a map of object name to TrackStoreEntry. A TrackStoreEntry can contain any number of tracks
- * for a single target.
- * activeTracks_ -> This is a map of object name to ActiveTrackEntry. An ActiveTrackEntry is just playback information
+ * trackStore_ -> Internal map of tracks.
+ * activeTracks_ -> This is a map of object names to ActiveTrackEntry. An ActiveTrackEntry is just playback information
  * for a single track from the trackStore_ map. There can only ever be ONE animation track per object EVER!!! This
  * means if you call AnimationController::playTrack on an object that already has an active track, the previous track
  * will be stopped and replaced with the new track. Memory is managed through smart pointers, so everything should
@@ -81,9 +80,11 @@ void AnimationController::addTrack(SpriteObject *target, string trackName, vecto
 /**
  * @brief Plays a track for the given object. The supplied trackName MUST be already defined in the track store to
  * be played. Otherwise the animation will not start, and an error will be printed.
- * @param objectName The name of the object to perform animation on.
  * @param trackName The name of the track to play.
- * @note Will return early and not play the animation if the object or track do not exist in the track store.
+ * @note Will return early and not play the animation if the track does not exist. If the active track for the object
+ * the same as the queried one through trackName, then there are some special cases. If the active track was paused,
+ * then it will be resumed WHERE IT LEFT OFF. If the active track is currently running, then it will be replaced and
+ * started from the beginning. This is a slight nuance, but is important to know about for proper usage.
  */
 void AnimationController::playTrack(string trackName) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
@@ -124,14 +125,26 @@ void AnimationController::playTrack(string trackName) {
     activeTracks_[objectName] = tp;
 }
 
-/* Might want to do something fancy for resume */
-void AnimationController::pauseTrack(string objectName) {
+/**
+ * @brief Pauses the animation track's playback. Will do nothing if the track does not exist or is not running.
+ * @param trackName The name of the track to pause.
+ */
+void AnimationController::pauseTrack(string trackName) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    /* Check the object store for the track */
+    auto sit = trackStore_.find(trackName);
+    if (sit == trackStore_.end()) {
+        fprintf(stderr,
+            "AnimationController::pauseTrack: %s does not exist in the track store. Cannot pause animation.\n",
+            trackName.c_str());
+        return;
+    }
+    auto objectName = sit->second.target->getObjectName();
     auto it = activeTracks_.find(objectName);
     if (it != activeTracks_.end()) {
         it->second.get()->state = TrackState::PAUSED;
     } else {
-        fprintf(stderr, "AnimationController::pauseTrack: %s has no active animations!",
+        fprintf(stderr, "AnimationController::pauseTrack: %s has no active animations.",
             objectName.c_str());
     }
 }
