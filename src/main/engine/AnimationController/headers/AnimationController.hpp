@@ -150,7 +150,9 @@ class AnimationController {
 
  private:
     map<string, KeyFrames> keyFrameStore_;
+    /* Map of trackName to TrackConfig */
     map<string, TrackStoreEntry> trackStore_;
+    /* Map of object name to active track */
     map<string, std::shared_ptr<ActiveTrackEntry>> activeTracks_;
     std::mutex controllerLock_;
 };
