@@ -215,7 +215,6 @@ class GivenAnAnimationControllerToTestRunning : public GivenAnAnimationControlle
         animationController_.playTrack("test track");
         // Make sure the animation is in a running state after adding
         validateActiveTracks(1, TrackState::RUNNING, 0);
-
     }
 
     void TearDown() override {
