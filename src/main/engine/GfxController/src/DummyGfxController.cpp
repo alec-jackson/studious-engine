@@ -37,7 +37,7 @@ GfxResult<unsigned int> DummyGfxController::sendBufferData(size_t size, void *da
 GfxResult<unsigned int> DummyGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format,
     void *data) {
     printf("GfxController::sendTextureData: width %u, height %u, format %d, data %p\n",
-        width, height, format, data);
+        width, height, static_cast<std::underlying_type_t<TexFormat>>(format), data);
     return GFX_OK(unsigned int);
 }
 
@@ -89,7 +89,7 @@ GfxResult<unsigned int> DummyGfxController::sendFloatVector(unsigned int variabl
 }
 
 GfxResult<unsigned int> DummyGfxController::polygonRenderMode(RenderMode mode) {
-    printf("GfxController::polygonRenderMode: mode=[%d]", mode);
+    printf("GfxController::polygonRenderMode: mode=[%d]", static_cast<std::underlying_type_t<RenderMode>>(mode));
     return GFX_OK(unsigned int);
 }
 
@@ -118,7 +118,7 @@ GfxResult<unsigned int> DummyGfxController::bindVao(unsigned int vao) {
 
 GfxResult<unsigned int> DummyGfxController::setCapability(GfxCapability capabilityId, bool enabled) {
     printf("GfxController::setCapability: CAPABILITY: %d, enabled: %d\n",
-        capabilityId, enabled);
+        static_cast<std::underlying_type_t<GfxCapability>>(capabilityId), enabled);
     return GFX_OK(unsigned int);
 }
 
@@ -139,7 +139,8 @@ GfxResult<unsigned int> DummyGfxController::updateBufferData(const vector<float>
 
 GfxResult<unsigned int> DummyGfxController::setTexParam(TexParam param, TexVal val) {
     printf("GfxController::setTexParam: param %d, val %d\n",
-        param, val.type());
+            static_cast<std::underlying_type_t<TexParam>>(param),
+            static_cast<std::underlying_type_t<TexValType>>(val.type()));
     return GFX_OK(unsigned int);
 }
 
@@ -168,7 +169,7 @@ GfxResult<unsigned int> DummyGfxController::drawTriangles(unsigned int size) {
 
 void DummyGfxController::clear(GfxClearMode clearMode) {
     printf("GfxController::clear: clearMode %d\n",
-        clearMode);
+        static_cast<std::underlying_type_t<GfxClearMode>>(clearMode));
 }
 
 void DummyGfxController::deleteBuffer(unsigned int *bufferId) {
