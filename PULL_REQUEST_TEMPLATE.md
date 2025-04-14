@@ -4,7 +4,7 @@
 <!--- Give a brief description of your changes. -->
 
 ### Issues
-<!--- List any relavant GitHub issues this PR is addressing here. -->
+<!--- List any relevant GitHub issues this PR is addressing here. -->
 
 ### Considerations
 <!--- If any major decisions, breaking changes, or redesigns were made, describe them here. Give a brief summary describing how you came to this conclusion. -->
