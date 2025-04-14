@@ -13,6 +13,7 @@
 #include <vector>
 #include <cstdio>
 #include <memory>
+#include <utility>
 #include <OpenGlEsGfxController.hpp>
 
 /**
@@ -113,7 +114,8 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int widt
             convertedData = convertToRgba(width * height, static_cast<uint8_t *>(data));
             break;
         default:
-            fprintf(stderr, "OpenGlEsGfxController::sendTextureData: Unknown texture format %d\n", format);
+            fprintf(stderr, "OpenGlEsGfxController::sendTextureData: Unknown texture format %d\n",
+                static_cast<std::underlying_type_t<TexFormat>>(format));
             return GFX_FAILURE(unsigned int);
     }
     if (convertedData.use_count() > 0) {
@@ -693,7 +695,8 @@ void OpenGlEsGfxController::clear(GfxClearMode clearMode) {
             clearVal = GL_DEPTH_BUFFER_BIT;
             break;
         default:
-            printf("OpenGlEsGfxController::clear: Unknown clearMode %d\n", clearMode);
+            printf("OpenGlEsGfxController::clear: Unknown clearMode %d\n",
+                static_cast<std::underlying_type_t<GfxClearMode>>(clearMode));
             return;
     }
     glClear(clearVal);
