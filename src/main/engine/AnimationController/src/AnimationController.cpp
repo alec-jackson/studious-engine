@@ -442,6 +442,11 @@ int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
     return result;
 }
 
+/**
+ * @brief Updates the currently rendered frame of the target SpriteObject based on framerate of animation track,
+ * deltaTime, and data from the track.
+ * @param trackPlayback The active track to update.
+ */
 void AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback) {
     auto tp = trackPlayback.get();
     auto target = trackPlayback.get()->target;
