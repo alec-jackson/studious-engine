@@ -80,7 +80,7 @@ if [ "$singleJob" != true ]; then
     if [ ${TYPE} = "Darwin" ]; then
         make -j$(sysctl -n hw.physicalcpu)
     else
-        cmake --build ..
+        cmake --build .. -j $(nproc)
     fi
 else
     echo "Single threaded build mode enabled"
