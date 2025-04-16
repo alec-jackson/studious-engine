@@ -6,12 +6,16 @@ embeddedBuild=false
 debugBuild=false
 runTests=false
 singleJob=false
+buildAll=false
 target=default
 while [ $# -ne 0 ]; do
     arg="$1"
     case "$arg" in
         -clean)
             cleanBuild=true
+            ;;
+        -a)
+            buildAll=true
             ;;
         -d)
             debugBuild=true
@@ -62,6 +66,10 @@ if [ "$embeddedBuild" == true ]; then
     echo "Building EMBEDDED TARGET"
     ARGS="$ARGS -DGFX_EMBEDDED=1"
 fi
+if [ "$buildAll" == true ]; then
+    echo "Building with Examples"
+    ARGS="$ARGS -DEXAMPLES=1"
+fi
 # Add the selected target to the args
 ARGS="$ARGS -DMAIN_TARGET=$target"
 cmake ${ARGS} ..
@@ -72,7 +80,7 @@ if [ "$singleJob" != true ]; then
     if [ ${TYPE} = "Darwin" ]; then
         make -j$(sysctl -n hw.physicalcpu)
     else
-        make -j$(nproc)
+        cmake --build ..
     fi
 else
     echo "Single threaded build mode enabled"
@@ -80,6 +88,7 @@ else
 fi
 if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
+    tput init
 else
     if [ "$runTests" == true ]; then
         ctest --output-on-failure

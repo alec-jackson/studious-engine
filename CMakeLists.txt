@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 enable_testing()
-project(engineExample VERSION 0.0.1)
+project(studious VERSION 1.0.0)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -36,7 +36,6 @@ include_directories(
   src/main/engine/AnimationController/headers
   src/main/engine/Misc/headers
   src/main/engine/SceneObject/headers
-  src/main/example/headers
   src/main/misc/headers
 )
 
@@ -52,6 +51,14 @@ find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(GTest CONFIG)
+
+
+if(EXAMPLES)
+
+  add_subdirectory(examples/2dDemo)
+  add_subdirectory(examples/3dDemoScene)
+
+endif()
 
 # Add additional games here :)
 if (MAIN_TARGET STREQUAL "default")
@@ -70,8 +77,7 @@ else()
   )
 endif()
 
-add_executable(${PROJECT_NAME}
-  ${MAIN_FILE}
+add_library(${PROJECT_NAME} SHARED
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/GameInstance.cpp
