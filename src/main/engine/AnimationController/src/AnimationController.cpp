@@ -13,9 +13,8 @@
 #include <string>
 #include <cstdio>
 #include <memory>
+#include <cmath>
 #include <AnimationController.hpp>
-#include <UiObject.hpp>
-#include <TextObject.hpp>
 
 std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
     auto keyframe = createKeyFrame(type, time);
@@ -31,6 +30,123 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
     keyframe.get()->type = type;
     keyframe.get()->hasCb = false;
     return keyframe;
+}
+
+/**
+ * @brief Creates and adds a track configuration to the internal track store. Adding a track to the
+ * track store will not automatically play it. @see AnimationController::playTrack.
+ * @param target The SpriteObject to apply the animation track to.
+ * @param trackName Friendly name of the animation track.
+ * @param trackData The actual track data. Each number in the list corresponds to a frame to set in the SpriteObject's
+ * sprite grid. For example, the trackData { 3, 4, 5 } means that the animation track will first display frame 3, then
+ * 4 and then 5. The speed at which frames are sequentially switched is determined by the supplied fps rate. An empty
+ * vector for trackData is actually legal, and will default to a set of increasing numbers starting from 0 to the
+ * number of available frames in the SpriteObject. For a SpriteObject with 4 frames, the default trackData would look
+ * like { 0, 1, 2, 3 }.
+ * @param fps The framerate the animation should play back.
+ * @note There is no trackData bounds checking at this level. Bounds checking occurs at the SpriteObject level.
+ * 
+ * There are two internal AnimationController maps that are used to store and play track data.
+ * trackStore_ -> Internal map of tracks.
+ * activeTracks_ -> This is a map of object names to ActiveTrackEntry. An ActiveTrackEntry is just playback information
+ * for a single track from the trackStore_ map. There can only ever be ONE animation track per object EVER!!! This
+ * means if you call AnimationController::playTrack on an object that already has an active track, the previous track
+ * will be stopped and replaced with the new track. Memory is managed through smart pointers, so everything should
+ * clean up on its own.
+ */
+void AnimationController::addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    if (target == nullptr) {
+        fprintf(stderr, "AnimationController::addTrack: target cannot be null.\n");
+        return;
+    }
+    /* If trackData is empty, use all available frames */
+    if (trackData.empty()) {
+        for (uint i = 0; i < target->getBankSize(); ++i) {
+            trackData.push_back(i);
+        }
+    }
+
+    auto track = std::make_shared<TrackConfiguration>(
+        trackData,
+        trackName,
+        fps);
+
+    /* Set the track in the track store */
+    trackStore_[trackName].target = target;
+    trackStore_[trackName].track = track;
+}
+
+/**
+ * @brief Plays a track for the given object. The supplied trackName MUST be already defined in the track store to
+ * be played. Otherwise the animation will not start, and an error will be printed.
+ * @param trackName The name of the track to play.
+ * @note Will return early and not play the animation if the track does not exist. If the active track for the object
+ * the same as the queried one through trackName, then there are some special cases. If the active track was paused,
+ * then it will be resumed WHERE IT LEFT OFF. If the active track is currently running, then it will be replaced and
+ * started from the beginning. This is a slight nuance, but is important to know about for proper usage.
+ */
+void AnimationController::playTrack(string trackName) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    /* Check if the requested track exists */
+    auto tsit = trackStore_.find(trackName);
+    if (tsit == trackStore_.end()) {
+        fprintf(stderr, "AnimationController::playTrack: %s does not exist in the track store.\n",
+            trackName.c_str());
+        return;
+    }
+    auto objectPtr = tsit->second.target;
+    auto objectName = objectPtr->getObjectName();
+    /* Check if the animation is still in the active list */
+    auto ait = activeTracks_.find(objectName);
+    if (ait != activeTracks_.end()) {
+        auto match = ait->second.get()->track.get()->trackName.compare(trackName);
+        auto &state = ait->second.get()->state;
+        /* If the active track is the same track, let's resume it if paused... */
+        if (!match && state == TrackState::PAUSED) {
+            /* Resume the animation from where it left off if so */
+            ait->second.get()->state = TrackState::RUNNING;
+            printf("AnimationController::playTrack: Resuming previously active track %s\n",
+                trackName.c_str());
+            return;
+        }
+        /* If the track is already running, we'll just fall through and restart it */
+    }
+    // Create a ActiveTrackEntry and add it to the playing queue
+    float secondsPerFrame = 1.0 / tsit->second.track.get()->targetFps;
+    printf("AnimationController::playTrack: Starting track %s\n",
+        trackName.c_str());
+    auto tp = std::make_shared<ActiveTrackEntry>(
+        tsit->second.track,
+        secondsPerFrame,
+        secondsPerFrame * tsit->second.track.get()->trackData.size(),
+        0,
+        objectPtr);
+    activeTracks_[objectName] = tp;
+}
+
+/**
+ * @brief Pauses the animation track's playback. Will do nothing if the track does not exist or is not running.
+ * @param trackName The name of the track to pause.
+ */
+void AnimationController::pauseTrack(string trackName) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    /* Check the object store for the track */
+    auto sit = trackStore_.find(trackName);
+    if (sit == trackStore_.end()) {
+        fprintf(stderr,
+            "AnimationController::pauseTrack: %s does not exist in the track store. Cannot pause animation.\n",
+            trackName.c_str());
+        return;
+    }
+    auto objectName = sit->second.target->getObjectName();
+    auto it = activeTracks_.find(objectName);
+    if (it != activeTracks_.end()) {
+        it->second.get()->state = TrackState::PAUSED;
+    } else {
+        fprintf(stderr, "AnimationController::pauseTrack: %s has no active animations.",
+            objectName.c_str());
+    }
 }
 
 int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame) {
@@ -111,6 +227,14 @@ void AnimationController::update() {
     // Erase keys in the deferredDelete list
     for (auto item : deferredDelete) {
         keyFrameStore_.erase(item);
+    }
+    /* Update track based animations */
+    for (auto &entry : activeTracks_) {
+        /* Only update the track if it's running */
+        auto state = entry.second.get()->state;
+        if (state == TrackState::RUNNING)
+            /* Update the active track */
+            updateTrack(entry.second);
     }
 }
 
@@ -316,4 +440,26 @@ int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
         result = UPDATE_TIME;
     }
     return result;
+}
+
+/**
+ * @brief Updates the currently rendered frame of the target SpriteObject based on framerate of animation track,
+ * deltaTime, and data from the track.
+ * @param trackPlayback The active track to update.
+ */
+void AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback) {
+    auto tp = trackPlayback.get();
+    auto target = trackPlayback.get()->target;
+    auto track = tp->track.get()->trackData;
+    /* Update timings and current frame */
+    tp->currentTime += deltaTime;
+    /* Wrap time around sequence time */
+    tp->currentTime = std::fmod(tp->currentTime, tp->sequenceTime);
+    /* Determine current frame based on current time */
+    int trackIdx = (tp->currentTime / tp->sequenceTime) * tp->track.get()->trackData.size();
+    tp->currentTrackIdx = trackIdx;
+    /* Grab the real frame number with the track idx */
+    auto frameNumber = tp->track.get()->trackData.at(trackIdx);
+    /* Set the sprite object's frame number to the frame number calculated */
+    target->setCurrentFrame(frameNumber);
 }

@@ -193,6 +193,34 @@ target_link_libraries(gtest_SpriteObjectTests
 )
 
 gtest_discover_tests(gtest_SpriteObjectTests)
+# ======================================== AnimationControllerTests ========================================
+add_executable(gtest_AnimationControllerTests
+  src/main/engine/AnimationController/test/src/AnimationControllerTests.cpp
+  src/main/engine/AnimationController/src/AnimationController.cpp
+  src/main/engine/SceneObject/src/SpriteObject.cpp
+  src/main/engine/SceneObject/src/GameObject2D.cpp
+  src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/engine/SceneObject/src/TextObject.cpp
+  src/main/engine/SceneObject/src/UiObject.cpp
+  src/main/utilities/src/Polygon.cpp
+)
+
+target_include_directories(gtest_AnimationControllerTests
+  PRIVATE src/main/engine/AnimationController/test/headers
+  PRIVATE src/main/engine/AnimationController/headers
+  PUBLIC ${FREETYPE_INCLUDE_DIRS}
+)
+
+target_link_libraries(gtest_AnimationControllerTests
+  PUBLIC SDL2::Image
+  GTest::gtest_main
+  GTest::gmock
+  GTest::gmock
+  PUBLIC ${FREETYPE_LIBRARIES}
+)
+
+gtest_discover_tests(gtest_AnimationControllerTests)
+# ======================================== END OF GTESTS ========================================
 endif()
 
 install(TARGETS ${PROJECT_NAME})
