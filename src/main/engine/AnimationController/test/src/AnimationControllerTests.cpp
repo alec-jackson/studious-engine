@@ -22,7 +22,6 @@ const unsigned int DUMMY_TEXTURE_ID = 0xDEADBEEF;
 const unsigned int DUMMY_VAO = 0xBEEF;
 const char *DUMMY_OBJ_NAME = "test object";
 const char *DUMMY_TRACK_NAME = "test track";
-double deltaTime;
 const vector<int> REFERENCE_TRACK = { 3, 4, 5, 6, 5, 4 };
 const int TARGET_FPS = 12;
 const int INDEX_SHIFT = 1;

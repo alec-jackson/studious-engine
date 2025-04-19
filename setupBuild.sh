@@ -7,7 +7,7 @@ debugBuild=false
 runTests=false
 singleJob=false
 buildAll=false
-target=default
+target=studious-3dExampleScene
 while [ $# -ne 0 ]; do
     arg="$1"
     case "$arg" in
@@ -27,12 +27,14 @@ while [ $# -ne 0 ]; do
             embeddedBuild=true
             ;;
         -r)
+            buildAll=true
             runBuild=true
             ;;
         -s)
             singleJob=true
             ;;
         -target)
+            # This just modifies the run target, does not affect compilation
             shift
             target="$1"
             ;;
@@ -70,22 +72,21 @@ if [ "$buildAll" == true ]; then
     echo "Building with Examples"
     ARGS="$ARGS -DEXAMPLES=1"
 fi
-# Add the selected target to the args
-ARGS="$ARGS -DMAIN_TARGET=$target"
+
 cmake ${ARGS} ..
 
 # Build Project
 TYPE=`uname`
+JOBS=1
 if [ "$singleJob" != true ]; then
     if [ ${TYPE} = "Darwin" ]; then
-        make -j$(sysctl -n hw.physicalcpu)
+        JOBS=$(sysctl -n hw.physicalcpu)
     else
-        cmake --build .. -j $(nproc)
+        JOBS=$(nproc)
     fi
-else
-    echo "Single threaded build mode enabled"
-    make
 fi
+echo "Building with ${JOBS} threads."
+cmake --build . -j ${JOBS}
 if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
     tput init
@@ -96,7 +97,7 @@ else
         if [ "$runBuild" == true ]; then
             # Run program
             cd ..
-            ./engineExample
+            ./$target
         fi
     fi
 fi

@@ -60,23 +60,6 @@ if(EXAMPLES)
 
 endif()
 
-# Add additional games here :)
-if (MAIN_TARGET STREQUAL "default")
-  set(MAIN_FILE 
-    src/main/example/src/game.cpp
-  )
-elseif (MAIN_TARGET STREQUAL "chris_2d")
-  set(MAIN_FILE 
-    src/main/example/2dDemo/game.cpp
-  )
-else()
-  message("Unknown main target: ${MAIN_TARGET}. Please ensure the MAIN_TARGET is valid!")
-  message("Defaulting to 'default' target.")
-  set(MAIN_FILE 
-    src/main/example/src/game.cpp
-  )
-endif()
-
 add_library(${PROJECT_NAME} SHARED
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
@@ -95,6 +78,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
   src/main/engine/GfxController/src/OpenGlEsGfxController.cpp
   src/main/engine/AnimationController/src/AnimationController.cpp
+  src/main/engine/Misc/src/DeltaTime.cpp
   src/main/misc/src/config.cpp
 )
 
@@ -209,6 +193,7 @@ add_executable(gtest_AnimationControllerTests
   src/main/engine/SceneObject/src/TextObject.cpp
   src/main/engine/SceneObject/src/UiObject.cpp
   src/main/utilities/src/Polygon.cpp
+  src/main/engine/Misc/src/DeltaTime.cpp
 )
 
 target_include_directories(gtest_AnimationControllerTests
@@ -220,7 +205,6 @@ target_include_directories(gtest_AnimationControllerTests
 target_link_libraries(gtest_AnimationControllerTests
   PUBLIC SDL2::Image
   GTest::gtest_main
-  GTest::gmock
   GTest::gmock
   PUBLIC ${FREETYPE_LIBRARIES}
 )
