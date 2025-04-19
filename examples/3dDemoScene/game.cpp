@@ -99,8 +99,6 @@ OpenGlGfxController gfxController = OpenGlGfxController();
 #endif
 AnimationController animationController;
 
-double deltaTime = 0.0f;
-
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
 

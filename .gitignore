@@ -9,6 +9,7 @@ engineExample
 *.DS_Store
 engineExample.xcodeproj/*
 *.log
+studious-*ExampleScene
 
 # Cmake Temp Files #
 
