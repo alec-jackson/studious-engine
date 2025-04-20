@@ -45,13 +45,13 @@ void UiObject::generateVertexBase
     auto tX2 = tX + dT;
     auto tY2 = tY + dT;
     vector<float> vertices = {
-            x, y, tX, tY,
-            x, y2, tX, tY2,
-            x2, y2, tX2, tY2,
+            x, y2, tX, tY,
+            x, y, tX, tY2,
+            x2, y2, tX2, tY,
 
-            x, y, tX, tY,
-            x2, y2, tX2, tY2,
-            x2, y, tX2, tY
+            x2, y2, tX2, tY,
+            x, y, tX, tY2,
+            x2, y, tX2, tY2
     };
     // Convert triangle index to vertexData offset
     // 2 triangles, 3 vertices per tri, 4 points per vertex
@@ -69,12 +69,12 @@ std::shared_ptr<float[]> UiObject::generateVertices(float x, float y, float iFx,
 
     // Create the triangles from top left to right
     for (int i = 1; i < 4; ++i) {
-        auto y2 = y - (iFy * i);
-        auto y1 = y - (iFy * (i-1));
+        auto y2 = y + (iFy * i);
+        auto y1 = y + (iFy * (i-1));
         for (int j = 1; j < 4; ++j) {
             auto x2 = x + (iFx * j);
             auto x1 = x + (iFx * (j - 1));
-            auto idx = (j - 1) + (i - 1) * 3;
+            auto idx = (j - 1) + (4 - i - 1) * 3;
             generateVertexBase(vertexData, idx, x1, y1, x2, y2);
         }
     }
@@ -91,10 +91,14 @@ void UiObject::initializeVertexData() {
             break;
         case CENTER:
             x = -1 * ((textureWidth_) / 2.0f);
-            y = (textureHeight_) / 2.0f;
+            y = -1 * ((textureHeight_) / 6.0f);
+            break;
+        case TOP_LEFT:
+            y = -1.0f * textureHeight_ / 3.0f;
+            x = 0.0f;
             break;
         default:
-            fprintf(stderr, "UiObject::initializeVertexData: Unsupported anchor type %d\n", anchor_);
+            fprintf(stderr, "GameObject2D::initializeVertexData: Unsupported anchor type %d\n", anchor_);
             assert(false);
             break;
     }

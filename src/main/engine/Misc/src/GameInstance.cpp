@@ -263,7 +263,7 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
     return gameObject.get();
 }
 
-CameraObject *GameInstance::createCamera(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createCamera: Creating CameraObject %zu\n", sceneObjects_.size());

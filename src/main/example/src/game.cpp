@@ -243,7 +243,7 @@ int runtime(GameInstance *currentGame) {
 
     auto testUi = currentGame->createUi(
         "src/resources/images/Message Bubble UI.png",   // image path
-        vec3(150.0f, 100.0f, 0.0f),                     // Position
+        vec3(150.0f, 145.0f, 0.0f),                     // Position
         0.5f,                                           // Scale
         100.0f,                                         // Width
         0.0f,                                           // Height

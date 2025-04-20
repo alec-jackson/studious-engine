@@ -44,6 +44,7 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
  * number of available frames in the SpriteObject. For a SpriteObject with 4 frames, the default trackData would look
  * like { 0, 1, 2, 3 }.
  * @param fps The framerate the animation should play back.
+ * @param loop Will control whether the animation loops infinitely or ends on last frame.
  * @note There is no trackData bounds checking at this level. Bounds checking occurs at the SpriteObject level.
  * 
  * There are two internal AnimationController maps that are used to store and play track data.
@@ -54,7 +55,7 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
  * will be stopped and replaced with the new track. Memory is managed through smart pointers, so everything should
  * clean up on its own.
  */
-void AnimationController::addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps) {
+void AnimationController::addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps, bool loop) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     if (target == nullptr) {
         fprintf(stderr, "AnimationController::addTrack: target cannot be null.\n");
@@ -70,7 +71,8 @@ void AnimationController::addTrack(SpriteObject *target, string trackName, vecto
     auto track = std::make_shared<TrackConfiguration>(
         trackData,
         trackName,
-        fps);
+        fps,
+        loop);
 
     /* Set the track in the track store */
     trackStore_[trackName].target = target;
@@ -161,11 +163,11 @@ int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFra
         // Make sure we do not have duplicate SceneObject names in the store
         assert(it->second.target == target);
         // Add the keyFrame to the object's keyframe queue
-        it->second.kQueue.push(keyFrame.get());
+        it->second.kQueue.push(keyFrame);
         kfQueueSize = it->second.kQueue.size();
     } else {
         // If the object has no keyframestore, add it
-        keyFrameStore_[target->getObjectName()].kQueue.push(keyFrame.get());
+        keyFrameStore_[target->getObjectName()].kQueue.push(keyFrame);
         keyFrameStore_[target->getObjectName()].target = target;
         kfQueueSize = 1;
     }
@@ -175,6 +177,7 @@ int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFra
 void AnimationController::update() {
     // Lock the controller
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    vector<std::function<void(void)>> callbacks;
     vector<string> deferredDelete;
     // Run update methods on each object here
     for (auto &entry : keyFrameStore_) {
@@ -204,21 +207,21 @@ void AnimationController::update() {
         auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET;
 
         // Update the time passed since keyframe has started
-        currentKf->currentTime += deltaTime;
+        currentKf.get()->currentTime += deltaTime;
         // Perform updates in keyframe
-        result |= updatePosition(target, currentKf);
-        result |= updateStretch(target, currentKf);
-        result |= updateText(target, currentKf);
-        result |= updateTime(target, currentKf);
-        result |= updateRotation(target, currentKf);
-        result |= updateScale(target, currentKf);
+        result |= updatePosition(target, currentKf.get());
+        result |= updateStretch(target, currentKf.get());
+        result |= updateText(target, currentKf.get());
+        result |= updateTime(target, currentKf.get());
+        result |= updateRotation(target, currentKf.get());
+        result |= updateScale(target, currentKf.get());
         // Only remove the keyframe when all updates are done...
         if (result == done) {
             printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
             // Remove the keyframe from the queue
             entry.second.kQueue.pop();
             // Call the callback associated with the keyframe
-            if (currentKf->hasCb) currentKf->callback();
+            if (currentKf->hasCb) callbacks.push_back(currentKf->callback);
             if (entry.second.kQueue.empty())
                 deferredDelete.push_back(entry.first);
         }
@@ -228,13 +231,26 @@ void AnimationController::update() {
     for (auto item : deferredDelete) {
         keyFrameStore_.erase(item);
     }
+    deferredDelete.clear();
     /* Update track based animations */
     for (auto &entry : activeTracks_) {
         /* Only update the track if it's running */
         auto state = entry.second.get()->state;
-        if (state == TrackState::RUNNING)
+        if (state == TrackState::RUNNING) {
             /* Update the active track */
-            updateTrack(entry.second);
+            if (updateTrack(entry.second)) {
+                deferredDelete.push_back(entry.first);
+            }
+        }
+    }
+    // Erase keys in the deferredDelete list
+    for (auto item : deferredDelete) {
+        activeTracks_.erase(item);
+    }
+    /* Run callbacks after update() with lock released */
+    scopeLock.unlock();
+    for (auto cb : callbacks) {
+        cb();
     }
 }
 
@@ -446,13 +462,19 @@ int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
  * @brief Updates the currently rendered frame of the target SpriteObject based on framerate of animation track,
  * deltaTime, and data from the track.
  * @param trackPlayback The active track to update.
+ * @return true if the track is complete, false if it's still ongoing.
  */
-void AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback) {
+bool AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback) {
     auto tp = trackPlayback.get();
     auto target = trackPlayback.get()->target;
     auto track = tp->track.get()->trackData;
     /* Update timings and current frame */
     tp->currentTime += deltaTime;
+    /* Break the update early if loop is enabled */
+    if (!tp->track.get()->loop && tp->currentTime > tp->sequenceTime) {
+        target->setCurrentFrame(tp->track.get()->trackData.at(tp->track.get()->trackData.size() - 1));
+        return true;
+    }
     /* Wrap time around sequence time */
     tp->currentTime = std::fmod(tp->currentTime, tp->sequenceTime);
     /* Determine current frame based on current time */
@@ -462,4 +484,5 @@ void AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPla
     auto frameNumber = tp->track.get()->trackData.at(trackIdx);
     /* Set the sprite object's frame number to the frame number calculated */
     target->setCurrentFrame(frameNumber);
+    return false;
 }

@@ -81,7 +81,7 @@ class GameInstance {
     void startGame(const configData &config);
     GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
-    CameraObject *createCamera(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+    CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, unsigned int programId,
         string objectName);

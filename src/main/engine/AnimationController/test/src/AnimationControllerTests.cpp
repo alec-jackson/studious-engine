@@ -167,7 +167,7 @@ TEST_P(GivenAnAnimationControllerPlaybackParam, WhenTrackPlayingAndUpdateCalled_
     /* Preparation */
     auto expectedFrame = std::get<0>(GetParam());
     auto expectedIdx = std::get<1>(GetParam());
-    animationController_.addTrack(spriteObject_.get(), DUMMY_TRACK_NAME, REFERENCE_TRACK, TARGET_FPS);
+    animationController_.addTrack(spriteObject_.get(), DUMMY_TRACK_NAME, REFERENCE_TRACK, TARGET_FPS, false);
 
     /* Action */
     animationController_.playTrack(DUMMY_TRACK_NAME);
@@ -213,7 +213,7 @@ class GivenAnAnimationControllerToTestRunning : public GivenAnAnimationControlle
     void SetUp() override {
         /* Preparation */
         GivenAnAnimationControllerToTest::SetUp();
-        animationController_.addTrack(spriteObject_.get(), DUMMY_TRACK_NAME, REFERENCE_TRACK, TARGET_FPS);
+        animationController_.addTrack(spriteObject_.get(), DUMMY_TRACK_NAME, REFERENCE_TRACK, TARGET_FPS, false);
         animationController_.playTrack(DUMMY_TRACK_NAME);
         // Make sure the animation is in a running state after adding
         validateActiveTracks(1, TrackState::RUNNING, 0);

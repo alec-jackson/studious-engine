@@ -75,8 +75,9 @@ struct TrackConfiguration {
     vector<int> trackData;
     string trackName;
     int targetFps;
-    inline TrackConfiguration(vector<int> tD, string tN, int tF) :
-        trackData { tD }, trackName { tN }, targetFps { tF } {};
+    bool loop;
+    inline TrackConfiguration(vector<int> tD, string tN, int tF, bool l) :
+        trackData { tD }, trackName { tN }, targetFps { tF }, loop { l } {};
 };
 
 /**
@@ -118,14 +119,14 @@ struct KeyFrame {
 };
 
 struct KeyFrames {
-    std::queue<KeyFrame *> kQueue;
+    std::queue<std::shared_ptr<KeyFrame>> kQueue;
     SceneObject *target;
 };
 
 class AnimationController {
  public:
     int addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame);
-    void addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps);
+    void addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps, bool loop);
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateRotation(SceneObject *target, KeyFrame *keyFrame);
@@ -133,7 +134,7 @@ class AnimationController {
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
-    void updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
+    bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
