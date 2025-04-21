@@ -135,7 +135,7 @@ void GivenAnAnimationController::SetUp() {
     initMocks();
     /* Real SpriteObject is used for now, but can be mocked later for less required test setup. */
     spriteObject_ = std::make_unique<SpriteObject>(
-        testSpritePath, vec3(0, 0, 0), 1.0f, 0, DUMMY_OBJ_NAME, ObjectType::GAME_OBJECT_2D,
+        testSpritePath, vec3(0, 0, 0), 1.0f, 0, DUMMY_OBJ_NAME, ObjectType::SPRITE_OBJECT,
         ObjectAnchor::TOP_LEFT, &mockGfxController_);
 
     /* Call split grid on the sprite object */

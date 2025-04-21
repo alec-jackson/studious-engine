@@ -27,9 +27,9 @@
 
  (void) startGameInstance does not return any value.
  */
-GameInstance::GameInstance(vector<string> soundList, vector<string> vertShaders,
+GameInstance::GameInstance(vector<string> vertShaders,
         vector<string> fragShaders, GfxController *gfxController, int width, int height)
-        : gfxController_ { gfxController }, soundList_ { soundList }, vertShaders_ { vertShaders },
+        : gfxController_ { gfxController }, vertShaders_ { vertShaders },
         fragShaders_ { fragShaders }, width_ { width }, height_ { height } {
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
@@ -40,8 +40,6 @@ GameInstance::GameInstance(vector<string> soundList, vector<string> vertShaders,
 void GameInstance::startGame(const configData &config) {
     initWindow(config);
     initAudio();
-    // Comment out playSound to disable music
-    playSound(0, -1, 50);
     initController();
     initApplication(vertShaders_, fragShaders_);
     keystate = SDL_GetKeyboardState(NULL);
@@ -102,55 +100,76 @@ int GameInstance::getControllersConnected() {
     return controllersConnected;
 }
 
-/*
- (void) playSound takes an (int) soundIndex number associated with a specific
- sound piece loaded into the game instance and plays that sound (int) loop
- number of times. If indefinite looping is desired, (int) loop can be set to -1.
- Infinitely looping sounds must be stopped manually.
-
- (void) playSound does not return any value.
-*/
-int GameInstance::playSound(unsigned int soundIndex, int loop, int volume) {
-    int channel = -1;
+/**
+ * @brief Plays a loaded sound effect.
+ * @param sfxName The name of the previously loaded sfx to play.
+ * @param loop If set to true, the sound effect will repeat indefinitely.
+ * @param volume Volume level to play sound effect at. Valid values are between
+ * 0-128.
+ * @return 0 on success, -1 on failure.
+ */
+int GameInstance::playSound(string sfxName, bool loop, int volume) {
+    std::unique_lock<std::mutex> scopeLock(soundLock_);
+    /* Make sure the sound has been previously loaded */
+    auto lsit = loadedSounds_.find(sfxName);
+    if (lsit == loadedSounds_.end()) {
+        fprintf(stderr, "GameInstance::playSound: Cannot play %s! Sound has not been loaded.\n",
+            sfxName.c_str());
+        return -1;
+    }
     if (audioInitialized_) {
-        assert(soundIndex < sound.size());
         // Adjust the volume of the sound
         // Volume ranges from (0-128)
         // so (volume / 128) = % volume
-        Mix_VolumeChunk(sound[soundIndex], volume);
-        channel = Mix_PlayChannel(-1, sound[soundIndex], loop);
+        Mix_VolumeChunk(lsit->second, volume);
+        activeChannels_[sfxName] = Mix_PlayChannel(-1, lsit->second, loop);
     } else {
         fprintf(stderr, "GameInstance::playSound: Sound uninitialized, not playing any sounds\n");
+        return -1;
     }
-    return channel;
+    return 0;
 }
 
-void GameInstance::playSound(const char *soundPath, int volume) {
-    // Make sure the volume is within the acceptable range
-    assert(volume >= 0);
-    assert(volume <= 128);
-
-    // Load the sound
-    auto soundIndex = loadSound(soundPath);
-
-    // Play the sound
-    playSound(soundIndex, 0, volume);
-}
-
-void GameInstance::changeVolume(int soundIndex, int volume) {
+/**
+ * @brief Change the volume of a loaded sound effect.
+ * @param sfxName The name of the sound effect to modify.
+ * @param volume The volume to set for the sound effect. Range of 0-128.
+ * @return 0 on success, -1 on failure.
+ */
+int GameInstance::changeVolume(string sfxName, int volume) {
+    auto lsit = loadedSounds_.find(sfxName);
+    if (lsit == loadedSounds_.end()) {
+        fprintf(stderr, "GameInstance::changeVolume: Cannot change volume of %s, sound has not been loaded\n",
+            sfxName.c_str());
+        return -1;
+    }
     if (audioInitialized_) {
-        Mix_VolumeChunk(sound[soundIndex], volume);
+        Mix_VolumeChunk(lsit->second, volume);
     } else {
         fprintf(stderr, "GameInstance::playSound: Sound uninitialized, cannot change volume!\n");
+        return -1;
     }
+    return 0;
 }
 
-void GameInstance::stopSound(int channel) {
-    if (channel == -1) {
-        fprintf(stderr, "GameInstance::stopSound: Invalid channel\n");
-        return;
+/**
+ * @brief Stops the sound effect's playback if it is active.
+ * @param sfxName The name of the sfx to stop.
+ * @return 0 on success and the sound is paused, -1 if a failure occurred.
+ * A failure will occur if the sound is not currently active.
+ */
+int GameInstance::stopSound(string sfxName) {
+    /* Check if the sfx is active */
+    auto acit = activeChannels_.find(sfxName);
+    if (acit != activeChannels_.end()) {
+        Mix_HaltChannel(acit->second);
+    } else {
+        fprintf(stderr, "GameInstance::stopSound: %s is not playing\n",
+            sfxName.c_str());
+        return -1;
     }
-    Mix_HaltChannel(channel);
+    return 0;
+    
 }
 
 /*
@@ -177,12 +196,12 @@ GameInstance::~GameInstance() {
     for (int i = 0; i < controllersConnected; i++) {
         SDL_GameControllerClose(gameControllers[i]);
     }
-    for (auto s : sound) {
-        Mix_FreeChunk(s);
+    for (auto &s : loadedSounds_) {
+        Mix_FreeChunk(s.second);
     }
-    sound.clear();
-    soundList_.clear();
     Mix_CloseAudio();
+    loadedSounds_.clear();
+    activeChannels_.clear();
     SDL_GL_DeleteContext(mainContext);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -275,11 +294,11 @@ CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float
 }
 
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
-    unsigned int programId, string objectName) {
+    float charSpacing, uint programId, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createText: Creating TextObject %zu\n", sceneObjects_.size());
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
-        programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
+        charSpacing, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
     sceneObjects_.push_back(text);
     return text.get();
 }
@@ -288,7 +307,7 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
     ObjectAnchor anchor, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     auto sprite = std::make_shared<SpriteObject>(spritePath, position, scale, programId, objectName,
-        ObjectType::GAME_OBJECT_2D, anchor, gfxController_);
+        ObjectType::SPRITE_OBJECT, anchor, gfxController_);
     sceneObjects_.push_back(sprite);
     return sprite.get();
 }
@@ -411,13 +430,10 @@ void GameInstance::initWindow(const configData &config) {
     }
 }
 
-/*
- (void) initAudio uses the pathnames provided in the soundList_ vector to
- initialize the audio inside of SDL mixer. In the case of an error during the
- initialization process, initAudio will call exit() with an error code of -1.
-
- (void) initAudio does not return any values.
-*/
+/**
+ * @brief Attempts to initialize the audio with SDL2-mixer.
+ * @note On success, the audioInitialized_ flag is set to true.
+ */
 void GameInstance::initAudio() {
     audioID = Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512);
     if (audioID < 0) {
@@ -431,22 +447,25 @@ void GameInstance::initAudio() {
             << SDL_GetError() << "\n";
         return;
     }
-    vector<string>::iterator it;
-    int i = 0;
-    for (it = soundList_.begin(); it != soundList_.end(); ++it) {
-        sound.push_back(Mix_LoadWAV((*it).c_str()));
-        if (sound[i++] == NULL) {
-            cerr << "Error: Unable to load wave file: " << soundList_[i] << '\n';
-        }
-    }
     audioInitialized_ = true;
 }
 
-// Returns the index of the newly loaded sound
-uint GameInstance::loadSound(const char *songPath) {
-    assert(songPath != nullptr);
-    sound.push_back(Mix_LoadWAV(songPath));
-    return sound.size() - 1;
+/**
+ * @brief Loads a sound into memory. The loaded sound becomes available in the
+ * loadedSounds_ map.
+ * @param sfxName Friendly name of the sound effect.
+ * @param sfxPath Path to the sound effect file to load.
+ * @return 0 on success, -1 on failure.
+ */
+int GameInstance::loadSound(string sfxName, string sfxPath) {
+    auto sfxData = Mix_LoadWAV(sfxPath.c_str());
+    if (sfxData == nullptr) {
+        fprintf(stderr, "GameInstance::loadSound: Failed to load sfx %s at %s\n",
+            sfxName.c_str(), sfxPath.c_str());
+        return -1;
+    }
+    loadedSounds_[sfxName] = sfxData;
+    return 0;
 }
 
 /*

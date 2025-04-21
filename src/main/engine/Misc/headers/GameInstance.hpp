@@ -14,6 +14,7 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <map>
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
@@ -53,13 +54,13 @@ class GameInstance {
     SDL_Renderer *renderer;
     SDL_Event event;
     SDL_GLContext mainContext;
-    vector<Mix_Chunk *> sound;
     vector<std::shared_ptr<SceneObject>> sceneObjects_;
-    vector<string> soundList_;
     vector<string> vertShaders_;
     vector<string> fragShaders_;
     vector<string> texturePathStage_;
     vector<string> texturePath_;
+    map<string, Mix_Chunk *> loadedSounds_;
+    map<string, int> activeChannels_;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
     vec3 directionalLight;
@@ -67,6 +68,7 @@ class GameInstance {
     int width_, height_;
     int audioID, controllersConnected = 0;
     mutex sceneLock_;
+    mutex soundLock_;
     bool audioInitialized_ = false;
 
     void initWindow(const configData &config);
@@ -75,7 +77,7 @@ class GameInstance {
     void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
 
  public:
-    GameInstance(vector<string> soundList, vector<string> vertShaders,
+    GameInstance(vector<string> vertShaders,
         vector<string> fragShaders, GfxController *gfxController, int width, int height);
     ~GameInstance();
     void startGame(const configData &config);
@@ -83,7 +85,7 @@ class GameInstance {
         string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping);
-    TextObject *createText(string message, vec3 position, float scale, string fontPath, unsigned int programId,
+    TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing, uint programId,
         string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
         ObjectAnchor anchor, string objectName);
@@ -96,11 +98,10 @@ class GameInstance {
     const Uint8 *getKeystate();
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
-    int playSound(unsigned int soundIndex, int loop, int volume);
-    void playSound(const char *soundPath, int volume);
-    uint loadSound(const char *songPath);
-    void changeVolume(int soundIndex, int volume);
-    void stopSound(int channel);
+    int playSound(string sfxName, bool loop, int volume);
+    int loadSound(string sfxName, string sfxPath);
+    int changeVolume(string sfxName, int volume);
+    int stopSound(string sfxName);
     void changeWindowMode(int mode);
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);

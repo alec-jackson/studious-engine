@@ -13,10 +13,10 @@
 #include <string>
 #include <TextObject.hpp>
 
-TextObject::TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
+TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, uint programId,
     string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
-    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), message_  { message },
-    fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) }, textColor_ { vec3(1.0f) } {
+    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), charPadding_ { charSpacing },
+    message_  { message }, fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) }, textColor_ { vec3(1.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -47,7 +47,7 @@ void TextObject::initializeText() {
         fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load font\n");
         throw std::runtime_error("Failed to load font");
     } else {
-        FT_Set_Pixel_Sizes(face, 0, 48);
+        FT_Set_Pixel_Sizes(face, 0, 96);
         for (unsigned char c = 0; c < 128; c++) {
             if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
                 fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load glyph\n");
@@ -83,7 +83,7 @@ void TextObject::initializeText() {
 
 void TextObject::createMessage() {
     auto x = 0, y = 0;
-    auto spacing = 0.5f;
+    auto spacing = 1.0f;  /// @todo Make this adjustable
     // Use textures to create each character as an independent object
     for (auto character : message_) {
         Character ch = characters[character];
@@ -118,7 +118,7 @@ void TextObject::createMessage() {
         gfxController_->enableVertexAttArray(0, 4);
         vaos_.push_back(vao);
         // Update x/y
-        x = w == 0 ? x + static_cast<float>(ch.Advance / 100.0f) : xpos + w;
+        x = w == 0 ? x + static_cast<float>(ch.Advance / 100.0f) : xpos + w + charPadding_;
     }
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);

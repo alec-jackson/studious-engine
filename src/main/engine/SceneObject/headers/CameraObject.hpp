@@ -31,6 +31,7 @@ class CameraObject : public SceneObject {
     inline vec3 getOffset() { return offset_; }
     inline SceneObject *getTarget() { return target_; }
     inline float getAspectRatio() { return aspectRatio_; }
+    inline vector<SceneObject *> getSceneObjects() const { return sceneObjects_; }
 
     // Camera Specific Methods
     void render() override;
