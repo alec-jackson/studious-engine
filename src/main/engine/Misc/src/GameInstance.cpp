@@ -169,7 +169,6 @@ int GameInstance::stopSound(string sfxName) {
         return -1;
     }
     return 0;
-    
 }
 
 /*

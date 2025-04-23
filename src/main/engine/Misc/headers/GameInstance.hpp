@@ -85,8 +85,8 @@ class GameInstance {
         string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping);
-    TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing, uint programId,
-        string objectName);
+    TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing,
+        uint programId, string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
         ObjectAnchor anchor, string objectName);
     UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
