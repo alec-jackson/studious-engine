@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <cstdio>
 #include <game.hpp>
 #ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
@@ -100,8 +99,6 @@ OpenGlGfxController gfxController = OpenGlGfxController();
 #endif
 AnimationController animationController;
 
-double deltaTime = 0.0f;
-
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
 
@@ -140,37 +137,150 @@ int runtime(GameInstance *currentGame) {
     bool isDone = false;
     cout << "Creating camera.\n";
 
-    auto currentCamera = currentGame->createCamera(nullptr, vec3(0), 0.0, 16.0 / 9.0, 4.0, 90.0);
-    auto player = currentGame->createSprite("src/resources/images/JTIconNoBackground.png", vec3(0), 0.5,
-        gfxController.getProgramId(3).get(), ObjectAnchor::BOTTOM_LEFT, "player");
+    /// @todo Make loading textures for objects a little more user friendly
+    // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
+    vector<int> texturePattern = {0, 1, 2, 3};
+    vector<int> texturePatternStage = {0, 0, 0, 0};
 
-    player->createCollider(gfxController.getProgramId(1).get());
+    cout << "Creating Map.\n";
 
-    auto obstacle = currentGame->createSprite("src/resources/images/dot_image.png",
-        vec3(300, 500, 0), 10, gfxController.getProgramId(3).get(), ObjectAnchor::CENTER, "obstacle");
+    auto mapPoly = ModelImport("src/resources/models/map3.obj",
+        texturePathStage,
+        texturePatternStage,
+        gfxController.getProgramId(0).get())
+        .createPolygonFromFile();
 
-    obstacle->splitGrid(5, 4, 24);
-    obstacle->createCollider(gfxController.getProgramId(1).get());
+    auto mapObject = currentGame->createGameObject(&mapPoly,
+        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
 
-    /* Create an animation track for the obstacle */
-    vector<int> animationTrack = {
-        0, 1, 2, 3
-    };
-    animationController.addTrack(
-        obstacle,
-        "one to four",
-        animationTrack,
-        1);
-    animationController.addTrack(
-        obstacle,
-        "all frames",
-        {},
-        12);
-    animationController.playTrack("all frames");
+    cout << "Creating Player\n";
+
+    auto playerPoly = ModelImport(
+        "src/resources/models/Dracula.obj",
+        texturePath,
+        texturePattern,
+        gfxController.getProgramId(0).get())
+        .createPolygonFromFile();
+
+    // Ready the gameObjectInfo for the player object
+    playerRef = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
+        vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
+    playerRef->createCollider(gfxController.getProgramId(1).get());
+
+    cout << "Creating wolf\n";
+
+    auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
+        texturePath,
+        texturePattern,
+        gfxController.getProgramId(0).get())
+        .createPolygonFromFile();
+
+    auto wolfObject = currentGame->createGameObject(&wolfPoly,
+        vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
+
+    // Make the wolf spin :)
+    auto kf = AnimationController::createKeyFrame(
+        UPDATE_ROTATION,        // Rotate
+        5.0f);                 // Spin for 5 seconds
+
+    kf->rotation.desired = vec3(0.0f, 0.0f, 720.0f);
+    auto kf1 = AnimationController::createKeyFrame(
+        UPDATE_ROTATION | UPDATE_POS,   // Rotate and move
+        5.0f);                          // seconds
+
+    kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
+    kf1->pos.desired = wolfObject->getPosition() + vec3(0.07f, 0.0f, 0.05f);
+    animationController.addKeyFrame(wolfObject, kf);
+    animationController.addKeyFrame(wolfObject, kf1);
+
+    wolfObject->createCollider(gfxController.getProgramId(1).get());
+    wolfRef = wolfObject;
+
+    // Configure some in-game text objects
+    auto engineText = currentGame->createText(
+        "Studious Engine 2025",                 // Message
+        vec3(25.0f, 25.0f, 0.0f),               // Position
+        1.0f,                                   // Scale
+        "src/resources/fonts/AovelSans.ttf",    // Font Path
+        gfxController.getProgramId(2).get(),    // ProgramId
+        "studious-text");                       // ObjectName
+
+    auto contactText = currentGame->createText(
+        "Contact",                              // Message
+        vec3(25.0f, 300.0f, 0.0f),              // Position
+        0.7f,                                   // Scale
+        "src/resources/fonts/AovelSans.ttf",    // Font Path
+        gfxController.getProgramId(2).get(),    // ProgramId
+        "contact-text");                        // ObjectName
+
+    pressUText = currentGame->createText(
+        "Press 'U' to attach/detach mouse",
+        vec3(800.0f, 670.0f, 0.0f),
+        0.7f,
+        "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(),
+        "contact-text");
+
+    collDebugText = contactText;
+    collDebugText->setMessage("Contact: False");
+
+    auto fpsText = currentGame->createText("FPS",
+        vec3(25.0f, 670.0f, 0.0f),
+        0.7f,
+        "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(),
+        "fps-text");
+
+    auto testSprite = currentGame->createSprite(
+        "src/resources/images/JTIconNoBackground.png",
+        vec3(1250.0f, 50.0f, 0.0f),
+        0.1f,
+        gfxController.getProgramId(3).get(),
+        ObjectAnchor::CENTER,
+        "test-sprite");
+
+    auto testUi = currentGame->createUi(
+        "src/resources/images/Message Bubble UI.png",   // image path
+        vec3(150.0f, 100.0f, 0.0f),                     // Position
+        0.5f,                                           // Scale
+        100.0f,                                         // Width
+        0.0f,                                           // Height
+        gfxController.getProgramId(4).get(),            // Shader pair
+        ObjectAnchor::CENTER,                           // Anchor
+        "uiBubble");                                    // UI Bubble
+    auto testText = currentGame->createText(
+        "Textbox Example",
+        vec3(45.0f, 155.0f, 0.0f),
+        0.6f,
+        "src/resources/fonts/AovelSans.ttf",
+        gfxController.getProgramId(2).get(),
+        "test-text");
+
+    fps_counter = fpsText;
+    fps_counter->setMessage("FPS: 0");
+
+    auto currentCamera = currentGame->createCamera(playerRef,
+        vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
+    playerRef->setRotation(vec3(0, 0, 0));
+    cout << "currentGameObject tag is " << playerRef->getObjectName()
+        << '\n';
+
+    playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
+    playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
+    playerRef->setScale(0.0062f);
+
     // Add objects to camera
     vector<SceneObject *> targets = {
-        obstacle,
-        player
+        mapObject,
+        playerRef,
+        wolfObject,
+        engineText,
+        contactText,
+        fpsText,
+        pressUText,
+        testSprite,
+        testUi,
+        testText
     };
 
     // Add all objects to active camera
@@ -188,10 +298,10 @@ int runtime(GameInstance *currentGame) {
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
-    // thread rotThread(rotateShape, &currentGameInfo, playerRef);
+    thread rotThread(rotateShape, &currentGameInfo, playerRef);
     mainLoop(&currentGameInfo);
     isDone = true;
-    // rotThread.join();
+    rotThread.join();
     return 0;
 }
 
@@ -205,19 +315,12 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int running = 1;
+    int running = 1, collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
-    auto playerPtr = reinterpret_cast<GameObject2D *>(currentGame->getSceneObject("player"));
-    auto obstaclePtr = reinterpret_cast<GameObject2D *>(currentGame->getSceneObject("obstacle"));
-    float speed = 5.0f;
-    vec3 offset;
-    vec3 newPos;
-    bool eDown = false;
     while (running) {
-        offset = vec3(0);
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
         running = currentGame->isWindowOpen();
@@ -226,25 +329,16 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
+        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
+        string collMessage;
+        if (collision == 1) {
+            collMessage = "Contact: True";
+        } else {
+            collMessage = "Contact: False";
+        }
+        collDebugText->setMessage(collMessage);
         animationController.update();
         end = SDL_GetPerformanceCounter();
-        if (currentGame->getKeystate()[SDL_SCANCODE_W]) offset += vec3(0, speed, 0);
-        if (currentGame->getKeystate()[SDL_SCANCODE_S]) offset -= vec3(0, speed, 0);
-        if (currentGame->getKeystate()[SDL_SCANCODE_D]) offset += vec3(speed, 0, 0);
-        if (currentGame->getKeystate()[SDL_SCANCODE_A]) offset -= vec3(speed, 0, 0);
-        if (currentGame->getKeystate()[SDL_SCANCODE_E] && !eDown) {
-            printf("E pressed!\n");
-            eDown = true;
-            animationController.pauseTrack("obstacle");
-        } else if (!currentGame->getKeystate()[SDL_SCANCODE_E] && eDown) {
-            printf("E released!\n");
-            eDown = false;
-            animationController.playTrack("one to four");
-        }
-        newPos = playerPtr->getPosition(offset);
-        playerPtr->setPosition(newPos);
-        if (currentGame->getCollision2D(playerPtr, obstaclePtr, vec3(0))) printf("CONTACT TRUE\n");
-        // Update player position
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
@@ -257,6 +351,7 @@ int mainLoop(gameInfo* gamein) {
                 sum /= times.size();
                 times.clear();
                 cout << "FPS: " << 1.0 / sum << '\n';
+                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
     }
