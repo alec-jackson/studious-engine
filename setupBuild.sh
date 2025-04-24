@@ -7,6 +7,7 @@ debugBuild=false
 runTests=false
 singleJob=false
 buildAll=false
+installLib=false
 target=studious-3dExampleScene
 while [ $# -ne 0 ]; do
     arg="$1"
@@ -32,6 +33,10 @@ while [ $# -ne 0 ]; do
             ;;
         -s)
             singleJob=true
+            ;;
+        -i)
+            # Installs the library on your system automatically
+            installLib=true
             ;;
         -target)
             # This just modifies the run target, does not affect compilation
@@ -91,6 +96,11 @@ if [ "$singleJob" != true ]; then
 fi
 echo "Building with ${JOBS} threads."
 cmake --build . -j ${JOBS}
+
+if [ "$installLib" == true ]; then
+    echo "Installing studious library files"
+    cmake --install .
+fi
 if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
     tput init
