@@ -145,6 +145,42 @@ void GivenAnAnimationController::TearDown() {
     // Probably do something useful here
 }
 
+class GivenAnAnimationControllerReady : public GivenAnAnimationController, public ::testing::Test {
+ public:
+    void SetUp() override {
+        GivenAnAnimationController::SetUp();
+    }
+    void TearDown() override {
+        GivenAnAnimationController::TearDown();
+    }
+};
+
+/**
+ * @brief Ensures that the AnimationController removes active tracks when their complete sequence time
+ * has elapsed. The completed animation track should leave the animation on the final frame of the track
+ * when it completes.
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenNoLoopAnimationFinished_ThenActiveTrackRemoved) {
+    /* Preparation */
+    // The expected frame should be the last in the track
+    auto expectedFrame = REFERENCE_TRACK.at(REFERENCE_TRACK.size() - 1);
+    auto expectedIdx = REFERENCE_TRACK.size();
+    animationController_.addTrack(spriteObject_.get(), DUMMY_TRACK_NAME, REFERENCE_TRACK, TARGET_FPS, false);
+
+    /* Action */
+    animationController_.playTrack(DUMMY_TRACK_NAME);
+    // The middle frame should appear between 33-66% of the animation's cycle
+    deltaTime = (1.0 / TARGET_FPS) * expectedIdx;
+    animationController_.update();
+
+    /* Validation */
+    // There should be no active tracks at this point
+    auto activeTracks = animationController_.getActiveTracks();
+    EXPECT_TRUE(activeTracks.empty());
+    // The sprite should be left on the final frame when the animation completes
+    EXPECT_EQ(spriteObject_->getCurrentFrame(), expectedFrame);
+}
+
 class GivenAnAnimationControllerPlaybackParam : public GivenAnAnimationController,
     public ::testing::TestWithParam<std::tuple<int, int>> {
  public:
@@ -166,7 +202,7 @@ TEST_P(GivenAnAnimationControllerPlaybackParam, WhenTrackPlayingAndUpdateCalled_
     /* Preparation */
     auto expectedFrame = std::get<0>(GetParam());
     auto expectedIdx = std::get<1>(GetParam());
-    animationController_.addTrack(spriteObject_.get(), DUMMY_TRACK_NAME, REFERENCE_TRACK, TARGET_FPS, false);
+    animationController_.addTrack(spriteObject_.get(), DUMMY_TRACK_NAME, REFERENCE_TRACK, TARGET_FPS, true);
 
     /* Action */
     animationController_.playTrack(DUMMY_TRACK_NAME);

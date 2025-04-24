@@ -471,7 +471,7 @@ bool AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPla
     /* Update timings and current frame */
     tp->currentTime += deltaTime;
     /* Break the update early if loop is enabled */
-    if (!tp->track.get()->loop && tp->currentTime > tp->sequenceTime) {
+    if (!tp->track.get()->loop && tp->currentTime >= tp->sequenceTime) {
         target->setCurrentFrame(tp->track.get()->trackData.at(tp->track.get()->trackData.size() - 1));
         return true;
     }
