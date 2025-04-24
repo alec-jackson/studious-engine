@@ -46,7 +46,7 @@ int getCorner(int vertexIdx) {
     1     4---5
     */
     if (vertexIdx == 0) return 0;
-    if (vertexIdx == 1 || vertexId == 4) return 1;
+    if (vertexIdx == 1 || vertexIdx == 4) return 1;
     if (vertexIdx == 2 || vertexIdx == 3) return 3;
     if (vertexIdx == 5) return 2;
     return -1;
