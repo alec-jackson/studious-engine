@@ -24,25 +24,31 @@ int getCorner(int vertexIdx) {
     // Triangle layout is arbitrary, so these values are essentially just mapped
     /* Triangle topology
 
-    Triangle 1 has corners 0, 1, 2
-    0
-    |\
-    | \
-    |  \
+    Triangle 1 has corners 0, 1, 3
+    0---3
+    |  /
+    | /
+    |/
+    1
+
+    Triangle 2 has corners 1, 2, 3
+        3
+       /|
+      / |
+     /  |
     1---2
 
-    Triangle 2 has corners 0, 2, 3
-    0---3
-     \  |
-      \ |
-       \|
-        2
-
+    These map to the indexes:
+    0---2     3
+    |  /     /|
+    | /     / |
+    |/     /  |
+    1     4---5
     */
-    if (vertexIdx == 0 || vertexIdx == 3) return 0;
-    if (vertexIdx == 1) return 1;
-    if (vertexIdx == 2 || vertexIdx == 4) return 2;
-    if (vertexIdx == 5) return 3;
+    if (vertexIdx == 0) return 0;
+    if (vertexIdx == 1 || vertexId == 4) return 1;
+    if (vertexIdx == 2 || vertexIdx == 3) return 3;
+    if (vertexIdx == 5) return 2;
     return -1;
 }
 
@@ -80,9 +86,9 @@ int stretchTriangle(int index, float horizontalScale, float verticalScale) {
 
     // Apply scale factor depending on location (vertical)
     if (square == 3 || square == 4 || square == 5) {
-        if (corner == 1 || corner == 2) y -= verticalScale;
-    } else if (square == 6 || square == 7 || square == 8) {
-        y -= verticalScale;
+        if (corner == 3 || corner == 0) y += verticalScale;
+    } else if (square == 0 || square == 1 || square == 2) {
+        y += verticalScale;
     } else {
         // Don't do anything here
     }
