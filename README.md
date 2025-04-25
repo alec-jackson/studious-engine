@@ -64,13 +64,13 @@ This started as an expansion of a pong engine we wrote so we didn't properly sep
 
 If you'd like to use it right now you'll probably need to do a fair amount of work on get things working as needed. Although we hope it'll provide a good starting reference for working with OpenGL.
 
-# Installing The Studious Library
+## Installing The Studious Library
 
 The studious library can be installde by simply passing the `-i` argument to the buildScript. This will run cmake --install on your build directory, and add the compiled library and headers to your sysroot. The complete command to execute from the project's directory is:
 
 `./setupBuild.sh -i`
 
-# Studious Template Project
+## Studious Template Project
 
 After installing the studious library on your system, you can clone the template project at https://github.com/Weetsy/studious-template and run its setupBuild script to run an empty base project. You can compile and run this new studious project the same way you build and run the engine example:
 
