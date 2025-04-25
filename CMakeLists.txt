@@ -216,6 +216,8 @@ gtest_discover_tests(gtest_AnimationControllerTests)
 # ======================================== END OF GTESTS ========================================
 endif()
 
+# --------------------------------------- LIBRARY INSTALL --------------------------------------
+
 install(TARGETS ${PROJECT_NAME}
     EXPORT studiousTargets  # Add the target to the export group
     LIBRARY DESTINATION lib
