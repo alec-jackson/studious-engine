@@ -70,6 +70,8 @@ The studious library can be installde by simply passing the `-i` argument to the
 
 `./setupBuild.sh -i`
 
+On MacOS the above command should work fine, but on Linux hosts you may need to run the build script with sudo privileges.
+
 ## Studious Template Project
 
 After installing the studious library on your system, you can clone the template project at https://github.com/Weetsy/studious-template and run its setupBuild script to run an empty base project. You can compile and run this new studious project the same way you build and run the engine example:
