@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <map>
 #include <game.hpp>
 #ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
@@ -41,8 +42,8 @@
  the texture to use).
 */
 // Global Variables, should eventually be moved to a config file
-vector<string> soundList = {
-    "src/resources/sfx/music/endlessNight.wav"
+map<string, string> soundList = {
+    { "bg_music", "src/resources/sfx/music/endlessNight.wav" }
 };  // A list of gameSounds to load
 
 // Lists of embedded/core shaders
@@ -114,7 +115,7 @@ int main(int argc, char **argv) {
         width = 1280;
         height = 720;
     }
-    GameInstance currentGame(soundList, vertShaders, fragShaders, &gfxController, width, height);
+    GameInstance currentGame(vertShaders, fragShaders, &gfxController, width, height);
     currentGame.startGame(config);
     errorNum = runtime(&currentGame);
     return errorNum;
@@ -136,6 +137,13 @@ int runtime(GameInstance *currentGame) {
     struct gameInfo currentGameInfo;
     bool isDone = false;
     cout << "Creating camera.\n";
+
+    // Initialize sfx
+    for (auto sfx : soundList) {
+        currentGame->loadSound(sfx.first, sfx.second);
+    }
+    // Start the background music
+    currentGame->playSound("bg_music", 1, 60);
 
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
@@ -200,24 +208,27 @@ int runtime(GameInstance *currentGame) {
     auto engineText = currentGame->createText(
         "Studious Engine 2025",                 // Message
         vec3(25.0f, 25.0f, 0.0f),               // Position
-        1.0f,                                   // Scale
+        0.5f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
+        5.0f,                                   // Char spacing
         gfxController.getProgramId(2).get(),    // ProgramId
         "studious-text");                       // ObjectName
 
     auto contactText = currentGame->createText(
         "Contact",                              // Message
         vec3(25.0f, 300.0f, 0.0f),              // Position
-        0.7f,                                   // Scale
+        0.35f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
+        0.0f,                                   // Char spacing
         gfxController.getProgramId(2).get(),    // ProgramId
         "contact-text");                        // ObjectName
 
     pressUText = currentGame->createText(
         "Press 'U' to attach/detach mouse",
         vec3(800.0f, 670.0f, 0.0f),
-        0.7f,
+        0.35f,
         "src/resources/fonts/AovelSans.ttf",
+        0.0f,
         gfxController.getProgramId(2).get(),
         "contact-text");
 
@@ -226,8 +237,9 @@ int runtime(GameInstance *currentGame) {
 
     auto fpsText = currentGame->createText("FPS",
         vec3(25.0f, 670.0f, 0.0f),
-        0.7f,
+        0.35f,
         "src/resources/fonts/AovelSans.ttf",
+        0.0f,
         gfxController.getProgramId(2).get(),
         "fps-text");
 
@@ -241,7 +253,7 @@ int runtime(GameInstance *currentGame) {
 
     auto testUi = currentGame->createUi(
         "src/resources/images/Message Bubble UI.png",   // image path
-        vec3(150.0f, 100.0f, 0.0f),                     // Position
+        vec3(150.0f, 145.0f, 0.0f),                     // Position
         0.5f,                                           // Scale
         100.0f,                                         // Width
         0.0f,                                           // Height
@@ -250,9 +262,10 @@ int runtime(GameInstance *currentGame) {
         "uiBubble");                                    // UI Bubble
     auto testText = currentGame->createText(
         "Textbox Example",
-        vec3(45.0f, 155.0f, 0.0f),
-        0.6f,
+        vec3(40.0f, 155.0f, 0.0f),
+        0.3f,
         "src/resources/fonts/AovelSans.ttf",
+        0.0f,
         gfxController.getProgramId(2).get(),
         "test-text");
 

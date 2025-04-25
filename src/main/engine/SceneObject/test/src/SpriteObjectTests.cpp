@@ -68,7 +68,7 @@ class GivenASpriteObject: public ::testing::Test {
 void GivenASpriteObject::SetUp() {
     initMocks();
     spriteObject_ = new SpriteObject(testSpritePath, vec3(0.0f, 0.0f, 0.0f), 1.0f, 1, "testSprite",
-        ObjectType::GAME_OBJECT_2D, ObjectAnchor::CENTER, &mockGfxController_);
+        ObjectType::SPRITE_OBJECT, ObjectAnchor::CENTER, &mockGfxController_);
 }
 
 /**

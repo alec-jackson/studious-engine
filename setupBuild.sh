@@ -72,6 +72,10 @@ if [ "$buildAll" == true ]; then
     echo "Building with Examples"
     ARGS="$ARGS -DEXAMPLES=1"
 fi
+if [ "$runTests" == true ]; then
+    echo "Compiling tests"
+    ARGS="$ARGS -DRUNTEST=1"
+fi
 
 cmake ${ARGS} ..
 

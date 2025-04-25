@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
         width = 1280;
         height = 720;
     }
-    GameInstance currentGame(soundList, vertShaders, fragShaders, &gfxController, width, height);
+    GameInstance currentGame(vertShaders, fragShaders, &gfxController, width, height);
     currentGame.startGame(config);
     errorNum = runtime(&currentGame);
     return errorNum;
@@ -158,12 +158,14 @@ int runtime(GameInstance *currentGame) {
         obstacle,
         "one to four",
         animationTrack,
-        1);
+        1,
+        true);
     animationController.addTrack(
         obstacle,
         "all frames",
         {},
-        12);
+        12,
+        true);
     animationController.playTrack("all frames");
     // Add objects to camera
     vector<SceneObject *> targets = {

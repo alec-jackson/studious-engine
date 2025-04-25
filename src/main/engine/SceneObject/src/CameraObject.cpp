@@ -14,29 +14,38 @@
 #include <vector>
 #include <CameraObject.hpp>
 
-CameraObject::CameraObject(GameObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+CameraObject::CameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
     SceneObject(type, objectName, gfxController), target_ { target }, offset_ { offset }, cameraAngle_ { cameraAngle },
-    aspectRatio_ { aspectRatio }, nearClipping_ { nearClipping }, farClipping_ { farClipping } {}
+    aspectRatio_ { aspectRatio }, nearClipping_ { nearClipping }, farClipping_ { farClipping } {
+        initialTargetPos_ = target != nullptr ? target->getPosition() : vec3(0);
+    }
 
 /// @todo: Figure out what the destructor should do
 CameraObject::~CameraObject() {
 }
 
 void CameraObject::render() {
-    /// @todo Add field to modify target offset
     vec3 eye = vec3(0);
     vec3 center = vec3(0.0f, 0.01f, 0.0f);
-    if (target_ != nullptr) {
-        eye = target_->getPosition(offset_);
-        center = target_->getPosition(center);
-    }
-    mat4 viewMatrix = lookAt(eye, center, vec3(0, 1, 0));
-    mat4 orthographicMatrix = ortho(0.0f, 1280.0f, 0.0f, 720.0f);
+    orthographicMatrix_ = ortho(0.0f, 1280.0f, 0.0f, 720.0f, -1.0f, 1.0f);
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
+    mat4 viewMatrix(1.0f);
+    vpMatrixOrthographic_ = orthographicMatrix_;
+    if (target_ != nullptr) {
+        /* If there is a target, aim the camera at it */
+        eye = target_->getPosition(offset_);
+        center = target_->getPosition(center);
+        /* Sprite Objects will use a simple translation matrix instead of a view matrix */
+        if (target_->type() == SPRITE_OBJECT) {
+            viewMatrix = glm::translate(glm::mat4(1.0f), vec3(-1) * (target_->getPosition() - initialTargetPos_));
+            vpMatrixOrthographic_ = orthographicMatrix_ * viewMatrix;
+        } else {
+            viewMatrix = lookAt(eye, center, vec3(0, 1, 0));
+        }
+    }
     vpMatrixPerspective_ = projectionMatrix * viewMatrix;
-    vpMatrixOrthographic_ = orthographicMatrix;
 }
 
 void CameraObject::update() {
@@ -57,7 +66,10 @@ void CameraObject::update() {
                 (*it)->setVpMatrix(vpMatrixPerspective_);
                 break;
             case UI_OBJECT:
-            case GAME_OBJECT_2D:
+                /* Do not apply view to UI */
+                (*it)->setVpMatrix(orthographicMatrix_);
+                break;
+            case SPRITE_OBJECT:
             case TEXT_OBJECT:
                 (*it)->setVpMatrix(vpMatrixOrthographic_);
                 break;

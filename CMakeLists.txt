@@ -105,7 +105,7 @@ target_link_libraries(${PROJECT_NAME}
 
 set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-if (GTest_FOUND)
+if (GTest_FOUND AND RUNTEST)
 # ======================================== ModelImportTests ========================================
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp

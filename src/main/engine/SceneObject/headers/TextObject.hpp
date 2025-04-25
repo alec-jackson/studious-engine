@@ -33,7 +33,7 @@ class TextObject : public SceneObject {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
-    explicit TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
+    explicit TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, uint programId,
         string objectName, ObjectType type, GfxController *gfxController);
     ~TextObject() override;
 
@@ -41,11 +41,13 @@ class TextObject : public SceneObject {
     void setMessage(string message);
     inline void setCutoff(vec3 cutoff) { cutoff_ = cutoff; }
     inline void setColor(vec3 color) { textColor_ = color; }
+    inline void setCharPadding(float padding) { charPadding_ = padding; }
 
     // Getters
     inline string getMessage() { return this->message_; }
     inline vec3 getCutoff() { return cutoff_; }
     inline vec3 getColor() { return textColor_; }
+    inline float getCharPadding() { return charPadding_; }
 
     // Render method
     void render() override;
@@ -56,6 +58,7 @@ class TextObject : public SceneObject {
     unsigned char *rgbConversion(size_t size, unsigned char *data);
 
  private:
+    float charPadding_;
     string message_;
     string fontPath_;
     vector<unsigned int> vaos_;
