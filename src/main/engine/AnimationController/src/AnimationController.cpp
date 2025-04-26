@@ -35,17 +35,17 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
 /**
  * @brief Creates and adds a track configuration to the internal track store. Adding a track to the
  * track store will not automatically play it. @see AnimationController::playTrack.
- * @param target The SpriteObject to apply the animation track to.
+ * @param target The GameObject2D to apply the animation track to.
  * @param trackName Friendly name of the animation track.
- * @param trackData The actual track data. Each number in the list corresponds to a frame to set in the SpriteObject's
+ * @param trackData The actual track data. Each number in the list corresponds to a frame to set in the GameObject2D's
  * sprite grid. For example, the trackData { 3, 4, 5 } means that the animation track will first display frame 3, then
  * 4 and then 5. The speed at which frames are sequentially switched is determined by the supplied fps rate. An empty
  * vector for trackData is actually legal, and will default to a set of increasing numbers starting from 0 to the
- * number of available frames in the SpriteObject. For a SpriteObject with 4 frames, the default trackData would look
+ * number of available frames in the GameObject2D. For a GameObject2D with 4 frames, the default trackData would look
  * like { 0, 1, 2, 3 }.
  * @param fps The framerate the animation should play back.
  * @param loop Will control whether the animation loops infinitely or ends on last frame.
- * @note There is no trackData bounds checking at this level. Bounds checking occurs at the SpriteObject level.
+ * @note There is no trackData bounds checking at this level. Bounds checking occurs at the GameObject2D level.
  * 
  * There are two internal AnimationController maps that are used to store and play track data.
  * trackStore_ -> Internal map of tracks.
@@ -55,7 +55,7 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
  * will be stopped and replaced with the new track. Memory is managed through smart pointers, so everything should
  * clean up on its own.
  */
-void AnimationController::addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps, bool loop) {
+void AnimationController::addTrack(GameObject2D *target, string trackName, vector<int> trackData, int fps, bool loop) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     if (target == nullptr) {
         fprintf(stderr, "AnimationController::addTrack: target cannot be null.\n");
@@ -459,7 +459,7 @@ int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
 }
 
 /**
- * @brief Updates the currently rendered frame of the target SpriteObject based on framerate of animation track,
+ * @brief Updates the currently rendered frame of the target GameObject2D based on framerate of animation track,
  * deltaTime, and data from the track.
  * @param trackPlayback The active track to update.
  * @return true if the track is complete, false if it's still ongoing.

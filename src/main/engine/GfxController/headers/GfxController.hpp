@@ -111,6 +111,7 @@ class GfxController {
     virtual GfxResult<unsigned int> enableVertexAttArray(unsigned int layout, size_t size) = 0;
     virtual GfxResult<unsigned int> disableVertexAttArray(unsigned int layout) = 0;
     virtual GfxResult<unsigned int> drawTriangles(unsigned int size) = 0;
+    virtual void setBgColor(float r, float g, float b) = 0;
     virtual void clear(GfxClearMode clearMode) = 0;
     virtual void update() = 0;
     virtual void deleteBuffer(unsigned int *bufferId) = 0;

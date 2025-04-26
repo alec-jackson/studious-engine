@@ -36,6 +36,7 @@ include_directories(
   src/main/engine/AnimationController/headers
   src/main/engine/Misc/headers
   src/main/engine/SceneObject/headers
+  src/main/engine/SceneObjectExt/headers
   src/main/misc/headers
 )
 
@@ -71,6 +72,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/CameraObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/engine/SceneObjectExt/src/TrackExt.cpp
   src/main/utilities/src/GifLoader.cpp
   src/main/engine/Misc/src/inputMonitor.cpp
   src/main/engine/Misc/src/physics.cpp
@@ -239,6 +241,7 @@ install (FILES
   src/main/engine/SceneObject/headers/SpriteObject.hpp
   src/main/engine/SceneObject/headers/TextObject.hpp
   src/main/engine/SceneObject/headers/UiObject.hpp
+  src/main/engine/SceneObjectExt/headers/TrackExt.hpp
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlEsGfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp

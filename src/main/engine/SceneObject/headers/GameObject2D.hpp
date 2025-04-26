@@ -15,8 +15,9 @@
 #include <memory>
 #include <SceneObject.hpp>
 #include <ColliderObject.hpp>
+#include <TrackExt.hpp>
 
-class GameObject2D : public SceneObject {
+class GameObject2D : public SceneObject, public TrackExt {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
@@ -31,11 +32,13 @@ class GameObject2D : public SceneObject {
     void render() override;
     void update() override;
     void initializeTextureData();
-    void initializeShaderVars();
+    virtual void initializeShaderVars() = 0;
     void initializeVertexData();
     void createCollider(int programId);
-    std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture);
     void setDimensions(int width, int height);
+
+    // Animation Methods
+    virtual void createAnimation(int width, int height, int frameCount) = 0;
 
  protected:
     string texturePath_;

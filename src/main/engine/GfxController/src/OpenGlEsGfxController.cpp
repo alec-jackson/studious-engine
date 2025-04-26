@@ -727,3 +727,6 @@ void OpenGlEsGfxController::deleteVao(unsigned int *vao) {
     *vao = UINT_MAX;
 }
 
+void OpenGlEsGfxController::setBgColor(float r, float g, float b) {
+    bgColor_ = { r , g, b };
+}

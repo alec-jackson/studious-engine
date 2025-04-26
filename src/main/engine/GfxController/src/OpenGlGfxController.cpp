@@ -262,7 +262,7 @@ void OpenGlGfxController::updateOpenGl() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glCullFace(GL_BACK);
     glDepthFunc(GL_LESS);
-    glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
+    glClearColor(bgColor_[0], bgColor_[1], bgColor_[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -694,7 +694,7 @@ void OpenGlGfxController::deleteVao(unsigned int *vao) {
     }
 }
 
-OpenGlGfxController::OpenGlGfxController() {
+OpenGlGfxController::OpenGlGfxController() : bgColor_ { 0.2f, 0.2f, 0.4f } {
     printf("OpenGlGfxController::OpenGlGfxController\n");
 }
 
@@ -721,4 +721,8 @@ OpenGlGfxController::~OpenGlGfxController() {
     vboList_.clear();
     textureIdList_.clear();
     programIdList_.clear();
+}
+
+void OpenGlGfxController::setBgColor(float r, float g, float b) {
+    bgColor_ = { r, g, b };
 }

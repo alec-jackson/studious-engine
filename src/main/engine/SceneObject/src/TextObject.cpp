@@ -87,10 +87,10 @@ void TextObject::createMessage() {
     // Use textures to create each character as an independent object
     for (auto character : message_) {
         Character ch = characters[character];
-        float xpos = x + ch.Bearing.x * scale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-        float w = ch.Size.x * scale;
-        float h = ch.Size.y * scale;
+        float xpos = x + ch.Bearing.x * scale_;
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale_;
+        float w = ch.Size.x * scale_;
+        float h = ch.Size.y * scale_;
         if (character == '\n') {
             x = 0;
             y -= (h * (spacing + 1.0f));

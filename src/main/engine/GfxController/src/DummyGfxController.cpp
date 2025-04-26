@@ -182,3 +182,8 @@ void DummyGfxController::deleteVao(unsigned int *vao) {
         vao);
 }
 
+void DummyGfxController::setBgColor(float r, float g, float b) {
+    printf("GfxController::setBgColor: %f, %f, %f\n",
+        r, g, b);
+}
+

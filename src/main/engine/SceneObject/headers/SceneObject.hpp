@@ -38,7 +38,7 @@ class SceneObject {
     // Constructors
     inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, float scale, unsigned int programId,
         ObjectType type, GfxController *gfxController):
-            position(position), rotation(rotation), objectName(objectName), scale(scale), programId_(programId),
+            position(position), rotation(rotation), objectName(objectName), scale_(scale), programId_(programId),
             type_ { type }, gfxController_ { gfxController } {}
     inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController):
         objectName { objectName }, type_ { type }, gfxController_ { gfxController } {}
@@ -48,7 +48,7 @@ class SceneObject {
     inline void setPosition(vec3 position) { this->position = position; }
     inline void setRotation(vec3 rotation) { this->rotation = rotation; }
     inline void setResolution(vec3 resolution) { this->resolution_ = resolution; }
-    inline void setScale(float scale) { this->scale = scale ; }
+    inline void setScale(float scale) { this->scale_ = scale ; }
     inline void setRenderPriority(RenderPriority renderPriority) { this->renderPriority_ = renderPriority; }
 
     // Getter methods
@@ -59,7 +59,7 @@ class SceneObject {
     inline vec3 getPosition() const { return this->position; }
     inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
     inline vec3 getRotation() const { return this->rotation; }
-    inline float getScale() const { return this->scale; }
+    inline float getScale() const { return this->scale_; }
     inline RenderPriority getRenderPriority() const { return this->renderPriority_; }
     inline vec3 getResolution() const { return this->resolution_; }
     inline string getObjectName() const { return this->objectName; }
@@ -80,7 +80,7 @@ class SceneObject {
     vec3 resolution_;
 
     const string objectName;
-    float scale;
+    float scale_;
     unsigned int programId_;
     unsigned int vao_;
     ObjectType type_;

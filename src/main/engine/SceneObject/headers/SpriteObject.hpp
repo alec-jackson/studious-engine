@@ -14,7 +14,7 @@
 #include <vector>
 #include <GameObject2D.hpp>
 #include <ColliderObject.hpp>
-#include <Image.hpp>
+#include <TrackExt.hpp>
 
 class SpriteObject : public GameObject2D {
  public:
@@ -24,24 +24,20 @@ class SpriteObject : public GameObject2D {
     ~SpriteObject() override;
 
     // Gfx specific functions
-    void initializeShaderVars();
+    void initializeShaderVars() override;
+    void initializeVertexData();
     void render() override;
     void update() override;
 
-    // Animation Specific Functions
-    void splitGrid(int width, int height, int frameCount);
-
     // Getters
     inline vec3 getTint() { return tint_; }
-    inline uint getBankSize() { return imageBank_.textureIds.size(); }
-    inline uint getCurrentFrame() { return currentFrame_; }
 
     // Setters
     inline void setTint(vec3 tint) { tint_ = tint; }
-    inline void setCurrentFrame(int frame) { currentFrame_ = frame; }
+
+    // AnimationFuncs
+    void createAnimation(int width, int height, int frameCount) override;
 
  private:
     vec3 tint_;
-    Image imageBank_;
-    uint currentFrame_;
 };

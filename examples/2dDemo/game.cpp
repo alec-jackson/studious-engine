@@ -147,7 +147,7 @@ int runtime(GameInstance *currentGame) {
     auto obstacle = currentGame->createSprite("src/resources/images/dot_image.png",
         vec3(300, 500, 0), 10, gfxController.getProgramId(3).get(), ObjectAnchor::CENTER, "obstacle");
 
-    obstacle->splitGrid(5, 4, 24);
+    obstacle->createAnimation(5, 4, 24);
     obstacle->createCollider(gfxController.getProgramId(1).get());
 
     /* Create an animation track for the obstacle */
