@@ -97,14 +97,14 @@ fi
 echo "Building with ${JOBS} threads."
 cmake --build . -j ${JOBS}
 
-if [ "$installLib" == true ]; then
-    echo "Installing studious library files"
-    cmake --install .
-fi
 if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
     tput init
 else
+    if [ "$installLib" == true ]; then
+        echo "Installing studious library files"
+        cmake --install .
+    fi
     if [ "$runTests" == true ]; then
         ctest --output-on-failure
     else
