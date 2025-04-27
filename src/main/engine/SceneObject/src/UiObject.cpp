@@ -90,8 +90,8 @@ void UiObject::initializeVertexData() {
             y = 0.0f;
             break;
         case CENTER:
-            x = -1 * ((textureWidth_) / 2.0f);
-            y = -1 * ((textureHeight_) / 6.0f);
+            x = -1 * ((textureWidth_ * scale_) / 2.0f);
+            y = -1 * ((textureHeight_ * scale_) / 2.0f);
             break;
         case TOP_LEFT:
             y = -1.0f * textureHeight_ / 3.0f;
@@ -102,8 +102,8 @@ void UiObject::initializeVertexData() {
             assert(false);
             break;
     }
-    auto incrementFactorX = (textureWidth_ / 3.0f);
-    auto incrementFactorY = (textureHeight_ / 3.0f);
+    auto incrementFactorX = (textureWidth_ * scale_ / 3.0f);
+    auto incrementFactorY = (textureHeight_ * scale_ / 3.0f);
     // Use textures to create each character as an independent object
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
@@ -138,9 +138,9 @@ void UiObject::render() {
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
-    scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
+    // scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
     // modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
-    modelMat_ = translateMatrix_ * scaleMatrix_;
+    modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);

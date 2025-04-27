@@ -217,9 +217,9 @@ bool GameInstance::isWindowOpen() {
     bool running = true;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT || keystate[SDL_SCANCODE_ESCAPE]) {
-            cout << "Closing now...\n";
-            running = false;
-        }
+        cout << "Closing now...\n";
+        running = false;
+    }
     }
     return running;
 }

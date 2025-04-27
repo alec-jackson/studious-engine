@@ -253,12 +253,12 @@ int runtime(GameInstance *currentGame) {
 
     auto testUi = currentGame->createUi(
         "src/resources/images/Message Bubble UI.png",   // image path
-        vec3(20, 100, 0),                     // Position
+        vec3(150.0f, 145.0f, 0.0f),                     // Position
         0.5f,                                           // Scale
-        200.0f,                                         // Width
+        100.0f,                                         // Width
         0.0f,                                           // Height
         gfxController.getProgramId(4).get(),            // Shader pair
-        ObjectAnchor::BOTTOM_LEFT,                           // Anchor
+        ObjectAnchor::CENTER,                           // Anchor
         "uiBubble");                                    // UI Bubble
     auto testText = currentGame->createText(
         "Textbox Example",
