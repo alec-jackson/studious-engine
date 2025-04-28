@@ -87,6 +87,9 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 # Project include dirs
 
 target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include/studious>
   PUBLIC ${SDL2_INCLUDE_DIRS}
   PUBLIC ${GLEW_INCLUDE_DIRS}
   PUBLIC ${OPENGL_INCLUDE_DIR}
@@ -213,4 +216,44 @@ gtest_discover_tests(gtest_AnimationControllerTests)
 # ======================================== END OF GTESTS ========================================
 endif()
 
-install(TARGETS ${PROJECT_NAME})
+# --------------------------------------- LIBRARY INSTALL --------------------------------------
+
+install(TARGETS ${PROJECT_NAME}
+    EXPORT studiousTargets  # Add the target to the export group
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
+
+install (FILES
+  src/main/utilities/headers/ModelImport.hpp
+  src/main/utilities/headers/Polygon.hpp
+  src/main/common/headers/common.hpp
+  src/main/common/headers/winsup.hpp
+  src/main/engine/SceneObject/headers/CameraObject.hpp
+  src/main/engine/SceneObject/headers/ColliderObject.hpp
+  src/main/engine/SceneObject/headers/GameObject.hpp
+  src/main/engine/SceneObject/headers/GameObject2D.hpp
+  src/main/engine/SceneObject/headers/SceneObject.hpp
+  src/main/engine/SceneObject/headers/SpriteObject.hpp
+  src/main/engine/SceneObject/headers/TextObject.hpp
+  src/main/engine/SceneObject/headers/UiObject.hpp
+  src/main/engine/GfxController/headers/GfxController.hpp
+  src/main/engine/GfxController/headers/OpenGlEsGfxController.hpp
+  src/main/engine/GfxController/headers/OpenGlGfxController.hpp
+  src/main/engine/Misc/headers/game.hpp
+  src/main/engine/Misc/headers/GameInstance.hpp
+  src/main/engine/Misc/headers/Image.hpp
+  src/main/engine/Misc/headers/inputMonitor.hpp
+  src/main/engine/Misc/headers/physics.hpp
+  src/main/misc/headers/config.hpp
+  src/main/engine/AnimationController/headers/AnimationController.hpp
+  DESTINATION include/studious
+)
+
+install(EXPORT studiousTargets
+    FILE studious-config.cmake
+    NAMESPACE studious::
+    DESTINATION lib/cmake/studious
+)
