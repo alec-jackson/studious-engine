@@ -18,7 +18,7 @@
 #include <mutex> // NOLINT
 #include <memory>
 #include <vector>
-#include <GameObject2D.hpp>
+#include <TrackExt.hpp>
 #include <UiObject.hpp>
 #include <TextObject.hpp>
 
@@ -84,7 +84,7 @@ struct TrackConfiguration {
  * @brief Contains a set of tracks for a target object.
  */
 struct TrackStoreEntry {
-    GameObject2D *target;
+    TrackExt *target;
     std::shared_ptr<TrackConfiguration> track;
 };
 
@@ -99,8 +99,8 @@ struct ActiveTrackEntry {
     float sequenceTime;
     float currentTime = 0.0f;
     int currentTrackIdx;
-    GameObject2D *target;
-    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, float sPF, float sT, int cTI, GameObject2D *ta) :
+    TrackExt *target;
+    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, float sPF, float sT, int cTI, TrackExt *ta) :
         track { tr }, secondsPerFrame { sPF }, sequenceTime { sT }, currentTrackIdx { cTI }, target { ta } {};
 };
 
@@ -126,7 +126,7 @@ struct KeyFrames {
 class AnimationController {
  public:
     int addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame);
-    void addTrack(GameObject2D *target, string trackName, vector<int> trackData, int fps, bool loop);
+    void addTrack(TrackExt *target, string trackName, vector<int> trackData, int fps, bool loop);
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateRotation(SceneObject *target, KeyFrame *keyFrame);
@@ -143,6 +143,7 @@ class AnimationController {
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
     void playTrack(string trackName);
     void pauseTrack(string trackName);
+    void removeSceneObject(string objectName);
 
     // Getters for testing
     inline const std::map<string, KeyFrames> &getKeyFrameStore() { return keyFrameStore_; }

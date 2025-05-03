@@ -16,6 +16,7 @@
 #include <memory>
 #include <map>
 #include <atomic>
+#include <queue>
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
@@ -24,6 +25,7 @@
 #include <SpriteObject.hpp>
 #include <UiObject.hpp>
 #include <config.hpp>
+#include <AnimationController.hpp>
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
@@ -51,6 +53,7 @@ class GameInstance {
  private:
     const Uint8 *keystate;
     GfxController *gfxController_;
+    AnimationController *animationController_;
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Event event;
@@ -86,7 +89,7 @@ class GameInstance {
 
  public:
     GameInstance(vector<string> vertShaders,
-        vector<string> fragShaders, GfxController *gfxController, int width, int height);
+        vector<string> fragShaders, GfxController *gfxController, AnimationController *animationController, int width, int height);
     ~GameInstance();
     void startGame(const configData &config);
     GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
@@ -129,4 +132,5 @@ class GameInstance {
     int unlockScene();
     void shutdown();
     bool waitForKeyDown(SDL_Scancode input);
+    inline int isShutDown() { return shutdown_; }
 };

@@ -28,9 +28,9 @@
  (void) startGameInstance does not return any value.
  */
 GameInstance::GameInstance(vector<string> vertShaders,
-        vector<string> fragShaders, GfxController *gfxController, int width, int height)
-        : gfxController_ { gfxController }, vertShaders_ { vertShaders },
-        fragShaders_ { fragShaders }, width_ { width }, height_ { height }, shutdown_ ( 0 ) {
+        vector<string> fragShaders, GfxController *gfxController, AnimationController *animationController,
+        int width, int height) : gfxController_ { gfxController }, animationController_ { animationController },
+        vertShaders_ { vertShaders }, fragShaders_ { fragShaders }, width_ { width }, height_ { height }, shutdown_ ( 0 ) {
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;
@@ -411,6 +411,7 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
 
 int GameInstance::removeSceneObject(string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
+    animationController_->removeSceneObject(objectName);
     // Search for the object by name
     auto objectIt = std::find_if(sceneObjects_.begin(), sceneObjects_.end(),
         [&objectName](std::shared_ptr<SceneObject> obj) {

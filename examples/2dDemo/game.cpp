@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
         width = 1280;
         height = 720;
     }
-    GameInstance currentGame(vertShaders, fragShaders, &gfxController, width, height);
+    GameInstance currentGame(vertShaders, fragShaders, &gfxController, &animationController, width, height);
     currentGame.startGame(config);
     errorNum = runtime(&currentGame);
     return errorNum;

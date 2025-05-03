@@ -18,7 +18,7 @@
 GameObject2D::GameObject2D(string texturePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController),
-    TrackExt(texturePath, gfxController), texturePath_ { texturePath },
+    TrackExt(texturePath, this, gfxController), texturePath_ { texturePath },
     anchor_ { anchor } {
     printf("GameObject2D::GameObject2D: Creating 2D object %s\n", objectName.c_str());
 }

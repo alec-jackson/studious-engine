@@ -36,10 +36,6 @@ class GameObject2D : public SceneObject, public TrackExt {
     void initializeVertexData();
     void createCollider(int programId);
     void setDimensions(int width, int height);
-
-    // Animation Methods
-    virtual void createAnimation(int width, int height, int frameCount) = 0;
-
  protected:
     string texturePath_;
     std::shared_ptr<ColliderObject> collider_;
