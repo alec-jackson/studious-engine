@@ -30,7 +30,7 @@
 GameInstance::GameInstance(vector<string> vertShaders,
         vector<string> fragShaders, GfxController *gfxController, int width, int height)
         : gfxController_ { gfxController }, vertShaders_ { vertShaders },
-        fragShaders_ { fragShaders }, width_ { width }, height_ { height } {
+        fragShaders_ { fragShaders }, width_ { width }, height_ { height }, shutdown_ ( 0 ) {
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;
@@ -192,6 +192,8 @@ void GameInstance::changeWindowMode(int mode) {
 
 GameInstance::~GameInstance() {
     printf("GameInstance::~GameInstance\n");
+    /* We should empty the protected gfx requests queue */
+    runGfxRequests();
     for (int i = 0; i < controllersConnected; i++) {
         SDL_GameControllerClose(gameControllers[i]);
     }
@@ -201,10 +203,22 @@ GameInstance::~GameInstance() {
     Mix_CloseAudio();
     loadedSounds_.clear();
     activeChannels_.clear();
-    SDL_GL_DeleteContext(mainContext);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    shutdown();
     return;
+}
+
+void GameInstance::shutdown() {
+    printf("GameInstance::shutdown %p\n", window);
+    // If we haven't already called shutdown
+    if (window != nullptr) {
+        SDL_GL_DeleteContext(mainContext);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        window = nullptr;
+    }
+    shutdown_ = 1;
+    // Notify condition variables of shutdown
+    inputCv_.notify_all();
 }
 
 /*
@@ -214,14 +228,39 @@ GameInstance::~GameInstance() {
  false is returned.
 */
 bool GameInstance::isWindowOpen() {
-    bool running = true;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT || keystate[SDL_SCANCODE_ESCAPE]) {
-        cout << "Closing now...\n";
-        running = false;
+    return !keystate[SDL_SCANCODE_ESCAPE];
+}
+
+void GameInstance::protectedGfxRequest(std::function<void(void)> req) {
+    printf("GameInstance::protectedGfxRequest: Enter\n");
+    // Obtain the scene lock to add the request
+    std::unique_lock<std::mutex> scopeLock(requestLock_);
+    std::mutex reqLock;
+    reqLock.lock();
+    auto reqCb = [req, &reqLock]() {
+        // Call the request
+        req();
+        // Then unlock the reqLock
+        reqLock.unlock();
+    };
+    // Add the request to the request queue
+    protectedGfxReqs_.push(reqCb);
+    scopeLock.unlock();
+    // Wait for the reqLock to become available
+    printf("GameInstance::protectedGfxRequest: Added request, waiting on lock...\n");
+    reqLock.lock();
+    printf("GameInstance::protectedGfxRequest: Exit\n");
+    return;  // Wakeup thread making call
+}
+
+/* The scene lock should be captured when entering this function */
+void GameInstance::runGfxRequests() {
+    std::unique_lock<std::mutex> scopeLock(requestLock_);
+    while (!protectedGfxReqs_.empty()) {
+        auto cb = protectedGfxReqs_.front();
+        cb();
+        protectedGfxReqs_.pop();
     }
-    }
-    return running;
 }
 
 /*
@@ -237,7 +276,10 @@ bool GameInstance::isWindowOpen() {
  -1 is returned and nothing is rendered.
 */
 int GameInstance::updateObjects() {
+    /* Run requests in the protectedGfxRequest queue */
+    runGfxRequests();
     std::unique_lock<std::mutex> lock(sceneLock_);
+    // Run the protected queue functions here - the scene lock protects it
     if (sceneObjects_.empty()) {
         cerr << "Error: No active GameObjects in the current scene!\n";
         return -1;
@@ -266,7 +308,45 @@ int GameInstance::updateWindow() {
     SDL_GL_SwapWindow(window);
     // Retrieve the current window resolution
     SDL_GetWindowSize(window, &width_, &height_);
+    updateInput();
     return 0;
+}
+
+void GameInstance::updateInput() {
+    SDL_Event event;
+    auto res = SDL_PollEvent(&event);
+    if (res && event.type == SDL_KEYDOWN) {
+        // Lock access to the input queue
+        std::unique_lock<std::mutex> scopeLock(inputLock_);
+        // Let's just use the queue as a mailbox for now
+        if (inputQueue_.empty()) {
+            inputQueue_.push(event.key.keysym.scancode);
+        }
+        // Signal data is available
+        inputCv_.notify_all();
+    }
+}
+
+SDL_Scancode GameInstance::getInput() {
+    auto res = SDL_SCANCODE_UNKNOWN;
+    std::unique_lock<std::mutex> scopeLock(inputLock_);
+    // Check if any items are in the input queue
+    inputCv_.wait(scopeLock, [this]() { return !inputQueue_.empty() || shutdown_; });
+    // Pop the item off of the queue
+    if (!inputQueue_.empty()) {
+        res = inputQueue_.front();
+        inputQueue_.pop();
+    }
+    return res;
+}
+
+bool GameInstance::waitForKeyDown(SDL_Scancode input) {
+    SDL_Scancode curInput = SDL_SCANCODE_UNKNOWN;
+    while (!shutdown_) {
+        curInput = getInput();
+        if (input == curInput) break;
+    }
+    return curInput == input;
 }
 
 GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
@@ -293,11 +373,11 @@ CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float
 }
 
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
-    float charSpacing, uint programId, string objectName) {
+    float charSpacing, int charPoint, uint programId, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createText: Creating TextObject %zu\n", sceneObjects_.size());
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
-        charSpacing, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
+        charSpacing, charPoint, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
     sceneObjects_.push_back(text);
     return text.get();
 }

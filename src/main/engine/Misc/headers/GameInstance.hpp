@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <memory>
 #include <map>
+#include <atomic>
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
@@ -67,14 +68,21 @@ class GameInstance {
     float luminance;
     int width_, height_;
     int audioID, controllersConnected = 0;
+    std::atomic<int> shutdown_;
     mutex sceneLock_;
     mutex soundLock_;
+    mutex requestLock_;
+    mutex inputLock_;
+    std::condition_variable inputCv_;
+    queue<std::function<void(void)>> protectedGfxReqs_;
+    queue<SDL_Scancode> inputQueue_;
     bool audioInitialized_ = false;
 
     void initWindow(const configData &config);
     void initAudio();
     void initController();
     void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
+    void runGfxRequests();
 
  public:
     GameInstance(vector<string> vertShaders,
@@ -86,7 +94,7 @@ class GameInstance {
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing,
-        uint programId, string objectName);
+        int charPoint, uint programId, string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
         ObjectAnchor anchor, string objectName);
     UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
@@ -95,6 +103,7 @@ class GameInstance {
     int getHeight();
     vec3 getResolution();
     vec3 getDirectionalLight();
+    void protectedGfxRequest(std::function<void(void)> req);
     const Uint8 *getKeystate();
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
@@ -114,6 +123,10 @@ class GameInstance {
     bool isWindowOpen();
     int updateObjects();
     int updateWindow();
+    void updateInput();
+    SDL_Scancode getInput();
     int lockScene();
     int unlockScene();
+    void shutdown();
+    bool waitForKeyDown(SDL_Scancode input);
 };

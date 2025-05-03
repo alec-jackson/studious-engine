@@ -13,10 +13,10 @@
 #include <string>
 #include <TextObject.hpp>
 
-TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, uint programId,
+TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint, uint programId,
     string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), charPadding_ { charSpacing },
-    message_  { message }, fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) }, textColor_ { vec3(1.0f) } {
+    message_  { message }, fontPath_ { fontPath }, charPoint_ { charPoint }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) }, textColor_ { vec3(1.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -47,7 +47,7 @@ void TextObject::initializeText() {
         fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load font\n");
         throw std::runtime_error("Failed to load font");
     } else {
-        FT_Set_Pixel_Sizes(face, 0, 96);
+        FT_Set_Pixel_Sizes(face, 0, charPoint_);
         for (unsigned char c = 0; c < 128; c++) {
             if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
                 fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load glyph\n");

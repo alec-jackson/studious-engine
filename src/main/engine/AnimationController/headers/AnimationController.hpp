@@ -45,7 +45,7 @@
 #define CAP_NEG 2
 #define NUM_AXIS 3
 #define ANIMATION_COMPLETE_CB std::function<void(void)> callback
-
+// Address all of the memory ownership problems too
 extern double deltaTime;
 
 template <typename T>
