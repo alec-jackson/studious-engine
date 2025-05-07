@@ -492,7 +492,8 @@ void AnimationController::removeSceneObject(string objectName) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     // Delete active tracks
     auto atit = activeTracks_.find(objectName);
-    activeTracks_.erase(atit);
+    if (atit != activeTracks_.end())
+        activeTracks_.erase(atit);
 
     // Delete track stores
     vector<string> toDelete;
@@ -507,6 +508,7 @@ void AnimationController::removeSceneObject(string objectName) {
     }
     // delete keyframes
     auto kfit = keyFrameStore_.find(objectName);
-    keyFrameStore_.erase(kfit);
+    if (kfit != keyFrameStore_.end())
+        keyFrameStore_.erase(kfit);
 }
 

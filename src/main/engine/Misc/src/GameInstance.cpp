@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <queue>
 #include <GameInstance.hpp>
 
 /*
@@ -221,16 +222,6 @@ void GameInstance::shutdown() {
     inputCv_.notify_all();
 }
 
-/*
- (bool) isWindowOpen checks if the current SDL window is currently open still.
-
- (bool) isWindowOpen returns true when the SDL window is still open, otherwise
- false is returned.
-*/
-bool GameInstance::isWindowOpen() {
-    return !keystate[SDL_SCANCODE_ESCAPE];
-}
-
 void GameInstance::protectedGfxRequest(std::function<void(void)> req) {
     printf("GameInstance::protectedGfxRequest: Enter\n");
     // Obtain the scene lock to add the request
@@ -308,28 +299,33 @@ int GameInstance::updateWindow() {
     SDL_GL_SwapWindow(window);
     // Retrieve the current window resolution
     SDL_GetWindowSize(window, &width_, &height_);
-    updateInput();
     return 0;
 }
 
 void GameInstance::updateInput() {
     SDL_Event event;
     auto res = SDL_PollEvent(&event);
-    if (res && event.type == SDL_KEYDOWN) {
-        // Lock access to the input queue
-        std::unique_lock<std::mutex> scopeLock(inputLock_);
-        // Let's just use the queue as a mailbox for now
-        if (inputQueue_.empty()) {
-            inputQueue_.push(event.key.keysym.scancode);
+    if (res) {
+        if (event.type == SDL_KEYDOWN) {
+            // Lock access to the input queue
+            std::unique_lock<std::mutex> scopeLock(inputLock_);
+            // Let's just use the queue as a mailbox for now
+            if (inputQueue_.empty()) {
+                inputQueue_.push(event.key.keysym.scancode);
+            }
+            // Signal data is available
+            inputCv_.notify_all();
+        } else if (event.type == SDL_QUIT) {
+            shutdown();
         }
-        // Signal data is available
-        inputCv_.notify_all();
     }
 }
 
 SDL_Scancode GameInstance::getInput() {
     auto res = SDL_SCANCODE_UNKNOWN;
+    queue<SDL_Scancode> blankQueue;
     std::unique_lock<std::mutex> scopeLock(inputLock_);
+    inputQueue_.swap(blankQueue);
     // Check if any items are in the input queue
     inputCv_.wait(scopeLock, [this]() { return !inputQueue_.empty() || shutdown_; });
     // Pop the item off of the queue
@@ -407,6 +403,16 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
         if ((*it).get()->getObjectName().compare(objectName) == 0) result = (*it).get();
     }
     return result;
+}
+
+int GameInstance::update() {
+    // Update any controllers here that should be paced with the frame rate
+    int error = 0;
+    error = updateObjects();
+    error |= updateWindow();
+    updateInput();
+    animationController_->update();
+    return error;
 }
 
 int GameInstance::removeSceneObject(string objectName) {

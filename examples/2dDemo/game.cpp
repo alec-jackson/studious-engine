@@ -205,7 +205,6 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int running = 1;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
@@ -216,17 +215,15 @@ int mainLoop(gameInfo* gamein) {
     vec3 offset;
     vec3 newPos;
     bool eDown = false;
-    while (running) {
+    while (!currentGame->isShutDown()) {
         offset = vec3(0);
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
-        running = currentGame->isWindowOpen();
-        error = currentGame->updateObjects();
-        error |= currentGame->updateWindow();
+        if (currentGame->getKeystate()[SDL_SCANCODE_ESCAPE]) currentGame->shutdown();
+        error = currentGame->update();
         if (error) {
             return error;
         }
-        animationController.update();
         end = SDL_GetPerformanceCounter();
         if (currentGame->getKeystate()[SDL_SCANCODE_W]) offset += vec3(0, speed, 0);
         if (currentGame->getKeystate()[SDL_SCANCODE_S]) offset -= vec3(0, speed, 0);

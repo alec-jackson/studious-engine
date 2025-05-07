@@ -333,17 +333,15 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int running = 1, collision = 0;
+    int collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
-    while (running) {
-        /// @todo Move these calls to a separate thread...
+    while (!currentGame->isShutDown()) {
         begin = SDL_GetPerformanceCounter();
-        running = currentGame->isWindowOpen();
-        error = currentGame->updateObjects();
-        error |= currentGame->updateWindow();
+        if (currentGame->getKeystate()[SDL_SCANCODE_ESCAPE]) currentGame->shutdown();
+        error = currentGame->update();
         if (error) {
             return error;
         }
@@ -355,7 +353,6 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
-        animationController.update();
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         if (SHOW_FPS) {  // use sampleSize to find average FPS

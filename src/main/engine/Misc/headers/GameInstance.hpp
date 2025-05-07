@@ -86,6 +86,9 @@ class GameInstance {
     void initController();
     void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
     void runGfxRequests();
+    int updateObjects();
+    int updateWindow();
+    void updateInput();
 
  public:
     GameInstance(vector<string> vertShaders,
@@ -123,10 +126,7 @@ class GameInstance {
     int getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving);
     void setLuminance(float luminanceValue);
     void basicCollision(GameInstance* gameInstance);
-    bool isWindowOpen();
-    int updateObjects();
-    int updateWindow();
-    void updateInput();
+    int update();
     SDL_Scancode getInput();
     int lockScene();
     int unlockScene();
