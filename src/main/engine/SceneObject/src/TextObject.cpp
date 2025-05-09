@@ -4,19 +4,20 @@
  * @brief Implementation of TextObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <cstdio>
 #include <vector>
 #include <string>
 #include <TextObject.hpp>
 
-TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint, uint programId,
-    string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
+TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
+    uint programId, string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), charPadding_ { charSpacing },
-    message_  { message }, fontPath_ { fontPath }, charPoint_ { charPoint }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) }, textColor_ { vec3(1.0f) } {
+    message_  { message }, fontPath_ { fontPath }, charPoint_ { charPoint }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) },
+    textColor_ { vec3(1.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -160,7 +161,7 @@ void TextObject::update() {
 /**
  * @brief Update the text object with a new message. If the incoming message is the same as the existing message, then
  * the message is not updated.
- * 
+ *
  * @param message Incoming message to set TextObject to.
  */
 void TextObject::setMessage(string message) {

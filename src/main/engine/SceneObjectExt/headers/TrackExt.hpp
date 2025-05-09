@@ -7,14 +7,15 @@
 
 #pragma once
 #include <string>
+#include <memory>
 #include <SDL_image.h>
 #include <Image.hpp>
 #include <GfxController.hpp>
 #include <SceneObject.hpp>
 class TrackExt {
  public:
-    inline explicit TrackExt(std::string imagePath, SceneObject *obj, GfxController *gfxController) : imagePath_ { imagePath },
-        obj_ { obj }, extGfx_ { gfxController } {}
+    inline explicit TrackExt(std::string imagePath, SceneObject *obj, GfxController *gfxController) :
+        imagePath_ { imagePath }, obj_ { obj }, extGfx_ { gfxController } {}
 
     // Getters
     inline uint getBankSize() { return imageBank_.textureIds.size(); }

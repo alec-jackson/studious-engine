@@ -1,12 +1,12 @@
 /**
  * @file OpenGlGfxController.cpp
  * @author Christian Galvez
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-01-21
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include <string>
 #include <iostream>
@@ -17,7 +17,7 @@
 
 /**
  * @brief Generates a buffer in the OpenGL context
- * 
+ *
  * @param bufferId unsigned int to store new buffer ID created in OpenGL context
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
@@ -37,7 +37,7 @@ GfxResult<unsigned int> OpenGlGfxController::generateBuffer(unsigned int *buffer
 
 /**
  * @brief Binds a buffer to the current OpenGL context
- * 
+ *
  * @param bufferId ID of buffer to bind (needs to be generated first via generateBuffer)
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
@@ -54,7 +54,7 @@ GfxResult<unsigned int> OpenGlGfxController::bindBuffer(unsigned int bufferId) {
 /**
  * @brief Sends data to the currently bound buffer in the OpenGL context. This transfers data from the application
  * side (c++ studious) to the GPU side (OpenGL in this case).
- * 
+ *
  * @param size Size of the data array
  * @param data The data array write to the OpenGL buffer
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
@@ -74,7 +74,7 @@ GfxResult<unsigned int> OpenGlGfxController::sendBufferData(size_t size, void *d
 
 /**
  * @brief Copies texture data to the currently bound texture buffer.
- * 
+ *
  * @param width of the texture to send
  * @param height of the texture to send
  * @param format of the texture
@@ -110,7 +110,7 @@ GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width,
 
 /**
  * @brief Generates mipmaps for the currently bound texture
- * 
+ *
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
 GfxResult<unsigned int> OpenGlGfxController::generateMipMap() {
@@ -125,7 +125,7 @@ GfxResult<unsigned int> OpenGlGfxController::generateMipMap() {
 
 /**
  * @brief Generates a new texture and writes the new texture ID to the textureId variable passed in.
- * 
+ *
  * @param textureId assigned to newly created texture in OpenGL context.
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
@@ -143,7 +143,7 @@ GfxResult<unsigned int> OpenGlGfxController::generateTexture(unsigned int *textu
 
 /**
  * @brief Gets a programId for a specific index in the programIdList.
- * 
+ *
  * @param index in the programId list
  * @return GfxResult<unsigned int> OK with returned program ID when successful; FAILURE otherwise.
  */
@@ -157,7 +157,7 @@ GfxResult<unsigned int> OpenGlGfxController::getProgramId(uint index) {
 
 /**
  * @brief Compiles shaders and adds them to the programId list for this GfxController.
- * 
+ *
  * @param vertexShader Path to the vertexShader to compile on the system
  * @param fragmentShader Path to the fragmentShader to compile on the system
  * @return GfxResult<unsigned int> OK with the newly created programId; FAILURE otherwise.
@@ -237,7 +237,7 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string vertexShader, st
 
 /**
  * @brief Gets the location of a variable in a shader
- * 
+ *
  * @param programId program to search for variable inside of.
  * @param variableName name of variable to find in shader.
  * @return GfxResult<int> OK with variableId; FAILURE otherwise.
@@ -252,7 +252,7 @@ GfxResult<int> OpenGlGfxController::getShaderVariable(unsigned int programId, co
 /**
  * @brief Has a list of OpenGL specific commands that update once per frame. This is not part of the GfxController
  * interface.
- * 
+ *
  */
 void OpenGlGfxController::updateOpenGl() {
     glEnable(GL_MULTISAMPLE);
@@ -273,7 +273,7 @@ void OpenGlGfxController::updateOpenGl() {
 
 /**
  * @brief Runs through any updates.
- * 
+ *
  */
 void OpenGlGfxController::update() {
     updateOpenGl();
@@ -281,7 +281,7 @@ void OpenGlGfxController::update() {
 
 /**
  * @brief Initialize the OpenGL context.
- * 
+ *
  * @return GfxResult<int> OK if successful; FAILURE otherwise
  */
 GfxResult<int> OpenGlGfxController::init() {
@@ -297,7 +297,7 @@ GfxResult<int> OpenGlGfxController::init() {
 
 /**
  * @brief Sets the current program (shader) in the OpenGL context.
- * 
+ *
  * @param programId created by OpenGL for a set of shaders (program).
  * @return GfxResult<unsigned int> OK if successful, FAILURE if error occurred
  */
@@ -313,7 +313,7 @@ GfxResult<unsigned int> OpenGlGfxController::setProgram(unsigned int programId) 
 
 /**
  * @brief Sends a float to a corresponding variable inside of a program (shader)
- * 
+ *
  * @param variableId of the variable inside of the program to send data to
  * @param data to write to variable
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
@@ -325,7 +325,7 @@ GfxResult<unsigned int> OpenGlGfxController::sendFloat(unsigned int variableId, 
 
 /**
  * @brief Sends a 3D vector of floats to a shader variable
- * 
+ *
  * @param variableId variableId to write data to
  * @param count Number of float vectors to send
  * @param data Raw data to send to GPU
@@ -339,7 +339,7 @@ GfxResult<unsigned int> OpenGlGfxController::sendFloatVector(unsigned int variab
 /**
  * @brief Sets the rendering mode for triangles.
  * @see RenderMode enum for rendering options.
- * 
+ *
  * @param mode method for rendering triangles.
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
@@ -373,7 +373,7 @@ GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) 
 
 /**
  * @brief Sends a 4x4 matrix of floats to the GPU memory for a variable in the current program.
- * 
+ *
  * @param variableId Variable to write data to
  * @param count Number of matrices to write - generally just one
  * @param data Raw data to send over to program variable.
@@ -386,7 +386,7 @@ GfxResult<unsigned int> OpenGlGfxController::sendFloatMatrix(unsigned int variab
 
 /**
  * @brief Sends an integer to the GPU memory for a variable in the current program.
- * 
+ *
  * @param variableId Variable identifier in the current program
  * @param data Raw data to copy to GPU
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
@@ -398,7 +398,7 @@ GfxResult<unsigned int> OpenGlGfxController::sendInteger(unsigned int variableId
 
 /**
  * @brief Binds a texture to the current OpenGL context.
- * 
+ *
  * @param textureId ID of texture to bind.
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
@@ -419,7 +419,7 @@ GfxResult<unsigned int> OpenGlGfxController::bindTexture(unsigned int textureId)
 /**
  * @brief Binds a VAO object in the current OpenGL context
  * @note The name of this method will most likely change other GFX backends are added.
- * 
+ *
  * @param vao VAO ID to bind
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
@@ -436,11 +436,11 @@ GfxResult<unsigned int> OpenGlGfxController::bindVao(unsigned int vao) {
 
 /**
  * @brief Enables/Disables an OpenGL capability in the current context.
- * 
+ *
  *        Usage: setFeature(GL_CULL_FACE, true)
- * 
+ *
  * will enable the GL_CULL_FACE capability.
- * 
+ *
  * @param capabilityId ID of the capability to toggle on/off.
  * @param enabled Whether or not to enable/disable the capability
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
@@ -467,7 +467,7 @@ GfxResult<unsigned int> OpenGlGfxController::setCapability(GfxCapability capabil
 
 /**
  * @brief Initializes a VAO object
- * 
+ *
  * @param vao to initialize
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
@@ -487,7 +487,7 @@ GfxResult<unsigned int> OpenGlGfxController::initVao(unsigned int *vao) {
 
 /**
  * @brief Deletes textures from the OpenGL context.
- * 
+ *
  * @param tId texture ID to delete in the OpenGL context.
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
@@ -504,7 +504,7 @@ GfxResult<unsigned int> OpenGlGfxController::deleteTextures(unsigned int *tId) {
 
 /**
  * @brief Updates a VBO buffer with a set of vertices
- * 
+ *
  * @param vertices Vector of vertex data to copy to VBO object
  * @param vbo identifier for the buffer to write data into
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
@@ -523,7 +523,7 @@ GfxResult<unsigned int> OpenGlGfxController::updateBufferData(const vector<float
 
 /**
  * @brief Sets a texture parameter for the texture currently bound in the OpenGL context
- * 
+ *
  * @param param parameter to update @see TexParam in GfxController
  * @param val value to set for the given parameter
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
@@ -585,7 +585,7 @@ GfxResult<unsigned int> OpenGlGfxController::setTexParam(TexParam param, TexVal 
 
 /**
  * @brief Enables a vertex attribute array and configures the vertex attribute pointer
- * 
+ *
  * @param layout The layout set in the OpenGL shader
  * @param size The per-object size. A 3D vertex would have a size of 3, because each point is made of 3 floats
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
@@ -609,7 +609,7 @@ GfxResult<unsigned int> OpenGlGfxController::enableVertexAttArray(unsigned int l
 
 /**
  * @brief Disables a vertex attribute array in the OpenGL context.
- * 
+ *
  * @param layout The layout of the vertex attribute array to disable in the current program.
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
@@ -625,7 +625,7 @@ GfxResult<unsigned int> OpenGlGfxController::disableVertexAttArray(unsigned int 
 
 /**
  * @brief Draws triangles using currently bound textures/buffers.
- * 
+ *
  * @param size The number of vertices to render
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
@@ -642,7 +642,7 @@ GfxResult<unsigned int> OpenGlGfxController::drawTriangles(unsigned int size) {
 /**
  * @brief Clears buffers in the OpenGL context. Common uses are COLOR buffers (framebuffer) or
  * DEPTH buffers.
- * 
+ *
  * @param clearMode what should be cleared @see GfxClearMode
  */
 void OpenGlGfxController::clear(GfxClearMode clearMode) {
@@ -664,7 +664,7 @@ void OpenGlGfxController::clear(GfxClearMode clearMode) {
 
 /**
  * @brief Deletes a VBO object
- * 
+ *
  * @param bufferId pointer to VBO ID of buffer to delete
  */
 void OpenGlGfxController::deleteBuffer(unsigned int *bufferId) {
@@ -680,7 +680,7 @@ void OpenGlGfxController::deleteBuffer(unsigned int *bufferId) {
 
 /**
  * @brief Deletes a VAO object
- * 
+ *
  * @param vao pointer to VAO ID of VAO to delete
  */
 void OpenGlGfxController::deleteVao(unsigned int *vao) {

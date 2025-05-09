@@ -4,9 +4,9 @@
  * @brief Implementation of gameInstance
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <cstdio>
 #include <iostream>
@@ -31,7 +31,8 @@
 GameInstance::GameInstance(vector<string> vertShaders,
         vector<string> fragShaders, GfxController *gfxController, AnimationController *animationController,
         int width, int height) : gfxController_ { gfxController }, animationController_ { animationController },
-        vertShaders_ { vertShaders }, fragShaders_ { fragShaders }, width_ { width }, height_ { height }, shutdown_ ( 0 ) {
+        vertShaders_ { vertShaders }, fragShaders_ { fragShaders }, width_ { width }, height_ { height },
+        shutdown_(0) {
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;

@@ -4,9 +4,9 @@
  * @brief SpriteObject is a SceneObject; can be rendered by a CameraObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #pragma once
@@ -36,6 +36,7 @@ class GameObject2D : public SceneObject, public TrackExt {
     void initializeVertexData();
     void createCollider(int programId);
     void setDimensions(int width, int height);
+
  protected:
     string texturePath_;
     std::shared_ptr<ColliderObject> collider_;

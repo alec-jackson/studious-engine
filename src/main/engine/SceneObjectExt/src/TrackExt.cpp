@@ -5,25 +5,27 @@
  * @copyright Copyright (c) 2025
  */
 
-#include <memory>
 #include <TrackExt.hpp>
+#include <assert.h>
+#include <memory>
+#include <cstdio>
 #include <GfxController.hpp>
 #include <SDL_image.h>
-#include <assert.h>
+
 
 /**
  * @brief Splits the sprite grid image into multiple equally sized frames. Re-opens the sprite and creates a texture
  * for each frame inside of the sprite grid. Creates frames in a sprite grid in sequential order from top left to
  * bottom right. Will assert if the dimensions of the image will not work.
- * 
+ *
  * If any asserts occur when running this function then something about the passed in image is bad. When this function
  * is called, the SpriteObject will no longer render itself as the passed in image. Instead, by default it will render
  * the first frame in the sprite grid and re-size the object itself to the dimensions of the first frame.
- * 
+ *
  * The image's width must be perfectly divisible by the width of each frame. The same is true for the height. The passed
  * in frameCount must also be less than or equal to the number of possible frames in the image given the width and height
  * of each frame.
- * 
+ *
  * @param width Of each frame in the sprite grid.
  * @param height Of each frame in the sprite grid.
  * @param frameCount The number of frames to pull from the sprite grid.
@@ -96,7 +98,7 @@ void TrackExt::splitGrid(int width, int height, int frameCount) {
 
 /**
  * @brief Tightly packs texture data stored in an SDL_Surface to remove 4-byte alignment.
- * 
+ *
  * @param texture Valid SDL_Surface containing image data.
  * @return std::shared_ptr<uint8_t[]> Buffer containing tightly packed pixel data.
  */

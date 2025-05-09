@@ -4,9 +4,9 @@
  * @brief GameInstance class contains a current scene to render GameObjects in
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #pragma once
@@ -92,7 +92,8 @@ class GameInstance {
 
  public:
     GameInstance(vector<string> vertShaders,
-        vector<string> fragShaders, GfxController *gfxController, AnimationController *animationController, int width, int height);
+        vector<string> fragShaders, GfxController *gfxController, AnimationController *animationController, int width,
+        int height);
     ~GameInstance();
     void startGame(const configData &config);
     GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,

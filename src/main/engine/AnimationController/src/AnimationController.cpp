@@ -4,9 +4,9 @@
  * @brief Implementation for Animation Controller
  * @version 0.1
  * @date 2024-10-20
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #include <vector>
@@ -46,7 +46,7 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
  * @param fps The framerate the animation should play back.
  * @param loop Will control whether the animation loops infinitely or ends on last frame.
  * @note There is no trackData bounds checking at this level. Bounds checking occurs at the TrackExt level.
- * 
+ *
  * There are two internal AnimationController maps that are used to store and play track data.
  * trackStore_ -> Internal map of tracks.
  * activeTracks_ -> This is a map of object names to ActiveTrackEntry. An ActiveTrackEntry is just playback information
@@ -501,7 +501,7 @@ void AnimationController::removeSceneObject(string objectName) {
         if (entry.second.target->getObj()->getObjectName().compare(objectName) == 0) {
             toDelete.push_back(entry.first);
         }
-    };
+    }
     for (auto entry : toDelete) {
         auto tsit = trackStore_.find(entry);
         trackStore_.erase(tsit);
@@ -511,4 +511,3 @@ void AnimationController::removeSceneObject(string objectName) {
     if (kfit != keyFrameStore_.end())
         keyFrameStore_.erase(kfit);
 }
-

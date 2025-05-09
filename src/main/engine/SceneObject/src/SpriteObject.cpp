@@ -4,9 +4,9 @@
  * @brief Implementation for SpriteObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <string>
 #include <cstdio>
