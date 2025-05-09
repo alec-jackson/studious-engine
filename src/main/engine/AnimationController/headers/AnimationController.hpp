@@ -143,6 +143,10 @@ class AnimationController {
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
     void playTrack(string trackName);
     void pauseTrack(string trackName);
+    /**
+    * @brief Removes a scene object from all track and key frame stores in the AnimationController.
+    * @param objectName Name of the object to remove from the AnimationController.
+    */
     void removeSceneObject(string objectName);
 
     // Getters for testing

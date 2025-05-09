@@ -29,10 +29,10 @@ const int INDEX_SHIFT = 1;
 const char *testSpritePath = "../src/resources/images/test_image.png";
 /**
  * @brief Launches google test suite defined in file
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -72,7 +72,7 @@ class GivenAnAnimationController {
 /**
  * @brief Initializes mocks for the GfxController. Most mocks just define default behavior, but
  * the EXPECT_CALL mocks will capture generated frame data from the SpriteObject.
- * 
+ *
  */
 void GivenAnAnimationController::initMocks() {
     // Set up the mock GfxController
@@ -138,7 +138,7 @@ void GivenAnAnimationController::SetUp() {
         ObjectAnchor::TOP_LEFT, &mockGfxController_);
 
     /* Call split grid on the sprite object */
-    spriteObject_->splitGrid(width, height, numFrames);
+    spriteObject_->createAnimation(width, height, numFrames);
 }
 
 void GivenAnAnimationController::TearDown() {
@@ -316,4 +316,3 @@ TEST_F(GivenAnAnimationControllerToTestRunning, WhenPausedInMiddleOfPlayback_The
     /* Validation - Make sure track is where it left off */
     validateActiveTracks(1, TrackState::RUNNING, INDEX_SHIFT * framesPassed);
 }
-

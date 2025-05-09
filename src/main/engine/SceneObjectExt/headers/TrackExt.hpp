@@ -28,7 +28,6 @@ class TrackExt {
      virtual void createAnimation(int width, int height, int frameCount) = 0;
  protected:
     void splitGrid(int width, int height, int frameCount);
-    std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture);
     Image imageBank_;
     uint currentFrame_;
     std::string imagePath_;

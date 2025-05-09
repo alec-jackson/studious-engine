@@ -4,12 +4,13 @@
  * @brief Image class definition for storing image data
  * @version 0.1
  * @date 2024-10-20
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 #include <vector>
+#include <SDL2/SDL_image.h>
 
 struct Image {
     /* Constraints across all image resolutions */
@@ -19,3 +20,5 @@ struct Image {
     /* textureIds for each frame */
     std::vector<unsigned int> textureIds;
 };
+
+std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture);
