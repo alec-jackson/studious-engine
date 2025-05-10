@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
         width = 1280;
         height = 720;
     }
-    GameInstance currentGame(vertShaders, fragShaders, &gfxController, width, height);
+    GameInstance currentGame(vertShaders, fragShaders, &gfxController, &animationController, width, height);
     currentGame.startGame(config);
     errorNum = runtime(&currentGame);
     return errorNum;
@@ -147,7 +147,7 @@ int runtime(GameInstance *currentGame) {
     auto obstacle = currentGame->createSprite("src/resources/images/dot_image.png",
         vec3(300, 500, 0), 10, gfxController.getProgramId(3).get(), ObjectAnchor::CENTER, "obstacle");
 
-    obstacle->splitGrid(5, 4, 24);
+    obstacle->createAnimation(5, 4, 24);
     obstacle->createCollider(gfxController.getProgramId(1).get());
 
     /* Create an animation track for the obstacle */
@@ -205,7 +205,6 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int running = 1;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
@@ -216,17 +215,15 @@ int mainLoop(gameInfo* gamein) {
     vec3 offset;
     vec3 newPos;
     bool eDown = false;
-    while (running) {
+    while (!currentGame->isShutDown()) {
         offset = vec3(0);
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
-        running = currentGame->isWindowOpen();
-        error = currentGame->updateObjects();
-        error |= currentGame->updateWindow();
+        if (currentGame->getKeystate()[SDL_SCANCODE_ESCAPE]) currentGame->shutdown();
+        error = currentGame->update();
         if (error) {
             return error;
         }
-        animationController.update();
         end = SDL_GetPerformanceCounter();
         if (currentGame->getKeystate()[SDL_SCANCODE_W]) offset += vec3(0, speed, 0);
         if (currentGame->getKeystate()[SDL_SCANCODE_S]) offset -= vec3(0, speed, 0);

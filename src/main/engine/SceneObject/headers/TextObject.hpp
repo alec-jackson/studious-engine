@@ -32,9 +32,8 @@ typedef struct Character {
 class TextObject : public SceneObject {
  public:
     // Constructors
-    /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
-    explicit TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, uint programId,
-        string objectName, ObjectType type, GfxController *gfxController);
+    explicit TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
+        uint programId, string objectName, ObjectType type, GfxController *gfxController);
     ~TextObject() override;
 
     // Setters
@@ -68,6 +67,8 @@ class TextObject : public SceneObject {
     unsigned int modelMatId_;
     unsigned int cutoffId_;
     unsigned int projectionId_;
+
+    int charPoint_;
 
     mat4 modelMat_;
     vec3 cutoff_;

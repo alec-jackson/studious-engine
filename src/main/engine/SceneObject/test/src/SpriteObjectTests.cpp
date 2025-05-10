@@ -4,9 +4,9 @@
  * @brief Test suite for SpriteObject functions.
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <gtest/gtest.h>
 #include <vector>
@@ -24,10 +24,10 @@ const unsigned int dummyVao = 0xBEEF;
 const char *testSpritePath = "../src/resources/images/test_image.png";
 /**
  * @brief Launches google test suite defined in file
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -81,7 +81,7 @@ void GivenASpriteObject::TearDown() {
 /**
  * @brief Initializes mocks for the GfxController. Most mocks just define default behavior, but
  * the EXPECT_CALL mocks will capture generated frame data from the SpriteObject.
- * 
+ *
  */
 void GivenASpriteObject::initMocks() {
     // Set up the mock GfxController
@@ -144,7 +144,7 @@ void GivenASpriteObject::initMocks() {
  */
 TEST_F(GivenASpriteObject, WhenSplitGridCalled_ThenImagesSplitSuccessfully) {
     /* Preparation/Action */
-    spriteObject_->splitGrid(width, height, numFrames);
+    spriteObject_->createAnimation(width, height, numFrames);
 
     /* Validation */
     auto frameSize = width * height * bytesPerPixel;
@@ -155,4 +155,3 @@ TEST_F(GivenASpriteObject, WhenSplitGridCalled_ThenImagesSplitSuccessfully) {
         EXPECT_EQ(0, result);
     }
 }
-

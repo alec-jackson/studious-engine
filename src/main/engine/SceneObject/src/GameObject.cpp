@@ -41,7 +41,7 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
             hasTexture.push_back(1);  // Texture found for obj i
         }
     }
-    scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
+    scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
     translateMatrix_ = glm::translate(mat4(1.0f), position);
     rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
@@ -183,7 +183,7 @@ void GameObject::render() {
                 vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
                 vec3(0, 0, 1));
 
-        scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
+        scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
         auto modelMatrix = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
         // Send our shared variables over to our program (shader)
         gfxController_->sendFloat(luminanceId, luminance);

@@ -4,9 +4,9 @@
  * @brief Global animation controller for SceneObjects
  * @version 0.1
  * @date 2024-10-20
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #pragma once
@@ -18,7 +18,7 @@
 #include <mutex> // NOLINT
 #include <memory>
 #include <vector>
-#include <SpriteObject.hpp>
+#include <TrackExt.hpp>
 #include <UiObject.hpp>
 #include <TextObject.hpp>
 
@@ -84,7 +84,7 @@ struct TrackConfiguration {
  * @brief Contains a set of tracks for a target object.
  */
 struct TrackStoreEntry {
-    SpriteObject *target;
+    TrackExt *target;
     std::shared_ptr<TrackConfiguration> track;
 };
 
@@ -99,8 +99,8 @@ struct ActiveTrackEntry {
     float sequenceTime;
     float currentTime = 0.0f;
     int currentTrackIdx;
-    SpriteObject *target;
-    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, float sPF, float sT, int cTI, SpriteObject *ta) :
+    TrackExt *target;
+    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, float sPF, float sT, int cTI, TrackExt *ta) :
         track { tr }, secondsPerFrame { sPF }, sequenceTime { sT }, currentTrackIdx { cTI }, target { ta } {};
 };
 
@@ -126,7 +126,7 @@ struct KeyFrames {
 class AnimationController {
  public:
     int addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame);
-    void addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps, bool loop);
+    void addTrack(TrackExt *target, string trackName, vector<int> trackData, int fps, bool loop);
     void update();
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateRotation(SceneObject *target, KeyFrame *keyFrame);
@@ -143,7 +143,11 @@ class AnimationController {
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
     void playTrack(string trackName);
     void pauseTrack(string trackName);
-
+    /**
+     * @brief Removes a scene object from all track and key frame stores in the AnimationController.
+     * @param objectName Name of the object to remove from the AnimationController.
+     */
+    void removeSceneObject(string objectName);
     // Getters for testing
     inline const std::map<string, KeyFrames> &getKeyFrameStore() { return keyFrameStore_; }
     inline const std::map<string, TrackStoreEntry> &getTrackStore() { return trackStore_; }

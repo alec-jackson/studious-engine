@@ -10,6 +10,7 @@ engineExample
 engineExample.xcodeproj/*
 *.log
 studious-*ExampleScene
+.cache
 
 # Cmake Temp Files #
 

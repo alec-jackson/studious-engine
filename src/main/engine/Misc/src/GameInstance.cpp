@@ -4,15 +4,17 @@
  * @brief Implementation of gameInstance
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
+#include <condition_variable>
 #include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <memory>
+#include <queue>
 #include <GameInstance.hpp>
 
 /*
@@ -28,9 +30,10 @@
  (void) startGameInstance does not return any value.
  */
 GameInstance::GameInstance(vector<string> vertShaders,
-        vector<string> fragShaders, GfxController *gfxController, int width, int height)
-        : gfxController_ { gfxController }, vertShaders_ { vertShaders },
-        fragShaders_ { fragShaders }, width_ { width }, height_ { height } {
+        vector<string> fragShaders, GfxController *gfxController, AnimationController *animationController,
+        int width, int height) : gfxController_ { gfxController }, animationController_ { animationController },
+        vertShaders_ { vertShaders }, fragShaders_ { fragShaders }, width_ { width }, height_ { height },
+        shutdown_(0) {
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;
@@ -192,6 +195,8 @@ void GameInstance::changeWindowMode(int mode) {
 
 GameInstance::~GameInstance() {
     printf("GameInstance::~GameInstance\n");
+    /* We should empty the protected gfx requests queue */
+    runGfxRequests();
     for (int i = 0; i < controllersConnected; i++) {
         SDL_GameControllerClose(gameControllers[i]);
     }
@@ -201,27 +206,60 @@ GameInstance::~GameInstance() {
     Mix_CloseAudio();
     loadedSounds_.clear();
     activeChannels_.clear();
-    SDL_GL_DeleteContext(mainContext);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    shutdown();
     return;
 }
 
-/*
- (bool) isWindowOpen checks if the current SDL window is currently open still.
-
- (bool) isWindowOpen returns true when the SDL window is still open, otherwise
- false is returned.
-*/
-bool GameInstance::isWindowOpen() {
-    bool running = true;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT || keystate[SDL_SCANCODE_ESCAPE]) {
-            cout << "Closing now...\n";
-            running = false;
-        }
+void GameInstance::shutdown() {
+    if (isShutDown()) return;
+    printf("GameInstance::shutdown %p\n", window);
+    // If we haven't already called shutdown
+    if (window != nullptr) {
+        SDL_GL_DeleteContext(mainContext);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        window = nullptr;
     }
-    return running;
+    // Complete all protectedGfxRequests
+    runGfxRequests();
+    shutdown_ = 1;
+    // Notify condition variables of shutdown
+    inputCv_.notify_all();
+    progressCv_.notify_all();
+}
+
+bool GameInstance::protectedGfxRequest(std::function<void(void)> req) {
+    // Do nothing when we shut down
+    if (isShutDown()) return false;
+    printf("GameInstance::protectedGfxRequest: Enter\n");
+    // Obtain the scene lock to add the request
+    std::unique_lock<std::mutex> scopeLock(requestLock_);
+    std::condition_variable cv;
+    std::atomic<int> done = 0;
+    auto reqCb = [req, &done, &cv]() {
+        // Call the request
+        req();
+        // Set the done flag and signal completion
+        done = 1;
+        cv.notify_all();
+    };
+    // Add the request to the request queue
+    protectedGfxReqs_.push(reqCb);
+    // Wait for the reqLock to become available
+    printf("GameInstance::protectedGfxRequest: Added request, waiting for completion...\n");
+    cv.wait(scopeLock, [&done, this]() { return done == 1 || isShutDown(); });
+    printf("GameInstance::protectedGfxRequest: Exit\n");
+    return done == 1;  // Wakeup thread making call
+}
+
+/* The scene lock should be captured when entering this function */
+void GameInstance::runGfxRequests() {
+    std::unique_lock<std::mutex> scopeLock(requestLock_);
+    while (!protectedGfxReqs_.empty()) {
+        auto cb = protectedGfxReqs_.front();
+        cb();
+        protectedGfxReqs_.pop();
+    }
 }
 
 /*
@@ -237,20 +275,19 @@ bool GameInstance::isWindowOpen() {
  -1 is returned and nothing is rendered.
 */
 int GameInstance::updateObjects() {
+    /* Run requests in the protectedGfxRequest queue */
+    runGfxRequests();
     std::unique_lock<std::mutex> lock(sceneLock_);
+    // Run the protected queue functions here - the scene lock protects it
     if (sceneObjects_.empty()) {
         cerr << "Error: No active GameObjects in the current scene!\n";
         return -1;
     }
     gfxController_->update();
     // Update cameras
-    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
-        if ((*it).get()->type() == ObjectType::CAMERA_OBJECT) {
-            CameraObject *cObj = static_cast<CameraObject *>((*it).get());
-            // Send the current screen resolution to the camera
-            cObj->setResolution(this->getResolution());
-            cObj->update();
-        }
+    for (auto camera : cameras_) {
+        camera->setResolution(this->getResolution());
+        camera->update();
     }
     return 0;
 }
@@ -267,6 +304,49 @@ int GameInstance::updateWindow() {
     // Retrieve the current window resolution
     SDL_GetWindowSize(window, &width_, &height_);
     return 0;
+}
+
+void GameInstance::updateInput() {
+    SDL_Event event;
+    auto res = SDL_PollEvent(&event);
+    if (res) {
+        if (event.type == SDL_KEYDOWN) {
+            // Lock access to the input queue
+            std::unique_lock<std::mutex> scopeLock(inputLock_);
+            // Let's just use the queue as a mailbox for now
+            if (inputQueue_.empty()) {
+                inputQueue_.push(event.key.keysym.scancode);
+            }
+            // Signal data is available
+            inputCv_.notify_all();
+        } else if (event.type == SDL_QUIT) {
+            shutdown();
+        }
+    }
+}
+
+SDL_Scancode GameInstance::getInput() {
+    auto res = SDL_SCANCODE_UNKNOWN;
+    queue<SDL_Scancode> blankQueue;
+    std::unique_lock<std::mutex> scopeLock(inputLock_);
+    inputQueue_.swap(blankQueue);
+    // Check if any items are in the input queue
+    inputCv_.wait(scopeLock, [this]() { return !inputQueue_.empty() || shutdown_; });
+    // Pop the item off of the queue
+    if (!inputQueue_.empty()) {
+        res = inputQueue_.front();
+        inputQueue_.pop();
+    }
+    return res;
+}
+
+bool GameInstance::waitForKeyDown(SDL_Scancode input) {
+    SDL_Scancode curInput = SDL_SCANCODE_UNKNOWN;
+    while (!shutdown_) {
+        curInput = getInput();
+        if (input == curInput) break;
+    }
+    return curInput == input;
 }
 
 GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
@@ -288,16 +368,16 @@ CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float
     auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
     auto gameCamera = std::make_shared<CameraObject>(target, offset, cameraAngle,
         aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
-    sceneObjects_.push_back(gameCamera);
+    cameras_.push_back(gameCamera);
     return gameCamera.get();
 }
 
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
-    float charSpacing, uint programId, string objectName) {
+    float charSpacing, int charPoint, uint programId, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createText: Creating TextObject %zu\n", sceneObjects_.size());
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
-        charSpacing, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
+        charSpacing, charPoint, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
     sceneObjects_.push_back(text);
     return text.get();
 }
@@ -329,8 +409,19 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
     return result;
 }
 
+int GameInstance::update() {
+    // Update any controllers here that should be paced with the frame rate
+    int error = 0;
+    error = updateObjects();
+    error |= updateWindow();
+    updateInput();
+    animationController_->update();
+    return error;
+}
+
 int GameInstance::removeSceneObject(string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
+    animationController_->removeSceneObject(objectName);
     // Search for the object by name
     auto objectIt = std::find_if(sceneObjects_.begin(), sceneObjects_.end(),
         [&objectName](std::shared_ptr<SceneObject> obj) {
@@ -341,17 +432,10 @@ int GameInstance::removeSceneObject(string objectName) {
         fprintf(stderr, "GameInstance::removeSceneObject: Not found (%s)\n",
             objectName.c_str());
         return -1;
-    } else {
-        // This could be optimized a bit better - remove scene object from all cameras if found
-        for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
-            if ((*it).get()->type() == ObjectType::CAMERA_OBJECT) {
-                // Attempt to remove the object from the current camera
-                auto camera = static_cast<CameraObject *>((*it).get());
-                camera->removeSceneObject((*objectIt).get()->getObjectName());
-            }
-        }
     }
-
+    for (auto camera : cameras_) {
+        camera->removeSceneObject(objectName);
+    }
     sceneObjects_.erase(objectIt);
     return 0;
 }
@@ -529,4 +613,10 @@ int GameInstance::lockScene() {
 int GameInstance::unlockScene() {
     sceneLock_.unlock();
     return 0;
+}
+
+bool GameInstance::waitForProgress(std::function<bool(void)> pred) {
+    std::unique_lock<std::mutex> scopeLock(progressLock_);
+    progressCv_.wait(scopeLock, [pred, this]() { return pred() || isShutDown(); });
+    return !isShutDown();
 }

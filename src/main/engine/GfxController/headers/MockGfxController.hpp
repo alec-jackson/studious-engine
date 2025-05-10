@@ -4,9 +4,9 @@
  * @brief Mock GfxController implemenation for unit tests.
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #pragma once
 #include <gmock/gmock.h>
@@ -46,4 +46,6 @@ class MockGfxController : public GfxController {
     MOCK_METHOD(void, update, (), (override));
     MOCK_METHOD(void, deleteBuffer, (unsigned int *), (override));
     MOCK_METHOD(void, deleteVao, (unsigned int *), (override));
+    // virtual void setBgColor(float r, float g, float b) = 0;
+    MOCK_METHOD(void, setBgColor, (float r, float g, float b), (override));
 };

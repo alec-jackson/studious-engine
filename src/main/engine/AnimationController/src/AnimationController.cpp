@@ -4,9 +4,9 @@
  * @brief Implementation for Animation Controller
  * @version 0.1
  * @date 2024-10-20
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #include <vector>
@@ -35,18 +35,18 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
 /**
  * @brief Creates and adds a track configuration to the internal track store. Adding a track to the
  * track store will not automatically play it. @see AnimationController::playTrack.
- * @param target The SpriteObject to apply the animation track to.
+ * @param target The TrackExt to apply the animation track to.
  * @param trackName Friendly name of the animation track.
- * @param trackData The actual track data. Each number in the list corresponds to a frame to set in the SpriteObject's
+ * @param trackData The actual track data. Each number in the list corresponds to a frame to set in the TrackExt's
  * sprite grid. For example, the trackData { 3, 4, 5 } means that the animation track will first display frame 3, then
  * 4 and then 5. The speed at which frames are sequentially switched is determined by the supplied fps rate. An empty
  * vector for trackData is actually legal, and will default to a set of increasing numbers starting from 0 to the
- * number of available frames in the SpriteObject. For a SpriteObject with 4 frames, the default trackData would look
+ * number of available frames in the TrackExt. For a TrackExt with 4 frames, the default trackData would look
  * like { 0, 1, 2, 3 }.
  * @param fps The framerate the animation should play back.
  * @param loop Will control whether the animation loops infinitely or ends on last frame.
- * @note There is no trackData bounds checking at this level. Bounds checking occurs at the SpriteObject level.
- * 
+ * @note There is no trackData bounds checking at this level. Bounds checking occurs at the TrackExt level.
+ *
  * There are two internal AnimationController maps that are used to store and play track data.
  * trackStore_ -> Internal map of tracks.
  * activeTracks_ -> This is a map of object names to ActiveTrackEntry. An ActiveTrackEntry is just playback information
@@ -55,7 +55,7 @@ std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float ti
  * will be stopped and replaced with the new track. Memory is managed through smart pointers, so everything should
  * clean up on its own.
  */
-void AnimationController::addTrack(SpriteObject *target, string trackName, vector<int> trackData, int fps, bool loop) {
+void AnimationController::addTrack(TrackExt *target, string trackName, vector<int> trackData, int fps, bool loop) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     if (target == nullptr) {
         fprintf(stderr, "AnimationController::addTrack: target cannot be null.\n");
@@ -97,7 +97,8 @@ void AnimationController::playTrack(string trackName) {
             trackName.c_str());
         return;
     }
-    auto objectPtr = tsit->second.target;
+    auto trackPtr = tsit->second.target;
+    auto objectPtr = trackPtr->getObj();
     auto objectName = objectPtr->getObjectName();
     /* Check if the animation is still in the active list */
     auto ait = activeTracks_.find(objectName);
@@ -123,7 +124,7 @@ void AnimationController::playTrack(string trackName) {
         secondsPerFrame,
         secondsPerFrame * tsit->second.track.get()->trackData.size(),
         0,
-        objectPtr);
+        trackPtr);
     activeTracks_[objectName] = tp;
 }
 
@@ -141,7 +142,7 @@ void AnimationController::pauseTrack(string trackName) {
             trackName.c_str());
         return;
     }
-    auto objectName = sit->second.target->getObjectName();
+    auto objectName = sit->second.target->getObj()->getObjectName();
     auto it = activeTracks_.find(objectName);
     if (it != activeTracks_.end()) {
         it->second.get()->state = TrackState::PAUSED;
@@ -459,7 +460,7 @@ int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
 }
 
 /**
- * @brief Updates the currently rendered frame of the target SpriteObject based on framerate of animation track,
+ * @brief Updates the currently rendered frame of the target TrackExt based on framerate of animation track,
  * deltaTime, and data from the track.
  * @param trackPlayback The active track to update.
  * @return true if the track is complete, false if it's still ongoing.
@@ -485,4 +486,28 @@ bool AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPla
     /* Set the sprite object's frame number to the frame number calculated */
     target->setCurrentFrame(frameNumber);
     return false;
+}
+
+void AnimationController::removeSceneObject(string objectName) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    // Delete active tracks
+    auto atit = activeTracks_.find(objectName);
+    if (atit != activeTracks_.end())
+        activeTracks_.erase(atit);
+
+    // Delete track stores
+    vector<string> toDelete;
+    for (auto entry : trackStore_) {
+        if (entry.second.target->getObj()->getObjectName().compare(objectName) == 0) {
+            toDelete.push_back(entry.first);
+        }
+    }
+    for (auto entry : toDelete) {
+        auto tsit = trackStore_.find(entry);
+        trackStore_.erase(tsit);
+    }
+    // delete keyframes
+    auto kfit = keyFrameStore_.find(objectName);
+    if (kfit != keyFrameStore_.end())
+        keyFrameStore_.erase(kfit);
 }

@@ -27,13 +27,11 @@ class GameObject: public SceneObject {
     ~GameObject() override;
 
     // Setters
-    inline void setScale(float scale) { this->scale = scale; }
     inline void setDirectionalLight(vec3 directionalLight) { this->directionalLight = directionalLight; }
     inline void setLuminance(float luminance) { this->luminance = luminance; }
     inline void setProgramId(unsigned int programId) { this->programId_ = programId; }
 
     // Getters
-    inline float getScale() { return this->scale; }
     inline vec3 getDirectionalLight() { return this->directionalLight; }
     inline float getLuminance() { return this->luminance; }
     inline unsigned int getProgramId() { return this->programId_; }
