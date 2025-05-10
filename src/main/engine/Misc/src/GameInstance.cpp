@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <condition_variable>
 #include <cstdio>
 #include <iostream>
 #include <string>
@@ -210,6 +211,7 @@ GameInstance::~GameInstance() {
 }
 
 void GameInstance::shutdown() {
+    if (isShutDown()) return;
     printf("GameInstance::shutdown %p\n", window);
     // If we haven't already called shutdown
     if (window != nullptr) {
@@ -218,31 +220,36 @@ void GameInstance::shutdown() {
         SDL_Quit();
         window = nullptr;
     }
+    // Complete all protectedGfxRequests
+    runGfxRequests();
     shutdown_ = 1;
     // Notify condition variables of shutdown
     inputCv_.notify_all();
+    progressCv_.notify_all();
 }
 
-void GameInstance::protectedGfxRequest(std::function<void(void)> req) {
+bool GameInstance::protectedGfxRequest(std::function<void(void)> req) {
+    // Do nothing when we shut down
+    if (isShutDown()) return false;
     printf("GameInstance::protectedGfxRequest: Enter\n");
     // Obtain the scene lock to add the request
     std::unique_lock<std::mutex> scopeLock(requestLock_);
-    std::mutex reqLock;
-    reqLock.lock();
-    auto reqCb = [req, &reqLock]() {
+    std::condition_variable cv;
+    std::atomic<int> done = 0;
+    auto reqCb = [req, &done, &cv]() {
         // Call the request
         req();
-        // Then unlock the reqLock
-        reqLock.unlock();
+        // Set the done flag and signal completion
+        done = 1;
+        cv.notify_all();
     };
     // Add the request to the request queue
     protectedGfxReqs_.push(reqCb);
-    scopeLock.unlock();
     // Wait for the reqLock to become available
-    printf("GameInstance::protectedGfxRequest: Added request, waiting on lock...\n");
-    reqLock.lock();
+    printf("GameInstance::protectedGfxRequest: Added request, waiting for completion...\n");
+    cv.wait(scopeLock, [&done, this]() { return done == 1 || isShutDown(); });
     printf("GameInstance::protectedGfxRequest: Exit\n");
-    return;  // Wakeup thread making call
+    return done == 1;  // Wakeup thread making call
 }
 
 /* The scene lock should be captured when entering this function */
@@ -278,13 +285,9 @@ int GameInstance::updateObjects() {
     }
     gfxController_->update();
     // Update cameras
-    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
-        if ((*it).get()->type() == ObjectType::CAMERA_OBJECT) {
-            CameraObject *cObj = static_cast<CameraObject *>((*it).get());
-            // Send the current screen resolution to the camera
-            cObj->setResolution(this->getResolution());
-            cObj->update();
-        }
+    for (auto camera : cameras_) {
+        camera->setResolution(this->getResolution());
+        camera->update();
     }
     return 0;
 }
@@ -365,7 +368,7 @@ CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float
     auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
     auto gameCamera = std::make_shared<CameraObject>(target, offset, cameraAngle,
         aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
-    sceneObjects_.push_back(gameCamera);
+    cameras_.push_back(gameCamera);
     return gameCamera.get();
 }
 
@@ -429,17 +432,10 @@ int GameInstance::removeSceneObject(string objectName) {
         fprintf(stderr, "GameInstance::removeSceneObject: Not found (%s)\n",
             objectName.c_str());
         return -1;
-    } else {
-        // This could be optimized a bit better - remove scene object from all cameras if found
-        for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
-            if ((*it).get()->type() == ObjectType::CAMERA_OBJECT) {
-                // Attempt to remove the object from the current camera
-                auto camera = static_cast<CameraObject *>((*it).get());
-                camera->removeSceneObject((*objectIt).get()->getObjectName());
-            }
-        }
     }
-
+    for (auto camera : cameras_) {
+        camera->removeSceneObject(objectName);
+    }
     sceneObjects_.erase(objectIt);
     return 0;
 }
@@ -617,4 +613,10 @@ int GameInstance::lockScene() {
 int GameInstance::unlockScene() {
     sceneLock_.unlock();
     return 0;
+}
+
+bool GameInstance::waitForProgress(std::function<bool(void)> pred) {
+    std::unique_lock<std::mutex> scopeLock(progressLock_);
+    progressCv_.wait(scopeLock, [pred, this]() { return pred() || isShutDown(); });
+    return !isShutDown();
 }

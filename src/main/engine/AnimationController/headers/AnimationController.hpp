@@ -144,11 +144,10 @@ class AnimationController {
     void playTrack(string trackName);
     void pauseTrack(string trackName);
     /**
-    * @brief Removes a scene object from all track and key frame stores in the AnimationController.
-    * @param objectName Name of the object to remove from the AnimationController.
-    */
+     * @brief Removes a scene object from all track and key frame stores in the AnimationController.
+     * @param objectName Name of the object to remove from the AnimationController.
+     */
     void removeSceneObject(string objectName);
-
     // Getters for testing
     inline const std::map<string, KeyFrames> &getKeyFrameStore() { return keyFrameStore_; }
     inline const std::map<string, TrackStoreEntry> &getTrackStore() { return trackStore_; }

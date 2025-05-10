@@ -59,6 +59,7 @@ class GameInstance {
     SDL_Event event;
     SDL_GLContext mainContext;
     vector<std::shared_ptr<SceneObject>> sceneObjects_;
+    vector<std::shared_ptr<CameraObject>> cameras_;
     vector<string> vertShaders_;
     vector<string> fragShaders_;
     vector<string> texturePathStage_;
@@ -76,7 +77,9 @@ class GameInstance {
     mutex soundLock_;
     mutex requestLock_;
     mutex inputLock_;
+    mutex progressLock_;
     std::condition_variable inputCv_;
+    std::condition_variable progressCv_;
     queue<std::function<void(void)>> protectedGfxReqs_;
     queue<SDL_Scancode> inputQueue_;
     bool audioInitialized_ = false;
@@ -85,9 +88,22 @@ class GameInstance {
     void initAudio();
     void initController();
     void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
+    /**
+     * @brief Runs GFX requests on the main thread. This method is required when calling GfxController methods
+     * from separate threads.
+     */
     void runGfxRequests();
+    /**
+     * @brief Updates game objects in the game scene.
+     */
     int updateObjects();
+    /**
+     * @brief Updates the underlying SDL window.
+     */
     int updateWindow();
+    /**
+     * @brief Polls for new input events and pushes them to the input queue.
+     */
     void updateInput();
 
  public:
@@ -110,7 +126,12 @@ class GameInstance {
     int getHeight();
     vec3 getResolution();
     vec3 getDirectionalLight();
-    void protectedGfxRequest(std::function<void(void)> req);
+    /**
+     * @brief Performs a "protected" GFX request. This adds a GfxRequest to the internal gfx request queue
+     * to be run on the main thread. This function blocks until the request is fulfilled.
+     * @return True when the request is fulfilled, otherwise return false.
+     */
+    bool protectedGfxRequest(std::function<void(void)> req);
     const Uint8 *getKeystate();
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
@@ -127,11 +148,34 @@ class GameInstance {
     int getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving);
     void setLuminance(float luminanceValue);
     void basicCollision(GameInstance* gameInstance);
+    /**
+     * @brief Updates controllers and game objects in the current game. Controllers updated with this function
+     * are controllers that must be updated from the main thread.
+     */
     int update();
+    /**
+     * @brief Fetches input from the internal input queue. Functions blocks until an input event is received.
+     */
     SDL_Scancode getInput();
     int lockScene();
     int unlockScene();
+    /**
+     * @brief Shuts down the current game. This updates the internal shutdown flag and causes all blocking methods
+     * to immediately return. Separate game threads should key off of the shutdown flag to shutdown gracefully.
+     * @see GameInstance::isShutDown().
+     */
     void shutdown();
+    /**
+     * @brief Blocks until a specific key is pressed.
+     * @param input The input to wait for.
+     * @return True when the key is received, false is shutdown signal received.
+     */
     bool waitForKeyDown(SDL_Scancode input);
+    /**
+     * @brief Checks if the game has been shut down.
+     * @return Returns true if shutdown has been called, false otherwise.
+     */
     inline int isShutDown() { return shutdown_; }
+    bool waitForProgress(std::function<bool(void)> pred);
+    inline void signalProgress() { progressCv_.notify_all(); }
 };
