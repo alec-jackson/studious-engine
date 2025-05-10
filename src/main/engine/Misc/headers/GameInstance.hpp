@@ -176,6 +176,14 @@ class GameInstance {
      * @return Returns true if shutdown has been called, false otherwise.
      */
     inline int isShutDown() { return shutdown_; }
+    /**
+     * @brief Blocks caller until the provided predicate is satisfied. Must be signaled manually when
+     * values in the predicate are altered. @see GameInstance::signalProgress().
+     */
     bool waitForProgress(std::function<bool(void)> pred);
+    /**
+     * @brief Signals to the game instance that it should wakeup all threads blocked by
+     * GameInstance::waitForProgress so they can check if their predicate has been satisfied.
+     */
     inline void signalProgress() { progressCv_.notify_all(); }
 };

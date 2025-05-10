@@ -22,4 +22,10 @@ struct Image {
     std::vector<unsigned int> textureIds;
 };
 
+/**
+ * @brief Tightly packs texture data stored in an SDL_Surface to remove 4-byte alignment.
+ *
+ * @param texture Valid SDL_Surface containing image data.
+ * @return std::shared_ptr<uint8_t[]> Buffer containing tightly packed pixel data.
+ */
 std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture);
