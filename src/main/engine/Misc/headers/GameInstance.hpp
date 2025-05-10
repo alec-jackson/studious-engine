@@ -17,6 +17,7 @@
 #include <map>
 #include <atomic>
 #include <queue>
+#include <condition_variable>
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
