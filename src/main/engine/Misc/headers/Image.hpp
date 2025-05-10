@@ -9,8 +9,9 @@
  *
  */
 #pragma once
-#include <vector>
 #include <SDL2/SDL_image.h>
+#include <vector>
+#include <memory>
 
 struct Image {
     /* Constraints across all image resolutions */

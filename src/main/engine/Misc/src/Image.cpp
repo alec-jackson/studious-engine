@@ -1,5 +1,12 @@
+/**
+ * @file Image.cpp
+ * @brief Helper functions for managing texture data.
+ * @author Christian Galvez
+ * @date May 9, 2025
+ * @copyright Studious-Engine 2025
+ */
 #include <Image.hpp>
-
+#include <memory>
 /**
  * @brief Tightly packs texture data stored in an SDL_Surface to remove 4-byte alignment.
  *
