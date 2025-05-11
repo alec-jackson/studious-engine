@@ -1,12 +1,12 @@
 /**
  * @file DummyGfxController.cpp
  * @author Christian Galvez
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-01-21
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include <string>
 #include <iostream>
@@ -51,12 +51,12 @@ GfxResult<int> DummyGfxController::cleanup() {
     return GFX_OK(int);
 }
 
-GfxResult<unsigned int> DummyGfxController::getProgramId(uint index) {
+GfxResult<unsigned int> DummyGfxController::getProgramId(string programName) {
     cout << "GfxController::getProgramId" << endl;
     return GFX_OK(unsigned int);
 }
 
-GfxResult<unsigned int> DummyGfxController::loadShaders(string vertexPath, string fragmentPath) {
+GfxResult<unsigned int> DummyGfxController::loadShaders(string programName, string vertexPath, string fragmentPath) {
     cout << "GfxController::loadShaders" << endl;
     return GFX_OK(unsigned int);
 }
@@ -186,4 +186,3 @@ void DummyGfxController::setBgColor(float r, float g, float b) {
     printf("GfxController::setBgColor: %f, %f, %f\n",
         r, g, b);
 }
-

@@ -82,6 +82,12 @@ class GfxResult {
     T data_;
 };
 
+struct ProgramData {
+    string programName;
+    string vertexShaderPath;
+    string fragmentShaderPath;
+};
+
 class GfxController {
  public:
     virtual GfxResult<int> init() = 0;
@@ -92,9 +98,21 @@ class GfxController {
     virtual GfxResult<unsigned int> sendTextureData(unsigned int width, unsigned int height, TexFormat format,
         void *data) = 0;
     virtual GfxResult<int>  getShaderVariable(unsigned int, const char *) = 0;
-    virtual GfxResult<unsigned int> getProgramId(uint) = 0;
+    /**
+     * @brief Fetches the program ID that belongs to the given name. Returns a
+     * GFX_FAILURE if the program does not exist, or is inactive.
+     */
+    virtual GfxResult<unsigned int> getProgramId(string) = 0;
     virtual GfxResult<unsigned int> setProgram(unsigned int) = 0;
-    virtual GfxResult<unsigned int> loadShaders(string, string) = 0;
+    /**
+     * @brief Compiles the provided shaders and creates a new program ID on success.
+     * @param programName The name to give the newly created program.
+     * @param vertShadedPath Path to the vertex shader to compile.
+     * @param fragShaderPath Path to the fragment sahder to compile.
+     * @return OK on success, FAILURE on failure. When successful, the program ID will be returned in the
+     * GfxResult's data field, accessable via GfxResult::get().
+     */
+    virtual GfxResult<unsigned int> loadShaders(string programName, string vertShaderPath, string fragShaderPath) = 0;
     virtual GfxResult<unsigned int> sendFloat(unsigned int variableId, float data) = 0;
     virtual GfxResult<unsigned int> sendFloatVector(unsigned int variableId, size_t count, float *data) = 0;
     virtual GfxResult<unsigned int> polygonRenderMode(RenderMode mode) = 0;

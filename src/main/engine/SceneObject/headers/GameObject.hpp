@@ -4,9 +4,9 @@
  * @brief GameObject is a SceneObject; can be rendered by a CameraObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #pragma once
@@ -22,7 +22,7 @@ class GameObject: public SceneObject {
  public:
     // Constructurs
     explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
-            string objectName, ObjectType type, GfxController *gfxController);
+            uint programId, string objectName, ObjectType type, GfxController *gfxController);
     explicit GameObject(GfxController *gfxController);
     ~GameObject() override;
 
@@ -41,7 +41,7 @@ class GameObject: public SceneObject {
     ColliderObject *getCollider();
 
     // Other methods
-    void createCollider(int programId);
+    void createCollider();
     void configureOpenGl();
 
     void render() override;

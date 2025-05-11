@@ -34,7 +34,7 @@ class GameObject2D : public SceneObject, public TrackExt {
     void initializeTextureData();
     virtual void initializeShaderVars() = 0;
     void initializeVertexData();
-    void createCollider(int programId);
+    void createCollider();
     void setDimensions(int width, int height);
 
  protected:

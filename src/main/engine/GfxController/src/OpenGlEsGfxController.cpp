@@ -160,18 +160,14 @@ GfxResult<unsigned int> OpenGlEsGfxController::generateTexture(unsigned int *tex
     return GFX_OK(unsigned int);
 }
 
-/**
- * @brief Gets a programId for a specific index in the programIdList.
- *
- * @param index in the programId list
- * @return GfxResult<unsigned int> OK with returned program ID when successful; FAILURE otherwise.
- */
-GfxResult<unsigned int> OpenGlEsGfxController::getProgramId(uint index) {
-    // Boundary check index
-    if (index > programIdList_.size()) {
-        return GfxResult<unsigned int>(GfxApiResult::FAILURE, UINT_MAX);
+GfxResult<unsigned int> OpenGlEsGfxController::getProgramId(string programName) {
+    auto result = GFX_FAILURE(uint);
+    // Check if the program exists in the program ID map
+    auto pimit = programIdMap_.find(programName);
+    if (pimit != programIdMap_.end()) {
+        result = GfxResult<uint>(GfxApiResult::OK, pimit->second);
     }
-    return GfxResult<unsigned int>(GfxApiResult::OK, programIdList_[index]);
+    return result;
 }
 
 /**
@@ -181,7 +177,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::getProgramId(uint index) {
  * @param fragmentShader Path to the fragmentShader to compile on the system
  * @return GfxResult<unsigned int> OK with the newly created programId; FAILURE otherwise.
  */
-GfxResult<unsigned int> OpenGlEsGfxController::loadShaders(string vertexShader, string fragmentShader) {
+GfxResult<unsigned int> OpenGlEsGfxController::loadShaders(string programName, string vertexShader, string fragmentShader) {
     unsigned int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     unsigned int fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     int logLength;
@@ -250,7 +246,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::loadShaders(string vertexShader, 
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
     // Add programId to programIdList
-    programIdList_.push_back(programId);
+    programIdMap_[programName] = programId;
 
     printf("OpenGlEsGfxController::loadShaders: Created programId %d\n", programId);
 

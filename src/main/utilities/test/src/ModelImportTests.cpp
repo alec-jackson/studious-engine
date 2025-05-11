@@ -21,7 +21,7 @@ using std::endl;
 class ModelImportTest: public ::testing::Test {
  protected:
     void SetUp() override {
-        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage, 0);
+        modelImport = new ModelImport("dummy", texturePathStage, texturePatternStage);
     }
     void TearDown() override {
         delete modelImport;

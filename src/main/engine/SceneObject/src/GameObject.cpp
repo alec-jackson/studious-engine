@@ -4,9 +4,9 @@
  * @brief Implementation for GameObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <string>
 #include <cstdio>
@@ -16,7 +16,7 @@
 
 /**
  * @brief GameObject constructor
- * 
+ *
  * @param characterModel Underlying Polygon object for rendering this GameObject
  * @param position Starting position of the GameObject
  * @param rotation Starting rotation of the GameObject
@@ -26,8 +26,8 @@
  * @param gfxController Graphics controller for rendering the game scene
  */
 GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
-    string objectName, ObjectType type, GfxController *gfxController):
-    SceneObject(position, rotation, objectName, scale, characterModel->programId, type, gfxController),
+    uint programId, string objectName, ObjectType type, GfxController *gfxController):
+    SceneObject(position, rotation, objectName, scale, programId, type, gfxController),
     model { characterModel } {
     configureOpenGl();
     luminance = 1.0f;
@@ -57,6 +57,7 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
     vpMatrix_ = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
+// What is this used for?
 GameObject::GameObject(GfxController *gfxController) :
     SceneObject(ObjectType::GAME_OBJECT, "EmptyModel", gfxController) {
     model = nullptr;
@@ -64,7 +65,7 @@ GameObject::GameObject(GfxController *gfxController) :
 
 /**
  * @brief Configures the created object with OpenGL. This step is required for object rendering.
- * 
+ *
  * @param polygon to configure OpenGL context for.
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
@@ -140,7 +141,7 @@ GameObject::~GameObject() {
 
 /**
  * @brief Updates and returns the GameObject's collider
- * 
+ *
  * @return ColliderObject* for the GameObject
  */
 ColliderObject *GameObject::getCollider(void) {
@@ -151,13 +152,19 @@ ColliderObject *GameObject::getCollider(void) {
 
 /**
  * @brief Creates a collider for this game object
- * 
+ *
  * @param programId Program used to render the collider (collider shaders)
  */
-void GameObject::createCollider(int programId) {
+void GameObject::createCollider() {
     printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
     auto colliderName = objectName + "-Collider";
-    collider_ = std::make_shared<ColliderObject>(this->getModel(), programId, &translateMatrix_, &scaleMatrix_,
+    auto colliderProg = gfxController_->getProgramId("colliderObject");
+    if (!colliderProg.isOk())
+    {
+        fprintf(stderr, "GameObject::createCollider: Failed to create collider! 'colliderObject' shader not defined!\n");
+        return;
+    }
+    collider_ = std::make_shared<ColliderObject>(this->getModel(), colliderProg.get(), &translateMatrix_, &scaleMatrix_,
         &vpMatrix_, ObjectType::SPRITE_OBJECT, colliderName, gfxController_);
 }
 
@@ -204,4 +211,3 @@ void GameObject::render() {
     }
     if (collider_.use_count() > 0) collider_.get()->update();
     }
-

@@ -1,12 +1,12 @@
 /**
  * @file OpenGlGfxController.hpp
  * @author Christian Galvez
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-01-21
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #pragma once
@@ -31,9 +31,9 @@ class OpenGlGfxController : public GfxController {
     GfxResult<unsigned int> sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data);
     GfxResult<int> getShaderVariable(unsigned int, const char *);
     GfxResult<int> cleanup();
-    GfxResult<unsigned int> getProgramId(uint);
+    GfxResult<unsigned int> getProgramId(string);
     GfxResult<unsigned int> setProgram(unsigned int programId);
-    GfxResult<unsigned int> loadShaders(string, string);
+    GfxResult<unsigned int> loadShaders(string, string, string);
     GfxResult<unsigned int> sendFloat(unsigned int variableId, float data);
     GfxResult<unsigned int> sendFloatVector(unsigned int variableId, size_t count, float *data);
     GfxResult<unsigned int> polygonRenderMode(RenderMode mode);
@@ -58,7 +58,7 @@ class OpenGlGfxController : public GfxController {
     void updateOpenGl();
 
  private:
-    vector<unsigned int> programIdList_;
+    map<string, uint> programIdMap_;
 
     /* Objects tracked internally to free when closing */
     vector<unsigned int> vaoList_;

@@ -31,6 +31,13 @@
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
 
+/* Define constants for shader names */
+#define UIOBJECT_PROG_NAME "uiObject"
+#define SPRITEOBJECT_PROG_NAME "spriteObject"
+#define GAMEOBJECT_PROG_NAME "gameObject"
+#define TEXTOBJECT_PROG_NAME "textObject"
+#define COLLIDEROBJECT_PROG_NAME "colliderObject"
+
 extern double deltaTime;
 
 /*
@@ -85,10 +92,10 @@ class GameInstance {
     queue<SDL_Scancode> inputQueue_;
     bool audioInitialized_ = false;
 
-    void initWindow(const configData &config);
+    void initWindow();
     void initAudio();
     void initController();
-    void initApplication(vector<string> vertexPath, vector<string> fragmentPath);
+    void initApplication();
     /**
      * @brief Runs GFX requests on the main thread. This method is required when calling GfxController methods
      * from separate threads.
@@ -108,21 +115,20 @@ class GameInstance {
     void updateInput();
 
  public:
-    GameInstance(vector<string> vertShaders,
-        vector<string> fragShaders, GfxController *gfxController, AnimationController *animationController, int width,
+    GameInstance(GfxController *gfxController, AnimationController *animationController, int width,
         int height);
     ~GameInstance();
-    void startGame(const configData &config);
+    void init();
     GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing,
-        int charPoint, uint programId, string objectName);
-    SpriteObject *createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
+        int charPoint, string objectName);
+    SpriteObject *createSprite(string spritePath, vec3 position, float scale,
         ObjectAnchor anchor, string objectName);
     UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
-        unsigned int programId, ObjectAnchor anchor, string objectName);
+        ObjectAnchor anchor, string objectName);
     int getWidth();
     int getHeight();
     vec3 getResolution();
@@ -187,4 +193,8 @@ class GameInstance {
      * GameInstance::waitForProgress so they can check if their predicate has been satisfied.
      */
     inline void signalProgress() { progressCv_.notify_all(); }
+    /**
+     * @brief Enables/disables use of Vsync.
+     */
+    void configureVsync(bool enable);
 };

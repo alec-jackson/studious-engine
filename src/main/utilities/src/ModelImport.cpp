@@ -14,10 +14,8 @@
 #include <iostream>
 #include <ModelImport.hpp>
 
-ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern,
-    unsigned int programId) :
-    modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
-    programId_ { programId } {
+ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern) :
+    modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern } {
     cout << "ModelImport::ModelImport" << endl;
 }
 
@@ -43,7 +41,6 @@ Polygon ModelImport::createPolygonFromFile() {
     }
     // Create the final object in the polygon
     buildObject(currentObject - 1);
-    polygon_.programId = this->programId_;
     polygon_.texturePath_ = texturePath_;
     polygon_.texturePattern_ = texturePattern_;
     return polygon_;
@@ -154,7 +151,7 @@ int ModelImport::buildObject(int objectId) {
             }
         }
     }
-    auto newPolygon = Polygon(triCount, programId_, vertexVbo, textureVbo, normalVbo);
+    auto newPolygon = Polygon(triCount, vertexVbo, textureVbo, normalVbo);
     polygon_.merge(newPolygon);
     return 0;
 }
