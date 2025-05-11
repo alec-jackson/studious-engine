@@ -158,10 +158,11 @@ ColliderObject *GameObject::getCollider(void) {
 void GameObject::createCollider() {
     printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
     auto colliderName = objectName + "-Collider";
-    auto colliderProg = gfxController_->getProgramId("colliderObject");
-    if (!colliderProg.isOk())
-    {
-        fprintf(stderr, "GameObject::createCollider: Failed to create collider! 'colliderObject' shader not defined!\n");
+    auto colliderProg = gfxController_->getProgramId(COLLIDEROBJECT_PROG_NAME);
+    if (!colliderProg.isOk()) {
+        fprintf(stderr,
+            "GameObject::createCollider: Failed to create collider! '%s' shader not defined!\n",
+            COLLIDEROBJECT_PROG_NAME);
         return;
     }
     collider_ = std::make_shared<ColliderObject>(this->getModel(), colliderProg.get(), &translateMatrix_, &scaleMatrix_,

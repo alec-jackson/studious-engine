@@ -17,7 +17,7 @@
 #include <map>
 #include <atomic>
 #include <queue>
-#include <condition_variable>
+#include <condition_variable> //NOLINT
 #include <common.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
@@ -30,13 +30,6 @@
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
-
-/* Define constants for shader names */
-#define UIOBJECT_PROG_NAME "uiObject"
-#define SPRITEOBJECT_PROG_NAME "spriteObject"
-#define GAMEOBJECT_PROG_NAME "gameObject"
-#define TEXTOBJECT_PROG_NAME "textObject"
-#define COLLIDEROBJECT_PROG_NAME "colliderObject"
 
 extern double deltaTime;
 

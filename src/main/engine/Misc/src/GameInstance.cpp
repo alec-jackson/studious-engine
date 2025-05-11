@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include <condition_variable>
+#include <condition_variable> //NOLINT
 #include <cstdio>
 #include <iostream>
 #include <string>

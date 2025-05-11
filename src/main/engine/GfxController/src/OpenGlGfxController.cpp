@@ -8,13 +8,12 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "GfxController.hpp"
+#include <OpenGlGfxController.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
 #include <cstdio>
 #include <algorithm>
-#include <OpenGlGfxController.hpp>
 
 /**
  * @brief Generates a buffer in the OpenGL context
@@ -159,7 +158,8 @@ GfxResult<unsigned int> OpenGlGfxController::getProgramId(string programName) {
  * @param fragmentShader Path to the fragmentShader to compile on the system
  * @return GfxResult<unsigned int> OK with the newly created programId; FAILURE otherwise.
  */
-GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, string vertexShader, string fragmentShader) {
+GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, string vertexShader,
+    string fragmentShader) {
     printf("Creaeting vertex shader id\n");
     unsigned int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     printf("Creaeting frag shader id\n");

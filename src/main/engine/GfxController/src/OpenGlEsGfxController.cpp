@@ -177,7 +177,8 @@ GfxResult<unsigned int> OpenGlEsGfxController::getProgramId(string programName) 
  * @param fragmentShader Path to the fragmentShader to compile on the system
  * @return GfxResult<unsigned int> OK with the newly created programId; FAILURE otherwise.
  */
-GfxResult<unsigned int> OpenGlEsGfxController::loadShaders(string programName, string vertexShader, string fragmentShader) {
+GfxResult<unsigned int> OpenGlEsGfxController::loadShaders(string programName, string vertexShader,
+    string fragmentShader) {
     unsigned int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     unsigned int fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     int logLength;
