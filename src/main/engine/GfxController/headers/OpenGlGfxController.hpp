@@ -50,6 +50,7 @@ class OpenGlGfxController : public GfxController {
     GfxResult<unsigned int> enableVertexAttArray(unsigned int layout, size_t size);
     GfxResult<unsigned int> disableVertexAttArray(unsigned int layout);
     GfxResult<unsigned int> drawTriangles(unsigned int size);
+    void setBgColor(float r, float g, float b);
     void deleteVao(unsigned int *vao);
     void deleteBuffer(unsigned int *bufferId);
     void clear(GfxClearMode clearMode);
@@ -63,4 +64,5 @@ class OpenGlGfxController : public GfxController {
     vector<unsigned int> vaoList_;
     vector<unsigned int> vboList_;
     vector<unsigned int> textureIdList_;
+    vector<float> bgColor_;
 };

@@ -36,6 +36,7 @@ include_directories(
   src/main/engine/AnimationController/headers
   src/main/engine/Misc/headers
   src/main/engine/SceneObject/headers
+  src/main/engine/SceneObjectExt/headers
   src/main/misc/headers
 )
 
@@ -71,6 +72,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/CameraObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/engine/SceneObjectExt/src/TrackExt.cpp
   src/main/utilities/src/GifLoader.cpp
   src/main/engine/Misc/src/inputMonitor.cpp
   src/main/engine/Misc/src/physics.cpp
@@ -79,6 +81,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/GfxController/src/OpenGlEsGfxController.cpp
   src/main/engine/AnimationController/src/AnimationController.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
+  src/main/engine/Misc/src/Image.cpp
   src/main/misc/src/config.cpp
 )
 
@@ -152,7 +155,7 @@ target_include_directories(gtest_PolygonTests
   PUBLIC ${FREETYPE_INCLUDE_DIRS}
 )
 
-target_link_libraries(gtest_PolygonTests 
+target_link_libraries(gtest_PolygonTests
   PUBLIC SDL2::Main
   PUBLIC SDL2::Mixer
   PUBLIC SDL2::Image
@@ -172,6 +175,8 @@ add_executable(gtest_SpriteObjectTests
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
   src/main/utilities/src/Polygon.cpp
+  src/main/engine/Misc/src/Image.cpp
+  src/main/engine/SceneObjectExt/src/TrackExt.cpp
 )
 
 target_include_directories(gtest_SpriteObjectTests
@@ -197,6 +202,8 @@ add_executable(gtest_AnimationControllerTests
   src/main/engine/SceneObject/src/UiObject.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
+  src/main/engine/SceneObjectExt/src/TrackExt.cpp
+  src/main/engine/Misc/src/Image.cpp
 )
 
 target_include_directories(gtest_AnimationControllerTests
@@ -239,6 +246,7 @@ install (FILES
   src/main/engine/SceneObject/headers/SpriteObject.hpp
   src/main/engine/SceneObject/headers/TextObject.hpp
   src/main/engine/SceneObject/headers/UiObject.hpp
+  src/main/engine/SceneObjectExt/headers/TrackExt.hpp
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlEsGfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp

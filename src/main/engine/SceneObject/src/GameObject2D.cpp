@@ -17,7 +17,8 @@
 
 GameObject2D::GameObject2D(string texturePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,
-    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), texturePath_ { texturePath },
+    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController),
+    TrackExt(texturePath, this, gfxController), texturePath_ { texturePath },
     anchor_ { anchor } {
     printf("GameObject2D::GameObject2D: Creating 2D object %s\n", objectName.c_str());
 }
@@ -26,25 +27,6 @@ void GameObject2D::initializeShaderVars() {
     gfxController_->setProgram(programId_);
     projectionId_ = gfxController_->getShaderVariable(programId_, "projection").get();
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
-}
-
-/**
- * @brief Tightly packs texture data stored in an SDL_Surface to remove 4-byte alignment.
- * 
- * @param texture Valid SDL_Surface containing image data.
- * @return std::shared_ptr<uint8_t[]> Buffer containing tightly packed pixel data.
- */
-std::shared_ptr<uint8_t[]> GameObject2D::packSurface(SDL_Surface *texture) {
-    /* Tightly pack to remove 4 byte alignment on texture */
-    auto pixelSize = texture->format->BytesPerPixel;
-    std::shared_ptr<uint8_t[]> packedData(new uint8_t[texture->w * texture->h * pixelSize],
-        std::default_delete<uint8_t[]>());
-    for (int i = 0; i < texture->h; ++i) {
-        memcpy(&packedData.get()[i * pixelSize * texture->w],
-            &(reinterpret_cast<uint8_t *>(texture->pixels))[i * (texture->pitch)],
-            pixelSize * texture->w);
-    }
-    return packedData;
 }
 
 void GameObject2D::initializeTextureData() {
@@ -84,52 +66,6 @@ void GameObject2D::initializeTextureData() {
 void GameObject2D::setDimensions(int width, int height) {
     textureWidth_ = width;
     textureHeight_ = height;
-}
-
-void GameObject2D::initializeVertexData() {
-    // Perform anchor points here
-    auto x = 0.0f, y = 0.0f;
-    switch (anchor_) {
-        case BOTTOM_LEFT:
-            x = 0.0f;
-            y = 0.0f;
-            break;
-        case CENTER:
-            x = -1 * ((textureWidth_) / 2.0f);
-            y = -1 * ((textureHeight_) / 2.0f);
-            break;
-        case TOP_LEFT:
-            y = -1.0f * textureHeight_;
-            x = 0.0f;
-            break;
-        default:
-            fprintf(stderr, "GameObject2D::initializeVertexData: Unsupported anchor type %d\n", anchor_);
-            assert(false);
-            break;
-    }
-    auto x2 = x + (textureWidth_), y2 = y + (textureHeight_);
-    // Use textures to create each character as an independent object
-    gfxController_->initVao(&vao_);
-    gfxController_->bindVao(vao_);
-    gfxController_->generateBuffer(&vbo_);
-    gfxController_->bindBuffer(vbo_);
-    // update VBO for each character
-    // UV coordinate origin STARTS in the TOP left, NOT BOTTOM LEFT!!!
-    vertTexData_ = {
-        x, y2, 0.0f, 0.0f,
-        x, y, 0.0f, 1.0f,
-        x2, y2, 1.0f, 0.0f,
-
-        x2, y2, 1.0f, 0.0f,
-        x, y, 0.0f, 1.0f,
-        x2, y, 1.0f, 1.0f
-    };
-
-    // Send VBO data for each character to the currently bound buffer
-    gfxController_->sendBufferData(sizeof(float) * vertTexData_.size(), &vertTexData_[0]);
-    gfxController_->enableVertexAttArray(0, 4);
-    gfxController_->bindBuffer(0);
-    gfxController_->bindVao(0);
 }
 
 /// @todo Do something useful here

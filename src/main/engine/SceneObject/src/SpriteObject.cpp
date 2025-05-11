@@ -4,9 +4,9 @@
  * @brief Implementation for SpriteObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <string>
 #include <cstdio>
@@ -20,13 +20,59 @@ SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsign
             spritePath, position, scale, programId, objectName, type, anchor, gfxController), tint_ { vec4(0) } {
     printf("SpriteObject::SpriteObject: Creating sprite %s\n", objectName.c_str());
     GameObject2D::initializeTextureData();
-    GameObject2D::initializeVertexData();
+    initializeVertexData();
     initializeShaderVars();
 }
 
 void SpriteObject::initializeShaderVars() {
     GameObject2D::initializeShaderVars();
     tintId_ = gfxController_->getShaderVariable(programId_, "tint").get();
+}
+
+void SpriteObject::initializeVertexData() {
+    // Perform anchor points here
+    auto x = 0.0f, y = 0.0f;
+    switch (anchor_) {
+        case BOTTOM_LEFT:
+            x = 0.0f;
+            y = 0.0f;
+            break;
+        case CENTER:
+            x = -1 * ((textureWidth_) / 2.0f);
+            y = -1 * ((textureHeight_) / 2.0f);
+            break;
+        case TOP_LEFT:
+            y = -1.0f * textureHeight_;
+            x = 0.0f;
+            break;
+        default:
+            fprintf(stderr, "SpriteObject::initializeVertexData: Unsupported anchor type %d\n", anchor_);
+            assert(false);
+            break;
+    }
+    auto x2 = x + (textureWidth_), y2 = y + (textureHeight_);
+    // Use textures to create each character as an independent object
+    gfxController_->initVao(&vao_);
+    gfxController_->bindVao(vao_);
+    gfxController_->generateBuffer(&vbo_);
+    gfxController_->bindBuffer(vbo_);
+    // update VBO for each character
+    // UV coordinate origin STARTS in the TOP left, NOT BOTTOM LEFT!!!
+    vertTexData_ = {
+        x, y2, 0.0f, 0.0f,
+        x, y, 0.0f, 1.0f,
+        x2, y2, 1.0f, 0.0f,
+
+        x2, y2, 1.0f, 0.0f,
+        x, y, 0.0f, 1.0f,
+        x2, y, 1.0f, 1.0f
+    };
+
+    // Send VBO data for each character to the currently bound buffer
+    gfxController_->sendBufferData(sizeof(float) * vertTexData_.size(), &vertTexData_[0]);
+    gfxController_->enableVertexAttArray(0, 4);
+    gfxController_->bindBuffer(0);
+    gfxController_->bindVao(0);
 }
 
 SpriteObject::~SpriteObject() {
@@ -38,7 +84,7 @@ void SpriteObject::render() {
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
-    scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
+    scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
     modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
@@ -67,91 +113,14 @@ void SpriteObject::update() {
     render();
 }
 
-/**
- * @brief Splits the sprite grid image into multiple equally sized frames. Re-opens the sprite and creates a texture
- * for each frame inside of the sprite grid. Creates frames in a sprite grid in sequential order from top left to
- * bottom right. Will assert if the dimensions of the image will not work.
- * 
- * If any asserts occur when running this function then something about the passed in image is bad. When this function
- * is called, the SpriteObject will no longer render itself as the passed in image. Instead, by default it will render
- * the first frame in the sprite grid and re-size the object itself to the dimensions of the first frame.
- * 
- * The image's width must be perfectly divisible by the width of each frame. The same is true for the height. The passed
- * in frameCount must also be less than or equal to the number of possible frames in the image given the width and height
- * of each frame.
- * 
- * @param width Of each frame in the sprite grid.
- * @param height Of each frame in the sprite grid.
- * @param frameCount The number of frames to pull from the sprite grid.
- */
-void SpriteObject::splitGrid(int width, int height, int frameCount) {
-    /* Re-open the image and process it */
-    auto image = IMG_Load(texturePath_.c_str());
-    if (image == nullptr) {
-        fprintf(stderr, "SpriteObject::splitGrid: Error - unable to open image %s\n",
-            texturePath_.c_str());
-        assert(0);
-        return;
-    }
+void SpriteObject::createAnimation(int width, int height, int frameCount) {
+    splitGrid(width, height, frameCount);
 
-    /* Validate the width, height and frame count */
-    assert(image->w % width == 0);
-    assert(image->h % height == 0);
-
-    /* No use in having a zero frame count, right? */
-    assert(frameCount > 0);
-
-    /* Detect the max frame count from the image dimensions */
-    auto numHorizontal = image->w / width;
-    auto numVertical = image->h / height;
-    auto maxFrames = numHorizontal * numVertical;
-
-    /* Determine the size of each pixel */
-    auto pixelSize = image->format->BytesPerPixel;
-    auto imageFormat = image->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
-    assert(frameCount <= maxFrames);
-    std::unique_ptr<uint8_t[]> data;
-    imageBank_.width = width;
-    imageBank_.height = height;
-    auto packedData = GameObject2D::packSurface(image);
-
-    /* Grab frames LEFT TO RIGHT from image data */
-    for (int i = 0; i < frameCount; ++i) {
-        data = std::unique_ptr<uint8_t[]>(new uint8_t[width * height * pixelSize]);
-        /* This is going to suck, but I can't think of a clever solution.
-           Copy each frame line by line... */
-        auto imageRow = image->w * height * (i / numHorizontal);
-        for (int j = 0; j < height; ++j) {
-            /* Select the row of images in the sprite grid */
-
-            auto imageStart = (image->w * j) + imageRow + ((i % numHorizontal) * width);
-            memcpy(&data.get()[j * width * pixelSize], &packedData.get()[imageStart * pixelSize], width * pixelSize);
-        }
-
-        /* Create a texture for the current frame */
-        unsigned int textureId;
-
-        gfxController_->generateTexture(&textureId);
-        gfxController_->bindTexture(textureId);
-        gfxController_->sendTextureData(width, height, imageFormat, data.get());
-        gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
-        gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
-        gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
-        gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
-        gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
-        gfxController_->generateMipMap();
-
-        /* Add the current image to the image bank */
-        imageBank_.textureIds.push_back(textureId);
-    }
-
-    SDL_FreeSurface(image);
+    // Update GameObject2D dimensions
 
     /* Update the dimensions of the SpriteObject to match the frame size */
-    GameObject2D::setDimensions(width, height);
+    setDimensions(width, height);
 
     /* GfxController will handle garbage collection of old data */
-    GameObject2D::initializeVertexData();
-
-    currentFrame_ = 0;  // Set the current frame to zero as the default
+    initializeVertexData();
 }

@@ -90,20 +90,20 @@ void UiObject::initializeVertexData() {
             y = 0.0f;
             break;
         case CENTER:
-            x = -1 * ((textureWidth_) / 2.0f);
-            y = -1 * ((textureHeight_) / 6.0f);
+            x = -1 * ((textureWidth_ * scale_) / 2.0f);
+            y = -1 * ((textureHeight_ * scale_) / 2.0f);
             break;
         case TOP_LEFT:
             y = -1.0f * textureHeight_ / 3.0f;
             x = 0.0f;
             break;
         default:
-            fprintf(stderr, "GameObject2D::initializeVertexData: Unsupported anchor type %d\n", anchor_);
+            fprintf(stderr, "UiObject::initializeVertexData: Unsupported anchor type %d\n", anchor_);
             assert(false);
             break;
     }
-    auto incrementFactorX = (textureWidth_ * scale / 3.0f);
-    auto incrementFactorY = (textureHeight_ * scale / 3.0f);
+    auto incrementFactorX = (textureWidth_ * scale_ / 3.0f);
+    auto incrementFactorY = (textureHeight_ * scale_ / 3.0f);
     // Use textures to create each character as an independent object
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
@@ -138,9 +138,8 @@ void UiObject::render() {
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
             vec3(0, 0, 1));
-    // scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
+    // scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
     // modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
-    // We wont do scale normally for now due to a bug
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
@@ -151,8 +150,15 @@ void UiObject::render() {
     gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);
-    gfxController_->bindTexture(textureId_);
-    gfxController_->drawTriangles(6 * 9);
+    /* Bind the texture based on the sprite grid split */
+    if (imageBank_.textureIds.empty()) {
+        /* Send the base image if no images are present in the image bank */
+        gfxController_->bindTexture(textureId_);
+    } else {
+        assert(currentFrame_ < imageBank_.textureIds.size());
+        gfxController_->bindTexture(imageBank_.textureIds.at(currentFrame_));
+    }
+    gfxController_->drawTriangles(POINTS_PER_TRIANGLE * TRIANGLES_PER_QUAD * QUADS_PER_UI_ELEM);
     gfxController_->bindVao(0);
     gfxController_->bindTexture(0);
 }
@@ -161,15 +167,26 @@ void UiObject::update() {
     render();
 }
 
-void UiObject::setWStretch(float scale) {
-    wScale_ = scale;
+void UiObject::setWStretch(float wScale) {
+    wScale_ = wScale;
 }
 
-void UiObject::setHStretch(float scale) {
-    hScale_ = scale;
+void UiObject::setHStretch(float hScale) {
+    hScale_ = hScale;
 }
 
 vec3 UiObject::getStretch() {
     return vec3(wScale_, hScale_, 0.0f);
 }
 
+void UiObject::createAnimation(int width, int height, int frameCount) {
+    splitGrid(width, height, frameCount);
+
+    // Update GameObject2D dimensions
+
+    /* Update the dimensions of the SpriteObject to match the frame size */
+    setDimensions(width, height);
+
+    /* GfxController will handle garbage collection of old data */
+    initializeVertexData();
+}

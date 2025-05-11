@@ -1,12 +1,12 @@
 /**
  * @file GfxController.hpp
  * @author Christian Galvez
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-01-21
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #pragma once
 #include <string>
@@ -111,6 +111,13 @@ class GfxController {
     virtual GfxResult<unsigned int> enableVertexAttArray(unsigned int layout, size_t size) = 0;
     virtual GfxResult<unsigned int> disableVertexAttArray(unsigned int layout) = 0;
     virtual GfxResult<unsigned int> drawTriangles(unsigned int size) = 0;
+    /**
+     * @brief Sets the background color of the window.
+     * @param r Red value from 0.0f to 1.0f.
+     * @param g Green value from 0.0f to 1.0f.
+     * @param b Blue value from 0.0f to 1.0f.
+     */
+    virtual void setBgColor(float r, float g, float b) = 0;
     virtual void clear(GfxClearMode clearMode) = 0;
     virtual void update() = 0;
     virtual void deleteBuffer(unsigned int *bufferId) = 0;

@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
         width = 1280;
         height = 720;
     }
-    GameInstance currentGame(vertShaders, fragShaders, &gfxController, width, height);
+    GameInstance currentGame(vertShaders, fragShaders, &gfxController, &animationController, width, height);
     currentGame.startGame(config);
     errorNum = runtime(&currentGame);
     return errorNum;
@@ -208,27 +208,30 @@ int runtime(GameInstance *currentGame) {
     auto engineText = currentGame->createText(
         "Studious Engine 2025",                 // Message
         vec3(25.0f, 25.0f, 0.0f),               // Position
-        0.5f,                                   // Scale
+        1.0f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
         5.0f,                                   // Char spacing
+        48,
         gfxController.getProgramId(2).get(),    // ProgramId
         "studious-text");                       // ObjectName
 
     auto contactText = currentGame->createText(
         "Contact",                              // Message
         vec3(25.0f, 300.0f, 0.0f),              // Position
-        0.35f,                                   // Scale
+        0.7f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
         0.0f,                                   // Char spacing
+        48,
         gfxController.getProgramId(2).get(),    // ProgramId
         "contact-text");                        // ObjectName
 
     pressUText = currentGame->createText(
         "Press 'U' to attach/detach mouse",
         vec3(800.0f, 670.0f, 0.0f),
-        0.35f,
+        0.7f,
         "src/resources/fonts/AovelSans.ttf",
         0.0f,
+        48,
         gfxController.getProgramId(2).get(),
         "contact-text");
 
@@ -237,9 +240,10 @@ int runtime(GameInstance *currentGame) {
 
     auto fpsText = currentGame->createText("FPS",
         vec3(25.0f, 670.0f, 0.0f),
-        0.35f,
+        0.7f,
         "src/resources/fonts/AovelSans.ttf",
         0.0f,
+        48,
         gfxController.getProgramId(2).get(),
         "fps-text");
 
@@ -253,9 +257,9 @@ int runtime(GameInstance *currentGame) {
 
     auto testUi = currentGame->createUi(
         "src/resources/images/Message Bubble UI.png",   // image path
-        vec3(150.0f, 145.0f, 0.0f),                     // Position
+        vec3(80.0f, 160.0f, 0.0f),                     // Position
         0.5f,                                           // Scale
-        100.0f,                                         // Width
+        115.0f,                                         // Width
         0.0f,                                           // Height
         gfxController.getProgramId(4).get(),            // Shader pair
         ObjectAnchor::CENTER,                           // Anchor
@@ -263,9 +267,10 @@ int runtime(GameInstance *currentGame) {
     auto testText = currentGame->createText(
         "Textbox Example",
         vec3(40.0f, 155.0f, 0.0f),
-        0.3f,
+        0.6f,
         "src/resources/fonts/AovelSans.ttf",
-        0.0f,
+        1.0f,
+        48,
         gfxController.getProgramId(2).get(),
         "test-text");
 
@@ -328,17 +333,15 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int running = 1, collision = 0;
+    int collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
-    while (running) {
-        /// @todo Move these calls to a separate thread...
+    while (!currentGame->isShutDown()) {
         begin = SDL_GetPerformanceCounter();
-        running = currentGame->isWindowOpen();
-        error = currentGame->updateObjects();
-        error |= currentGame->updateWindow();
+        if (currentGame->getKeystate()[SDL_SCANCODE_ESCAPE]) currentGame->shutdown();
+        error = currentGame->update();
         if (error) {
             return error;
         }
@@ -350,7 +353,6 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
-        animationController.update();
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         if (SHOW_FPS) {  // use sampleSize to find average FPS

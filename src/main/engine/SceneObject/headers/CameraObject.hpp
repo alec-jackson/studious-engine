@@ -26,6 +26,7 @@ class CameraObject : public SceneObject {
     // Setters
     inline void setOffset(vec3 offset) { offset_ = offset; }
     inline void setAspectRatio(float aspectRatio) { aspectRatio_ = aspectRatio; }
+    inline void setTarget(SceneObject *target) { target_ = target; }
 
     // Getters
     inline vec3 getOffset() { return offset_; }
@@ -38,6 +39,7 @@ class CameraObject : public SceneObject {
     void update() override;
     void addSceneObject(SceneObject *gameObject);
     void removeSceneObject(string objectName);
+    inline void clearSceneObjects() { sceneObjects_.clear(); }
 
  private:
     SceneObject *target_;

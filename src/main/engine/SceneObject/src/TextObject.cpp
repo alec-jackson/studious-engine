@@ -4,19 +4,20 @@
  * @brief Implementation of TextObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <cstdio>
 #include <vector>
 #include <string>
 #include <TextObject.hpp>
 
-TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, uint programId,
-    string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
+TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
+    uint programId, string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), charPadding_ { charSpacing },
-    message_  { message }, fontPath_ { fontPath }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) }, textColor_ { vec3(1.0f) } {
+    message_  { message }, fontPath_ { fontPath }, charPoint_ { charPoint }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) },
+    textColor_ { vec3(1.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -47,7 +48,7 @@ void TextObject::initializeText() {
         fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load font\n");
         throw std::runtime_error("Failed to load font");
     } else {
-        FT_Set_Pixel_Sizes(face, 0, 96);
+        FT_Set_Pixel_Sizes(face, 0, charPoint_);
         for (unsigned char c = 0; c < 128; c++) {
             if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
                 fprintf(stderr, "TextObject::initializeText: FREETYPE: Failed to load glyph\n");
@@ -87,10 +88,10 @@ void TextObject::createMessage() {
     // Use textures to create each character as an independent object
     for (auto character : message_) {
         Character ch = characters[character];
-        float xpos = x + ch.Bearing.x * scale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-        float w = ch.Size.x * scale;
-        float h = ch.Size.y * scale;
+        float xpos = x + ch.Bearing.x * scale_;
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale_;
+        float w = ch.Size.x * scale_;
+        float h = ch.Size.y * scale_;
         if (character == '\n') {
             x = 0;
             y -= (h * (spacing + 1.0f));
@@ -160,7 +161,7 @@ void TextObject::update() {
 /**
  * @brief Update the text object with a new message. If the incoming message is the same as the existing message, then
  * the message is not updated.
- * 
+ *
  * @param message Incoming message to set TextObject to.
  */
 void TextObject::setMessage(string message) {
