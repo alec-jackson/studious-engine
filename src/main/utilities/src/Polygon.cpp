@@ -26,8 +26,8 @@ static int polyCount;
  * @param textures Texture coordinates for the polygon
  * @param normals Normal vector for the polygon tri faces
  */
-Polygon::Polygon(unsigned int triCount, unsigned int programId, vector<float> vertices, vector<float> textures,
-    vector<float> normals) : Polygon(triCount, programId, vertices) {
+Polygon::Polygon(unsigned int triCount, vector<float> vertices, vector<float> textures,
+    vector<float> normals) : Polygon(triCount, vertices) {
     cout << "Polygon::Polygon: More complex constructor: polyCount[" << polyCount << "] -> [" << polyCount + 1 << "]"
         << endl;
 
@@ -45,8 +45,8 @@ Polygon::Polygon(unsigned int triCount, unsigned int programId, vector<float> ve
  * @param programId ProgramId used to identify the shader set associated with this polygon
  * @param vertices Vertex points for triangles making up the polygon
  */
-Polygon::Polygon(unsigned int pointCount, unsigned int programId, vector<float> vertices) :
-    pointCount { pointCount }, numberOfObjects { 1 }, textureUniformId { 0 }, programId { programId } {
+Polygon::Polygon(unsigned int pointCount, vector<float> vertices) :
+    pointCount { pointCount }, numberOfObjects { 1 }, textureUniformId { 0 } {
     cout << "Polygon::Polygon: Basic constructor: polyCount[" << polyCount << "] -> [" << polyCount + 1 << "]" << endl;
     ++polyCount;
 

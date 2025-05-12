@@ -1,12 +1,12 @@
 /**
  * @file ColliderObject.hpp
  * @author Christian Galvez
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-02-15
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #pragma once
@@ -27,7 +27,7 @@ class ColliderObject : public SceneObject {
     void updateCollider();
     void render() override;
     void update() override;
-    void createCollider(unsigned int programId);
+    void createCollider();
     int getCollision(ColliderObject *object, vec3 moving);
     float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
     inline vec4 center() { return center_; }
@@ -47,4 +47,3 @@ class ColliderObject : public SceneObject {
     mat4 *pVpMatrix_;
     int mvpId_;
 };
-

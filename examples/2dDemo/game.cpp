@@ -6,9 +6,9 @@
  *       engine is compiled and ran.
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <string>
 #include <vector>
@@ -21,64 +21,25 @@
 #include <OpenGlEsGfxController.hpp>
 #endif
 #include <AnimationController.hpp>
-/*
- IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
- Currently, the below global vectors are used for loading in sound effect files,
- texture files and shaders. Adding a new sound to the soundList allows the sound
- to be played by calling the GameInstance::playSound(int soundIndex, int loop)
- method (see documentation for use). When adding a new shader to be used in the
- program, it is IMPORTANT that you pair the vertex shader with the fragment
- shader you want to use together at the same index in the fragShaders and
- vertShaders vectors. For instance, if we had a shader called swamp.vert and
- swamp.frag, we would want both shaders to occur at the same spot in the vector
- (if we already have 2 shader files present, we would add swamp.vert as the
- third element in vertShaders, and swamp.frag as the third in fragShaders). After
- doing this, you should be able to set the programId using the
- GameInstance::getProgramID(int index) method to grab the programId for your
- gameObject. If the shader is in index 2, we would call getProgramID(2) to get
- the appropriate programId. For textures, we specify a path to an image that
- will be opened for a given texture, and specify the textures to use as a
- texture pattern (where each number in the vector corresponds to the index of
- the texture to use).
-*/
-// Global Variables, should eventually be moved to a config file
-vector<string> soundList = {
-    "src/resources/sfx/music/endlessNight.wav"
-};  // A list of gameSounds to load
 
 // Lists of embedded/core shaders
 #ifndef GFX_EMBEDDED
-vector<string> fragShaders = {
-    "src/main/shaders/core/gameObject.frag",
-    "src/main/shaders/core/colliderObject.frag",
-    "src/main/shaders/core/textObject.frag",
-    "src/main/shaders/core/spriteObject.frag",
-    "src/main/shaders/core/uiObject.frag"
-};  // Contains collider renderer and basic object renderer.
-vector<string> vertShaders = {
-    "src/main/shaders/core/gameObject.vert",
-    "src/main/shaders/core/colliderObject.vert",
-    "src/main/shaders/core/textObject.vert",
-    "src/main/shaders/core/spriteObject.vert",
-    "src/main/shaders/core/uiObject.vert"
-};  // Contains collider renderer and basic object renderer.
+vector<ProgramData> programs = {
+    { "gameObject", "src/main/shaders/core/gameObject.vert", "src/main/shaders/core/gameObject.frag" },
+    { "colliderObject", "src/main/shaders/core/colliderObject.vert", "src/main/shaders/core/colliderObject.frag" },
+    { "textObject", "src/main/shaders/core/textObject.vert", "src/main/shaders/core/textObject.frag" },
+    { "spriteObject", "src/main/shaders/core/spriteObject.vert", "src/main/shaders/core/spriteObject.frag" },
+    { "uiObject", "src/main/shaders/core/uiObject.vert", "src/main/shaders/core/uiObject.frag" }
+};
 #else
-vector<string> fragShaders = {
-    "src/main/shaders/es/gameObject.frag",
-    "src/main/shaders/es/colliderObject.frag",
-    "src/main/shaders/es/textObject.frag",
-    "src/main/shaders/es/spriteObject.frag",
-    "src/main/shaders/es/uiObject.frag"
-};  // Contains collider renderer and basic object renderer.
-vector<string> vertShaders = {
-    "src/main/shaders/es/gameObject.vert",
-    "src/main/shaders/es/colliderObject.vert",
-    "src/main/shaders/es/textObject.vert",
-    "src/main/shaders/es/spriteObject.vert",
-    "src/main/shaders/es/uiObject.vert"
-};  // Contains collider renderer and basic object renderer.
+vector<ProgramData> programs = {
+    { "gameObject", "src/main/shaders/es/gameObject.vert", "src/main/shaders/es/gameObject.frag" },
+    { "colliderObject", "src/main/shaders/es/colliderObject.vert", "src/main/shaders/es/colliderObject.frag" },
+    { "textObject", "src/main/shaders/es/textObject.vert", "src/main/shaders/es/textObject.frag" },
+    { "spriteObject", "src/main/shaders/es/spriteObject.vert", "src/main/shaders/es/spriteObject.frag" },
+    { "uiObject", "src/main/shaders/es/uiObject.vert", "src/main/shaders/es/uiObject.frag" }
+};
 #endif
-
 vector<string> texturePathStage = {
     "src/resources/images/skintexture.jpg"
 };
@@ -115,8 +76,12 @@ int main(int argc, char **argv) {
         width = 1280;
         height = 720;
     }
-    GameInstance currentGame(vertShaders, fragShaders, &gfxController, &animationController, width, height);
-    currentGame.startGame(config);
+    GameInstance currentGame(&gfxController, &animationController, width, height);
+    currentGame.configureVsync(config.enableVsync);
+    // Load shader programs
+    for (auto program : programs) {
+        gfxController.loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
+    }
     errorNum = runtime(&currentGame);
     return errorNum;
 }
@@ -140,15 +105,15 @@ int runtime(GameInstance *currentGame) {
 
     auto currentCamera = currentGame->createCamera(nullptr, vec3(0), 0.0, 16.0 / 9.0, 4.0, 90.0);
     auto player = currentGame->createSprite("src/resources/images/JTIconNoBackground.png", vec3(0), 0.5,
-        gfxController.getProgramId(3).get(), ObjectAnchor::BOTTOM_LEFT, "player");
+        ObjectAnchor::BOTTOM_LEFT, "player");
 
-    player->createCollider(gfxController.getProgramId(1).get());
+    player->createCollider();
 
     auto obstacle = currentGame->createSprite("src/resources/images/dot_image.png",
-        vec3(300, 500, 0), 10, gfxController.getProgramId(3).get(), ObjectAnchor::CENTER, "obstacle");
+        vec3(300, 500, 0), 10, ObjectAnchor::CENTER, "obstacle");
 
     obstacle->createAnimation(5, 4, 24);
-    obstacle->createCollider(gfxController.getProgramId(1).get());
+    obstacle->createCollider();
 
     /* Create an animation track for the obstacle */
     vector<int> animationTrack = {

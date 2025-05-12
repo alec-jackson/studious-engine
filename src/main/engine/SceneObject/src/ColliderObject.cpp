@@ -1,12 +1,12 @@
 /**
  * @file ColliderObject.cpp
  * @author Christian Galvez
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-02-15
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include <vector>
 #include <string>
@@ -32,7 +32,8 @@ ColliderObject::ColliderObject(Polygon *target, unsigned int programId, mat4 *tr
     mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
     SceneObject(type, objectName, gfxController), target_ { target }, pTranslateMatrix_ { translateMatrix },
     pScaleMatrix_ { scaleMatrix }, pVpMatrix_ { vpMatrix } {
-    createCollider(programId);
+    programId_ = programId;
+    createCollider();
 }
 
 /**
@@ -42,6 +43,7 @@ ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int pr
     mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
     SceneObject(type, objectName, gfxController), pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix },
     pVpMatrix_ { vpMatrix } {
+    programId_ = programId;
     // Separate vertex data from vertTexData
     assert(vertTexData.size() % 4 == 0);
     vector<float> vertices;
@@ -54,9 +56,9 @@ ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int pr
         }
         vertices.push_back(vertTexData.at(i));
     }
-    Polygon tempPoly(vertices.size(), programId, vertices);
+    Polygon tempPoly(vertices.size(), vertices);
     target_ = &tempPoly;
-    createCollider(programId);
+    createCollider();
 }
 
 void ColliderObject::updateCollider() {
@@ -106,7 +108,7 @@ void ColliderObject::update() {
 
 void ColliderObject::render() {
     if (poly_.get()->numberOfObjects > 0) {
-        gfxController_->setProgram(poly_.get()->programId);
+        gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::LINE);
         gfxController_->setCapability(GfxCapability::CULL_FACE, false);
         mat4 MVP = (*pVpMatrix_) * (*pTranslateMatrix_) * (*pScaleMatrix_);
@@ -117,7 +119,7 @@ void ColliderObject::render() {
     }
 }
 
-void ColliderObject::createCollider(unsigned int programId) {
+void ColliderObject::createCollider() {
     // Initialize VAO
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
@@ -125,7 +127,7 @@ void ColliderObject::createCollider(unsigned int programId) {
     float min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
     float max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
     // Set MVP ID for collider object
-    mvpId_ = gfxController_->getShaderVariable(programId, "MVP").get();
+    mvpId_ = gfxController_->getShaderVariable(programId_, "MVP").get();
     // Go through objects and get absolute min/max points
     for (auto it = target_->vertices.begin(); it != target_->vertices.end(); ++it) {
         for (int i = 0; i < 3; i++) {
@@ -187,7 +189,7 @@ void ColliderObject::createCollider(unsigned int programId) {
         min[0], min[1], max[2]
     };
     auto pointCount = colliderVertices.size() / 3;
-    poly_ = std::make_shared<Polygon>(pointCount, programId, colliderVertices);
+    poly_ = std::make_shared<Polygon>(pointCount, colliderVertices);
     gfxController_->generateBuffer(&poly_.get()->shapeBufferId[0]);
     gfxController_->bindBuffer(poly_.get()->shapeBufferId[0]);
     gfxController_->sendBufferData(sizeof(float) * colliderVertices.size(), &colliderVertices[0]);
@@ -224,4 +226,3 @@ float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
     }
     return currentMin;
 }
-

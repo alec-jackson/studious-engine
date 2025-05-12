@@ -16,9 +16,9 @@
 
 class Polygon {
  public:
-    Polygon(unsigned int pointCount, unsigned int programId, vector<float> vertices, vector<float> textures,
+    Polygon(unsigned int pointCount, vector<float> vertices, vector<float> textures,
         vector<float> normals);
-    Polygon(unsigned int pointCount, unsigned int programId, vector<float> vertices);
+    Polygon(unsigned int pointCount, vector<float> vertices);
     Polygon();
     void merge(const Polygon&);
     ~Polygon();
@@ -33,7 +33,6 @@ class Polygon {
     vector<unsigned int> pointCount;  // no. of distinct points in shape
     int numberOfObjects;  // Contains the number of objects in the model
     int textureUniformId;  // ID for finding texture sampler in OpenGL table
-    unsigned int programId;  // Used for storing programId of object's shader
 
     // Adding these in Polygon for now until we figure out material rendering
     vector<string> texturePath_;

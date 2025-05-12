@@ -4,9 +4,9 @@
  * @brief Implementation for GameObject2D
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <string>
 #include <cstdio>
@@ -59,7 +59,7 @@ void GameObject2D::initializeTextureData() {
  * @brief Updates the dimensions of the sprite. When using the splitGrid function, the image
  * itself will decrease in size, so we want to account for that. Run this to ensure the pixel
  * size remains the same after spliting.
- * 
+ *
  * @param width Width of the new sprite grid frame.
  * @param height Height of the new sprite grid frame.
  */
@@ -82,14 +82,21 @@ void GameObject2D::update() {
 
 /**
  * @brief Creates a collider for this game object
- * 
+ *
  * @param programId Program used to render the collider (collider shaders)
  */
-void GameObject2D::createCollider(int programId) {
+void GameObject2D::createCollider() {
     printf("GameObject2D::createCollider: Creating collider for object %s\n", objectName.c_str());
     auto colliderName = objectName + "-Collider";
-    collider_ = std::make_shared<ColliderObject>(vertTexData_, programId, &translateMatrix_, &scaleMatrix_, &vpMatrix_,
-        ObjectType::GAME_OBJECT, colliderName, gfxController_);
+    auto colliderProg = gfxController_->getProgramId(COLLIDEROBJECT_PROG_NAME);
+    if (!colliderProg.isOk()) {
+        fprintf(stderr,
+            "GameObject2D::createCollider: Failed to create collider! '%s' program does not exist!\n",
+            COLLIDEROBJECT_PROG_NAME);
+        return;
+    }
+    collider_ = std::make_shared<ColliderObject>(vertTexData_, colliderProg.get(), &translateMatrix_, &scaleMatrix_,
+        &vpMatrix_, ObjectType::GAME_OBJECT, colliderName, gfxController_);
 }
 
 /**

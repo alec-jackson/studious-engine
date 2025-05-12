@@ -23,9 +23,9 @@ class MockGfxController : public GfxController {
     MOCK_METHOD(GfxResult<unsigned int>, sendBufferData, (size_t, void *), (override));
     MOCK_METHOD(GfxResult<unsigned int>, sendTextureData, (unsigned int, unsigned int, TexFormat, void *), (override));
     MOCK_METHOD(GfxResult<int>, getShaderVariable, (unsigned int, const char *), (override));
-    MOCK_METHOD(GfxResult<unsigned int>, getProgramId, (uint), (override));
+    MOCK_METHOD(GfxResult<unsigned int>, getProgramId, (string), (override));
     MOCK_METHOD(GfxResult<unsigned int>, setProgram, (unsigned int), (override));
-    MOCK_METHOD(GfxResult<unsigned int>, loadShaders, (string, string), (override));
+    MOCK_METHOD(GfxResult<unsigned int>, loadShaders, (string, string, string), (override));
     MOCK_METHOD(GfxResult<unsigned int>, sendFloat, (unsigned int, float), (override));
     MOCK_METHOD(GfxResult<unsigned int>, sendFloatVector, (unsigned int, size_t, float *), (override));
     MOCK_METHOD(GfxResult<unsigned int>, polygonRenderMode, (RenderMode), (override));

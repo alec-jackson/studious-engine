@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include <condition_variable>
+#include <condition_variable> //NOLINT
 #include <cstdio>
 #include <iostream>
 #include <string>
@@ -29,22 +29,21 @@
 
  (void) startGameInstance does not return any value.
  */
-GameInstance::GameInstance(vector<string> vertShaders,
-        vector<string> fragShaders, GfxController *gfxController, AnimationController *animationController,
+GameInstance::GameInstance(GfxController *gfxController, AnimationController *animationController,
         int width, int height) : gfxController_ { gfxController }, animationController_ { animationController },
-        vertShaders_ { vertShaders }, fragShaders_ { fragShaders }, width_ { width }, height_ { height },
+        width_ { width }, height_ { height },
         shutdown_(0) {
     luminance = 1.0f;  // Set default values
     directionalLight = vec3(-100, 100, 100);
     controllersConnected = 0;
+    init();
 }
 
-// Helper function for startup
-void GameInstance::startGame(const configData &config) {
-    initWindow(config);
+void GameInstance::init() {
+    initWindow();
     initAudio();
     initController();
-    initApplication(vertShaders_, fragShaders_);
+    initApplication();
     keystate = SDL_GetKeyboardState(NULL);
 }
 
@@ -353,8 +352,15 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
     string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createGameObject: Creating GameObject %zu\n", sceneObjects_.size());
+    auto gameObjProg = gfxController_->getProgramId(GAMEOBJECT_PROG_NAME);
+    if (!gameObjProg.isOk()) {
+        fprintf(stderr,
+            "GameInstance::createGameObject: Failed to create GameObject! '%s' program does not exist!\n",
+            GAMEOBJECT_PROG_NAME);
+        return nullptr;
+    }
     auto gameObject = std::make_shared<GameObject>(characterModel, position, rotation,
-        scale, objectName, ObjectType::GAME_OBJECT, gfxController_);
+        scale, gameObjProg.get(), objectName, ObjectType::GAME_OBJECT, gfxController_);
     gameObject.get()->setDirectionalLight(directionalLight);
     gameObject.get()->setLuminance(luminance);
     sceneObjects_.push_back(gameObject);
@@ -373,28 +379,49 @@ CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float
 }
 
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
-    float charSpacing, int charPoint, uint programId, string objectName) {
+    float charSpacing, int charPoint, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createText: Creating TextObject %zu\n", sceneObjects_.size());
+    auto textProg = gfxController_->getProgramId(TEXTOBJECT_PROG_NAME);
+    if (!textProg.isOk()) {
+        fprintf(stderr,
+            "GameInstance::createText: Failed to create TextObject! '%s' program does not exist!\n",
+            TEXTOBJECT_PROG_NAME);
+        return nullptr;
+    }
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
-        charSpacing, charPoint, programId, objectName, ObjectType::TEXT_OBJECT, gfxController_);
+        charSpacing, charPoint, textProg.get(), objectName, ObjectType::TEXT_OBJECT, gfxController_);
     sceneObjects_.push_back(text);
     return text.get();
 }
 
-SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float scale, unsigned int programId,
+SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float scale,
     ObjectAnchor anchor, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
-    auto sprite = std::make_shared<SpriteObject>(spritePath, position, scale, programId, objectName,
+    auto spriteProg = gfxController_->getProgramId(SPRITEOBJECT_PROG_NAME);
+    if (!spriteProg.isOk()) {
+        fprintf(stderr,
+            "GameInstance::createSprite: Unable to create sprite! '%s' program does not exist!\n",
+            SPRITEOBJECT_PROG_NAME);
+        return nullptr;
+    }
+    auto sprite = std::make_shared<SpriteObject>(spritePath, position, scale, spriteProg.get(), objectName,
         ObjectType::SPRITE_OBJECT, anchor, gfxController_);
     sceneObjects_.push_back(sprite);
     return sprite.get();
 }
 
 UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
-    unsigned int programId, ObjectAnchor anchor, string objectName) {
+    ObjectAnchor anchor, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
-    auto ui = std::make_shared<UiObject>(spritePath, position, scale, wScale, hScale, programId, objectName,
+    auto uiProg = gfxController_->getProgramId("uiObject");
+    if (!uiProg.isOk()) {
+        fprintf(stderr,
+            "GameInstance::createUi: Failed to create UI object! '%s' program does not exist!\n",
+            UIOBJECT_PROG_NAME);
+        return nullptr;
+    }
+    auto ui = std::make_shared<UiObject>(spritePath, position, scale, wScale, hScale, uiProg.get(), objectName,
         ObjectType::UI_OBJECT, anchor, gfxController_);
     sceneObjects_.push_back(ui);
     return ui.get();
@@ -483,7 +510,7 @@ void GameInstance::setLuminance(float luminanceValue) {
 
  (void) initWindow does not return any values.
 */
-void GameInstance::initWindow(const configData &config) {
+void GameInstance::initWindow() {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
     window = SDL_CreateWindow("Studious Engine Example", SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED, width_, height_,
@@ -503,14 +530,16 @@ void GameInstance::initWindow(const configData &config) {
 #endif
     mainContext = SDL_GL_CreateContext(window);
     if (!mainContext) exit(EXIT_FAILURE);
-
-    SDL_GL_SetSwapInterval(config.enableVsync);  // 0 - Disable VSYNC / 1 - Enable VSYNC
     renderer = SDL_GetRenderer(window);
 
     if (window == NULL) {
         cerr << "Error: Failed to create SDL window!\n";
         return;
     }
+}
+
+void GameInstance::configureVsync(bool enable) {
+    SDL_GL_SetSwapInterval(enable);  // 0 - Disable VSYNC / 1 - Enable VSYNC
 }
 
 /**
@@ -580,29 +609,8 @@ void GameInstance::initController() {
     return;
 }
 
-/*
- (void) initApplication grabs the shader files provided in the
- (vector<string>) vertexPath and (vector<string>) fragmentPath vectors and
- compiles and loads them into the current GameInstance.
-
- (void) initApplication does not return any values.
-*/
-void GameInstance::initApplication(vector<string> vertexPath, vector<string> fragmentPath) {
-    // Compile each of our shaders and assign them their own programId number
+void GameInstance::initApplication() {
     gfxController_->init();
-    for (uint i = 0; i < vertexPath.size(); i++) {
-        gfxController_->loadShaders(vertexPath[i].c_str(), fragmentPath[i].c_str());
-    }
-}
-
-/* [NOT IMPLEMENTED] [OLD WORK REMOVED DUE TO CHANGES]
- (void) basicCollision takes a (GameInstance *) gameInstance and performs a
- basic collision check on all of the active GameObjects in the scene. This
- method is still a WIP and does not really do anything at the moment.
-
- (void) basicCollision does not return any values.
-*/
-void GameInstance::basicCollision(GameInstance *gameInstance) {
 }
 
 int GameInstance::lockScene() {

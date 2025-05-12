@@ -11,6 +11,13 @@
 #include <common.hpp>
 #include <GfxController.hpp>
 
+/* Define constants for shader names */
+#define UIOBJECT_PROG_NAME "uiObject"
+#define SPRITEOBJECT_PROG_NAME "spriteObject"
+#define GAMEOBJECT_PROG_NAME "gameObject"
+#define TEXTOBJECT_PROG_NAME "textObject"
+#define COLLIDEROBJECT_PROG_NAME "colliderObject"
+
 /// @todo Add SceneObject grouping for shared model changes
 enum ObjectType {
     UNDEFINED,

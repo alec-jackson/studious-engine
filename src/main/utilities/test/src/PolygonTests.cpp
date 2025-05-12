@@ -38,12 +38,11 @@ int main(int argc, char **argv) {
 
 Polygon createTestPolygon() {
     auto expectedPointCount = 123;
-    auto expectedProgramId = 1;
     vector<float> expectedVertices = { 0.333, 0.694, 0.777 };
     vector<float> expectedTextures = { 1.0, 0.1, 0.0 };
     vector<float> expectedNormals = { 0.123, 0.234, 0.345 };
 
-    auto polygon = Polygon(expectedPointCount, expectedProgramId, expectedVertices, expectedTextures, expectedNormals);
+    auto polygon = Polygon(expectedPointCount, expectedVertices, expectedTextures, expectedNormals);
 
     polygon.shapeBufferId[0] = 7;
     polygon.normalBufferId[0] = 8;
@@ -65,7 +64,6 @@ bool vectorEquals(vector<float> expectedVertices, vector<float> actualVertices) 
 TEST(PolygonConstructor, WhenConstructedWithData_ThenPolygonHasExpectedData) {
     // Preparation
     auto expectedPointCount = 123;
-    auto expectedProgramId = 1;
     auto expectedShapeBufferId = 0;
     auto expectedNormalBufferId = 0;
     auto expectedNumberOfObjects = 1;
@@ -74,11 +72,10 @@ TEST(PolygonConstructor, WhenConstructedWithData_ThenPolygonHasExpectedData) {
     vector<float> expectedNormals = { 0.123, 0.234, 0.345 };
 
     // Action
-    auto polygon = Polygon(expectedPointCount, expectedProgramId, expectedVertices, expectedTextures, expectedNormals);
+    auto polygon = Polygon(expectedPointCount, expectedVertices, expectedTextures, expectedNormals);
 
     // Validation
     EXPECT_EQ(expectedPointCount, polygon.pointCount[0]);
-    EXPECT_EQ(expectedProgramId, polygon.programId);
     EXPECT_TRUE(vectorEquals(expectedVertices, polygon.vertices[0]));
     EXPECT_TRUE(vectorEquals(expectedTextures, polygon.textureCoords[0]));
     EXPECT_TRUE(vectorEquals(expectedNormals, polygon.normalCoords[0]));
@@ -89,7 +86,6 @@ TEST(PolygonConstructor, WhenConstructedWithData_ThenPolygonHasExpectedData) {
 
 TEST(PolygonMerge, WhenTwoPolygonsMerged_ThenPolygonDataMergedOk) {
     // Preparation
-    auto expectedProgramId = 1;
     auto expectedNumberOfObjects = 2;
     auto expectedVectorSizesAfterMerge = 2;
     // Create two normal polygons to merge
@@ -104,9 +100,6 @@ TEST(PolygonMerge, WhenTwoPolygonsMerged_ThenPolygonDataMergedOk) {
     poly1.merge(poly2);
 
     // Validation
-    // Check that the programId is the same after merge
-    EXPECT_EQ(expectedProgramId, poly1.programId);
-
     // Check that the number of objects was incremented
     EXPECT_EQ(expectedNumberOfObjects, poly1.numberOfObjects);
 

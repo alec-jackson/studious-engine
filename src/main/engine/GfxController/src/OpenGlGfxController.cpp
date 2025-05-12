@@ -8,12 +8,12 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include <OpenGlGfxController.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
 #include <cstdio>
 #include <algorithm>
-#include <OpenGlGfxController.hpp>
 
 /**
  * @brief Generates a buffer in the OpenGL context
@@ -141,18 +141,14 @@ GfxResult<unsigned int> OpenGlGfxController::generateTexture(unsigned int *textu
     return GFX_OK(unsigned int);
 }
 
-/**
- * @brief Gets a programId for a specific index in the programIdList.
- *
- * @param index in the programId list
- * @return GfxResult<unsigned int> OK with returned program ID when successful; FAILURE otherwise.
- */
-GfxResult<unsigned int> OpenGlGfxController::getProgramId(uint index) {
-    // Boundary check index
-    if (index > programIdList_.size()) {
-        return GfxResult<unsigned int>(GfxApiResult::FAILURE, UINT_MAX);
+GfxResult<unsigned int> OpenGlGfxController::getProgramId(string programName) {
+    auto result = GFX_FAILURE(uint);
+    // Check if the program exists in the program ID map
+    auto pimit = programIdMap_.find(programName);
+    if (pimit != programIdMap_.end()) {
+        result = GfxResult<uint>(GfxApiResult::OK, pimit->second);
     }
-    return GfxResult<unsigned int>(GfxApiResult::OK, programIdList_[index]);
+    return result;
 }
 
 /**
@@ -162,8 +158,11 @@ GfxResult<unsigned int> OpenGlGfxController::getProgramId(uint index) {
  * @param fragmentShader Path to the fragmentShader to compile on the system
  * @return GfxResult<unsigned int> OK with the newly created programId; FAILURE otherwise.
  */
-GfxResult<unsigned int> OpenGlGfxController::loadShaders(string vertexShader, string fragmentShader) {
+GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, string vertexShader,
+    string fragmentShader) {
+    printf("Creaeting vertex shader id\n");
     unsigned int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    printf("Creaeting frag shader id\n");
     unsigned int fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     int logLength;
     int success = GL_FALSE;
@@ -227,10 +226,10 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string vertexShader, st
     glDetachShader(programId, fragmentShaderID);
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
-    // Add programId to programIdList
-    programIdList_.push_back(programId);
+    // Add programId to programIdMap
+    programIdMap_[programName] = programId;
 
-    printf("OpenGlGfxController::loadShaders: Created programId %d\n", programId);
+    printf("OpenGlGfxController::loadShaders: Created program %s -> programId %d\n", programName.c_str(), programId);
 
     return GfxResult<unsigned int>(GfxApiResult::OK, programId);
 }
@@ -713,14 +712,14 @@ OpenGlGfxController::~OpenGlGfxController() {
         glDeleteTextures(1, &textureId);
     }
     /* Delete Shader Programs */
-    for (auto programId : programIdList_) {
-        glDeleteProgram(programId);
+    for (auto programEntry : programIdMap_) {
+        glDeleteProgram(programEntry.second);
     }
 
     vaoList_.clear();
     vboList_.clear();
     textureIdList_.clear();
-    programIdList_.clear();
+    programIdMap_.clear();
 }
 
 void OpenGlGfxController::setBgColor(float r, float g, float b) {
