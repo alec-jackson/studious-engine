@@ -71,6 +71,7 @@ void CameraObject::update() {
                 break;
             case SPRITE_OBJECT:
             case TEXT_OBJECT:
+            case TILE_OBJECT:
                 (*it)->setVpMatrix(vpMatrixOrthographic_);
                 break;
             default:

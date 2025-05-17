@@ -8,9 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include <string>
 #include <cstdio>
-#include <iostream>
 #include <vector>
 #include <memory>
 #include <SpriteObject.hpp>

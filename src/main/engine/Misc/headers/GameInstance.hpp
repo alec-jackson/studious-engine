@@ -25,6 +25,7 @@
 #include <TextObject.hpp>
 #include <SpriteObject.hpp>
 #include <UiObject.hpp>
+#include <TileObject.hpp>
 #include <config.hpp>
 #include <AnimationController.hpp>
 
@@ -122,6 +123,8 @@ class GameInstance {
         ObjectAnchor anchor, string objectName);
     UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
         ObjectAnchor anchor, string objectName);
+    TileObject *createTileMap(vector<string> textures, vector<TileData> mapData,
+        vec3 position, float scale, string objectName, GfxController *gfxController);
     int getWidth();
     int getHeight();
     vec3 getResolution();

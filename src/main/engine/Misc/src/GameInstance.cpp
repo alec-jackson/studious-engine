@@ -414,7 +414,7 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
 UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
     ObjectAnchor anchor, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
-    auto uiProg = gfxController_->getProgramId("uiObject");
+    auto uiProg = gfxController_->getProgramId(UIOBJECT_PROG_NAME);
     if (!uiProg.isOk()) {
         fprintf(stderr,
             "GameInstance::createUi: Failed to create UI object! '%s' program does not exist!\n",
@@ -425,6 +425,22 @@ UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, 
         ObjectType::UI_OBJECT, anchor, gfxController_);
     sceneObjects_.push_back(ui);
     return ui.get();
+}
+
+TileObject *GameInstance::createTileMap(vector<string> textures, vector<TileData> mapData,
+    vec3 position, float scale, string objectName, GfxController *gfxController) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
+    auto tileProg = gfxController_->getProgramId(TILEOBJECT_PROG_NAME);
+    if (!tileProg.isOk()) {
+        fprintf(stderr,
+            "GameInstance::createTileMap: Failed to create tile map! '%s' program does not exist!\n",
+            TILEOBJECT_PROG_NAME);
+        return nullptr;
+    }
+    auto tile = std::make_shared<TileObject>(textures, mapData, position, vec3(0.0f), scale, ObjectType::TILE_OBJECT, tileProg.get(), objectName,
+        gfxController);
+    sceneObjects_.push_back(tile);
+    return tile.get();
 }
 
 SceneObject *GameInstance::getSceneObject(string objectName) {

@@ -9,8 +9,6 @@
  *
  */
 #include <cstdio>
-#include <vector>
-#include <string>
 #include <TextObject.hpp>
 
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
