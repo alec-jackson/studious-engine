@@ -136,11 +136,12 @@ int runtime(GameInstance *currentGame) {
 
     // Create a new tile object and add it to the scene
     auto tile = currentGame->createTileMap(
-        { "src/resources/images/floor_0.png" },
-        {{ 0, 0, "src/resources/images/floor_0.png" },
-        { 1, 1, "src/resources/images/floor_0.png" },
-        { -1, -1, "src/resources/images/floor_0.png" }},
-        vec3(100, 100, 0),
+        {{ "floor_0", "src/resources/images/floor_0.png" }},
+        {{ 0, 0, "floor_0" },
+        { 0, 1, "floor_0" },
+        { 1, 1, "floor_0" },
+        { -1, -1, "floor_0" }},
+        vec3(200, 200, 0),
         6.0f,
         "test-tile",
         &gfxController

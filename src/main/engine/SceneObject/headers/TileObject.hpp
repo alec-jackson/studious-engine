@@ -17,16 +17,20 @@ struct TileData {
 
 class TileObject : public SceneObject {
  public:
-    explicit TileObject(vector<string> textures, vector<TileData> mapData, vec3 position, vec3 rotation, float scale, ObjectType type, uint programId, string objectName, GfxController *gfxController);
+    explicit TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation, float scale, ObjectType type, uint programId, string objectName, GfxController *gfxController);
     void sanityCheck();
     void update() override;
     void render() override;
  private:
     void basicTriangle();
-    void generateTextureData(vector<string> textures);
+    void generateTextureData(map<string, string> textures);
     void processMapData();
     map<string, int> textureToIndexMap_;
     vector<TileData> mapData_;
     uint projectionId_;
+    uint texArr_;
+    int width_;
+    int height_;
+    TexFormat textureFormat_;
 };
 

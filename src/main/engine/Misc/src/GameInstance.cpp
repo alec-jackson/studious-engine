@@ -427,7 +427,7 @@ UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, 
     return ui.get();
 }
 
-TileObject *GameInstance::createTileMap(vector<string> textures, vector<TileData> mapData,
+TileObject *GameInstance::createTileMap(map<string, string> textures, vector<TileData> mapData,
     vec3 position, float scale, string objectName, GfxController *gfxController) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     auto tileProg = gfxController_->getProgramId(TILEOBJECT_PROG_NAME);
