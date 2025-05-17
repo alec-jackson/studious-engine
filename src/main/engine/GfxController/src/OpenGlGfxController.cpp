@@ -187,6 +187,7 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, str
         vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
         cerr << vertexShader << ": " << &errorLog[0] << "\n";
+        assert(false);
     }
     file.close();
     success = GL_FALSE;
@@ -209,6 +210,7 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, str
         vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
         cerr << fragmentShader << ": " << &errorLog[0] << "\n";
+        assert(false);
     }
     file.close();
     unsigned int programId = glCreateProgram();
@@ -221,6 +223,7 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, str
         vector<char> errorLog(logLength + 1);
         glGetProgramInfoLog(programId, logLength, NULL, &errorLog[0]);
         cerr << &errorLog[0] << "\n";
+        assert(false);
     }
     glDetachShader(programId, vertexShaderID);
     glDetachShader(programId, fragmentShaderID);
@@ -243,8 +246,8 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, str
  */
 GfxResult<int> OpenGlGfxController::getShaderVariable(unsigned int programId, const char *variableName) {
     auto varId = glGetUniformLocation(programId, variableName);
-    auto result = GfxResult<int>(GfxApiResult::FAILURE, varId);
-    if (varId == -1) result = GfxResult<int>(GfxApiResult::OK, varId);
+    auto result = GfxResult<int>(GfxApiResult::OK, varId);
+    if (varId == -1) result = GfxResult<int>(GfxApiResult::FAILURE, varId);
     return result;
 }
 
@@ -304,6 +307,7 @@ GfxResult<unsigned int> OpenGlGfxController::setProgram(unsigned int programId) 
     glUseProgram(programId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
+        assert(false);
         fprintf(stderr, "OpenGlGfxController::setProgram: programId %d Error: %d\n", programId, error);
         return GFX_FAILURE(unsigned int);
     }
@@ -428,6 +432,7 @@ GfxResult<unsigned int> OpenGlGfxController::bindVao(unsigned int vao) {
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
         fprintf(stderr, "OpenGlGfxController::bindVao: vao %u, Error: %d\n", vao, error);
+        assert(false);
         return GFX_FAILURE(unsigned int);
     }
     return GFX_OK(unsigned int);

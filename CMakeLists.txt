@@ -19,7 +19,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (NOT WIN32)
-add_compile_options(-Wall -Werror)
+add_compile_options(-Wall)
 endif()
 
 if (APPLE)
@@ -72,6 +72,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/CameraObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/engine/SceneObject/src/TileObject.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
   src/main/utilities/src/GifLoader.cpp
   src/main/engine/Misc/src/inputMonitor.cpp

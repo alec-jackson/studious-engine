@@ -17,6 +17,7 @@
 #define GAMEOBJECT_PROG_NAME "gameObject"
 #define TEXTOBJECT_PROG_NAME "textObject"
 #define COLLIDEROBJECT_PROG_NAME "colliderObject"
+#define TILEOBJECT_PROG_NAME "tileObject"
 
 /// @todo Add SceneObject grouping for shared model changes
 enum ObjectType {
@@ -25,7 +26,8 @@ enum ObjectType {
     CAMERA_OBJECT,
     GAME_OBJECT,
     UI_OBJECT,
-    SPRITE_OBJECT
+    SPRITE_OBJECT,
+    TILE_OBJECT
 };
 
 enum RenderPriority {

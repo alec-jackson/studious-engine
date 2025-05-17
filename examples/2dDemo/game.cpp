@@ -29,7 +29,8 @@ vector<ProgramData> programs = {
     { "colliderObject", "src/main/shaders/core/colliderObject.vert", "src/main/shaders/core/colliderObject.frag" },
     { "textObject", "src/main/shaders/core/textObject.vert", "src/main/shaders/core/textObject.frag" },
     { "spriteObject", "src/main/shaders/core/spriteObject.vert", "src/main/shaders/core/spriteObject.frag" },
-    { "uiObject", "src/main/shaders/core/uiObject.vert", "src/main/shaders/core/uiObject.frag" }
+    { "uiObject", "src/main/shaders/core/uiObject.vert", "src/main/shaders/core/uiObject.frag" },
+    { "tileObject", "src/main/shaders/core/tileObject.vert", "src/main/shaders/core/tileObject.frag" }
 };
 #else
 vector<ProgramData> programs = {
@@ -132,10 +133,24 @@ int runtime(GameInstance *currentGame) {
         12,
         true);
     animationController.playTrack("all frames");
+
+    // Create a new tile object and add it to the scene
+    auto tile = currentGame->createTileMap(
+        {{ "floor_0", "src/resources/images/floor_0.png" }},
+        {{ 0, 0, "floor_0" },
+        { 0, 1, "floor_0" },
+        { 1, 1, "floor_0" },
+        { -1, -1, "floor_0" }},
+        vec3(200, 200, 0),
+        6.0f,
+        "test-tile",
+        &gfxController
+    );
     // Add objects to camera
     vector<SceneObject *> targets = {
         obstacle,
-        player
+        player,
+        tile
     };
 
     // Add all objects to active camera
@@ -202,7 +217,7 @@ int mainLoop(gameInfo* gamein) {
             printf("E released!\n");
             eDown = false;
             animationController.playTrack("one to four");
-        }
+    }
         newPos = playerPtr->getPosition(offset);
         playerPtr->setPosition(newPos);
         if (currentGame->getCollision2D(playerPtr, obstaclePtr, vec3(0))) printf("CONTACT TRUE\n");
