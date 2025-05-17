@@ -247,6 +247,7 @@ install (FILES
   src/main/engine/SceneObject/headers/SpriteObject.hpp
   src/main/engine/SceneObject/headers/TextObject.hpp
   src/main/engine/SceneObject/headers/UiObject.hpp
+  src/main/engine/SceneObject/headers/TileObject.hpp
   src/main/engine/SceneObjectExt/headers/TrackExt.hpp
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlEsGfxController.hpp

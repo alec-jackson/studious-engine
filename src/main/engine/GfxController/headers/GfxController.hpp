@@ -102,7 +102,7 @@ class GfxController {
     virtual GfxResult<uint> sendBufferData(size_t size, void *data) = 0;
     virtual GfxResult<uint> sendTextureData(uint width, uint height, TexFormat format,
         void *data) = 0;
-    virtual GfxResult<uint> sendTextureData3D(uint offsetx, uint offsety, uint index, uint width, uint height, uint layers, TexFormat format,
+    virtual GfxResult<uint> sendTextureData3D(int offsetx, int offsety, int index, uint width, uint height, TexFormat format,
         void *data) = 0;
     virtual GfxResult<int>  getShaderVariable(uint, const char *) = 0;
     /**

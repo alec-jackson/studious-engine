@@ -20,19 +20,28 @@ struct TileData {
 
 class TileObject : public SceneObject {
  public:
-    explicit TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation, float scale, ObjectType type, uint programId, string objectName, GfxController *gfxController);
-    void sanityCheck();
+    explicit TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation, float scale, ObjectType type, uint programId, string objectName, ObjectAnchor anchor, GfxController *gfxController);
     void update() override;
     void render() override;
+
+    // Getters
+    inline vec3 getTint() { return tint_; }
+
+    // Setters
+    inline void setTint(vec3 tint) { tint_ = tint; }
  private:
     void generateTextureData(map<string, string> textures);
     void processMapData();
+    void sanityCheck();
     map<string, int> textureToIndexMap_;
     vector<TileData> mapData_;
     uint projectionId_;
+    uint tintId_;
     uint texArr_;
     int width_;
     int height_;
     TexFormat textureFormat_;
+    ObjectAnchor anchor_;
+    vec3 tint_;
 };
 

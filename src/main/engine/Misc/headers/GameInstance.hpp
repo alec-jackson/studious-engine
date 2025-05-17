@@ -124,7 +124,7 @@ class GameInstance {
     UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
         ObjectAnchor anchor, string objectName);
     TileObject *createTileMap(map<string, string> textures, vector<TileData> mapData,
-        vec3 position, float scale, string objectName, GfxController *gfxController);
+        vec3 position, float scale, string objectName, ObjectAnchor anchor, GfxController *gfxController);
     int getWidth();
     int getHeight();
     vec3 getResolution();

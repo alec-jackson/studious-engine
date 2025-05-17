@@ -29,3 +29,5 @@ struct Image {
  * @return std::shared_ptr<uint8_t[]> Buffer containing tightly packed pixel data.
  */
 std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture);
+
+SDL_Surface *convertSurfaceToRgba(SDL_Surface *surface);

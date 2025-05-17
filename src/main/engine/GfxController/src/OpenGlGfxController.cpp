@@ -108,7 +108,7 @@ GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width,
     return GFX_OK(unsigned int);
 }
 
-GfxResult<uint> OpenGlGfxController::sendTextureData3D(uint offsetx, uint offsety, uint index, uint width, uint height, uint layers, TexFormat format,
+GfxResult<uint> OpenGlGfxController::sendTextureData3D(int offsetx, int offsety, int index, uint width, uint height, TexFormat format,
     void *data) {
     glTexSubImage3D(GL_TEXTURE_2D_ARRAY,  // Target
         0,  // mipmap level
@@ -117,13 +117,13 @@ GfxResult<uint> OpenGlGfxController::sendTextureData3D(uint offsetx, uint offset
         index,
         width,
         height,
-        layers,
+        1,  // Just send one layer of data at a time for now...
         format == TexFormat::RGB ? GL_RGB : GL_RGBA,
         GL_UNSIGNED_BYTE,
         data);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
-        fprintf(stderr, "OpenGlGfxController::sendTextureData: Error %d\n", error);
+        fprintf(stderr, "OpenGlGfxController::sendTextureData3D: Error %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
     return GFX_OK(unsigned int);
