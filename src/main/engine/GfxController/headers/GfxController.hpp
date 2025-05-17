@@ -70,6 +70,11 @@ enum class GfxClearMode {
     COLOR
 };
 
+enum class GfxTextureType {
+    NORMAL,
+    ARRAY
+};
+
 template <typename T>
 class GfxResult {
  public:
@@ -91,19 +96,21 @@ struct ProgramData {
 class GfxController {
  public:
     virtual GfxResult<int> init() = 0;
-    virtual GfxResult<unsigned int> generateBuffer(unsigned int *bufferId) = 0;
-    virtual GfxResult<unsigned int> generateTexture(unsigned int *textureId) = 0;
-    virtual GfxResult<unsigned int> bindBuffer(unsigned int bufferId) = 0;
-    virtual GfxResult<unsigned int> sendBufferData(size_t size, void *data) = 0;
-    virtual GfxResult<unsigned int> sendTextureData(unsigned int width, unsigned int height, TexFormat format,
+    virtual GfxResult<uint> generateBuffer(uint *bufferId) = 0;
+    virtual GfxResult<uint> generateTexture(uint *textureId) = 0;
+    virtual GfxResult<uint> bindBuffer(uint bufferId) = 0;
+    virtual GfxResult<uint> sendBufferData(size_t size, void *data) = 0;
+    virtual GfxResult<uint> sendTextureData(uint width, uint height, TexFormat format,
         void *data) = 0;
-    virtual GfxResult<int>  getShaderVariable(unsigned int, const char *) = 0;
+    virtual GfxResult<uint> sendTextureData3D(uint offsetx, uint offsety, uint index, uint width, uint height, uint layers, TexFormat format,
+        void *data) = 0;
+    virtual GfxResult<int>  getShaderVariable(uint, const char *) = 0;
     /**
      * @brief Fetches the program ID that belongs to the given name. Returns a
      * GFX_FAILURE if the program does not exist, or is inactive.
      */
-    virtual GfxResult<unsigned int> getProgramId(string) = 0;
-    virtual GfxResult<unsigned int> setProgram(unsigned int) = 0;
+    virtual GfxResult<uint> getProgramId(string) = 0;
+    virtual GfxResult<uint> setProgram(uint) = 0;
     /**
      * @brief Compiles the provided shaders and creates a new program ID on success.
      * @param programName The name to give the newly created program.
@@ -112,23 +119,49 @@ class GfxController {
      * @return OK on success, FAILURE on failure. When successful, the program ID will be returned in the
      * GfxResult's data field, accessable via GfxResult::get().
      */
-    virtual GfxResult<unsigned int> loadShaders(string programName, string vertShaderPath, string fragShaderPath) = 0;
-    virtual GfxResult<unsigned int> sendFloat(unsigned int variableId, float data) = 0;
-    virtual GfxResult<unsigned int> sendFloatVector(unsigned int variableId, size_t count, float *data) = 0;
-    virtual GfxResult<unsigned int> polygonRenderMode(RenderMode mode) = 0;
-    virtual GfxResult<unsigned int> sendFloatMatrix(unsigned int variableId, size_t count, float *data) = 0;
-    virtual GfxResult<unsigned int> sendInteger(unsigned int variableId, int data) = 0;
-    virtual GfxResult<unsigned int> bindTexture(unsigned int textureId) = 0;
-    virtual GfxResult<unsigned int> initVao(unsigned int *vao) = 0;
-    virtual GfxResult<unsigned int> bindVao(unsigned int vao) = 0;
-    virtual GfxResult<unsigned int> setCapability(GfxCapability capabilityId, bool enabled) = 0;
-    virtual GfxResult<unsigned int> deleteTextures(unsigned int *tId) = 0;
-    virtual GfxResult<unsigned int> updateBufferData(const vector<float> &vertices, unsigned int vbo) = 0;
-    virtual GfxResult<unsigned int> setTexParam(TexParam param, TexVal val) = 0;
-    virtual GfxResult<unsigned int> generateMipMap() = 0;
-    virtual GfxResult<unsigned int> enableVertexAttArray(unsigned int layout, size_t size) = 0;
-    virtual GfxResult<unsigned int> disableVertexAttArray(unsigned int layout) = 0;
-    virtual GfxResult<unsigned int> drawTriangles(unsigned int size) = 0;
+    virtual GfxResult<uint> loadShaders(string programName, string vertShaderPath, string fragShaderPath) = 0;
+    virtual GfxResult<uint> sendFloat(uint variableId, float data) = 0;
+    virtual GfxResult<uint> sendFloatVector(uint variableId, size_t count, float *data) = 0;
+    virtual GfxResult<uint> polygonRenderMode(RenderMode mode) = 0;
+    virtual GfxResult<uint> sendFloatMatrix(uint variableId, size_t count, float *data) = 0;
+    virtual GfxResult<uint> sendInteger(uint variableId, int data) = 0;
+    /**
+     * @brief Binds a texture to the current OpenGL context.
+     *
+     * @param textureId ID of texture to bind.
+     * @param type The type of texture being bound.
+     * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
+     */
+    virtual GfxResult<uint> bindTexture(uint textureId, GfxTextureType type) = 0;
+    virtual GfxResult<uint> initVao(uint *vao) = 0;
+    virtual GfxResult<uint> bindVao(uint vao) = 0;
+    virtual GfxResult<uint> setCapability(GfxCapability capabilityId, bool enabled) = 0;
+    virtual GfxResult<uint> deleteTextures(uint *tId) = 0;
+    virtual GfxResult<uint> updateBufferData(const vector<float> &vertices, uint vbo) = 0;
+    virtual GfxResult<uint> setTexParam(TexParam param, TexVal val, GfxTextureType type) = 0;
+    virtual GfxResult<uint> generateMipMap() = 0;
+    /**
+     * @brief Enables a vertex attribute array and configures the vertex attribute pointer.
+     *
+     * @param layout The layout set in the OpenGL shader.
+     * @param count The number of elements in the attribute array.
+     * @param size The size of the underlying type used in bytes. Use sizeof() operator.
+     * @param offset Offset of the data in GPU memory. Normally zero unless combining multiple attributes into one.
+     * @return GfxResult<uint> OK if succeeded, FAILURE if error occurred.
+     */
+    virtual GfxResult<uint> enableVertexAttArray(uint layout, int count, size_t size, void *offset) = 0;
+    /**
+     * @brief Configures the divisor for the attribute in a GLSL shader.
+     * 
+     * @param layout Attribute to target.
+     * @param divisor Divisor to use. Use zero for none.
+     * @return GfxResult<uint> OK if succeeded, FAILURE if error occurred.
+     */
+    virtual GfxResult<uint> setVertexAttDivisor(uint layout, uint divisor) = 0;
+    virtual GfxResult<uint> disableVertexAttArray(uint layout) = 0;
+    virtual GfxResult<uint> drawTriangles(uint size) = 0;
+    virtual GfxResult<uint> drawTrianglesInstanced(uint size, uint count) = 0;
+    virtual GfxResult<uint> allocateTexture3D(TexFormat format, uint width, uint height, uint layers) = 0;
     /**
      * @brief Sets the background color of the window.
      * @param r Red value from 0.0f to 1.0f.
@@ -138,6 +171,6 @@ class GfxController {
     virtual void setBgColor(float r, float g, float b) = 0;
     virtual void clear(GfxClearMode clearMode) = 0;
     virtual void update() = 0;
-    virtual void deleteBuffer(unsigned int *bufferId) = 0;
-    virtual void deleteVao(unsigned int *vao) = 0;
+    virtual void deleteBuffer(uint *bufferId) = 0;
+    virtual void deleteVao(uint *vao) = 0;
 };

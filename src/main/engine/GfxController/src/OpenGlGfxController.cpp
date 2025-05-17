@@ -108,6 +108,27 @@ GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width,
     return GFX_OK(unsigned int);
 }
 
+GfxResult<uint> OpenGlGfxController::sendTextureData3D(uint offsetx, uint offsety, uint index, uint width, uint height, uint layers, TexFormat format,
+    void *data) {
+    glTexSubImage3D(GL_TEXTURE_2D_ARRAY,  // Target
+        0,  // mipmap level
+        offsetx,
+        offsety,
+        index,
+        width,
+        height,
+        layers,
+        format == TexFormat::RGB ? GL_RGB : GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        data);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::sendTextureData: Error %d\n", error);
+        return GFX_FAILURE(unsigned int);
+    }
+    return GFX_OK(unsigned int);
+}
+
 /**
  * @brief Generates mipmaps for the currently bound texture
  *
@@ -129,15 +150,29 @@ GfxResult<unsigned int> OpenGlGfxController::generateMipMap() {
  * @param textureId assigned to newly created texture in OpenGL context.
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
-GfxResult<unsigned int> OpenGlGfxController::generateTexture(unsigned int *textureId) {
+GfxResult<unsigned int> OpenGlGfxController::generateTexture(uint *textureId) {
     glGenTextures(1, textureId);
-
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::generateTexture: Error: %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
     textureIdList_.push_back(*textureId);
+    return GFX_OK(unsigned int);
+}
+
+GfxResult<uint> OpenGlGfxController::allocateTexture3D(TexFormat format, uint width, uint height, uint layers) {
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY,
+        1, // Mipmap level count - not dealing with these for now. -CG
+        format == TexFormat::RGB ? GL_RGB8 : GL_RGBA8, // format
+        width,
+        height,
+        layers);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::allocateTexture3D: Error: %d\n", error);
+        return GFX_FAILURE(unsigned int);
+    }
     return GFX_OK(unsigned int);
 }
 
@@ -399,17 +434,22 @@ GfxResult<unsigned int> OpenGlGfxController::sendInteger(unsigned int variableId
     return GFX_OK(unsigned int);
 }
 
-/**
- * @brief Binds a texture to the current OpenGL context.
- *
- * @param textureId ID of texture to bind.
- * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
- */
-GfxResult<unsigned int> OpenGlGfxController::bindTexture(unsigned int textureId) {
+GfxResult<unsigned int> OpenGlGfxController::bindTexture(uint textureId, GfxTextureType type) {
+    GLenum texType;
+    switch (type) {
+        case GfxTextureType::NORMAL:
+            texType = GL_TEXTURE_2D;
+            break;
+        case GfxTextureType::ARRAY:
+            texType = GL_TEXTURE_2D_ARRAY;
+            break;
+        default:
+            texType = GL_TEXTURE_2D;
+            break;
+    }
     // Use texture unit zero - nothing fancy
     glActiveTexture(GL_TEXTURE0);
-    // Binds the specific textureId to a GL_TEXTURE_2D - might only need to do once?
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    glBindTexture(texType, textureId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
@@ -532,10 +572,11 @@ GfxResult<unsigned int> OpenGlGfxController::updateBufferData(const vector<float
  * @param val value to set for the given parameter
  * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
  */
-GfxResult<unsigned int> OpenGlGfxController::setTexParam(TexParam param, TexVal val) {
+GfxResult<unsigned int> OpenGlGfxController::setTexParam(TexParam param, TexVal val, GfxTextureType type) {
     // Convert Studious GFX enums to OpenGL enums
     auto glParam = 0;
     auto glVal = 0;
+    auto glTexType = 0;
     switch (param) {
         case TexParam::WRAP_MODE_S:
             glParam = GL_TEXTURE_WRAP_S;
@@ -578,7 +619,18 @@ GfxResult<unsigned int> OpenGlGfxController::setTexParam(TexParam param, TexVal 
                 static_cast<int>(param));
             break;
     }
-    glTexParameteri(GL_TEXTURE_2D, glParam, glVal);
+    switch (type) {
+        case GfxTextureType::NORMAL:
+            glTexType = GL_TEXTURE_2D;
+            break;
+        case GfxTextureType::ARRAY:
+            glTexType = GL_TEXTURE_2D_ARRAY;
+            break;
+        default:
+            glTexType = GL_TEXTURE_2D;
+            break;
+    }
+    glTexParameteri(glTexType, glParam, glVal);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::setTexParam: Error %d\n", error);
@@ -587,25 +639,28 @@ GfxResult<unsigned int> OpenGlGfxController::setTexParam(TexParam param, TexVal 
     return GFX_OK(unsigned int);
 }
 
-/**
- * @brief Enables a vertex attribute array and configures the vertex attribute pointer
- *
- * @param layout The layout set in the OpenGL shader
- * @param size The per-object size. A 3D vertex would have a size of 3, because each point is made of 3 floats
- * @return GfxResult<unsigned int> OK if succeeded, FAILURE if error occurred
- */
-GfxResult<unsigned int> OpenGlGfxController::enableVertexAttArray(unsigned int layout, size_t size) {
+GfxResult<unsigned int> OpenGlGfxController::enableVertexAttArray(uint layout, int count, size_t size, void *offset) {
     glVertexAttribPointer(
-        layout,                     // layout in shader
-        size,                       // size
-        GL_FLOAT,                   // type
-        GL_FALSE,                   // normalized?
-        size * sizeof(float),     // stride
-        0);                         // array buffer offset
+        layout,                          // layout in shader
+        count,                           // size
+        GL_FLOAT,                        // type
+        GL_FALSE,                        // normalized?
+        count * size,                    // stride
+        offset);                         // array buffer offset
     glEnableVertexAttribArray(layout);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::enableVertexAttArray: Error %d\n", error);
+        return GFX_FAILURE(unsigned int);
+    }
+    return GFX_OK(unsigned int);
+}
+
+GfxResult<uint> OpenGlGfxController::setVertexAttDivisor(uint layout, uint divisor) {
+    glVertexAttribDivisor(layout, divisor);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::setVertexAttDivisor: Error %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
     return GFX_OK(unsigned int);
@@ -638,6 +693,16 @@ GfxResult<unsigned int> OpenGlGfxController::drawTriangles(unsigned int size) {
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::drawTriangles: Error %d\n", error);
+        return GFX_FAILURE(unsigned int);
+    }
+    return GFX_OK(unsigned int);
+}
+
+GfxResult<uint> OpenGlGfxController::drawTrianglesInstanced(uint size, uint count) {
+    glDrawArraysInstanced(GL_TRIANGLES, 0, size, count);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGlGfxController::drawTrianglesInstanced: Error %d\n", error);
         return GFX_FAILURE(unsigned int);
     }
     return GFX_OK(unsigned int);

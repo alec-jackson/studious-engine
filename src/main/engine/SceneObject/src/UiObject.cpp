@@ -112,7 +112,7 @@ void UiObject::initializeVertexData() {
 
     vertexData_ = generateVertices(x, y, incrementFactorX, incrementFactorY);
     gfxController_->sendBufferData(sizeof(float) * 24 * 9, vertexData_.get());
-    gfxController_->enableVertexAttArray(0, 4);
+    gfxController_->enableVertexAttArray(0, 4, sizeof(float), 0);
 
     // Generate the vertex index buffer and send it
     vertexIndexData_ = std::shared_ptr<float[]>(new float[24 * 3], std::default_delete<float[]>());
@@ -123,7 +123,7 @@ void UiObject::initializeVertexData() {
     gfxController_->generateBuffer(&vertexIndexVbo_);
     gfxController_->bindBuffer(vertexIndexVbo_);
     gfxController_->sendBufferData(sizeof(float) * 24 * 9, vertexIndexData_.get());
-    gfxController_->enableVertexAttArray(1, 1);
+    gfxController_->enableVertexAttArray(1, 1, sizeof(float), 0);
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
 }
@@ -153,14 +153,14 @@ void UiObject::render() {
     /* Bind the texture based on the sprite grid split */
     if (imageBank_.textureIds.empty()) {
         /* Send the base image if no images are present in the image bank */
-        gfxController_->bindTexture(textureId_);
+        gfxController_->bindTexture(textureId_, GfxTextureType::NORMAL);
     } else {
         assert(currentFrame_ < imageBank_.textureIds.size());
-        gfxController_->bindTexture(imageBank_.textureIds.at(currentFrame_));
+        gfxController_->bindTexture(imageBank_.textureIds.at(currentFrame_), GfxTextureType::NORMAL);
     }
     gfxController_->drawTriangles(POINTS_PER_TRIANGLE * TRIANGLES_PER_QUAD * QUADS_PER_UI_ELEM);
     gfxController_->bindVao(0);
-    gfxController_->bindTexture(0);
+    gfxController_->bindTexture(0, GfxTextureType::NORMAL);
 }
 
 void UiObject::update() {

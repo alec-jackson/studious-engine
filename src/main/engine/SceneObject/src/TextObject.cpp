@@ -55,16 +55,16 @@ void TextObject::initializeText() {
             unsigned int textureId = 0;
             // Generate OpenGL textures for Freetype font rasterizations
             gfxController_->generateTexture(&textureId);
-            gfxController_->bindTexture(textureId);
+            gfxController_->bindTexture(textureId, GfxTextureType::NORMAL);
             gfxController_->sendTextureData(
                 face->glyph->bitmap.width,
                 face->glyph->bitmap.rows,
                 TexFormat::BITMAP,
                 face->glyph->bitmap.buffer);
-            gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
-            gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
-            gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR));
-            gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR));
+            gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+            gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+            gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR), GfxTextureType::NORMAL);
+            gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR), GfxTextureType::NORMAL);
 
             Character character = {
                 textureId,
@@ -74,7 +74,7 @@ void TextObject::initializeText() {
             };
             characters.insert(std::pair<char, Character>(c, character));
         }
-        gfxController_->bindTexture(0);
+        gfxController_->bindTexture(0, GfxTextureType::NORMAL);
     }
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
@@ -114,7 +114,7 @@ void TextObject::createMessage() {
 
         // Send VBO data for each character to the currently bound buffer
         gfxController_->sendBufferData(sizeof(float) * vertices.size(), &vertices[0]);
-        gfxController_->enableVertexAttArray(0, 4);
+        gfxController_->enableVertexAttArray(0, 4, sizeof(float), 0);
         vaos_.push_back(vao);
         // Update x/y
         x = w == 0 ? x + static_cast<float>(ch.Advance / 100.0f) : xpos + w + charPadding_;
@@ -145,11 +145,11 @@ void TextObject::render() {
         if (character == '\n') continue;
         gfxController_->bindVao(vaos_[index++]);
         Character ch = characters[character];
-        gfxController_->bindTexture(ch.TextureID);
+        gfxController_->bindTexture(ch.TextureID, GfxTextureType::NORMAL);
         gfxController_->drawTriangles(6);
     }
     gfxController_->bindVao(0);
-    gfxController_->bindTexture(0);
+    gfxController_->bindTexture(0, GfxTextureType::NORMAL);
 }
 
 void TextObject::update() {

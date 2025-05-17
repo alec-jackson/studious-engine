@@ -8,6 +8,9 @@
 #pragma once
 #include <SceneObject.hpp>
 #include <GfxController.hpp>
+#define TILE_VEC4_ATTRIBUTE_COUNT 4
+#define TILE_MODEL_VEC4_START_ATTR 2
+#define TILE_LAYER_FLOAT_ATTR 1
 
 struct TileData {
     int x;

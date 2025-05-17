@@ -40,13 +40,13 @@ void GameObject2D::initializeTextureData() {
     auto packedData = packSurface(texture);
     // Send texture image to OpenGL
     gfxController_->generateTexture(&textureId_);
-    gfxController_->bindTexture(textureId_);
+    gfxController_->bindTexture(textureId_, GfxTextureType::NORMAL);
     gfxController_->sendTextureData(texture->w, texture->h, textureFormat, packedData.get());
-    gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
-    gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
-    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
-    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
-    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
+    gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+    gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR), GfxTextureType::NORMAL);
+    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP), GfxTextureType::NORMAL);
+    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10), GfxTextureType::NORMAL);
     gfxController_->generateMipMap();
 
     textureWidth_ = texture->w;

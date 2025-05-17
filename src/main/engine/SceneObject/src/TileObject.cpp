@@ -35,7 +35,7 @@ void TileObject::processMapData() {
     gfxController_->bindBuffer(vbo);
 
     gfxController_->sendBufferData(sizeof(float) * vertData.size(), vertData.data());
-    gfxController_->enableVertexAttArray(0, 4);
+    gfxController_->enableVertexAttArray(0, 4, sizeof(float), 0);
     gfxController_->bindBuffer(0);
 
     auto modelMatrices = std::unique_ptr<mat4[]>(new mat4[mapData_.size()]);
@@ -56,24 +56,11 @@ void TileObject::processMapData() {
     gfxController_->generateBuffer(&vbo);
     gfxController_->bindBuffer(vbo);
     gfxController_->sendBufferData(mapData_.size() * sizeof(mat4), &modelMatrices.get()[0]);
-    // We need to generate a vec4 for each model
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(vec4), (void *)0);
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(vec4), (void *)(1 * sizeof(vec4)));
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(vec4), (void *)(2 * sizeof(vec4)));
-    glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(vec4), (void *)(3 * sizeof(vec4)));
-    assert(glGetError() == GL_NO_ERROR);
-
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribDivisor(3, 1);
-    glVertexAttribDivisor(4, 1);
-    assert(glGetError() == GL_NO_ERROR);
-    glVertexAttribDivisor(5, 1);
-    assert(glGetError() == GL_NO_ERROR);
-
+    for (int i = 0; i < TILE_VEC4_ATTRIBUTE_COUNT; i++) {
+        auto layout = TILE_MODEL_VEC4_START_ATTR + i;
+        gfxController_->enableVertexAttArray(layout, 4, sizeof(vec4), (void *)(i * sizeof(vec4)));
+        gfxController_->setVertexAttDivisor(layout, 1);
+    }
     gfxController_->bindBuffer(0);
 
     // This is going to be interesting, but add layout indices to the stream
@@ -81,15 +68,7 @@ void TileObject::processMapData() {
     gfxController_->generateBuffer(&vbo);
     gfxController_->bindBuffer(vbo);
     gfxController_->sendBufferData(sizeof(float) * mapData_.size(), &layerIndices.get()[0]);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void *)0);
-    glVertexAttribDivisor(1, 1);
-    assert(glGetError() == GL_NO_ERROR);
-
-    glBindVertexArray(0);
-    assert(glGetError() == GL_NO_ERROR);
-
+    gfxController_->enableVertexAttArray(TILE_LAYER_FLOAT_ATTR, 1, sizeof(float), 0);
     gfxController_->bindVao(0);
 }
 
@@ -106,40 +85,28 @@ void TileObject::generateTextureData(map<string, string> textures) {
             textureFormat_ = textureFormat;
             width_ = surface->w;
             height_ = surface->h;
-            glGenTextures(1, &texArr_);
-            assert(glGetError() == GL_NO_ERROR);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, texArr_);
-            assert(glGetError() == GL_NO_ERROR);
+            gfxController_->generateTexture(&texArr_);
+            gfxController_->bindTexture(texArr_, GfxTextureType::ARRAY);
             // Define the storage for the texture array
-            glTexStorage3D(GL_TEXTURE_2D_ARRAY,
-                1, // Mipmap level count
-                textureFormat_ == TexFormat::RGB ? GL_RGB8 : GL_RGBA8, // format
-                width_,
-                height_,
-                layerCount);
-            auto error = glGetError();
-            assert(error == GL_NO_ERROR);
+            gfxController_->allocateTexture3D(textureFormat_, width_, height_, layerCount);
         }
         assert(textureFormat == textureFormat_);
         assert(surface->w <= width_);
         assert(surface->h <= height_);
         // Upload the texture data
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, // Target
-            0, // mipmap level
-            0, // offset x
-            0, // offset y
-            0, // layer index
+        gfxController_->sendTextureData3D(
+            0,
+            0,
+            currentIndex,
             surface->w,
             surface->h,
             layerCount,
-            textureFormat_ == TexFormat::RGB ? GL_RGB : GL_RGBA,
-            GL_UNSIGNED_BYTE,
+            textureFormat_,
             packedPixels.get());
-        assert(glGetError() == GL_NO_ERROR);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+        gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::ARRAY);
+        gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::ARRAY);
+        gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR), GfxTextureType::ARRAY);
+        gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR), GfxTextureType::ARRAY);
         textureToIndexMap_[texturePath.first] = currentIndex;
         SDL_FreeSurface(surface);
         currentIndex++;
@@ -163,16 +130,8 @@ void TileObject::render() {
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
-    assert(glGetError() == GL_NO_ERROR);
     gfxController_->bindVao(vao_);
-    assert(glGetError() == GL_NO_ERROR);
-    //gfxController_->bindTexture(texArr_);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, texArr_);
-    assert(glGetError() == GL_NO_ERROR);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, mapData_.size());
-    //glDrawArrays(GL_TRIANGLES, 0, 6);
-    assert(glGetError() == GL_NO_ERROR);
-    //glDrawArrays(GL_TRIANGLES, 0, 6);
+    gfxController_->bindTexture(texArr_, GfxTextureType::ARRAY);
+    gfxController_->drawTrianglesInstanced(6, mapData_.size());
     gfxController_->bindVao(0);
 }
