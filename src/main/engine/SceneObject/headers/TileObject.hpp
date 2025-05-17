@@ -22,7 +22,6 @@ class TileObject : public SceneObject {
     void update() override;
     void render() override;
  private:
-    void basicTriangle();
     void generateTextureData(map<string, string> textures);
     void processMapData();
     map<string, int> textureToIndexMap_;

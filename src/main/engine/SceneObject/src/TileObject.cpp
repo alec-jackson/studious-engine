@@ -4,15 +4,12 @@
 
 TileObject::TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation, float scale, ObjectType type, uint programId, string objectName,
     GfxController *gfxController) : SceneObject(position, rotation, objectName, scale, programId, type, gfxController), mapData_ { mapData } {
-    // What the flip
     // Generate texture array based on the provided textures
     generateTextureData(textures);
     sanityCheck();
-    //scale_ = 10;
-    //processMapData();
-    basicTriangle();
+    processMapData();
 }
-void TileObject::basicTriangle() {
+void TileObject::processMapData() {
     projectionId_ = gfxController_->getShaderVariable(programId_, "projection").get();
     // Let's start with a basic triangle example
     float x = 0.0f, y = 0.0f;
@@ -45,26 +42,19 @@ void TileObject::basicTriangle() {
     auto layerIndices = std::unique_ptr<float[]>(new float[mapData_.size()]);
     auto index = 0;
     for (auto entry : mapData_) {
-        printf("TileObject::processMapData: Calculating model data stream\n");
-        printf("TileObject::processMapData: Calculating tile %d, %d\n",
-            entry.x, entry.y);
-        //auto ttimit = textureToIndexMap_.find(entry.texture);
-        //assert(ttimit != textureToIndexMap_.end());
-
         // We need to create the model matrix
-
         mat4 model = mat4(1.0f);
         model = glm::translate(model, vec3(entry.x * width_ * scale_, entry.y * height_ * scale_, 0.0f) + position);
         model = glm::scale(model, glm::vec3(scale_));
         modelMatrices.get()[index] = model;
+        // Save the current texture as an index in the texture array
         layerIndices.get()[index] = static_cast<float>(textureToIndexMap_.at(entry.texture));
         index++;
     }
 
     // After models generated, send the model data to OpenGL
-    uint buffer;
-    gfxController_->generateBuffer(&buffer);
-    gfxController_->bindBuffer(buffer);
+    gfxController_->generateBuffer(&vbo);
+    gfxController_->bindBuffer(vbo);
     gfxController_->sendBufferData(mapData_.size() * sizeof(mat4), &modelMatrices.get()[0]);
     // We need to generate a vec4 for each model
     glEnableVertexAttribArray(2);
@@ -87,10 +77,9 @@ void TileObject::basicTriangle() {
     gfxController_->bindBuffer(0);
 
     // This is going to be interesting, but add layout indices to the stream
-    uint buf2;
     // Send layout index data
-    gfxController_->generateBuffer(&buf2);
-    gfxController_->bindBuffer(buf2);
+    gfxController_->generateBuffer(&vbo);
+    gfxController_->bindBuffer(vbo);
     gfxController_->sendBufferData(sizeof(float) * mapData_.size(), &layerIndices.get()[0]);
 
     glEnableVertexAttribArray(1);
@@ -157,96 +146,6 @@ void TileObject::generateTextureData(map<string, string> textures) {
     }
 }
 
-void TileObject::processMapData() {
-    // What do we actually need to do?
-    auto x = 0.0f, y = 0.0f;
-    auto x2 = x + (16), y2 = y + (16);
-    // update VBO for each character
-    // UV coordinate origin STARTS in the TOP left, NOT BOTTOM LEFT!!!
-    vector<float> vertData = {
-        x, y2, 0.0f, 0.0f,
-        x, y, 0.0f, 1.0f,
-        x2, y2, 1.0f, 0.0f,
-
-        x2, y2, 1.0f, 0.0f,
-        x, y, 0.0f, 1.0f,
-        x2, y, 1.0f, 1.0f
-    };
-    uint vbo;
-    gfxController_->initVao(&vao_);
-    gfxController_->bindVao(vao_);
-    gfxController_->generateBuffer(&vbo);
-    gfxController_->bindBuffer(vbo);
-    gfxController_->sendBufferData(sizeof(vertData), vertData.data());
-    gfxController_->enableVertexAttArray(0, 4);
-    // We can probably just keep the vao bound for now.
-    // Model data for each tile
-    auto modelMatrices = std::unique_ptr<mat4[]>(new mat4[mapData_.size()]);
-    auto layerIndices = std::unique_ptr<float[]>(new float[mapData_.size()]);
-    // 1. We need to map the texture strings to a specific layer.
-    for (auto entry : mapData_) {
-        printf("TileObject::processMapData: Calculating model data stream\n");
-        // Get the layer index
-        auto ttimit = textureToIndexMap_.find(entry.texture);
-        // This assert will occur if the texture map data references a texture not supplied
-        assert(ttimit != textureToIndexMap_.end());
-        auto index = ttimit->second;
-
-        // We need to create the model matrix
-
-        mat4 model = mat4(1.0f);
-        model = glm::translate(model, vec3(entry.x, entry.y, 0.0f));
-        model = glm::scale(model, glm::vec3(scale_));
-        modelMatrices.get()[index] = model;
-
-        // Save the layer index for the texture used
-        layerIndices.get()[index] = static_cast<float>(index);
-    }
-    // 2. We need to use some standard base coordinates to create the vertex data and texture coords. Do something similar to sprite object.
-
-    // 3. Need to apply model transformations per object. Apply scale, translation, rotation. Model data is streamed as an attrib pointer.
-
-    // 4. Generate VAO with vertex data VBO for ONE OBJECT. Will use instancing for drawing.
-
-    // 5. We need to stream the layer index with the texture coordinates. I think this can be done using an attrib pointer. Don't repeat numbers for same obj.
-    uint buffer;
-    // Send layout index data
-    gfxController_->generateBuffer(&buffer);
-    gfxController_->bindBuffer(buffer);
-    gfxController_->sendBufferData(sizeof(float) * mapData_.size(), &layerIndices.get()[0]);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void *)0);
-    glVertexAttribDivisor(1, 1);
-    assert(glGetError() == GL_NO_ERROR);
-    // I tihnk it's fine to keep the VAO Bound????
-    gfxController_->generateBuffer(&buffer);
-    gfxController_->bindBuffer(buffer);
-    gfxController_->sendBufferData(mapData_.size() * sizeof(mat4), &modelMatrices.get()[0]);
-    // We need to generate a vec4 for each model
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(vec4), (void *)0);
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(vec4), (void *)(1 * sizeof(vec4)));
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(vec4), (void *)(2 * sizeof(vec4)));
-    glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(vec4), (void *)(3 * sizeof(vec4)));
-    assert(glGetError() == GL_NO_ERROR);
-
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribDivisor(3, 1);
-    glVertexAttribDivisor(4, 1);
-    assert(glGetError() == GL_NO_ERROR);
-    glVertexAttribDivisor(5, 1);
-    assert(glGetError() == GL_NO_ERROR);
-
-    glBindVertexArray(0);
-    assert(glGetError() == GL_NO_ERROR);
-    // 6. ???
-    projectionId_ = gfxController_->getShaderVariable(programId_, "projection").get();
-}
-
 void TileObject::sanityCheck() {
     // make sure none of the tiles use a texture we aren't expecting
     for (auto entry : mapData_) {
@@ -270,7 +169,6 @@ void TileObject::render() {
     //gfxController_->bindTexture(texArr_);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D_ARRAY, texArr_);
-    glUniform1i(glGetUniformLocation(programId_, "sprite"), 0); // Bind to texture unit 0
     assert(glGetError() == GL_NO_ERROR);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, mapData_.size());
     //glDrawArrays(GL_TRIANGLES, 0, 6);
