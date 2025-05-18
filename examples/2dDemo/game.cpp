@@ -38,7 +38,8 @@ vector<ProgramData> programs = {
     { "colliderObject", "src/main/shaders/es/colliderObject.vert", "src/main/shaders/es/colliderObject.frag" },
     { "textObject", "src/main/shaders/es/textObject.vert", "src/main/shaders/es/textObject.frag" },
     { "spriteObject", "src/main/shaders/es/spriteObject.vert", "src/main/shaders/es/spriteObject.frag" },
-    { "uiObject", "src/main/shaders/es/uiObject.vert", "src/main/shaders/es/uiObject.frag" }
+    { "uiObject", "src/main/shaders/es/uiObject.vert", "src/main/shaders/es/uiObject.frag" },
+    { "tileObject", "src/main/shaders/es/tileObject.vert", "src/main/shaders/es/tileObject.frag" }
 };
 #endif
 vector<string> texturePathStage = {
@@ -136,14 +137,15 @@ int runtime(GameInstance *currentGame) {
 
     // Create a new tile object and add it to the scene
     auto tile = currentGame->createTileMap(
-        {{ "floor_0", "src/resources/images/floor_0.png" }},
+        {{ "floor_0", "src/resources/images/rock_texture.jpg" }},
         {{ 0, 0, "floor_0" },
         { 0, 1, "floor_0" },
         { 1, 1, "floor_0" },
         { -1, -1, "floor_0" }},
         vec3(200, 200, 0),
-        6.0f,
+        0.1f,
         "test-tile",
+        ObjectAnchor::BOTTOM_LEFT,
         &gfxController
     );
     // Add objects to camera
