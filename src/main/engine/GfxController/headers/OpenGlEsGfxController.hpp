@@ -30,6 +30,16 @@ struct GfxVaoData {
     uint divisor = 0;
 };
 
+struct AtlasTexture {
+    std::unique_ptr<uint8_t[]> data;
+    uint width;
+    uint height;
+    uint depth;
+    uint frameWidth;
+    uint frameHeight;
+    uint textureId;
+};
+
 class OpenGlEsGfxController : public GfxController {
  public:
     GfxResult<int> init();
@@ -71,6 +81,7 @@ class OpenGlEsGfxController : public GfxController {
     void update();
     void updateOpenGl();
     std::shared_ptr<uint8_t[]> convertToRgba(size_t size, uint8_t *data);
+    void writeToAtlas(int index, uint width, uint height, void *data);
 
  private:
     map<string, uint> programIdMap_;
@@ -79,5 +90,7 @@ class OpenGlEsGfxController : public GfxController {
     map<uint, map<uint, GfxVaoData>> vaoBindData_;
     uint activeVao_ = 0;
     uint activeVbo_ = 0;
+    uint activeTexture_ = 0;
+    AtlasTexture atlasTexture_;
     bool drawDisabled_ = true;
 };

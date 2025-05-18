@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <memory>
 #include <utility>
+#include <cmath>
 #include <OpenGlEsGfxController.hpp>
 
 /**
@@ -131,51 +132,33 @@ GfxResult<unsigned int> OpenGlEsGfxController::sendTextureData(unsigned int widt
     return GFX_OK(unsigned int);
 }
 
+void OpenGlEsGfxController::writeToAtlas(int index, uint width, uint height, void *data) {
+    // Calculate the C value
+    int c = static_cast<int>(std::ceil(std::sqrt(atlasTexture_.depth)));
+    printf("OpenGlEsGfxController::writeToAtlas: Calculated C value is %d\n", c);
+    int frameRow = index / c;
+    int frameRowModifier = width * height * (frameRow * c);
+    int start = frameRowModifier + (width * index);
+    // This assert will fire if the memory for the atlas was never allocated
+    assert(atlasTexture_.data.get() != nullptr);
+    uint8_t *cdata = static_cast<uint8_t *>(data);
+    // Write to the buffer from start
+    for (uint i = 0; i < height; ++i) {
+        int atlasAddr = start + width * i;
+        int dataAddr = width * i;
+        // Draw each line programatically
+        memcpy(&atlasTexture_.data.get()[atlasAddr], &cdata[dataAddr], width);
+    }
+    printf("OpenGlEsGfxController::writeToAtlas: Exit\n");
+}
+
 GfxResult<uint> OpenGlEsGfxController::sendTextureData3D(int offsetx, int offsety, int index, uint width, uint height, TexFormat format,
     void *data) {
-    auto texFormat = GL_RGB;
-    std::shared_ptr<uint8_t[]> convertedData;
-    switch (format) {
-        case TexFormat::RGBA:
-            texFormat = GL_RGBA;
-            break;
-        case TexFormat::RGB:
-            texFormat = GL_RGB;
-            break;
-        case TexFormat::BITMAP:
-            texFormat = GL_RGB;
-            convertedData = convertToRgba(width * height, static_cast<uint8_t *>(data));
-            break;
-        default:
-            fprintf(stderr, "OpenGlEsGfxController::sendTextureData3D: Unknown texture format %d\n",
-                static_cast<std::underlying_type_t<TexFormat>>(format));
-            return GFX_FAILURE(unsigned int);
-    }
-    if (convertedData.use_count() > 0) {
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY,  // Target
-            0,  // mipmap level
-            offsetx,
-            offsety,
-            index,
-            width,
-            height,
-            1,  // Just send one layer of data at a time for now...
-            format == TexFormat::RGB ? GL_RGB : GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            convertedData.get());
-    } else {
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY,  // Target
-            0,  // mipmap level
-            offsetx,
-            offsety,
-            index,
-            width,
-            height,
-            1,  // Just send one layer of data at a time for now...
-            format == TexFormat::RGB ? GL_RGB : GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            data);
-    }
+    assert(activeTexture_ == atlasTexture_.textureId);
+    // Need to perform a subroutine to write the texture data to the atlas
+    writeToAtlas(index, width, height, data);
+    // Just send the entire atlas each time
+    sendTextureData(atlasTexture_.frameWidth, atlasTexture_.frameHeight, TexFormat::RGBA, atlasTexture_.data.get());
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlEsGfxController::sendTextureData3D: Error %d\n", error);
@@ -185,17 +168,26 @@ GfxResult<uint> OpenGlEsGfxController::sendTextureData3D(int offsetx, int offset
 }
 
 GfxResult<uint> OpenGlEsGfxController::allocateTexture3D(TexFormat format, uint width, uint height, uint layers) {
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY,
-        1, // Mipmap level count - not dealing with these for now. -CG
-        format == TexFormat::RGB ? GL_RGB8 : GL_RGBA8, // format
-        width,
-        height,
-        layers);
-    auto error = glGetError();
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "OpenGlEsGfxController::allocateTexture3D: Error: %d\n", error);
-        return GFX_FAILURE(unsigned int);
-    }
+    assert(activeTexture_ != 0);
+    // Use texture atlas for OpenGL ES 2.0
+    // Determine the size of the current texture atlas
+    // I'm also going to guess that an RGBA texture is 32 bits per color?
+    // Also just going to IGNORE format for now... Will not stay that way forever though
+    size_t colorSize = sizeof(uint8_t) * 4;
+    size_t atlasSize = colorSize * width * height * layers;
+    atlasTexture_.data = std::unique_ptr<uint8_t[]>(new uint8_t[atlasSize]);
+    // Calculate C value for frameWidth
+    int c = static_cast<int>(std::ceil(std::sqrt(layers)));
+    int rowCount = static_cast<int>(std::ceil(static_cast<float>(layers) / c));
+    atlasTexture_.width = width;
+    atlasTexture_.height = height;
+    atlasTexture_.frameWidth = width * c;
+    atlasTexture_.frameHeight = height * rowCount;
+    atlasTexture_.depth = layers;
+    atlasTexture_.textureId = activeTexture_;
+    printf("OpenGlEsGfxController::allocateTexture3D: Created atlas w: %d h: %d fw: %d fh: %d d: %d\n",
+        atlasTexture_.width, atlasTexture_.height, atlasTexture_.frameWidth,
+        atlasTexture_.frameHeight, atlasTexture_.depth);
     return GFX_OK(unsigned int);
 }
 
@@ -486,6 +478,7 @@ GfxResult<unsigned int> OpenGlEsGfxController::bindTexture(uint textureId, GfxTe
         fprintf(stderr, "OpenGlGfxController::bindTexture: textureId %u, Error: %d\n", textureId, error);
         return GFX_FAILURE(unsigned int);
     }
+    activeTexture_ = textureId;
     return GFX_OK(unsigned int);
 }
 
@@ -533,8 +526,6 @@ GfxResult<unsigned int> OpenGlEsGfxController::bindVao(unsigned int vao) {
                         error);
                     return GFX_FAILURE(unsigned int);
                 }
-                // Set the divisor
-                glVertexAttribDivisor(bindData.layout, bindData.divisor);
                 error = glGetError();
                 if (error != GL_NO_ERROR) {
                     fprintf(stderr, "OpenGlEsGfxController::bindVao:[ENABLE_ATTRIB_ARRAY] vao %u, Error: %d\n", vao,

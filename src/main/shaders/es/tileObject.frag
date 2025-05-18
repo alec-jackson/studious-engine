@@ -1,15 +1,14 @@
-#version 330 core
-in vec3 TexCoords;
-in vec4 vColor;
-out vec4 color;
+precision mediump float;
 
-uniform sampler2DArray sprite;
+varying vec2 TexCoords;
+varying vec4 vColor;
+uniform sampler2D sprite;
 uniform vec3 tint;
 
 void main() {
-    vec4 texColor = texture(sprite, TexCoords);
-		if (texColor.a < 0.1) {
-			discard;
-		}
-    color = texColor + vec4(tint, 0.0);
+    vec4 texColor = texture2D(sprite, TexCoords);
+    if (texColor.a < 0.1) {
+        discard;
+    }
+    gl_FragColor = texColor + vec4(tint, 0.0);
 }
