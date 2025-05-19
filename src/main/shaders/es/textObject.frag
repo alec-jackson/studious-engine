@@ -1,9 +1,7 @@
-#version 100
-
+#version 310 es
 precision mediump float;
-
-varying vec2 TexCoords; // varying is in/out
-//varying vec4 color; // out
+in vec2 TexCoords;
+out vec4 color;
 
 uniform sampler2D text;
 uniform vec3 textColor;
@@ -14,6 +12,6 @@ void main() {
     if (gl_FragCoord.y > cutoff.y) {
         discard;
     }
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture2D(text, TexCoords).r);
-    gl_FragColor = vec4(textColor, 1.0) * sampled;
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
+    color = vec4(textColor, 1.0) * sampled;
 }

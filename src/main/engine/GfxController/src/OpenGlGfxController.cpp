@@ -162,12 +162,16 @@ GfxResult<unsigned int> OpenGlGfxController::generateTexture(uint *textureId) {
 }
 
 GfxResult<uint> OpenGlGfxController::allocateTexture3D(TexFormat format, uint width, uint height, uint layers) {
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY,
+    glTexImage3D(GL_TEXTURE_2D_ARRAY,
         1, // Mipmap level count - not dealing with these for now. -CG
-        format == TexFormat::RGB ? GL_RGB8 : GL_RGBA8, // format
+        format == TexFormat::RGB ? GL_RGB : GL_RGBA, // format
         width,
         height,
-        layers);
+        layers,
+        0, // border
+        format == TexFormat::RGB ? GL_RGB : GL_RGBA, // format
+        GL_UNSIGNED_BYTE, // type
+        nullptr); // data
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::allocateTexture3D: Error: %d\n", error);
@@ -195,9 +199,7 @@ GfxResult<unsigned int> OpenGlGfxController::getProgramId(string programName) {
  */
 GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, string vertexShader,
     string fragmentShader) {
-    printf("Creaeting vertex shader id\n");
     unsigned int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-    printf("Creaeting frag shader id\n");
     unsigned int fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     int logLength;
     int success = GL_FALSE;
@@ -243,7 +245,7 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, str
     glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength) {
         vector<char> errorLog(logLength + 1);
-        glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
+        glGetShaderInfoLog(fragmentShaderID, logLength, NULL, &errorLog[0]);
         cerr << fragmentShader << ": " << &errorLog[0] << "\n";
         assert(false);
     }
@@ -292,7 +294,7 @@ GfxResult<int> OpenGlGfxController::getShaderVariable(unsigned int programId, co
  *
  */
 void OpenGlGfxController::updateOpenGl() {
-    glEnable(GL_MULTISAMPLE);
+    //glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -323,7 +325,7 @@ void OpenGlGfxController::update() {
  */
 GfxResult<int> OpenGlGfxController::init() {
     cout << "OpenGlGfxController::init" << endl;
-    if (glewInit() != GLEW_OK) {
+    if (!gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress)) {
         cerr << "Error: Failed to initialize GLEW!\n";
         return GFX_FAILURE(int);
     }
@@ -382,6 +384,9 @@ GfxResult<unsigned int> OpenGlGfxController::sendFloatVector(unsigned int variab
  * @return GfxResult<unsigned int> OK if successful; FAILURE otherwise
  */
 GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
+    #ifdef GFX_EMBEDDED
+    return GFX_OK(unsigned int);
+    #else
     auto result = GFX_OK(unsigned int);
     switch (mode) {
         case RenderMode::POINT:
@@ -407,6 +412,7 @@ GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) 
         return GFX_FAILURE(unsigned int);
     }
     return result;
+    #endif
 }
 
 /**

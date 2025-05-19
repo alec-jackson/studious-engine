@@ -24,7 +24,6 @@ endif()
 
 if (APPLE)
 include_directories(
-  /usr/local/Cellar/glew/2.2.0_1/include/
   /usr/local/Cellar/glm/0.9.9.8/include/
 )
 endif (APPLE)
@@ -38,12 +37,12 @@ include_directories(
   src/main/engine/SceneObject/headers
   src/main/engine/SceneObjectExt/headers
   src/main/misc/headers
+  src/main/opengl/headers
 )
 
 include(GoogleTest)
 include(CTest)
 
-find_package(GLEW 2.0 REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_image REQUIRED)
@@ -84,6 +83,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/Misc/src/Image.cpp
   src/main/misc/src/config.cpp
+  src/main/opengl/src/glad.c
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
@@ -95,7 +95,6 @@ target_include_directories(${PROJECT_NAME}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include/studious>
   PUBLIC ${SDL2_INCLUDE_DIRS}
-  PUBLIC ${GLEW_INCLUDE_DIRS}
   PUBLIC ${OPENGL_INCLUDE_DIR}
   PUBLIC ${FREETYPE_INCLUDE_DIRS}
 )
@@ -105,7 +104,6 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC SDL2::Mixer
   PUBLIC SDL2::Image
   PUBLIC ${OPENGL_LIBRARIES}
-  PUBLIC ${GLEW_LIBRARIES}
   PUBLIC Threads::Threads
   PUBLIC ${FREETYPE_LIBRARIES}
 )
@@ -122,7 +120,6 @@ add_executable(gtest_ModelImportTests
 
 target_include_directories(gtest_ModelImportTests
   PUBLIC ${SDL2_INCLUDE_DIRS}
-  PUBLIC ${GLEW_INCLUDE_DIRS}
   PUBLIC ${OPENGL_INCLUDE_DIR}
   PUBLIC ${FREETYPE_INCLUDE_DIRS}
   PRIVATE src/main/utilities/test/headers
@@ -133,7 +130,6 @@ target_link_libraries(gtest_ModelImportTests
   PUBLIC SDL2::Mixer
   PUBLIC SDL2::Image
   PUBLIC ${OPENGL_LIBRARIES}
-  PUBLIC ${GLEW_LIBRARIES}
   PUBLIC Threads::Threads
   PUBLIC ${FREETYPE_LIBRARIES}
   PUBLIC GTest::gtest_main
@@ -151,7 +147,6 @@ add_executable(gtest_PolygonTests
 target_include_directories(gtest_PolygonTests
   PRIVATE src/main/utilities/test/headers
   PUBLIC ${SDL2_INCLUDE_DIRS}
-  PUBLIC ${GLEW_INCLUDE_DIRS}
   PUBLIC ${OPENGL_INCLUDE_DIR}
   PUBLIC ${FREETYPE_INCLUDE_DIRS}
 )
@@ -161,7 +156,6 @@ target_link_libraries(gtest_PolygonTests
   PUBLIC SDL2::Mixer
   PUBLIC SDL2::Image
   PUBLIC ${OPENGL_LIBRARIES}
-  PUBLIC ${GLEW_LIBRARIES}
   PUBLIC Threads::Threads
   PUBLIC ${FREETYPE_LIBRARIES}
   PUBLIC GTest::gtest_main

@@ -364,7 +364,7 @@ void OpenGlEsGfxController::update() {
  */
 GfxResult<int> OpenGlEsGfxController::init() {
     cout << "OpenGlEsGfxController::init" << endl;
-    if (glewInit() != GLEW_OK) {
+    if (!gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress)) {
         cerr << "Error: Failed to initialize GLFW!\n";
         return GFX_FAILURE(int);
     }

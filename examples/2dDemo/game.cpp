@@ -19,6 +19,7 @@
 #include <OpenGlGfxController.hpp>
 #else
 #include <OpenGlEsGfxController.hpp>
+#include <OpenGlGfxController.hpp>
 #endif
 #include <AnimationController.hpp>
 
@@ -57,7 +58,7 @@ TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
 #ifdef GFX_EMBEDDED
-OpenGlEsGfxController gfxController = OpenGlEsGfxController();
+OpenGlGfxController gfxController = OpenGlGfxController();
 #else
 OpenGlGfxController gfxController = OpenGlGfxController();
 #endif

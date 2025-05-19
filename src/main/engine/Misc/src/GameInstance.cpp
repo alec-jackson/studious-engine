@@ -537,8 +537,8 @@ void GameInstance::initWindow() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
 #ifdef __APPLE__  // Temporarily restrict SDL AA to MACOS
@@ -546,7 +546,10 @@ void GameInstance::initWindow() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
 #endif
     mainContext = SDL_GL_CreateContext(window);
-    if (!mainContext) exit(EXIT_FAILURE);
+    if (!mainContext) {
+        fprintf(stderr, "GameInstance::initWindow: Failed to init Context!\n");
+        exit(EXIT_FAILURE);
+    }
     renderer = SDL_GetRenderer(window);
 
     if (window == NULL) {

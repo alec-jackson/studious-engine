@@ -1,9 +1,7 @@
-#version 100
-
+#version 310 es
 precision mediump float;
-
-attribute vec4 vertex; // <vec2 pos, vec2 tex> // Attribute is in
-varying vec2 TexCoords; // pass to fragment, must be defined in both
+layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
+out vec2 TexCoords;
 
 uniform mat4 projection;
 uniform mat4 model;
