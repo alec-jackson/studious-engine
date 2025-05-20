@@ -38,25 +38,8 @@ vector<ProgramData> programs = {
     { "tileObject", "src/main/shaders/es/tileObject.vert", "src/main/shaders/es/tileObject.frag" }
 };
 #endif
-vector<string> texturePathStage = {
-    "src/resources/images/skintexture.jpg"
-};
-vector<string> texturePath = {
-    "src/resources/images/rock_texture.jpg",
-    "src/resources/images/rock_texture.jpg",
-    "src/resources/images/shoetexture.jpg",
-    "src/resources/images/shirttexture.jpg"
-};
 
-TextObject *fps_counter;
-TextObject *collDebugText;
-TextObject *pressUText;
-GameObject *wolfRef, *playerRef;  // Used for collision testing
-#ifdef GFX_EMBEDDED
 OpenGlGfxController gfxController = OpenGlGfxController();
-#else
-OpenGlGfxController gfxController = OpenGlGfxController();
-#endif
 AnimationController animationController;
 
 int runtime(GameInstance *currentGame);
@@ -215,7 +198,7 @@ int mainLoop(gameInfo* gamein) {
             printf("E released!\n");
             eDown = false;
             animationController.playTrack("one to four");
-    }
+        }
         newPos = playerPtr->getPosition(offset);
         playerPtr->setPosition(newPos);
         if (currentGame->getCollision2D(playerPtr, obstaclePtr, vec3(0))) printf("CONTACT TRUE\n");

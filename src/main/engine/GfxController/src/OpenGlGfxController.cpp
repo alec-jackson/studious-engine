@@ -118,7 +118,7 @@ GfxResult<uint> OpenGlGfxController::sendTextureData3D(int offsetx, int offsety,
         width,
         height,
         1,  // Just send one layer of data at a time for now...
-        GL_RGBA,
+        format == TexFormat::RGB ? GL_RGB : GL_RGBA,
         GL_UNSIGNED_BYTE,
         data);
     auto error = glGetError();
@@ -169,7 +169,7 @@ GfxResult<uint> OpenGlGfxController::allocateTexture3D(TexFormat format, uint wi
         height,
         layers,
         0,  // border
-        GL_RGBA,  // format
+        format == TexFormat::RGB ? GL_RGB : GL_RGBA,  // format
         GL_UNSIGNED_BYTE,  // type
         nullptr);  // data - not required at allocation
     auto error = glGetError();
@@ -224,7 +224,6 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, str
         vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(vertexShaderID, logLength, NULL, &errorLog[0]);
         cerr << vertexShader << ": " << &errorLog[0] << "\n";
-        assert(false);
     }
     file.close();
     success = GL_FALSE;
@@ -247,7 +246,6 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, str
         vector<char> errorLog(logLength + 1);
         glGetShaderInfoLog(fragmentShaderID, logLength, NULL, &errorLog[0]);
         cerr << fragmentShader << ": " << &errorLog[0] << "\n";
-        assert(false);
     }
     file.close();
     unsigned int programId = glCreateProgram();
@@ -260,7 +258,6 @@ GfxResult<unsigned int> OpenGlGfxController::loadShaders(string programName, str
         vector<char> errorLog(logLength + 1);
         glGetProgramInfoLog(programId, logLength, NULL, &errorLog[0]);
         cerr << &errorLog[0] << "\n";
-        assert(false);
     }
     glDetachShader(programId, vertexShaderID);
     glDetachShader(programId, fragmentShaderID);
@@ -353,7 +350,6 @@ GfxResult<unsigned int> OpenGlGfxController::setProgram(unsigned int programId) 
     glUseProgram(programId);
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
-        assert(false);
         fprintf(stderr, "OpenGlGfxController::setProgram: programId %d Error: %d\n", programId, error);
         return GFX_FAILURE(unsigned int);
     }
@@ -421,7 +417,7 @@ GfxResult<unsigned int> OpenGlGfxController::polygonRenderMode(RenderMode mode) 
         return GFX_FAILURE(unsigned int);
     }
     return result;
-    #endif
+    #endif  // GFX_EMBEDDED
 }
 
 /**
@@ -487,7 +483,6 @@ GfxResult<unsigned int> OpenGlGfxController::bindVao(unsigned int vao) {
     if (error != GL_NO_ERROR) {
         /// @todo When a logger is added, add OpenGL error log debugging
         fprintf(stderr, "OpenGlGfxController::bindVao: vao %u, Error: %d\n", vao, error);
-        assert(false);
         return GFX_FAILURE(unsigned int);
     }
     return GFX_OK(unsigned int);

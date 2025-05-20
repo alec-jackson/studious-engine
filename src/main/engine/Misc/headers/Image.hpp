@@ -30,4 +30,12 @@ struct Image {
  */
 std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture);
 
+/**
+ * @brief Converts an RGB SDL surface to an RGBA one. Performs some additional error handling. On success, the previous
+ * surface is freed.
+ * 
+ * @param surface To convert to RGBA format.
+ * @return SDL_Surface* in RGBA format, and previous surface is freed on success. nullptr on failure, and the previous
+ * surface is not freed.
+ */
 SDL_Surface *convertSurfaceToRgba(SDL_Surface *surface);
