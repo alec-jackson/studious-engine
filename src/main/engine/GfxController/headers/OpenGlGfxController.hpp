@@ -10,7 +10,11 @@
  */
 
 #pragma once
-#include <glad.h>
+#ifdef GFX_EMBEDDED
+#include <es/glad.h>
+#else
+#include <core/glad.h>
+#endif
 #include <vector>
 #include <string>
 #include <GfxController.hpp>

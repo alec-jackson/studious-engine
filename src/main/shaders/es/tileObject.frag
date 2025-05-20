@@ -1,6 +1,6 @@
 #version 310 es
 precision mediump float;
-precision mediump sampler2DArray;
+precision highp sampler2DArray;
 in vec3 TexCoords;
 out vec4 color;
 

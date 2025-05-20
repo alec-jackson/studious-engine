@@ -118,7 +118,7 @@ GfxResult<uint> OpenGlGfxController::sendTextureData3D(int offsetx, int offsety,
         width,
         height,
         1,  // Just send one layer of data at a time for now...
-        format == TexFormat::RGB ? GL_RGB : GL_RGBA,
+        GL_RGBA,
         GL_UNSIGNED_BYTE,
         data);
     auto error = glGetError();
@@ -163,13 +163,13 @@ GfxResult<unsigned int> OpenGlGfxController::generateTexture(uint *textureId) {
 
 GfxResult<uint> OpenGlGfxController::allocateTexture3D(TexFormat format, uint width, uint height, uint layers) {
     glTexImage3D(GL_TEXTURE_2D_ARRAY,
-        1, // Mipmap level count - not dealing with these for now. -CG
-        format == TexFormat::RGB ? GL_RGB : GL_RGBA, // format
+        0, // Mipmap level count - not dealing with these for now. -CG
+        format == TexFormat::RGB ? GL_RGB8 : GL_RGBA8, // format
         width,
         height,
         layers,
         0, // border
-        format == TexFormat::RGB ? GL_RGB : GL_RGBA, // format
+        GL_RGBA, // format
         GL_UNSIGNED_BYTE, // type
         nullptr); // data
     auto error = glGetError();
@@ -325,10 +325,17 @@ void OpenGlGfxController::update() {
  */
 GfxResult<int> OpenGlGfxController::init() {
     cout << "OpenGlGfxController::init" << endl;
+#ifdef GFX_EMBEDDED
     if (!gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress)) {
         cerr << "Error: Failed to initialize GLEW!\n";
         return GFX_FAILURE(int);
     }
+#else
+if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+    cerr << "Error: Failed to initialize GLEW!\n";
+    return GFX_FAILURE(int);
+}
+#endif  // GFX_EMBEDDED
     // Set pixel storage alignment mode for font loading
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     return GFX_OK(int);

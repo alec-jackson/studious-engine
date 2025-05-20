@@ -18,11 +18,11 @@
     Online:
         https://glad.dav1d.de/#profile=compatibility&language=c&specification=gl&loader=on&api=gles2%3D3.1
 */
-
+#ifdef GFX_EMBEDDED
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "glad.h"
+#include <es/glad.h>
 
 struct gladGLversionStruct GLVersion = { 0, 0 };
 
@@ -828,4 +828,4 @@ int gladLoadGLES2Loader(GLADloadproc load) {
 	if (!find_extensionsGLES2()) return 0;
 	return GLVersion.major != 0 || GLVersion.minor != 0;
 }
-
+#endif  // GFX_EMBEDDED

@@ -15,12 +15,7 @@
 #include <iostream>
 #include <cstdio>
 #include <game.hpp>
-#ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
-#else
-#include <OpenGlEsGfxController.hpp>
-#include <OpenGlGfxController.hpp>
-#endif
 #include <AnimationController.hpp>
 
 // Lists of embedded/core shaders
@@ -138,13 +133,13 @@ int runtime(GameInstance *currentGame) {
 
     // Create a new tile object and add it to the scene
     auto tile = currentGame->createTileMap(
-        {{ "floor_0", "src/resources/images/rock_texture.jpg" }},
+        {{ "floor_0", "src/resources/images/floor_0.png" }},
         {{ 0, 0, "floor_0" },
         { 0, 1, "floor_0" },
         { 1, 1, "floor_0" },
         { -1, -1, "floor_0" }},
         vec3(200, 200, 0),
-        0.1f,
+        6.0f,
         "test-tile",
         ObjectAnchor::BOTTOM_LEFT,
         &gfxController

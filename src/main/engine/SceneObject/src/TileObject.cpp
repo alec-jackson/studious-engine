@@ -71,27 +71,6 @@ void TileObject::processMapData() {
         layerIndices.get()[index] = static_cast<float>(textureToIndexMap_.at(entry.texture));
         index++;
     }
-    // We need to do something ABSOLUTELY CANCER Here. ES 2.0 does not support divisors, so we
-    // need to duplicate data by a factor of 4
-    // Duplicate each model matrix 4 times in sequence, so each model matrix is like
-    // 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2 and so on...
-    auto modelMatricesDup = std::unique_ptr<mat4[]>(new mat4[mapData_.size() * 4]);
-    auto layerIndicesDup = std::unique_ptr<float[]>(new float[mapData_.size() * 4]);
-    for (int i = 0; i < mapData_.size(); i++) {
-        auto modelIndex = i * 4;
-        auto layerIndex = i * 4;
-        modelMatricesDup.get()[modelIndex] = modelMatrices.get()[i];
-        modelMatricesDup.get()[modelIndex + 1] = modelMatrices.get()[i];
-        modelMatricesDup.get()[modelIndex + 2] = modelMatrices.get()[i];
-        modelMatricesDup.get()[modelIndex + 3] = modelMatrices.get()[i];
-        layerIndicesDup.get()[layerIndex] = layerIndices.get()[i];
-        layerIndicesDup.get()[layerIndex + 1] = layerIndices.get()[i];
-        layerIndicesDup.get()[layerIndex + 2] = layerIndices.get()[i];
-        layerIndicesDup.get()[layerIndex + 3] = layerIndices.get()[i];
-    }
-    // Now re-assign the model matrices to the duplicated data
-    modelMatrices = std::move(modelMatricesDup);
-    layerIndices = std::move(layerIndicesDup);
 
     // After models generated, send the model data to OpenGL
     gfxController_->generateBuffer(&vbo);

@@ -78,12 +78,12 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
-  src/main/engine/GfxController/src/OpenGlEsGfxController.cpp
   src/main/engine/AnimationController/src/AnimationController.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/Misc/src/Image.cpp
   src/main/misc/src/config.cpp
-  src/main/opengl/src/glad.c
+  src/main/opengl/src/es/glad.c
+  src/main/opengl/src/core/glad.c
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
@@ -244,7 +244,6 @@ install (FILES
   src/main/engine/SceneObject/headers/TileObject.hpp
   src/main/engine/SceneObjectExt/headers/TrackExt.hpp
   src/main/engine/GfxController/headers/GfxController.hpp
-  src/main/engine/GfxController/headers/OpenGlEsGfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp
   src/main/engine/Misc/headers/game.hpp
   src/main/engine/Misc/headers/GameInstance.hpp
