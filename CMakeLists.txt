@@ -255,12 +255,6 @@ install (FILES
   DESTINATION include/studious
 )
 
-install (DIRECTORY
-  src/main/opengl/headers/core
-  src/main/opengl/headers/es
-  DESTINATION include/studious
-)
-
 install(EXPORT studiousTargets
     FILE studious-config.cmake
     NAMESPACE studious::
