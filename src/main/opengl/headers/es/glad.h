@@ -19,6 +19,7 @@
         https://glad.dav1d.de/#profile=compatibility&language=c&specification=gl&loader=on&api=gles2%3D3.1
 */
 
+#ifdef GFX_EMBEDDED
 
 #ifndef __glad_h_
 #define __glad_h_
@@ -1890,3 +1891,5 @@ GLAPI PFNGLVERTEXBINDINGDIVISORPROC glad_glVertexBindingDivisor;
 #endif
 
 #endif
+
+#endif  // GFX_EMBEDDED
