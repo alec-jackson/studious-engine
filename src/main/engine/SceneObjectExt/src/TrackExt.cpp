@@ -82,7 +82,8 @@ void TrackExt::splitGrid(int width, int height, int frameCount) {
         extGfx_->sendTextureData(width, height, imageFormat, data.get());
         extGfx_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
         extGfx_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
-        extGfx_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR), GfxTextureType::NORMAL);
+        extGfx_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR),
+            GfxTextureType::NORMAL);
         extGfx_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP), GfxTextureType::NORMAL);
         extGfx_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10), GfxTextureType::NORMAL);
         extGfx_->generateMipMap();

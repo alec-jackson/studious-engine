@@ -61,10 +61,14 @@ void TextObject::initializeText() {
                 face->glyph->bitmap.rows,
                 TexFormat::BITMAP,
                 face->glyph->bitmap.buffer);
-            gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
-            gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
-            gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR), GfxTextureType::NORMAL);
-            gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR), GfxTextureType::NORMAL);
+            gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE),
+                GfxTextureType::NORMAL);
+            gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE),
+                GfxTextureType::NORMAL);
+            gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR),
+                GfxTextureType::NORMAL);
+            gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::GFX_LINEAR),
+                GfxTextureType::NORMAL);
 
             Character character = {
                 textureId,

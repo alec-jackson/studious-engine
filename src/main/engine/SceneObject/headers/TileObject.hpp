@@ -6,6 +6,8 @@
  * @date May 11, 2025
  */
 #pragma once
+#include <string>
+#include <vector>
 #include <SceneObject.hpp>
 #include <GfxController.hpp>
 #define TILE_VEC4_ATTRIBUTE_COUNT 4
@@ -20,7 +22,9 @@ struct TileData {
 
 class TileObject : public SceneObject {
  public:
-    explicit TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation, float scale, ObjectType type, uint programId, string objectName, ObjectAnchor anchor, GfxController *gfxController);
+    explicit TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
+        float scale, ObjectType type, uint programId, string objectName, ObjectAnchor anchor,
+        GfxController *gfxController);
     void update() override;
     void render() override;
 
@@ -29,6 +33,7 @@ class TileObject : public SceneObject {
 
     // Setters
     inline void setTint(vec3 tint) { tint_ = tint; }
+
  private:
     void generateTextureData(map<string, string> textures);
     void processMapData();

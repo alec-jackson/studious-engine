@@ -1,10 +1,21 @@
+/**
+ * @file TileObject.cpp
+ * @author Christian Galvez
+ * @brief Tile Object renderer for studious.
+ * @version 0.1
+ * @date 2025-05-19
+ * 
+ * @copyright Copyright studious-engine 2025
+ * 
+ */
 #include <TileObject.hpp>
 #include <GL/glew.h>
 #include <Image.hpp>
 
-TileObject::TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation, float scale, ObjectType type, uint programId, string objectName,
-    ObjectAnchor anchor, GfxController *gfxController) : SceneObject(position, rotation, objectName, scale, programId, type, gfxController), mapData_ { mapData },
-    anchor_ { anchor }, tint_ { vec3(0) } {
+TileObject::TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
+    float scale, ObjectType type, uint programId, string objectName,
+    ObjectAnchor anchor, GfxController *gfxController) : SceneObject(position, rotation, objectName, scale,
+    programId, type, gfxController), mapData_ { mapData }, anchor_ { anchor }, tint_ { vec3(0) } {
     // Generate texture array based on the provided textures
     generateTextureData(textures);
     sanityCheck();
@@ -78,7 +89,7 @@ void TileObject::processMapData() {
     gfxController_->sendBufferData(mapData_.size() * sizeof(mat4), &modelMatrices.get()[0]);
     for (int i = 0; i < TILE_VEC4_ATTRIBUTE_COUNT; i++) {
         auto layout = TILE_MODEL_VEC4_START_ATTR + i;
-        gfxController_->enableVertexAttArray(layout, 4, sizeof(vec4), (void *)(i * sizeof(vec4)));
+        gfxController_->enableVertexAttArray(layout, 4, sizeof(vec4), reinterpret_cast<void *>((i * sizeof(vec4))));
         gfxController_->setVertexAttDivisor(layout, 1);
     }
     gfxController_->bindBuffer(0);
@@ -139,8 +150,10 @@ void TileObject::generateTextureData(map<string, string> textures) {
             packedPixels.get());
         gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::ARRAY);
         gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::ARRAY);
-        gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR), GfxTextureType::ARRAY);
-        gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR), GfxTextureType::ARRAY);
+        gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR),
+        GfxTextureType::ARRAY);
+        gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR),
+            GfxTextureType::ARRAY);
         textureToIndexMap_[texturePath.first] = currentIndex;
         SDL_FreeSurface(surface);
         currentIndex++;

@@ -108,8 +108,8 @@ GfxResult<unsigned int> OpenGlGfxController::sendTextureData(unsigned int width,
     return GFX_OK(unsigned int);
 }
 
-GfxResult<uint> OpenGlGfxController::sendTextureData3D(int offsetx, int offsety, int index, uint width, uint height, TexFormat format,
-    void *data) {
+GfxResult<uint> OpenGlGfxController::sendTextureData3D(int offsetx, int offsety, int index, uint width, uint height,
+    TexFormat format, void *data) {
     glTexSubImage3D(GL_TEXTURE_2D_ARRAY,  // Target
         0,  // mipmap level
         offsetx,
@@ -163,15 +163,15 @@ GfxResult<unsigned int> OpenGlGfxController::generateTexture(uint *textureId) {
 
 GfxResult<uint> OpenGlGfxController::allocateTexture3D(TexFormat format, uint width, uint height, uint layers) {
     glTexImage3D(GL_TEXTURE_2D_ARRAY,
-        0, // Mipmap level count - not dealing with these for now. -CG
-        format == TexFormat::RGB ? GL_RGB8 : GL_RGBA8, // format
+        0,  // Mipmap level count - not dealing with these for now. -CG
+        format == TexFormat::RGB ? GL_RGB8 : GL_RGBA8,  // format
         width,
         height,
         layers,
-        0, // border
-        GL_RGBA, // format
-        GL_UNSIGNED_BYTE, // type
-        nullptr); // data
+        0,  // border
+        GL_RGBA,  // format
+        GL_UNSIGNED_BYTE,  // type
+        nullptr);  // data - not required at allocation
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGlGfxController::allocateTexture3D: Error: %d\n", error);
@@ -294,7 +294,9 @@ GfxResult<int> OpenGlGfxController::getShaderVariable(unsigned int programId, co
  *
  */
 void OpenGlGfxController::updateOpenGl() {
-    //glEnable(GL_MULTISAMPLE);
+#ifndef GFX_EMBEDDED
+    glEnable(GL_MULTISAMPLE);
+#endif  // GFX_EMBEDDED
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);

@@ -438,8 +438,8 @@ TileObject *GameInstance::createTileMap(map<string, string> textures, vector<Til
             TILEOBJECT_PROG_NAME);
         return nullptr;
     }
-    auto tile = std::make_shared<TileObject>(textures, mapData, position, vec3(0.0f), scale, ObjectType::TILE_OBJECT, tileProg.get(), objectName,
-        anchor, gfxController);
+    auto tile = std::make_shared<TileObject>(textures, mapData, position, vec3(0.0f), scale, ObjectType::TILE_OBJECT,
+    tileProg.get(), objectName, anchor, gfxController);
     sceneObjects_.push_back(tile);
     return tile.get();
 }
