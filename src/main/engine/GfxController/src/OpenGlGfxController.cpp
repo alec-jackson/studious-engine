@@ -326,14 +326,14 @@ GfxResult<int> OpenGlGfxController::init() {
     cout << "OpenGlGfxController::init" << endl;
 #ifdef GFX_EMBEDDED
     if (!gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress)) {
-        cerr << "Error: Failed to initialize GLEW!\n";
+        cerr << "Error: Failed to initialize GLAD!\n";
         return GFX_FAILURE(int);
     }
 #else
-if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-    cerr << "Error: Failed to initialize GLEW!\n";
-    return GFX_FAILURE(int);
-}
+    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+        cerr << "Error: Failed to initialize GLAD!\n";
+        return GFX_FAILURE(int);
+    }
 #endif  // GFX_EMBEDDED
     // Set pixel storage alignment mode for font loading
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
