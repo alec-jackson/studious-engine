@@ -106,7 +106,7 @@ GfxResult<unsigned int> DummyGfxController::sendInteger(unsigned int variableId,
     return GFX_OK(unsigned int);
 }
 
-GfxResult<unsigned int> DummyGfxController::bindTexture(unsigned int textureId) {
+GfxResult<unsigned int> DummyGfxController::bindTexture(unsigned int textureId, GfxTextureType type) {
     printf("GfxController::bindTexture: textureId=[%u]", textureId);
     return GFX_OK(unsigned int);
 }
@@ -137,7 +137,7 @@ GfxResult<unsigned int> DummyGfxController::updateBufferData(const vector<float>
     return GFX_OK(unsigned int);
 }
 
-GfxResult<unsigned int> DummyGfxController::setTexParam(TexParam param, TexVal val) {
+GfxResult<unsigned int> DummyGfxController::setTexParam(TexParam param, TexVal val, GfxTextureType type) {
     printf("GfxController::setTexParam: param %d, val %d\n",
             static_cast<std::underlying_type_t<TexParam>>(param),
             static_cast<std::underlying_type_t<TexValType>>(val.type()));
@@ -149,7 +149,7 @@ GfxResult<unsigned int> DummyGfxController::generateMipMap() {
     return GFX_OK(unsigned int);
 }
 
-GfxResult<unsigned int> DummyGfxController::enableVertexAttArray(unsigned int layout, size_t size) {
+GfxResult<unsigned int> DummyGfxController::enableVertexAttArray(uint layout, int count, size_t size, void *offset) {
     printf("GfxController::enableVertexAttArray: layout %d, size %zu\n",
         layout, size);
     return GFX_OK(unsigned int);

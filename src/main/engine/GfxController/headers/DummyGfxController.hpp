@@ -31,15 +31,15 @@ class DummyGfxController : public GfxController {
     GfxResult<unsigned int> polygonRenderMode(RenderMode mode);
     GfxResult<unsigned int> sendFloatMatrix(unsigned int variableId, size_t count, float *data);
     GfxResult<unsigned int> sendInteger(unsigned int variableId, int data);
-    GfxResult<unsigned int> bindTexture(unsigned int textureId);
+    GfxResult<unsigned int> bindTexture(unsigned int textureId, GfxTextureType type);
     GfxResult<unsigned int> initVao(unsigned int *vao);
     GfxResult<unsigned int> bindVao(unsigned int vao);
     GfxResult<unsigned int> setCapability(GfxCapability capabilityId, bool enabled);
     GfxResult<unsigned int> deleteTextures(unsigned int *tId);
     GfxResult<unsigned int> updateBufferData(const vector<float> &vertices, unsigned int vbo);
-    GfxResult<unsigned int> setTexParam(TexParam param, TexVal val);
+    GfxResult<unsigned int> setTexParam(TexParam param, TexVal val, GfxTextureType type);
     GfxResult<unsigned int> generateMipMap();
-    GfxResult<unsigned int> enableVertexAttArray(unsigned int layout, size_t size);
+    GfxResult<unsigned int> enableVertexAttArray(uint layout, int count, size_t size, void *offset);
     GfxResult<unsigned int> disableVertexAttArray(unsigned int layout);
     GfxResult<unsigned int> drawTriangles(unsigned int size);
     void setBgColor(float r, float g, float b);
