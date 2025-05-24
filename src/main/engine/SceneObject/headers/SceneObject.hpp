@@ -19,6 +19,13 @@
 #define COLLIDEROBJECT_PROG_NAME "colliderObject"
 #define TILEOBJECT_PROG_NAME "tileObject"
 
+/* Default Render Priority Levels */
+#define RENDER_PRIOR_LOWEST 0
+#define RENDER_PRIOR_LOW 10
+#define RENDER_PRIOR_MEDIUM 20
+#define RENDER_PRIOR_HIGH 40
+#define RENDER_PRIOR_HIGHEST 100
+
 /// @todo Add SceneObject grouping for shared model changes
 enum ObjectType {
     UNDEFINED,
@@ -28,12 +35,6 @@ enum ObjectType {
     UI_OBJECT,
     SPRITE_OBJECT,
     TILE_OBJECT
-};
-
-enum RenderPriority {
-    HIGH,
-    MEDIUM,
-    LOW
 };
 
 enum ObjectAnchor {
@@ -58,7 +59,8 @@ class SceneObject {
     inline void setRotation(vec3 rotation) { this->rotation = rotation; }
     inline void setResolution(vec3 resolution) { this->resolution_ = resolution; }
     inline void setScale(float scale) { this->scale_ = scale ; }
-    inline void setRenderPriority(RenderPriority renderPriority) { this->renderPriority_ = renderPriority; }
+    inline void setRenderPriority(uint renderPriority) { this->renderPriority_ =
+        renderPriority <= RENDER_PRIOR_HIGHEST ? renderPriority : RENDER_PRIOR_HIGHEST; }
 
     // Getter methods
     inline const mat4 &vpMatrix() const { return vpMatrix_; }
@@ -69,7 +71,7 @@ class SceneObject {
     inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
     inline vec3 getRotation() const { return this->rotation; }
     inline float getScale() const { return this->scale_; }
-    inline RenderPriority getRenderPriority() const { return this->renderPriority_; }
+    inline uint getRenderPriority() const { return this->renderPriority_; }
     inline vec3 getResolution() const { return this->resolution_; }
     inline string getObjectName() const { return this->objectName; }
     inline ObjectType type() const { return type_; }
@@ -94,7 +96,9 @@ class SceneObject {
     unsigned int vao_;
     ObjectType type_;
 
-    RenderPriority renderPriority_ = RenderPriority::HIGH;
+    uint renderPriority_ = RENDER_PRIOR_HIGH;
 
     GfxController *gfxController_;
+
+    mutex objectLock_;
 };

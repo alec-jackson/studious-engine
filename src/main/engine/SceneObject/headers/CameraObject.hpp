@@ -39,11 +39,15 @@ class CameraObject : public SceneObject {
     void update() override;
     void addSceneObject(SceneObject *gameObject);
     void removeSceneObject(string objectName);
-    inline void clearSceneObjects() { sceneObjects_.clear(); }
+    void resetRenderPriorityMap();
+    inline void clearSceneObjects() { sceneObjects_.clear(); sceneObjectsOrdered_.clear(); }
 
  private:
+    void resetRenderPriorityMap_();
     SceneObject *target_;
     vector<SceneObject *> sceneObjects_;
+    // Render priority to list of scene objects
+    map<uint, vector<SceneObject *>> sceneObjectsOrdered_;
     vec3 offset_;
     vec3 initialTargetPos_;
     mat4 vpMatrixPerspective_;

@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "SceneObject.hpp"
 #include <condition_variable> //NOLINT
 #include <cstdio>
 #include <iostream>
@@ -363,6 +364,7 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
         scale, gameObjProg.get(), objectName, ObjectType::GAME_OBJECT, gfxController_);
     gameObject.get()->setDirectionalLight(directionalLight);
     gameObject.get()->setLuminance(luminance);
+    gameObject.get()->setRenderPriority(RENDER_PRIOR_LOW);
     sceneObjects_.push_back(gameObject);
     return gameObject.get();
 }
@@ -391,6 +393,7 @@ TextObject *GameInstance::createText(string message, vec3 position, float scale,
     }
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
         charSpacing, charPoint, textProg.get(), objectName, ObjectType::TEXT_OBJECT, gfxController_);
+    text.get()->setRenderPriority(RENDER_PRIOR_HIGH);
     sceneObjects_.push_back(text);
     return text.get();
 }
@@ -407,6 +410,7 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
     }
     auto sprite = std::make_shared<SpriteObject>(spritePath, position, scale, spriteProg.get(), objectName,
         ObjectType::SPRITE_OBJECT, anchor, gfxController_);
+    sprite.get()->setRenderPriority(RENDER_PRIOR_LOW);
     sceneObjects_.push_back(sprite);
     return sprite.get();
 }
@@ -423,6 +427,7 @@ UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, 
     }
     auto ui = std::make_shared<UiObject>(spritePath, position, scale, wScale, hScale, uiProg.get(), objectName,
         ObjectType::UI_OBJECT, anchor, gfxController_);
+    ui.get()->setRenderPriority(RENDER_PRIOR_MEDIUM);
     sceneObjects_.push_back(ui);
     return ui.get();
 }
@@ -440,6 +445,7 @@ TileObject *GameInstance::createTileMap(map<string, string> textures, vector<Til
     }
     auto tile = std::make_shared<TileObject>(textures, mapData, position, vec3(0.0f), scale, ObjectType::TILE_OBJECT,
     tileProg.get(), objectName, anchor, gfxController);
+    tile.get()->setRenderPriority(RENDER_PRIOR_LOWEST);
     sceneObjects_.push_back(tile);
     return tile.get();
 }
