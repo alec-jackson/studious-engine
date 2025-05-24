@@ -80,11 +80,11 @@ void GivenAnAnimationController::initMocks() {
         *textureId = DUMMY_TEXTURE_ID;
         return GFX_OK(unsigned int);
     });
-    ON_CALL(mockGfxController_, bindTexture(_))
+    ON_CALL(mockGfxController_, bindTexture(_, _))
         .WillByDefault(testing::Return(GFX_OK(unsigned int)));
     ON_CALL(mockGfxController_, sendTextureData(_, _, _, _))
         .WillByDefault(testing::Return(GFX_OK(unsigned int)));
-    ON_CALL(mockGfxController_, setTexParam(_, _))
+    ON_CALL(mockGfxController_, setTexParam(_, _, _))
         .WillByDefault(testing::Return(GFX_OK(unsigned int)));
     ON_CALL(mockGfxController_, generateMipMap())
         .WillByDefault(testing::Return(GFX_OK(unsigned int)));
@@ -100,7 +100,7 @@ void GivenAnAnimationController::initMocks() {
         .WillByDefault(testing::Return(GFX_OK(unsigned int)));
     ON_CALL(mockGfxController_, sendBufferData(_, _))
         .WillByDefault(testing::Return(GFX_OK(unsigned int)));
-    ON_CALL(mockGfxController_, enableVertexAttArray(_, _))
+    ON_CALL(mockGfxController_, enableVertexAttArray(_, _, _, _))
         .WillByDefault(testing::Return(GFX_OK(unsigned int)));
     ON_CALL(mockGfxController_, setProgram(_))
         .WillByDefault(testing::Return(GFX_OK(unsigned int)));

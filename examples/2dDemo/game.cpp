@@ -15,11 +15,7 @@
 #include <iostream>
 #include <cstdio>
 #include <game.hpp>
-#ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
-#else
-#include <OpenGlEsGfxController.hpp>
-#endif
 #include <AnimationController.hpp>
 
 // Lists of embedded/core shaders
@@ -29,7 +25,8 @@ vector<ProgramData> programs = {
     { "colliderObject", "src/main/shaders/core/colliderObject.vert", "src/main/shaders/core/colliderObject.frag" },
     { "textObject", "src/main/shaders/core/textObject.vert", "src/main/shaders/core/textObject.frag" },
     { "spriteObject", "src/main/shaders/core/spriteObject.vert", "src/main/shaders/core/spriteObject.frag" },
-    { "uiObject", "src/main/shaders/core/uiObject.vert", "src/main/shaders/core/uiObject.frag" }
+    { "uiObject", "src/main/shaders/core/uiObject.vert", "src/main/shaders/core/uiObject.frag" },
+    { "tileObject", "src/main/shaders/core/tileObject.vert", "src/main/shaders/core/tileObject.frag" }
 };
 #else
 vector<ProgramData> programs = {
@@ -37,28 +34,12 @@ vector<ProgramData> programs = {
     { "colliderObject", "src/main/shaders/es/colliderObject.vert", "src/main/shaders/es/colliderObject.frag" },
     { "textObject", "src/main/shaders/es/textObject.vert", "src/main/shaders/es/textObject.frag" },
     { "spriteObject", "src/main/shaders/es/spriteObject.vert", "src/main/shaders/es/spriteObject.frag" },
-    { "uiObject", "src/main/shaders/es/uiObject.vert", "src/main/shaders/es/uiObject.frag" }
+    { "uiObject", "src/main/shaders/es/uiObject.vert", "src/main/shaders/es/uiObject.frag" },
+    { "tileObject", "src/main/shaders/es/tileObject.vert", "src/main/shaders/es/tileObject.frag" }
 };
 #endif
-vector<string> texturePathStage = {
-    "src/resources/images/skintexture.jpg"
-};
-vector<string> texturePath = {
-    "src/resources/images/rock_texture.jpg",
-    "src/resources/images/rock_texture.jpg",
-    "src/resources/images/shoetexture.jpg",
-    "src/resources/images/shirttexture.jpg"
-};
 
-TextObject *fps_counter;
-TextObject *collDebugText;
-TextObject *pressUText;
-GameObject *wolfRef, *playerRef;  // Used for collision testing
-#ifdef GFX_EMBEDDED
-OpenGlEsGfxController gfxController = OpenGlEsGfxController();
-#else
 OpenGlGfxController gfxController = OpenGlGfxController();
-#endif
 AnimationController animationController;
 
 int runtime(GameInstance *currentGame);
@@ -132,10 +113,25 @@ int runtime(GameInstance *currentGame) {
         12,
         true);
     animationController.playTrack("all frames");
+
+    // Create a new tile object and add it to the scene
+    auto tile = currentGame->createTileMap(
+        {{ "floor_0", "src/resources/images/rock_texture.jpg" }},
+        {{ 0, 0, "floor_0" },
+        { 0, 1, "floor_0" },
+        { 1, 1, "floor_0" },
+        { -1, -1, "floor_0" }},
+        vec3(200, 200, 0),
+        0.1f,
+        "test-tile",
+        ObjectAnchor::BOTTOM_LEFT,
+        &gfxController
+    );
     // Add objects to camera
     vector<SceneObject *> targets = {
         obstacle,
-        player
+        player,
+        tile
     };
 
     // Add all objects to active camera

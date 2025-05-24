@@ -414,7 +414,7 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
 UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
     ObjectAnchor anchor, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
-    auto uiProg = gfxController_->getProgramId("uiObject");
+    auto uiProg = gfxController_->getProgramId(UIOBJECT_PROG_NAME);
     if (!uiProg.isOk()) {
         fprintf(stderr,
             "GameInstance::createUi: Failed to create UI object! '%s' program does not exist!\n",
@@ -425,6 +425,23 @@ UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, 
         ObjectType::UI_OBJECT, anchor, gfxController_);
     sceneObjects_.push_back(ui);
     return ui.get();
+}
+
+TileObject *GameInstance::createTileMap(map<string, string> textures, vector<TileData> mapData,
+    vec3 position, float scale, string objectName, ObjectAnchor anchor, GfxController *gfxController) {
+    std::unique_lock<std::mutex> lock(sceneLock_);
+    printf("GameInstance::createTileMap: Creating TextObject %zu\n", sceneObjects_.size());
+    auto tileProg = gfxController_->getProgramId(TILEOBJECT_PROG_NAME);
+    if (!tileProg.isOk()) {
+        fprintf(stderr,
+            "GameInstance::createTileMap: Failed to create tile map! '%s' program does not exist!\n",
+            TILEOBJECT_PROG_NAME);
+        return nullptr;
+    }
+    auto tile = std::make_shared<TileObject>(textures, mapData, position, vec3(0.0f), scale, ObjectType::TILE_OBJECT,
+    tileProg.get(), objectName, anchor, gfxController);
+    sceneObjects_.push_back(tile);
+    return tile.get();
 }
 
 SceneObject *GameInstance::getSceneObject(string objectName) {
@@ -520,8 +537,8 @@ void GameInstance::initWindow() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
 #ifdef __APPLE__  // Temporarily restrict SDL AA to MACOS
@@ -529,7 +546,10 @@ void GameInstance::initWindow() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
 #endif
     mainContext = SDL_GL_CreateContext(window);
-    if (!mainContext) exit(EXIT_FAILURE);
+    if (!mainContext) {
+        fprintf(stderr, "GameInstance::initWindow: Failed to init Context!\n");
+        exit(EXIT_FAILURE);
+    }
     renderer = SDL_GetRenderer(window);
 
     if (window == NULL) {

@@ -11,7 +11,7 @@
 
 ## QA Checklist
 
-- [ ] I ran `cpplint --linelength=120 --recursive src/main/` and corrected any issues.
+- [ ] I ran `cpplint --linelength=120 --exclude=src/main/opengl --recursive src/main/` and corrected any issues.
 - [ ] I added unit tests to relevant code.
 - [ ] I added/revised Doxygen documentation on new code.
 - [ ] I can compile using G++.

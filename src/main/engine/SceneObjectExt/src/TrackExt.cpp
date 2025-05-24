@@ -78,13 +78,14 @@ void TrackExt::splitGrid(int width, int height, int frameCount) {
         unsigned int textureId;
 
         extGfx_->generateTexture(&textureId);
-        extGfx_->bindTexture(textureId);
+        extGfx_->bindTexture(textureId, GfxTextureType::NORMAL);
         extGfx_->sendTextureData(width, height, imageFormat, data.get());
-        extGfx_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
-        extGfx_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
-        extGfx_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
-        extGfx_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
-        extGfx_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
+        extGfx_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+        extGfx_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+        extGfx_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR),
+            GfxTextureType::NORMAL);
+        extGfx_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP), GfxTextureType::NORMAL);
+        extGfx_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10), GfxTextureType::NORMAL);
         extGfx_->generateMipMap();
 
         /* Add the current image to the image bank */

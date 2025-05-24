@@ -103,7 +103,9 @@ int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
 
 void ColliderObject::update() {
     // Easy wireframe rendering is unsupported in OpenGL ES
+#ifndef GFX_EMBEDDED
     render();
+#endif  // GFX_EMBEDDED
 }
 
 void ColliderObject::render() {
@@ -193,7 +195,7 @@ void ColliderObject::createCollider() {
     gfxController_->generateBuffer(&poly_.get()->shapeBufferId[0]);
     gfxController_->bindBuffer(poly_.get()->shapeBufferId[0]);
     gfxController_->sendBufferData(sizeof(float) * colliderVertices.size(), &colliderVertices[0]);
-    gfxController_->enableVertexAttArray(0, 3);
+    gfxController_->enableVertexAttArray(0, 3, sizeof(float), 0);
     // Set the correct center points
     for (int i = 0; i < 3; i++) {
         center_[i] = max[i] - ((abs(max[i] - min[i])) / 2);

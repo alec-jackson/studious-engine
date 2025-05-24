@@ -54,7 +54,6 @@ To build other included demo targets, specify the target to build and run with t
 - SDL2
 - SDL2_mixer
 - SDL2_image
-- GLEW
 - glm
 - freetype2
 - googletest

@@ -16,11 +16,7 @@
 #include <iostream>
 #include <map>
 #include <game.hpp>
-#ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
-#else
-#include <OpenGlEsGfxController.hpp>
-#endif
 #include <AnimationController.hpp>
 
 // Global Variables, should eventually be moved to a config file
@@ -61,11 +57,7 @@ TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
-#ifdef GFX_EMBEDDED
-OpenGlEsGfxController gfxController = OpenGlEsGfxController();
-#else
 OpenGlGfxController gfxController = OpenGlGfxController();
-#endif
 AnimationController animationController;
 
 int runtime(GameInstance *currentGame);

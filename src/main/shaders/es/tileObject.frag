@@ -1,9 +1,10 @@
 #version 310 es
 precision mediump float;
-in vec2 TexCoords;
+precision highp sampler2DArray;
+in vec3 TexCoords;
 out vec4 color;
 
-uniform sampler2D sprite;
+uniform sampler2DArray sprite;
 uniform vec3 tint;
 
 void main() {

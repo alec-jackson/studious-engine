@@ -20,3 +20,25 @@ std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture) {
     }
     return packedData;
 }
+
+SDL_Surface *convertSurfaceToRgba(SDL_Surface *surface) {
+    // Check if the passed in surface is already null
+    if (surface == nullptr) {
+        fprintf(stderr, "convertSurfaceToRgba: Passed in texture is NULL!\n");
+        return nullptr;
+    }
+    // Attempt to convert the surface to RGBA
+    SDL_Surface *rgbaSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
+    if (rgbaSurface == nullptr) {
+        auto error = SDL_GetError();
+        fprintf(stderr, "convertSurfaceToRgba: Failed to convert to RGBA! %s\n",
+            error);
+        return nullptr;
+    }
+
+    // IF everything actually worked, free the old surface
+    SDL_FreeSurface(surface);
+
+    // And return the converted surface
+    return rgbaSurface;
+}

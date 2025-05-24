@@ -10,7 +10,11 @@
  */
 
 #pragma once
-#include <GL/glew.h>
+#ifdef GFX_EMBEDDED
+#include <es/glad.h>
+#else
+#include <core/glad.h>
+#endif
 #include <vector>
 #include <string>
 #include <GfxController.hpp>
@@ -24,35 +28,40 @@ class OpenGlGfxController : public GfxController {
     OpenGlGfxController();
     ~OpenGlGfxController();
     GfxResult<int> init();
-    GfxResult<unsigned int> generateBuffer(unsigned int *bufferId);
-    GfxResult<unsigned int> generateTexture(unsigned int *textureId);
-    GfxResult<unsigned int> bindBuffer(unsigned int bufferId);
-    GfxResult<unsigned int> sendBufferData(size_t size, void *data);
-    GfxResult<unsigned int> sendTextureData(unsigned int width, unsigned int height, TexFormat format, void *data);
-    GfxResult<int> getShaderVariable(unsigned int, const char *);
+    GfxResult<uint> generateBuffer(uint *bufferId);
+    GfxResult<uint> generateTexture(uint *textureId);
+    GfxResult<uint> bindBuffer(uint bufferId);
+    GfxResult<uint> sendBufferData(size_t size, void *data);
+    GfxResult<uint> sendTextureData(uint width, uint height, TexFormat format, void *data);
+    GfxResult<uint> sendTextureData3D(int offsetx, int offsety, int index, uint width, uint height, TexFormat format,
+      void *data);
+    GfxResult<int> getShaderVariable(uint, const char *);
     GfxResult<int> cleanup();
-    GfxResult<unsigned int> getProgramId(string);
-    GfxResult<unsigned int> setProgram(unsigned int programId);
-    GfxResult<unsigned int> loadShaders(string, string, string);
-    GfxResult<unsigned int> sendFloat(unsigned int variableId, float data);
-    GfxResult<unsigned int> sendFloatVector(unsigned int variableId, size_t count, float *data);
-    GfxResult<unsigned int> polygonRenderMode(RenderMode mode);
-    GfxResult<unsigned int> sendFloatMatrix(unsigned int variableId, size_t count, float *data);
-    GfxResult<unsigned int> sendInteger(unsigned int variableId, int data);
-    GfxResult<unsigned int> bindTexture(unsigned int textureId);
-    GfxResult<unsigned int> initVao(unsigned int *vao);
-    GfxResult<unsigned int> bindVao(unsigned int vao);
-    GfxResult<unsigned int> setCapability(GfxCapability capabilityId, bool enabled);
-    GfxResult<unsigned int> deleteTextures(unsigned int *tId);
-    GfxResult<unsigned int> updateBufferData(const vector<float> &vertices, unsigned int vbo);
-    GfxResult<unsigned int> setTexParam(TexParam param, TexVal val);
-    GfxResult<unsigned int> generateMipMap();
-    GfxResult<unsigned int> enableVertexAttArray(unsigned int layout, size_t size);
-    GfxResult<unsigned int> disableVertexAttArray(unsigned int layout);
-    GfxResult<unsigned int> drawTriangles(unsigned int size);
+    GfxResult<uint> getProgramId(string);
+    GfxResult<uint> setProgram(uint programId);
+    GfxResult<uint> loadShaders(string, string, string);
+    GfxResult<uint> sendFloat(uint variableId, float data);
+    GfxResult<uint> sendFloatVector(uint variableId, size_t count, float *data);
+    GfxResult<uint> polygonRenderMode(RenderMode mode);
+    GfxResult<uint> sendFloatMatrix(uint variableId, size_t count, float *data);
+    GfxResult<uint> sendInteger(uint variableId, int data);
+    GfxResult<uint> bindTexture(uint textureId, GfxTextureType type);
+    GfxResult<uint> initVao(uint *vao);
+    GfxResult<uint> bindVao(uint vao);
+    GfxResult<uint> setCapability(GfxCapability capabilityId, bool enabled);
+    GfxResult<uint> deleteTextures(uint *tId);
+    GfxResult<uint> updateBufferData(const vector<float> &vertices, uint vbo);
+    GfxResult<uint> setTexParam(TexParam param, TexVal val, GfxTextureType type);
+    GfxResult<uint> generateMipMap();
+    GfxResult<uint> enableVertexAttArray(uint layout, int count, size_t size, void *offset);
+    GfxResult<uint> setVertexAttDivisor(uint layout, uint divisor);
+    GfxResult<uint> disableVertexAttArray(uint layout);
+    GfxResult<uint> drawTriangles(uint size);
+    GfxResult<uint> drawTrianglesInstanced(uint size, uint count);
+    GfxResult<uint> allocateTexture3D(TexFormat format, uint width, uint height, uint layers);
     void setBgColor(float r, float g, float b);
-    void deleteVao(unsigned int *vao);
-    void deleteBuffer(unsigned int *bufferId);
+    void deleteVao(uint *vao);
+    void deleteBuffer(uint *bufferId);
     void clear(GfxClearMode clearMode);
     void update();
     void updateOpenGl();
@@ -61,8 +70,8 @@ class OpenGlGfxController : public GfxController {
     map<string, uint> programIdMap_;
 
     /* Objects tracked internally to free when closing */
-    vector<unsigned int> vaoList_;
-    vector<unsigned int> vboList_;
-    vector<unsigned int> textureIdList_;
+    vector<uint> vaoList_;
+    vector<uint> vboList_;
+    vector<uint> textureIdList_;
     vector<float> bgColor_;
 };

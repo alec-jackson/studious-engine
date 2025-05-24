@@ -8,16 +8,14 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include <string>
 #include <cstdio>
-#include <iostream>
 #include <vector>
 #include <memory>
 #include <SpriteObject.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): GameObject2D(
-            spritePath, position, scale, programId, objectName, type, anchor, gfxController), tint_ { vec4(0) } {
+            spritePath, position, scale, programId, objectName, type, anchor, gfxController), tint_ { vec3(0) } {
     printf("SpriteObject::SpriteObject: Creating sprite %s\n", objectName.c_str());
     GameObject2D::initializeTextureData();
     initializeVertexData();
@@ -70,7 +68,7 @@ void SpriteObject::initializeVertexData() {
 
     // Send VBO data for each character to the currently bound buffer
     gfxController_->sendBufferData(sizeof(float) * vertTexData_.size(), &vertTexData_[0]);
-    gfxController_->enableVertexAttArray(0, 4);
+    gfxController_->enableVertexAttArray(0, 4, sizeof(float), 0);
     gfxController_->bindBuffer(0);
     gfxController_->bindVao(0);
 }
@@ -98,14 +96,14 @@ void SpriteObject::render() {
     /* Bind the texture based on the sprite grid split */
     if (imageBank_.textureIds.empty()) {
         /* Send the base image if no images are present in the image bank */
-        gfxController_->bindTexture(textureId_);
+        gfxController_->bindTexture(textureId_, GfxTextureType::NORMAL);
     } else {
         assert(currentFrame_ < imageBank_.textureIds.size());
-        gfxController_->bindTexture(imageBank_.textureIds.at(currentFrame_));
+        gfxController_->bindTexture(imageBank_.textureIds.at(currentFrame_), GfxTextureType::NORMAL);
     }
     gfxController_->drawTriangles(6);
     gfxController_->bindVao(0);
-    gfxController_->bindTexture(0);
+    gfxController_->bindTexture(0, GfxTextureType::NORMAL);
     if (collider_.use_count() > 0) collider_.get()->update();
 }
 
