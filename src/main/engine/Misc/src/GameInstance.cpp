@@ -433,7 +433,7 @@ UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, 
 }
 
 TileObject *GameInstance::createTileMap(map<string, string> textures, vector<TileData> mapData,
-    vec3 position, float scale, string objectName, ObjectAnchor anchor, GfxController *gfxController) {
+    vec3 position, float scale, ObjectAnchor anchor, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createTileMap: Creating TextObject %zu\n", sceneObjects_.size());
     auto tileProg = gfxController_->getProgramId(TILEOBJECT_PROG_NAME);
@@ -444,7 +444,7 @@ TileObject *GameInstance::createTileMap(map<string, string> textures, vector<Til
         return nullptr;
     }
     auto tile = std::make_shared<TileObject>(textures, mapData, position, vec3(0.0f), scale, ObjectType::TILE_OBJECT,
-    tileProg.get(), objectName, anchor, gfxController);
+    tileProg.get(), objectName, anchor, gfxController_);
     tile.get()->setRenderPriority(RENDER_PRIOR_LOWEST);
     sceneObjects_.push_back(tile);
     return tile.get();
