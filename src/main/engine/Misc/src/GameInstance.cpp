@@ -279,8 +279,8 @@ int GameInstance::updateObjects() {
     runGfxRequests();
     std::unique_lock<std::mutex> lock(sceneLock_);
     // Run the protected queue functions here - the scene lock protects it
-    if (sceneObjects_.empty()) {
-        cerr << "Error: No active GameObjects in the current scene!\n";
+    if (cameras_.empty()) {
+        cerr << "Error: No active Cameras in the scene!\n";
         return -1;
     }
     gfxController_->update();
