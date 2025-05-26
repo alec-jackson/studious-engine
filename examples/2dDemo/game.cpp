@@ -123,9 +123,8 @@ int runtime(GameInstance *currentGame) {
         { -1, -1, "floor_0" }},
         vec3(200, 200, 0),
         0.1f,
-        "test-tile",
         ObjectAnchor::BOTTOM_LEFT,
-        &gfxController
+        "test-tile"
     );
     // Add objects to camera
     vector<SceneObject *> targets = {
