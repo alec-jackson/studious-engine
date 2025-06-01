@@ -347,7 +347,7 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
         assert(false);
     }
     auto cTarget = reinterpret_cast<TextObject *>(target);
-    auto result = updateVector4(
+    auto result = updateVector(
         keyFrame->color.original,
         keyFrame->color.desired,
         cTarget->getColor(),
@@ -386,7 +386,8 @@ bool AnimationController::cap(float *cur, float target, float dv) {
         return  capped || *cur == target;
 }
 
-UpdateData<vec3> AnimationController::updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame) {
+template <typename T>
+UpdateData<T> AnimationController::updateVector(T original, T desired, T current, KeyFrame *keyFrame) {
     // Caps the position when the position differs than the target
     auto matchedPos = 0;
     auto timeMet = 0;
@@ -402,38 +403,14 @@ UpdateData<vec3> AnimationController::updateVector(vec3 original, vec3 desired, 
         current = desired;
         timeMet = 1;
     }
-    // Perform position capping for xyz
-    for (int i = 0; i < 3; ++i) {
+    // Perform position capping for dimensions
+    uint containerSize = sizeof(T) / sizeof(float);
+    for (int i = 0; i < containerSize; ++i) {
         if (cap(&current[i], desired[i], tD[i]))
         matchedPos++;
     }
-    updateResult = (matchedPos == NUM_AXIS && timeMet);
-    return UpdateData<vec3>(current, updateResult);
-}
-
-UpdateData<vec4> AnimationController::updateVector4(vec4 original, vec4 desired, vec4 current, KeyFrame *keyFrame) {
-    // Caps the position when the position differs than the target
-    auto matchedPos = 0;
-    auto timeMet = 0;
-    auto updateResult = false;
-    // Translation delta is time per frame * totalTime
-    auto tD = desired - original;
-
-    auto timeScalar = static_cast<float>(deltaTime) / keyFrame->targetTime;
-    current += (tD * timeScalar);
-
-    // Perform position locking when max time is met...
-    if (keyFrame->currentTime >= keyFrame->targetTime) {
-        current = desired;
-        timeMet = 1;
-    }
-    // Perform position capping for xyz
-    for (int i = 0; i < 4; ++i) {
-        if (cap(&current[i], desired[i], tD[i]))
-        matchedPos++;
-    }
-    updateResult = (matchedPos == NUM_AXIS && timeMet);
-    return UpdateData<vec4>(current, updateResult);
+    updateResult = (matchedPos == containerSize && timeMet);
+    return UpdateData<T>(current, updateResult);
 }
 
 UpdateData<float> AnimationController::updateFloat(float original, float desired, float current, KeyFrame *keyFrame) {

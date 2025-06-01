@@ -46,7 +46,6 @@
 // MISC
 #define CAP_POS 1
 #define CAP_NEG 2
-#define NUM_AXIS 3
 #define ANIMATION_COMPLETE_CB std::function<void(void)> callback
 
 extern double deltaTime;
@@ -143,8 +142,8 @@ class AnimationController {
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
-    UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
-    UpdateData<vec4> updateVector4(vec4 original, vec4 desired, vec4 current, KeyFrame *keyFrame);
+    template <typename T>
+    UpdateData<T> updateVector(T original, T desired, T current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
     void playTrack(string trackName);
