@@ -9,6 +9,8 @@
  *
  */
 #include <cstdio>
+#include <vector>
+#include <string>
 #include <TextObject.hpp>
 
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
@@ -131,7 +133,7 @@ void TextObject::createMessage() {
 TextObject::~TextObject() {
 }
 
- void TextObject::render() {
+void TextObject::render() {
     // Update model matrices
     translateMatrix_ = glm::translate(mat4(1.0f), position);
     modelMat_ = translateMatrix_;

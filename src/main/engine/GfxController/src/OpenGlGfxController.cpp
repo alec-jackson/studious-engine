@@ -8,13 +8,13 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "GfxController.hpp"
-#include <OpenGlGfxController.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
 #include <cstdio>
 #include <algorithm>
+#include <GfxController.hpp>
+#include <OpenGlGfxController.hpp>
 
 /**
  * @brief Generates a buffer in the OpenGL context

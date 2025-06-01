@@ -10,6 +10,10 @@
  */
 #include <TileObject.hpp>
 #include <GL/glew.h>
+#include <vector>
+#include <string>
+#include <memory>
+#include <cstdio>
 #include <Image.hpp>
 
 TileObject::TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,

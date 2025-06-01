@@ -22,6 +22,12 @@ if (NOT WIN32)
 add_compile_options(-Wall -Werror)
 endif()
 
+if (APPLE)
+include_directories(
+  /usr/local/Cellar/glm/0.9.9.8/include/
+)
+endif (APPLE)
+
 include_directories(
   src/main/utilities/headers
   src/main/common/headers

@@ -8,7 +8,6 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "SceneObject.hpp"
 #include <condition_variable> //NOLINT
 #include <cstdio>
 #include <iostream>
@@ -17,6 +16,7 @@
 #include <memory>
 #include <queue>
 #include <GameInstance.hpp>
+#include <SceneObject.hpp>
 
 /*
  (void) startGameInstance uses the passed struct (gameInstanceArgs) args to

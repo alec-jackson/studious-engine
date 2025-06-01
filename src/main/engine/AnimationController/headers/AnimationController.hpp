@@ -10,7 +10,6 @@
  */
 
 #pragma once
-#include "SceneObject.hpp"
 #include <map>
 #include <queue>
 #include <cassert>
@@ -19,6 +18,7 @@
 #include <mutex> // NOLINT
 #include <memory>
 #include <vector>
+#include <SceneObject.hpp>
 #include <TrackExt.hpp>
 #include <UiObject.hpp>
 #include <TextObject.hpp>

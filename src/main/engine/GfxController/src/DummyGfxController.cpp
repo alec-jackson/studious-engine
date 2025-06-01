@@ -80,7 +80,8 @@ GfxResult<unsigned int> DummyGfxController::sendFloat(unsigned int variableId, f
     return GFX_OK(unsigned int);
 }
 
-GfxResult<unsigned int> DummyGfxController::sendFloatVector(unsigned int variableId, size_t count, VectorType vType, float *data) {
+GfxResult<unsigned int> DummyGfxController::sendFloatVector(unsigned int variableId, size_t count, VectorType vType,
+    float *data) {
     printf("GfxController::sendFloatVector: variableId=[%u], count=[%zu], data=[%p]\n",
         variableId,
         count,
