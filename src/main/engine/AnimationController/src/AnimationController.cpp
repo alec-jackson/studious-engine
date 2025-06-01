@@ -202,10 +202,15 @@ void AnimationController::update() {
                 auto cTarget = static_cast<TextObject *>(target);
                 currentKf->text.original = cTarget->getMessage();
             }
+            if (currentKf->type & UPDATE_COLOR) {
+                assert(target->type() == ObjectType::TEXT_OBJECT);
+                auto cTarget = static_cast<TextObject *>(target);
+                currentKf->color.original = cTarget->getColor();
+            }
         }
 
         auto result = UPDATE_NOT_COMPLETE;
-        auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET;
+        auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET;
 
         // Update the time passed since keyframe has started
         currentKf.get()->currentTime += deltaTime;
@@ -216,6 +221,7 @@ void AnimationController::update() {
         result |= updateTime(target, currentKf.get());
         result |= updateRotation(target, currentKf.get());
         result |= updateScale(target, currentKf.get());
+        result |= updateColor(target, currentKf.get());
         // Only remove the keyframe when all updates are done...
         if (result == done) {
             printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
@@ -327,6 +333,31 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
     return (updated.updateComplete_) ? STRETCH_MET : UPDATE_NOT_COMPLETE;
 }
 
+int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
+    // Only update if the keyframe type has COLOR
+    if (!(keyFrame->type & UPDATE_COLOR)) {
+        return COLOR_MET;
+    }
+    // Check if the target is a text object
+    if (target->type() != ObjectType::TEXT_OBJECT) {
+        // This is horrible, log the error and assert
+        fprintf(stderr,
+            "AnimationController::updateText: Attempting to update non-text object %s!\n",
+            target->getObjectName().c_str());
+        assert(false);
+    }
+    auto cTarget = reinterpret_cast<TextObject *>(target);
+    auto result = updateVector4(
+        keyFrame->color.original,
+        keyFrame->color.desired,
+        cTarget->getColor(),
+        keyFrame);
+
+    cTarget->setColor(result.updatedValue_);
+
+    return (result.updateComplete_) ? COLOR_MET : UPDATE_NOT_COMPLETE;
+}
+
 bool AnimationController::cap(float *cur, float target, float dv) {
         auto capped = false;
         auto direction = 0;
@@ -378,6 +409,31 @@ UpdateData<vec3> AnimationController::updateVector(vec3 original, vec3 desired, 
     }
     updateResult = (matchedPos == NUM_AXIS && timeMet);
     return UpdateData<vec3>(current, updateResult);
+}
+
+UpdateData<vec4> AnimationController::updateVector4(vec4 original, vec4 desired, vec4 current, KeyFrame *keyFrame) {
+    // Caps the position when the position differs than the target
+    auto matchedPos = 0;
+    auto timeMet = 0;
+    auto updateResult = false;
+    // Translation delta is time per frame * totalTime
+    auto tD = desired - original;
+
+    auto timeScalar = static_cast<float>(deltaTime) / keyFrame->targetTime;
+    current += (tD * timeScalar);
+
+    // Perform position locking when max time is met...
+    if (keyFrame->currentTime >= keyFrame->targetTime) {
+        current = desired;
+        timeMet = 1;
+    }
+    // Perform position capping for xyz
+    for (int i = 0; i < 4; ++i) {
+        if (cap(&current[i], desired[i], tD[i]))
+        matchedPos++;
+    }
+    updateResult = (matchedPos == NUM_AXIS && timeMet);
+    return UpdateData<vec4>(current, updateResult);
 }
 
 UpdateData<float> AnimationController::updateFloat(float original, float desired, float current, KeyFrame *keyFrame) {

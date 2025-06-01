@@ -15,7 +15,7 @@ TextObject::TextObject(string message, vec3 position, float scale, string fontPa
     uint programId, string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), charPadding_ { charSpacing },
     message_  { message }, fontPath_ { fontPath }, charPoint_ { charPoint }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) },
-    textColor_ { vec3(1.0f) } {
+    textColor_ { vec4(1.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -32,7 +32,7 @@ void TextObject::initializeShaderVars() {
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
     cutoffId_ = gfxController_->getShaderVariable(programId_, "cutoff").get();
-    gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
+    gfxController_->sendFloatVector(cutoffId_, 1, VectorType::GFX_3D, glm::value_ptr(cutoff_));
 }
 
 void TextObject::initializeText() {
@@ -131,7 +131,7 @@ void TextObject::createMessage() {
 TextObject::~TextObject() {
 }
 
-void TextObject::render() {
+ void TextObject::render() {
     // Update model matrices
     translateMatrix_ = glm::translate(mat4(1.0f), position);
     modelMat_ = translateMatrix_;
@@ -139,10 +139,10 @@ void TextObject::render() {
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
-    gfxController_->sendFloatVector(cutoffId_, 1, glm::value_ptr(cutoff_));
+    gfxController_->sendFloatVector(cutoffId_, 1, VectorType::GFX_3D, glm::value_ptr(cutoff_));
     /// @todo optimize this...
     auto textColorId = gfxController_->getShaderVariable(programId_, "textColor").get();
-    gfxController_->sendFloatVector(textColorId, 1, glm::value_ptr(textColor_));
+    gfxController_->sendFloatVector(textColorId, 1, VectorType::GFX_4D, glm::value_ptr(textColor_));
     // Find a more clever solution
     auto index = 0;
     for (auto character : message_) {

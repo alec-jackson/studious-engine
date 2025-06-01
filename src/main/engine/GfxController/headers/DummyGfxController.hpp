@@ -27,7 +27,7 @@ class DummyGfxController : public GfxController {
     GfxResult<unsigned int> setProgram(unsigned int);
     GfxResult<unsigned int> loadShaders(string, string, string);
     GfxResult<unsigned int> sendFloat(unsigned int variableId, float data);
-    GfxResult<unsigned int> sendFloatVector(unsigned int variableId, size_t count, float *data);
+    GfxResult<unsigned int> sendFloatVector(unsigned int variableId, size_t count, VectorType vType, float *data);
     GfxResult<unsigned int> polygonRenderMode(RenderMode mode);
     GfxResult<unsigned int> sendFloatMatrix(unsigned int variableId, size_t count, float *data);
     GfxResult<unsigned int> sendInteger(unsigned int variableId, int data);

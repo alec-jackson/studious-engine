@@ -124,8 +124,7 @@ int runtime(GameInstance *currentGame) {
         vec3(200, 200, 0),
         0.1f,
         ObjectAnchor::BOTTOM_LEFT,
-        "test-tile"
-    );
+        "test-tile");
     // Add objects to camera
     vector<SceneObject *> targets = {
         obstacle,

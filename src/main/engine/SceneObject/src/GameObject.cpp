@@ -198,7 +198,7 @@ void GameObject::render() {
         // Send our shared variables over to our program (shader)
         gfxController_->sendFloat(luminanceId, luminance);
         gfxController_->sendFloat(rollOffId, rollOff);
-        gfxController_->sendFloatVector(directionalLightId, 1, glm::value_ptr(directionalLight));
+        gfxController_->sendFloatVector(directionalLightId, 1, VectorType::GFX_3D, glm::value_ptr(directionalLight));
         gfxController_->sendFloatMatrix(vpId, 1, glm::value_ptr(vpMatrix_));
         gfxController_->sendFloatMatrix(modelId, 1, glm::value_ptr(modelMatrix));
         gfxController_->sendInteger(hasTextureId, hasTexture[i]);

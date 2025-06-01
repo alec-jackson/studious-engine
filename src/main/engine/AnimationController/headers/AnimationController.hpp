@@ -10,6 +10,7 @@
  */
 
 #pragma once
+#include "SceneObject.hpp"
 #include <map>
 #include <queue>
 #include <cassert>
@@ -30,6 +31,7 @@
 #define TIME_MET 8
 #define ROTATION_MET 16
 #define SCALE_MET 32
+#define COLOR_MET 64
 
 // Update Types
 #define UPDATE_NONE 0
@@ -39,6 +41,7 @@
 #define UPDATE_TIME 8
 #define UPDATE_ROTATION 16
 #define UPDATE_SCALE 32
+#define UPDATE_COLOR 64
 
 // MISC
 #define CAP_POS 1
@@ -110,6 +113,7 @@ struct KeyFrame {
     AnimationData<string> text;
     AnimationData<vec3> rotation;
     AnimationData<float> scale;
+    AnimationData<vec4> color;
     float targetTime;
     float currentTime = 0.0f;
     int type;
@@ -134,11 +138,13 @@ class AnimationController {
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
+    int updateColor(SceneObject *target, KeyFrame *keyFrame);
     bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
     UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
+    UpdateData<vec4> updateVector4(vec4 original, vec4 desired, vec4 current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
     void playTrack(string trackName);
