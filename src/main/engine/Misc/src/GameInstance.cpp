@@ -8,6 +8,9 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <SDL_gamecontroller.h>
+#include <SDL_keyboard.h>
+#include <SDL_scancode.h>
 #include <condition_variable> //NOLINT
 #include <cstdio>
 #include <iostream>
@@ -17,6 +20,30 @@
 #include <queue>
 #include <GameInstance.hpp>
 #include <SceneObject.hpp>
+
+// GameInput maps for input devices
+map<SDL_Scancode, GameInput> keyboardInputMap = {
+    { SDL_SCANCODE_W, GameInput::NORTH      },
+    { SDL_SCANCODE_S, GameInput::SOUTH      },
+    { SDL_SCANCODE_D, GameInput::EAST       },
+    { SDL_SCANCODE_A, GameInput::WEST       },
+    { SDL_SCANCODE_RETURN, GameInput::A     },
+    { SDL_SCANCODE_BACKSPACE, GameInput::B  },
+    { SDL_SCANCODE_BACKSPACE, GameInput::X  },
+    { SDL_SCANCODE_ESCAPE, GameInput::QUIT  }
+};
+
+// GameInput maps for input devices
+map<SDL_GameControllerButton, GameInput> controllerInputMap = {
+    { SDL_CONTROLLER_BUTTON_DPAD_UP, GameInput::NORTH },
+    { SDL_CONTROLLER_BUTTON_DPAD_DOWN, GameInput::SOUTH },
+    { SDL_CONTROLLER_BUTTON_DPAD_RIGHT, GameInput::EAST },
+    { SDL_CONTROLLER_BUTTON_DPAD_LEFT, GameInput::WEST },
+    { SDL_CONTROLLER_BUTTON_A, GameInput::A },
+    { SDL_CONTROLLER_BUTTON_B, GameInput::B },
+    { SDL_CONTROLLER_BUTTON_X, GameInput::X },
+    { SDL_CONTROLLER_BUTTON_BACK, GameInput::QUIT }
+};
 
 /*
  (void) startGameInstance uses the passed struct (gameInstanceArgs) args to
@@ -76,20 +103,43 @@ vec3 GameInstance::getDirectionalLight() {
     return directionalLight;
 }
 
-/*
- (const Uint8 *) getKeystate returns the current keystate of the current
- GameInstance. The keystate is used for getting input from the user's keyboard.
- */
-const Uint8 *GameInstance::getKeystate() {
-    return keystate;
-}
-
 const bool GameInstance::getControllerInput(SDL_GameControllerButton button) {
     // Checks if a button was pressed against all connected controllers
     if (gameControllers[0] == nullptr) {
-        fprintf(stderr, "No controllers connected - not retrieving input!\n");
+        return false;
     }
     return SDL_GameControllerGetButton(gameControllers[0], button);
+}
+
+const bool GameInstance::getKeyboardInput(SDL_Scancode scancode) {
+    return SDL_GetKeyboardState(nullptr)[scancode];
+}
+
+const bool GameInstance::pollInput(GameInput input) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    auto pressed = false;
+    // Check for the target input from either a controller or keyboard (will improve later)
+    SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
+    SDL_GameControllerButton button = SDL_CONTROLLER_BUTTON_INVALID;
+    // Reverse the maps and find the corresponding raw input
+    for (auto kbEntry : keyboardInputMap) {
+        // Check if the value is equal and use that keycode
+        if (kbEntry.second == input) {
+            scancode = kbEntry.first;
+            break;
+        }
+    }
+    for (auto cEntry : controllerInputMap) {
+        // Check if the value is equal and use that keycode
+        if (cEntry.second == input) {
+            button = cEntry.first;
+            break;
+        }
+    }
+    // Now finally POLL for events on all devices.
+    pressed |= getControllerInput(button);
+    pressed |= getKeyboardInput(scancode);
+    return pressed;
 }
 
 /*
@@ -319,12 +369,12 @@ void GameInstance::updateInput() {
     auto res = SDL_PollEvent(&event);
     if (res) {
         if (event.type == SDL_KEYDOWN) {
-            printf("button pressed %d\n", event.key.keysym.scancode);
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
             // Let's just use the queue as a mailbox for now
-            if (inputQueue_.empty()) {
-                inputQueue_.push(event.key.keysym.scancode);
+            auto input = scancodeToInput(event.key.keysym.scancode);
+            if (inputQueue_.empty() && input != GameInput::NONE) {
+                inputQueue_.push(input);
             }
             // Signal data is available
             inputCv_.notify_all();
@@ -332,25 +382,29 @@ void GameInstance::updateInput() {
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
             // Let's just use the queue as a mailbox for now
-            printf("Button %u pressed\n", event.jbutton.button);
-            if (inputQueue_.empty()) {
-                inputQueue_.push(event.jbutton.button);
+            auto input = buttonToInput(static_cast<SDL_GameControllerButton>(event.jbutton.button));
+            if (inputQueue_.empty() && input != GameInput::NONE) {
+                inputQueue_.push(input);
             }
             // Signal data is available
             inputCv_.notify_all();
         } else if (event.type == SDL_QUIT) {
             shutdown();
+        } else if (event.type == SDL_JOYDEVICEADDED || event.type == SDL_JOYDEVICEREMOVED) {
+            // Connect to new controllers on the fly...
+            resetController();
+            initController();
         }
     }
 }
 
-int GameInstance::getInput(bool blocking) {
-    int res = SE_NO_INPUT;
-    queue<int> blankQueue;
+GameInput GameInstance::getInput() {
+    auto res = GameInput::NONE;
+    queue<GameInput> blankQueue;
     std::unique_lock<std::mutex> scopeLock(inputLock_);
-    if (blocking) inputQueue_.swap(blankQueue);
+    inputQueue_.swap(blankQueue);
     // Check if any items are in the input queue
-    inputCv_.wait(scopeLock, [this, blocking]() { return !inputQueue_.empty() || shutdown_ || !blocking; });
+    inputCv_.wait(scopeLock, [this]() { return !inputQueue_.empty() || shutdown_; });
     // Pop the item off of the queue
     if (!inputQueue_.empty()) {
         res = inputQueue_.front();
@@ -359,26 +413,13 @@ int GameInstance::getInput(bool blocking) {
     return res;
 }
 
-bool GameInstance::waitForKeyDown(int input) {
-    int curInput = SE_NO_INPUT;
+bool GameInstance::waitForInput(GameInput input) {
+    auto curInput = GameInput::NONE;
     while (!shutdown_) {
-        curInput = getInput(true);
+        curInput = getInput();
         if (input == curInput) break;
     }
     return curInput == input;
-}
-
-bool GameInstance::waitForKeyDown(vector<int> input) {
-    bool keyPressed = false;
-    while (!shutdown_) {
-        int curInput = getInput(true);
-        auto iit = std::find_if(input.begin(), input.end(), [curInput](int input) { return input == curInput; });
-        if (iit != input.end()) {
-            keyPressed = true;
-            break;
-        }
-    }
-    return keyPressed;
 }
 
 GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
@@ -645,6 +686,7 @@ int GameInstance::loadSound(string sfxName, string sfxPath) {
  (void) initController does not return any values.
 */
 void GameInstance::initController() {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
     int joyFlag = SDL_NumJoysticks();
     cout << "Number of joysticks connected: " << joyFlag << "\n";
     if (joyFlag < 1) {
@@ -667,6 +709,15 @@ void GameInstance::initController() {
     return;
 }
 
+void GameInstance::resetController() {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    for (int i = 0; i < controllersConnected; ++i) {
+        SDL_GameControllerClose(gameControllers[i]);
+        gameControllers[i] = nullptr;
+    }
+    controllersConnected = 0;
+}
+
 void GameInstance::initApplication() {
     gfxController_->init();
 }
@@ -685,4 +736,28 @@ bool GameInstance::waitForProgress(std::function<bool(void)> pred) {
     std::unique_lock<std::mutex> scopeLock(progressLock_);
     progressCv_.wait(scopeLock, [pred, this]() { return pred() || isShutDown(); });
     return !isShutDown();
+}
+
+GameInput GameInstance::scancodeToInput(SDL_Scancode scancode) {
+    auto input = GameInput::NONE;
+    // Check the input map for a game input
+    auto cimit = keyboardInputMap.find(scancode);
+    if (cimit != keyboardInputMap.end()) {
+        input = cimit->second;
+    }
+    return input;
+}
+
+GameInput GameInstance::buttonToInput(SDL_GameControllerButton button) {
+    auto input = GameInput::NONE;
+    // Check the input map for a game input
+    auto cimit = controllerInputMap.find(button);
+    if (cimit != controllerInputMap.end()) {
+        input = cimit->second;
+    }
+    return input;
+}
+
+const Uint8 *GameInstance::getKeystateRaw() {
+    return keystate;
 }

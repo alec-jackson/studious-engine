@@ -11,6 +11,7 @@
 
 #pragma once
 #include <SDL_gamecontroller.h>
+#include <SDL_scancode.h>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -32,7 +33,6 @@
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
-#define SE_NO_INPUT 0xBEEF
 
 extern double deltaTime;
 
@@ -44,6 +44,21 @@ extern double deltaTime;
 typedef struct controllerReadout {
     Sint16 leftAxis;
 } controllerReadout;
+
+enum class GameInput {
+    NONE,
+    QUIT,
+    NORTH,
+    SOUTH,
+    EAST,
+    WEST,
+    A,
+    B,
+    X,
+    Y,
+    R,
+    L
+};
 
 /*
  The GameInstance class is the class that holds all of the information about the
@@ -82,10 +97,11 @@ class GameInstance {
     mutex requestLock_;
     mutex inputLock_;
     mutex progressLock_;
+    mutex controllerLock_;
     std::condition_variable inputCv_;
     std::condition_variable progressCv_;
     queue<std::function<void(void)>> protectedGfxReqs_;
-    queue<int> inputQueue_;
+    queue<GameInput> inputQueue_;
     bool audioInitialized_ = false;
 
     void initWindow();
@@ -109,6 +125,9 @@ class GameInstance {
      * @brief Polls for new input events and pushes them to the input queue.
      */
     void updateInput();
+    GameInput scancodeToInput(SDL_Scancode scancode);
+    GameInput buttonToInput(SDL_GameControllerButton button);
+    void resetController();
 
  public:
     GameInstance(GfxController *gfxController, AnimationController *animationController, int width,
@@ -137,8 +156,10 @@ class GameInstance {
      * @return True when the request is fulfilled, otherwise return false.
      */
     bool protectedGfxRequest(std::function<void(void)> req);
-    const Uint8 *getKeystate();
+    const Uint8 *getKeystateRaw();
+    const bool getKeyboardInput(SDL_Scancode scancode);
     const bool getControllerInput(SDL_GameControllerButton button);
+    const bool pollInput(GameInput input);
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
     int playSound(string sfxName, bool loop, int volume);
@@ -162,7 +183,7 @@ class GameInstance {
     /**
      * @brief Fetches input from the internal input queue. Functions blocks until an input event is received.
      */
-    int getInput(bool blocking);
+    GameInput getInput();
     int lockScene();
     int unlockScene();
     /**
@@ -176,14 +197,8 @@ class GameInstance {
      * @param input The input to wait for.
      * @return True when the key is received, false is shutdown signal received.
      */
-    bool waitForKeyDown(int input);
+    bool waitForInput(GameInput input);
 
-    /**
-     * @brief Blocks until a specific key from the passed in list is pressed.
-     * @param input List of inputs for wait for.
-     * @return True when the key is received, false is shutdown signal received.
-     */
-    bool waitForKeyDown(vector<int> input);
     /**
      * @brief Checks if the game has been shut down.
      * @return Returns true if shutdown has been called, false otherwise.

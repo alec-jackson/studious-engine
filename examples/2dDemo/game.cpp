@@ -10,6 +10,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "GameInstance.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -178,21 +179,21 @@ int mainLoop(gameInfo* gamein) {
         offset = vec3(0);
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
-        if (currentGame->getKeystate()[SDL_SCANCODE_ESCAPE]) currentGame->shutdown();
+        if (currentGame->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         if (error) {
             return error;
         }
         end = SDL_GetPerformanceCounter();
-        if (currentGame->getKeystate()[SDL_SCANCODE_W]) offset += vec3(0, speed, 0);
-        if (currentGame->getKeystate()[SDL_SCANCODE_S]) offset -= vec3(0, speed, 0);
-        if (currentGame->getKeystate()[SDL_SCANCODE_D]) offset += vec3(speed, 0, 0);
-        if (currentGame->getKeystate()[SDL_SCANCODE_A]) offset -= vec3(speed, 0, 0);
-        if (currentGame->getKeystate()[SDL_SCANCODE_E] && !eDown) {
+        if (currentGame->pollInput(GameInput::NORTH)) offset += vec3(0, speed, 0);
+        if (currentGame->pollInput(GameInput::SOUTH)) offset -= vec3(0, speed, 0);
+        if (currentGame->pollInput(GameInput::EAST)) offset += vec3(speed, 0, 0);
+        if (currentGame->pollInput(GameInput::WEST)) offset -= vec3(speed, 0, 0);
+        if (currentGame->pollInput(GameInput::X) && !eDown) {
             printf("E pressed!\n");
             eDown = true;
             animationController.pauseTrack("obstacle");
-        } else if (!currentGame->getKeystate()[SDL_SCANCODE_E] && eDown) {
+        } else if (!currentGame->pollInput(GameInput::X) && eDown) {
             printf("E released!\n");
             eDown = false;
             animationController.playTrack("one to four");
