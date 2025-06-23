@@ -10,6 +10,7 @@
  */
 
 #pragma once
+#include <SDL_gamecontroller.h>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -31,6 +32,7 @@
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
+#define SE_NO_INPUT 0xBEEF
 
 extern double deltaTime;
 
@@ -83,7 +85,7 @@ class GameInstance {
     std::condition_variable inputCv_;
     std::condition_variable progressCv_;
     queue<std::function<void(void)>> protectedGfxReqs_;
-    queue<SDL_Scancode> inputQueue_;
+    queue<int> inputQueue_;
     bool audioInitialized_ = false;
 
     void initWindow();
@@ -136,6 +138,7 @@ class GameInstance {
      */
     bool protectedGfxRequest(std::function<void(void)> req);
     const Uint8 *getKeystate();
+    const bool getControllerInput(SDL_GameControllerButton button);
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
     int playSound(string sfxName, bool loop, int volume);
@@ -159,7 +162,7 @@ class GameInstance {
     /**
      * @brief Fetches input from the internal input queue. Functions blocks until an input event is received.
      */
-    SDL_Scancode getInput();
+    int getInput(bool blocking);
     int lockScene();
     int unlockScene();
     /**
@@ -173,7 +176,14 @@ class GameInstance {
      * @param input The input to wait for.
      * @return True when the key is received, false is shutdown signal received.
      */
-    bool waitForKeyDown(SDL_Scancode input);
+    bool waitForKeyDown(int input);
+
+    /**
+     * @brief Blocks until a specific key from the passed in list is pressed.
+     * @param input List of inputs for wait for.
+     * @return True when the key is received, false is shutdown signal received.
+     */
+    bool waitForKeyDown(vector<int> input);
     /**
      * @brief Checks if the game has been shut down.
      * @return Returns true if shutdown has been called, false otherwise.

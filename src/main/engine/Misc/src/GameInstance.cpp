@@ -84,6 +84,14 @@ const Uint8 *GameInstance::getKeystate() {
     return keystate;
 }
 
+const bool GameInstance::getControllerInput(SDL_GameControllerButton button) {
+    // Checks if a button was pressed against all connected controllers
+    if (gameControllers[0] == nullptr) {
+        fprintf(stderr, "No controllers connected - not retrieving input!\n");
+    }
+    return SDL_GameControllerGetButton(gameControllers[0], button);
+}
+
 /*
  (controllerReadout *) getControllers takes an (int) controllerIndex and returns
  the associated controllerReadout struct.
@@ -311,11 +319,22 @@ void GameInstance::updateInput() {
     auto res = SDL_PollEvent(&event);
     if (res) {
         if (event.type == SDL_KEYDOWN) {
+            printf("button pressed %d\n", event.key.keysym.scancode);
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
             // Let's just use the queue as a mailbox for now
             if (inputQueue_.empty()) {
                 inputQueue_.push(event.key.keysym.scancode);
+            }
+            // Signal data is available
+            inputCv_.notify_all();
+        } else if (event.type == SDL_JOYBUTTONDOWN) {
+            // Lock access to the input queue
+            std::unique_lock<std::mutex> scopeLock(inputLock_);
+            // Let's just use the queue as a mailbox for now
+            printf("Button %u pressed\n", event.jbutton.button);
+            if (inputQueue_.empty()) {
+                inputQueue_.push(event.jbutton.button);
             }
             // Signal data is available
             inputCv_.notify_all();
@@ -325,13 +344,13 @@ void GameInstance::updateInput() {
     }
 }
 
-SDL_Scancode GameInstance::getInput() {
-    auto res = SDL_SCANCODE_UNKNOWN;
-    queue<SDL_Scancode> blankQueue;
+int GameInstance::getInput(bool blocking) {
+    int res = SE_NO_INPUT;
+    queue<int> blankQueue;
     std::unique_lock<std::mutex> scopeLock(inputLock_);
-    inputQueue_.swap(blankQueue);
+    if (blocking) inputQueue_.swap(blankQueue);
     // Check if any items are in the input queue
-    inputCv_.wait(scopeLock, [this]() { return !inputQueue_.empty() || shutdown_; });
+    inputCv_.wait(scopeLock, [this, blocking]() { return !inputQueue_.empty() || shutdown_ || !blocking; });
     // Pop the item off of the queue
     if (!inputQueue_.empty()) {
         res = inputQueue_.front();
@@ -340,13 +359,26 @@ SDL_Scancode GameInstance::getInput() {
     return res;
 }
 
-bool GameInstance::waitForKeyDown(SDL_Scancode input) {
-    SDL_Scancode curInput = SDL_SCANCODE_UNKNOWN;
+bool GameInstance::waitForKeyDown(int input) {
+    int curInput = SE_NO_INPUT;
     while (!shutdown_) {
-        curInput = getInput();
+        curInput = getInput(true);
         if (input == curInput) break;
     }
     return curInput == input;
+}
+
+bool GameInstance::waitForKeyDown(vector<int> input) {
+    bool keyPressed = false;
+    while (!shutdown_) {
+        int curInput = getInput(true);
+        auto iit = std::find_if(input.begin(), input.end(), [curInput](int input) { return input == curInput; });
+        if (iit != input.end()) {
+            keyPressed = true;
+            break;
+        }
+    }
+    return keyPressed;
 }
 
 GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
