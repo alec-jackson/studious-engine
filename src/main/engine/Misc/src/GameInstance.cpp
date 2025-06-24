@@ -366,8 +366,7 @@ int GameInstance::updateWindow() {
 
 void GameInstance::updateInput() {
     SDL_Event event;
-    auto res = SDL_PollEvent(&event);
-    if (res) {
+    while (SDL_PollEvent(&event)) {
         if (event.type == SDL_KEYDOWN) {
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
