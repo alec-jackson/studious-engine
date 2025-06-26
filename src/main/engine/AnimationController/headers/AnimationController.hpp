@@ -137,6 +137,13 @@ class AnimationController {
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
+    /**
+     * @brief Processes the color keyframe if applicable using deltaTime.
+     * @param target - The SceneObject to apply the animation to.
+     * @param keyFrame - The KeyFrame to process.
+     * @return COLOR_MET if keyframe has completed, or UPDATE_NOT_COMPLETE otherwise. COLOR_MET is also
+     * returned when a color change does not exist for the current keyframe.
+     */
     int updateColor(SceneObject *target, KeyFrame *keyFrame);
     bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);

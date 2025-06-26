@@ -342,7 +342,7 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
     if (target->type() != ObjectType::TEXT_OBJECT) {
         // This is horrible, log the error and assert
         fprintf(stderr,
-            "AnimationController::updateText: Attempting to update non-text object %s!\n",
+            "AnimationController::updateColor: Attempting to update non-text object %s!\n",
             target->getObjectName().c_str());
         assert(false);
     }
@@ -386,6 +386,17 @@ bool AnimationController::cap(float *cur, float target, float dv) {
         return  capped || *cur == target;
 }
 
+/**
+ * @brief Linearly transforms a vector's values given the current values, the original values and the desired values.
+ * Uses deltaTime to determine updated values. Will set current = desired when the keyframe is finished.
+ * @param original - The original vector for the SceneObject when the keyframe began processing.
+ * @param desired - The desired vector values for the SceneObject upon keyframe completion.
+ * @param current - The current vector values for the current keyframe. These values are applied to the target
+ * SceneObject upon every update. These values are equal to the original vector when the keyframe begins processing,
+ * and will eventually become the desired values when the keyframe has completed.
+ * @param keyFrame - The keyframe to process time data from.
+ * @return UpdateData struct containing updated vector values.
+ */
 template <typename T>
 UpdateData<T> AnimationController::updateVector(T original, T desired, T current, KeyFrame *keyFrame) {
     // Caps the position when the position differs than the target

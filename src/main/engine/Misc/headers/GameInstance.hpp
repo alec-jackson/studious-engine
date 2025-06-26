@@ -125,8 +125,22 @@ class GameInstance {
      * @brief Polls for new input events and pushes them to the input queue.
      */
     void updateInput();
+    /**
+     * @brief Converts a raw SDL scancode value to a GameInput value. @see keyboardInputMap in the GameInstance.cpp
+     * source file to see the complete mapping.
+     * @return GameInput mapped to the raw input, or GameInput::NONE if undefined input received.
+     */
     GameInput scancodeToInput(SDL_Scancode scancode);
+    /**
+     * @brief Converts a raw SDL button input to the raw input's button map. @see controllerInputMap in the
+     * GameInstance.cpp source file.
+     * @return GameInput mapping to the raw button input. Returns GameInput::NONE if an input is received that is
+     * not defined in the controllerInputMap.
+     */
     GameInput buttonToInput(SDL_GameControllerButton button);
+    /**
+     * @brief Closes all active controllers and performs some cleanup.
+     */
     void resetController();
 
  public:
@@ -156,9 +170,29 @@ class GameInstance {
      * @return True when the request is fulfilled, otherwise return false.
      */
     bool protectedGfxRequest(std::function<void(void)> req);
+    /**
+     * @brief Can be used to check raw SDL scancode values. This has the same behavior as the previous
+     * getKeystate function did.
+     * @return Uint8 array that can be indexed using SDL_Scancode enumerated values.
+     */
     const Uint8 *getKeystateRaw();
+    /**
+     * @brief Shorthand way to check if a keyboard button has been pressed.
+     * @param scancode - The SDL_Scancode enum value to check for input state.
+     * @return true if the button described in scancode is pressed down, false otherwise.
+     */
     const bool getKeyboardInput(SDL_Scancode scancode);
+    /**
+     * @brief Check if a SDL_GameControllerButton has been pressed.
+     * @param button - The button to poll the input state of. Described by SDL_GameControllerButton.
+     * @return true if the button is pressed down, false otherwise.
+     */
     const bool getControllerInput(SDL_GameControllerButton button);
+    /**
+     * @brief Polls for a specific input across keyboard and controller input devices.
+     * @param input - The input to check for.
+     * @return true if the GameInput is being pressed by a keyboard or controller. False otherwise.
+     */
     const bool pollInput(GameInput input);
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
@@ -182,6 +216,7 @@ class GameInstance {
     int update();
     /**
      * @brief Fetches input from the internal input queue. Functions blocks until an input event is received.
+     * @return GameInput value pressed from either a controller or keyboard.
      */
     GameInput getInput();
     int lockScene();

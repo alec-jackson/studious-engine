@@ -112,7 +112,7 @@ const bool GameInstance::getControllerInput(SDL_GameControllerButton button) {
 }
 
 const bool GameInstance::getKeyboardInput(SDL_Scancode scancode) {
-    return SDL_GetKeyboardState(nullptr)[scancode];
+    return keystate[scancode];
 }
 
 const bool GameInstance::pollInput(GameInput input) {
