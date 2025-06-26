@@ -389,7 +389,7 @@ bool AnimationController::cap(float *cur, float target, float dv) {
 template <typename T>
 UpdateData<T> AnimationController::updateVector(T original, T desired, T current, KeyFrame *keyFrame) {
     // Caps the position when the position differs than the target
-    auto matchedPos = 0;
+    uint matchedPos = 0;
     auto timeMet = 0;
     auto updateResult = false;
     // Translation delta is time per frame * totalTime
@@ -405,7 +405,7 @@ UpdateData<T> AnimationController::updateVector(T original, T desired, T current
     }
     // Perform position capping for dimensions
     uint containerSize = sizeof(T) / sizeof(float);
-    for (int i = 0; i < containerSize; ++i) {
+    for (uint i = 0; i < containerSize; ++i) {
         if (cap(&current[i], desired[i], tD[i]))
         matchedPos++;
     }
