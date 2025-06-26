@@ -150,6 +150,17 @@ class AnimationController {
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
     template <typename T>
+    /**
+     * @brief Linearly transforms a vector's values given the current values, the original values and the desired values.
+     * Uses deltaTime to determine updated values. Will set current = desired when the keyframe is finished.
+     * @param original - The original vector for the SceneObject when the keyframe began processing.
+     * @param desired - The desired vector values for the SceneObject upon keyframe completion.
+     * @param current - The current vector values for the current keyframe. These values are applied to the target
+     * SceneObject upon every update. These values are equal to the original vector when the keyframe begins processing,
+     * and will eventually become the desired values when the keyframe has completed.
+     * @param keyFrame - The keyframe to process time data from.
+     * @return UpdateData struct containing updated vector values.
+     */
     UpdateData<T> updateVector(T original, T desired, T current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
