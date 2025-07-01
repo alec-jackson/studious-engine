@@ -9,7 +9,6 @@
  *
  */
 #include <TileObject.hpp>
-#include <GL/glew.h>
 #include <vector>
 #include <string>
 #include <memory>
