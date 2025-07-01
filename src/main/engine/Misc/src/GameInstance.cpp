@@ -45,6 +45,13 @@ map<SDL_GameControllerButton, GameInput> controllerInputMap = {
     { SDL_CONTROLLER_BUTTON_BACK, GameInput::QUIT }
 };
 
+map<Uint8, GameInput> hatInputMap = {
+    { SDL_HAT_UP, GameInput::NORTH },
+    { SDL_HAT_DOWN, GameInput::SOUTH },
+    { SDL_HAT_LEFT, GameInput::WEST },
+    { SDL_HAT_RIGHT, GameInput::EAST }
+};
+
 /*
  (void) startGameInstance uses the passed struct (gameInstanceArgs) args to
  configure the new GameInstance. The args struct is defined as the following:
@@ -370,6 +377,7 @@ void GameInstance::updateInput() {
         if (event.type == SDL_KEYDOWN) {
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
+    	    printf("Keyboard pressed %d\n", event.key.keysym.scancode);
             // Let's just use the queue as a mailbox for now
             auto input = scancodeToInput(event.key.keysym.scancode);
             if (inputQueue_.empty() && input != GameInput::NONE) {
@@ -380,8 +388,20 @@ void GameInstance::updateInput() {
         } else if (event.type == SDL_JOYBUTTONDOWN) {
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
+    	    printf("Button pressed %d\n", event.jbutton.button);
             // Let's just use the queue as a mailbox for now
             auto input = buttonToInput(static_cast<SDL_GameControllerButton>(event.jbutton.button));
+            if (inputQueue_.empty() && input != GameInput::NONE) {
+                inputQueue_.push(input);
+            }
+            // Signal data is available
+            inputCv_.notify_all();
+        } else if (event.type == SDL_JOYHATMOTION) {
+            // Lock access to the input queue
+            std::unique_lock<std::mutex> scopeLock(inputLock_);
+    	    printf("Hat pressed %d\n", event.jhat.value);
+            // Let's just use the queue as a mailbox for now
+            auto input = hatToInput(static_cast<Uint8>(event.jhat.value));
             if (inputQueue_.empty() && input != GameInput::NONE) {
                 inputQueue_.push(input);
             }
@@ -393,8 +413,20 @@ void GameInstance::updateInput() {
             // Connect to new controllers on the fly...
             resetController();
             initController();
+        } else {
+            printf("Event %d not handled\n", event.type);
         }
     }
+}
+
+GameInput GameInstance::hatToInput(Uint8 hatValue) {
+    auto input = GameInput::NONE;
+    // Check the input map for a game input
+    auto cimit = hatInputMap.find(hatValue);
+    if (cimit != hatInputMap.end()) {
+        input = cimit->second;
+    }
+    return input;
 }
 
 GameInput GameInstance::getInput() {

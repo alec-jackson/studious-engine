@@ -139,6 +139,11 @@ class GameInstance {
      */
     GameInput buttonToInput(SDL_GameControllerButton button);
     /**
+     * @brief Converts a raw SDL hat input to a GameInput.
+     * @return GameInput mapping to the raw hat value. Returns GameInput::NONE is mapping not found.
+     */
+    GameInput hatToInput(Uint8 hatValue);
+    /**
      * @brief Closes all active controllers and performs some cleanup.
      */
     void resetController();
