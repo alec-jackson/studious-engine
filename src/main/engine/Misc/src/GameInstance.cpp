@@ -413,8 +413,6 @@ void GameInstance::updateInput() {
             // Connect to new controllers on the fly...
             resetController();
             initController();
-        } else {
-            printf("Event %d not handled\n", event.type);
         }
     }
 }
