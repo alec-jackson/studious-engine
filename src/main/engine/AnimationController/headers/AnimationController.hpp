@@ -18,6 +18,7 @@
 #include <mutex> // NOLINT
 #include <memory>
 #include <vector>
+#include <SceneObject.hpp>
 #include <TrackExt.hpp>
 #include <UiObject.hpp>
 #include <TextObject.hpp>
@@ -30,6 +31,7 @@
 #define TIME_MET 8
 #define ROTATION_MET 16
 #define SCALE_MET 32
+#define COLOR_MET 64
 
 // Update Types
 #define UPDATE_NONE 0
@@ -39,11 +41,11 @@
 #define UPDATE_TIME 8
 #define UPDATE_ROTATION 16
 #define UPDATE_SCALE 32
+#define UPDATE_COLOR 64
 
 // MISC
 #define CAP_POS 1
 #define CAP_NEG 2
-#define NUM_AXIS 3
 #define ANIMATION_COMPLETE_CB std::function<void(void)> callback
 
 extern double deltaTime;
@@ -110,6 +112,7 @@ struct KeyFrame {
     AnimationData<string> text;
     AnimationData<vec3> rotation;
     AnimationData<float> scale;
+    AnimationData<vec4> color;
     float targetTime;
     float currentTime = 0.0f;
     int type;
@@ -134,11 +137,31 @@ class AnimationController {
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
     int updateTime(SceneObject *target, KeyFrame *keyFrame);
+    /**
+     * @brief Processes the color keyframe if applicable using deltaTime.
+     * @param target - The SceneObject to apply the animation to.
+     * @param keyFrame - The KeyFrame to process.
+     * @return COLOR_MET if keyframe has completed, or UPDATE_NOT_COMPLETE otherwise. COLOR_MET is also
+     * returned when a color change does not exist for the current keyframe.
+     */
+    int updateColor(SceneObject *target, KeyFrame *keyFrame);
     bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
-    UpdateData<vec3> updateVector(vec3 original, vec3 desired, vec3 current, KeyFrame *keyFrame);
+    template <typename T>
+    /**
+     * @brief Linearly transforms a vector's values given the current values, the original values and the desired values.
+     * Uses deltaTime to determine updated values. Will set current = desired when the keyframe is finished.
+     * @param original - The original vector for the SceneObject when the keyframe began processing.
+     * @param desired - The desired vector values for the SceneObject upon keyframe completion.
+     * @param current - The current vector values for the current keyframe. These values are applied to the target
+     * SceneObject upon every update. These values are equal to the original vector when the keyframe begins processing,
+     * and will eventually become the desired values when the keyframe has completed.
+     * @param keyFrame - The keyframe to process time data from.
+     * @return UpdateData struct containing updated vector values.
+     */
+    UpdateData<T> updateVector(T original, T desired, T current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
     UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
     void playTrack(string trackName);

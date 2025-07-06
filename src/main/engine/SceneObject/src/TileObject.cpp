@@ -4,12 +4,15 @@
  * @brief Tile Object renderer for studious.
  * @version 0.1
  * @date 2025-05-19
- * 
+ *
  * @copyright Copyright studious-engine 2025
- * 
+ *
  */
 #include <TileObject.hpp>
-#include <GL/glew.h>
+#include <vector>
+#include <string>
+#include <memory>
+#include <cstdio>
 #include <Image.hpp>
 
 TileObject::TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
@@ -176,7 +179,7 @@ void TileObject::render() {
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
-    gfxController_->sendFloatVector(tintId_, 1, glm::value_ptr(tint_));
+    gfxController_->sendFloatVector(tintId_, 1, VectorType::GFX_3D, glm::value_ptr(tint_));
     gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     gfxController_->bindVao(vao_);
     gfxController_->bindTexture(texArr_, GfxTextureType::ARRAY);

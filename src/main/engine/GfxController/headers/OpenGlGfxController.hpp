@@ -41,7 +41,7 @@ class OpenGlGfxController : public GfxController {
     GfxResult<uint> setProgram(uint programId);
     GfxResult<uint> loadShaders(string, string, string);
     GfxResult<uint> sendFloat(uint variableId, float data);
-    GfxResult<uint> sendFloatVector(uint variableId, size_t count, float *data);
+    GfxResult<uint> sendFloatVector(uint variableId, size_t count, VectorType vType, float *data);
     GfxResult<uint> polygonRenderMode(RenderMode mode);
     GfxResult<uint> sendFloatMatrix(uint variableId, size_t count, float *data);
     GfxResult<uint> sendInteger(uint variableId, int data);

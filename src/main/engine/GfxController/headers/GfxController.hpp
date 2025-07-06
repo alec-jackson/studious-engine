@@ -75,6 +75,12 @@ enum class GfxTextureType {
     ARRAY
 };
 
+enum class VectorType {
+    GFX_2D,
+    GFX_3D,
+    GFX_4D
+};
+
 template <typename T>
 class GfxResult {
  public:
@@ -121,7 +127,7 @@ class GfxController {
      */
     virtual GfxResult<uint> loadShaders(string programName, string vertShaderPath, string fragShaderPath) = 0;
     virtual GfxResult<uint> sendFloat(uint variableId, float data) = 0;
-    virtual GfxResult<uint> sendFloatVector(uint variableId, size_t count, float *data) = 0;
+    virtual GfxResult<uint> sendFloatVector(uint variableId, size_t count, VectorType vType, float *data) = 0;
     virtual GfxResult<uint> polygonRenderMode(RenderMode mode) = 0;
     virtual GfxResult<uint> sendFloatMatrix(uint variableId, size_t count, float *data) = 0;
     virtual GfxResult<uint> sendInteger(uint variableId, int data) = 0;
@@ -152,7 +158,7 @@ class GfxController {
     virtual GfxResult<uint> enableVertexAttArray(uint layout, int count, size_t size, void *offset) = 0;
     /**
      * @brief Configures the divisor for the attribute in a GLSL shader.
-     * 
+     *
      * @param layout Attribute to target.
      * @param divisor Divisor to use. Use zero for none.
      * @return GfxResult<uint> OK if succeeded, FAILURE if error occurred.

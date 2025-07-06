@@ -39,13 +39,14 @@ class TextObject : public SceneObject {
     // Setters
     void setMessage(string message);
     inline void setCutoff(vec3 cutoff) { cutoff_ = cutoff; }
-    inline void setColor(vec3 color) { textColor_ = color; }
+    inline void setColor(vec4 color) { textColor_ = color; }
+    inline void setColor(vec3 color) { textColor_ = vec4(color, 1.0f); }  // Compatibility
     inline void setCharPadding(float padding) { charPadding_ = padding; }
 
     // Getters
     inline string getMessage() { return this->message_; }
     inline vec3 getCutoff() { return cutoff_; }
-    inline vec3 getColor() { return textColor_; }
+    inline vec4 getColor() { return textColor_; }
     inline float getCharPadding() { return charPadding_; }
 
     // Render method
@@ -72,5 +73,5 @@ class TextObject : public SceneObject {
 
     mat4 modelMat_;
     vec3 cutoff_;
-    vec3 textColor_;
+    vec4 textColor_;
 };

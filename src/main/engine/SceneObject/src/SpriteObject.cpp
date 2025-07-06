@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <vector>
 #include <memory>
+#include <string>
 #include <SpriteObject.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
@@ -89,7 +90,7 @@ void SpriteObject::render() {
     gfxController_->polygonRenderMode(RenderMode::FILL);
     // Send shader variables
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
-    gfxController_->sendFloatVector(tintId_, 1, glm::value_ptr(tint_));
+    gfxController_->sendFloatVector(tintId_, 1, VectorType::GFX_3D, glm::value_ptr(tint_));
     gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);

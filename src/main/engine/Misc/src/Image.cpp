@@ -7,6 +7,7 @@
  */
 #include <Image.hpp>
 #include <memory>
+#include <cstdio>
 
 std::shared_ptr<uint8_t[]> packSurface(SDL_Surface *texture) {
     /* Tightly pack to remove 4 byte alignment on texture */

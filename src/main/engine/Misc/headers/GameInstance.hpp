@@ -10,6 +10,8 @@
  */
 
 #pragma once
+#include <SDL_gamecontroller.h>
+#include <SDL_scancode.h>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -42,6 +44,21 @@ extern double deltaTime;
 typedef struct controllerReadout {
     Sint16 leftAxis;
 } controllerReadout;
+
+enum class GameInput {
+    NONE,
+    QUIT,
+    NORTH,
+    SOUTH,
+    EAST,
+    WEST,
+    A,
+    B,
+    X,
+    Y,
+    R,
+    L
+};
 
 /*
  The GameInstance class is the class that holds all of the information about the
@@ -80,10 +97,11 @@ class GameInstance {
     mutex requestLock_;
     mutex inputLock_;
     mutex progressLock_;
+    mutex controllerLock_;
     std::condition_variable inputCv_;
     std::condition_variable progressCv_;
     queue<std::function<void(void)>> protectedGfxReqs_;
-    queue<SDL_Scancode> inputQueue_;
+    queue<GameInput> inputQueue_;
     bool audioInitialized_ = false;
 
     void initWindow();
@@ -107,6 +125,28 @@ class GameInstance {
      * @brief Polls for new input events and pushes them to the input queue.
      */
     void updateInput();
+    /**
+     * @brief Converts a raw SDL scancode value to a GameInput value. @see keyboardInputMap in the GameInstance.cpp
+     * source file to see the complete mapping.
+     * @return GameInput mapped to the raw input, or GameInput::NONE if undefined input received.
+     */
+    GameInput scancodeToInput(SDL_Scancode scancode);
+    /**
+     * @brief Converts a raw SDL button input to the raw input's button map. @see controllerInputMap in the
+     * GameInstance.cpp source file.
+     * @return GameInput mapping to the raw button input. Returns GameInput::NONE if an input is received that is
+     * not defined in the controllerInputMap.
+     */
+    GameInput buttonToInput(SDL_GameControllerButton button);
+    /**
+     * @brief Converts a raw SDL hat input to a GameInput.
+     * @return GameInput mapping to the raw hat value. Returns GameInput::NONE is mapping not found.
+     */
+    GameInput hatToInput(Uint8 hatValue);
+    /**
+     * @brief Closes all active controllers and performs some cleanup.
+     */
+    void resetController();
 
  public:
     GameInstance(GfxController *gfxController, AnimationController *animationController, int width,
@@ -124,7 +164,7 @@ class GameInstance {
     UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
         ObjectAnchor anchor, string objectName);
     TileObject *createTileMap(map<string, string> textures, vector<TileData> mapData,
-        vec3 position, float scale, string objectName, ObjectAnchor anchor, GfxController *gfxController);
+        vec3 position, float scale, ObjectAnchor anchor, string objectName);
     int getWidth();
     int getHeight();
     vec3 getResolution();
@@ -135,7 +175,30 @@ class GameInstance {
      * @return True when the request is fulfilled, otherwise return false.
      */
     bool protectedGfxRequest(std::function<void(void)> req);
-    const Uint8 *getKeystate();
+    /**
+     * @brief Can be used to check raw SDL scancode values. This has the same behavior as the previous
+     * getKeystate function did.
+     * @return Uint8 array that can be indexed using SDL_Scancode enumerated values.
+     */
+    const Uint8 *getKeystateRaw();
+    /**
+     * @brief Shorthand way to check if a keyboard button has been pressed.
+     * @param scancode - The SDL_Scancode enum value to check for input state.
+     * @return true if the button described in scancode is pressed down, false otherwise.
+     */
+    const bool getKeyboardInput(SDL_Scancode scancode);
+    /**
+     * @brief Check if a SDL_GameControllerButton has been pressed.
+     * @param button - The button to poll the input state of. Described by SDL_GameControllerButton.
+     * @return true if the button is pressed down, false otherwise.
+     */
+    const bool getControllerInput(SDL_GameControllerButton button);
+    /**
+     * @brief Polls for a specific input across keyboard and controller input devices.
+     * @param input - The input to check for.
+     * @return true if the GameInput is being pressed by a keyboard or controller. False otherwise.
+     */
+    const bool pollInput(GameInput input);
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
     int playSound(string sfxName, bool loop, int volume);
@@ -158,8 +221,9 @@ class GameInstance {
     int update();
     /**
      * @brief Fetches input from the internal input queue. Functions blocks until an input event is received.
+     * @return GameInput value pressed from either a controller or keyboard.
      */
-    SDL_Scancode getInput();
+    GameInput getInput();
     int lockScene();
     int unlockScene();
     /**
@@ -173,7 +237,8 @@ class GameInstance {
      * @param input The input to wait for.
      * @return True when the key is received, false is shutdown signal received.
      */
-    bool waitForKeyDown(SDL_Scancode input);
+    bool waitForInput(GameInput input);
+
     /**
      * @brief Checks if the game has been shut down.
      * @return Returns true if shutdown has been called, false otherwise.
