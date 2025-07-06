@@ -377,7 +377,7 @@ void GameInstance::updateInput() {
         if (event.type == SDL_KEYDOWN) {
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
-    	    printf("Keyboard pressed %d\n", event.key.keysym.scancode);
+           printf("Keyboard pressed %d\n", event.key.keysym.scancode);
             // Let's just use the queue as a mailbox for now
             auto input = scancodeToInput(event.key.keysym.scancode);
             if (inputQueue_.empty() && input != GameInput::NONE) {
@@ -388,7 +388,7 @@ void GameInstance::updateInput() {
         } else if (event.type == SDL_JOYBUTTONDOWN) {
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
-    	    printf("Button pressed %d\n", event.jbutton.button);
+            printf("Button pressed %d\n", event.jbutton.button);
             // Let's just use the queue as a mailbox for now
             auto input = buttonToInput(static_cast<SDL_GameControllerButton>(event.jbutton.button));
             if (inputQueue_.empty() && input != GameInput::NONE) {
@@ -399,7 +399,7 @@ void GameInstance::updateInput() {
         } else if (event.type == SDL_JOYHATMOTION) {
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
-    	    printf("Hat pressed %d\n", event.jhat.value);
+            printf("Hat pressed %d\n", event.jhat.value);
             // Let's just use the queue as a mailbox for now
             auto input = hatToInput(static_cast<Uint8>(event.jhat.value));
             if (inputQueue_.empty() && input != GameInput::NONE) {
