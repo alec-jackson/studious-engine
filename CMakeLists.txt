@@ -64,6 +64,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/utilities/src/ModelImport.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/GameInstance.cpp
+  src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/GameObject.cpp
   src/main/engine/SceneObject/src/SpriteObject.cpp
   src/main/engine/SceneObject/src/UiObject.cpp

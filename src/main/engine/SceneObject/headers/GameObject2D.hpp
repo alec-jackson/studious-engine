@@ -23,7 +23,7 @@ class GameObject2D : public SceneObject, public TrackExt {
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
     explicit GameObject2D(string texturePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController);
-    ~GameObject2D() override;
+    ~GameObject2D();
 
     // Getter methods
     ColliderObject *getCollider();
@@ -54,6 +54,4 @@ class GameObject2D : public SceneObject, public TrackExt {
     unsigned int textureHeight_;
 
     ObjectAnchor anchor_;
-
-    mat4 modelMat_;
 };

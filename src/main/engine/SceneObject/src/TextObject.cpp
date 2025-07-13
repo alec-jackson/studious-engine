@@ -135,7 +135,7 @@ TextObject::~TextObject() {
 
 void TextObject::render() {
     // Update model matrices
-    translateMatrix_ = glm::translate(mat4(1.0f), position);
+    updateModelMatrices();
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);

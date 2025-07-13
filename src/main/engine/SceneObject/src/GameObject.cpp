@@ -187,13 +187,7 @@ void GameObject::render() {
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::FILL);
         // Update our model transformation matrices
-        translateMatrix_ = glm::translate(mat4(1.0f), position);
-        rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
-                vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
-                vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
-                vec3(0, 0, 1));
-
-        scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
+        updateModelMatrices();
         auto modelMatrix = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
         // Send our shared variables over to our program (shader)
         gfxController_->sendFloat(luminanceId, luminance);

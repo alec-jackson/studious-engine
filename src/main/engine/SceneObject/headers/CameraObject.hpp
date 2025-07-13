@@ -21,7 +21,7 @@ class CameraObject : public SceneObject {
     // Constructors
     explicit CameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
         float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController);
-    ~CameraObject() override;
+    ~CameraObject();
 
     // Setters
     inline void setOffset(vec3 offset) { offset_ = offset; }

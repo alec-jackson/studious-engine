@@ -34,7 +34,7 @@ class TextObject : public SceneObject {
     // Constructors
     explicit TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
         uint programId, string objectName, ObjectType type, GfxController *gfxController);
-    ~TextObject() override;
+    ~TextObject();
 
     // Setters
     void setMessage(string message);

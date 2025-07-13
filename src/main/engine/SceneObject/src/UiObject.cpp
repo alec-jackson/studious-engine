@@ -4,9 +4,9 @@
  * @brief Implementation for UiObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <string>
 #include <vector>
@@ -34,7 +34,6 @@ void UiObject::initializeShaderVars() {
     vertexIndexId_ = gfxController_->getShaderVariable(programId_, "vertexIndex").get();
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
-    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
 }
 
 void UiObject::generateVertexBase
@@ -133,20 +132,15 @@ UiObject::~UiObject() {
 
 void UiObject::render() {
     // Update model matrices
-    translateMatrix_ = glm::translate(mat4(1.0f), position);
-    rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
-            vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
-            vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
-            vec3(0, 0, 1));
-    // scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
-    // modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
-    modelMat_ = translateMatrix_;
+    updateModelMatrices();
+    // Do not use the normal scale for UI - scale is used for initialization only
+    auto model = translateMatrix_ * rotateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
-    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
+    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(model));
     gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);

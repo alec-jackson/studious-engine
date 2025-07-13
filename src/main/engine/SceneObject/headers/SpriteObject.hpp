@@ -21,7 +21,7 @@ class SpriteObject : public GameObject2D {
     // Constructors
     explicit SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController);
-    ~SpriteObject() override;
+    ~SpriteObject();
 
     // Gfx specific functions
     void initializeShaderVars() override;

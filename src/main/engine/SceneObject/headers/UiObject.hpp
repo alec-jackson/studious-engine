@@ -4,9 +4,9 @@
  * @brief UiObject is a SceneObject; can be rendered by a CameraObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #pragma once
@@ -26,7 +26,7 @@ class UiObject : public GameObject2D {
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
     explicit UiObject(string spritePath, vec3 position, float scale, float wScale, float hScale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController);
-    ~UiObject() override;
+    ~UiObject();
 
     // Render method
     void render() override;

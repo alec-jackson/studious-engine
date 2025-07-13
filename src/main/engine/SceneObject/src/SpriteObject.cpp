@@ -78,18 +78,13 @@ SpriteObject::~SpriteObject() {
 }
 
 void SpriteObject::render() {
-    translateMatrix_ = glm::translate(mat4(1.0f), position);
-    rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
-            vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
-            vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
-            vec3(0, 0, 1));
-    scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
-    modelMat_ = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
+    updateModelMatrices();
+    mat4 model = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     // Send shader variables
-    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(modelMat_));
+    gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(model));
     gfxController_->sendFloatVector(tintId_, 1, VectorType::GFX_3D, glm::value_ptr(tint_));
     gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     // Find a more clever solution

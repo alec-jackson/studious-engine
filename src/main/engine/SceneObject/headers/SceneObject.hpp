@@ -52,7 +52,7 @@ class SceneObject {
             type_ { type }, gfxController_ { gfxController } {}
     inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController):
         objectName { objectName }, type_ { type }, gfxController_ { gfxController } {}
-    virtual ~SceneObject() = default;
+    virtual ~SceneObject();
     // Setter methods
     inline void setVpMatrix(mat4 vpMatrix) { vpMatrix_ = vpMatrix; }
     inline void setPosition(vec3 position) { this->position = position; }
@@ -75,6 +75,12 @@ class SceneObject {
     inline vec3 getResolution() const { return this->resolution_; }
     inline string getObjectName() const { return this->objectName; }
     inline ObjectType type() const { return type_; }
+
+    // Misc
+    void updateModelMatrices();
+    void setParent(SceneObject *parent);
+    void addChild(SceneObject *child);
+    void removeChild(SceneObject *child);
 
     // Interface methods
     virtual void render() = 0;
@@ -99,6 +105,8 @@ class SceneObject {
     uint renderPriority_ = RENDER_PRIOR_HIGH;
 
     GfxController *gfxController_;
+    SceneObject *parent_ = nullptr;
+    vector<SceneObject *> children_;
 
     mutex objectLock_;
 };
