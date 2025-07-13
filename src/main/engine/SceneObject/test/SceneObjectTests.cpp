@@ -14,9 +14,11 @@
 #include <memory>
 #include <iostream>
 #include <string>
+#include <set>
 
 using std::endl;
 using std::cout;
+using std::set;
 
 const char *TEST_OBJECT_NAME = "testObject";
 const char *PARENT_OBJECT_NAME = "parentObject";
@@ -48,7 +50,7 @@ class FakeSceneObject : public SceneObject {
     void render() override;
     void update() override;
     SceneObject *getParent() { return parent_; }
-    const vector<SceneObject *> &getChildren() { return children_; }
+    const set<SceneObject *> &getChildren() { return children_; }
     const mat4 &getTranslationMatrix() { return translateMatrix_; }
     const mat4 &getRotationMatrix() { return rotateMatrix_; }
     const mat4 &getScaleMatrix() { return scaleMatrix_; }
@@ -162,7 +164,7 @@ TEST_F(GivenASceneObject, WhenSetParent_ThenSceneObjectsConnected) {
     /* Validation */
     // Make sure the fixture object is set as the single child
     ASSERT_EQ(1, parent.getChildren().size());
-    ASSERT_EQ(&object_, parent.getChildren().front());
+    ASSERT_EQ(&object_, *parent.getChildren().begin());
     // Make sure the parent is set as the fixture object's parent
     ASSERT_EQ(&parent, object_.getParent());
 }
@@ -180,7 +182,26 @@ TEST_F(GivenASceneObject, WhenAddChild_ThenSceneObjectsConnected) {
     /* Validation */
     // Make sure the fixture object is set as the single child
     ASSERT_EQ(1, parent.getChildren().size());
-    ASSERT_EQ(&object_, parent.getChildren().front());
+    ASSERT_EQ(&object_, *parent.getChildren().begin());
+    // Make sure the parent is set as the fixture object's parent
+    ASSERT_EQ(&parent, object_.getParent());
+}
+
+/**
+ * @brief Ensures that a child added multiple times will only be present in the set once.
+ */
+TEST_F(GivenASceneObject, WhenAddSameChildTwice_ThenOnlyOneInSet) {
+    /* Preparation */
+    FakeSceneObject parent(PARENT_OBJECT_NAME);
+
+    /* Action */
+    parent.addChild(&object_);
+    parent.addChild(&object_);
+
+    /* Validation */
+    // Make sure the fixture object is set as the single child
+    ASSERT_EQ(1, parent.getChildren().size());
+    ASSERT_EQ(&object_, *parent.getChildren().begin());
     // Make sure the parent is set as the fixture object's parent
     ASSERT_EQ(&parent, object_.getParent());
 }

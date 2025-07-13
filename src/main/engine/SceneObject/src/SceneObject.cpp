@@ -29,7 +29,7 @@ void SceneObject::addChild(SceneObject *child) {
         return;
     }
     // Add a child to the children list
-    children_.push_back(child);
+    children_.insert(child);
     // Update the child's parent
     child->parent_ = this;
 }

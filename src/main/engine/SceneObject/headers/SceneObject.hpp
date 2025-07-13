@@ -8,7 +8,7 @@
  */
 #pragma once
 #include <string>
-#include <vector>
+#include <set>
 #include <common.hpp>
 #include <GfxController.hpp>
 
@@ -78,9 +78,26 @@ class SceneObject {
     inline ObjectType type() const { return type_; }
 
     // Misc
+    /**
+     * @brief Updates translate, rotate and scale matrices. Will modify model attributes if the scene object has an
+     * associated parent.
+     */
     void updateModelMatrices();
+    /**
+     * @brief Assigns the SceneObject a parent SceneObject. Will also add this current SceneObject to the parent's list
+     * of child objects if parent is not null.
+     * @param parent - Pointer to the parent SceneObject to assign to this object.
+     */
     void setParent(SceneObject *parent);
+    /**
+     * @brief Assigns a child object to this SceneObject. Only used for tracking.
+     * @param child - Pointer to the child SceneObject to track from this SceneObject.
+     */
     void addChild(SceneObject *child);
+    /**
+     * @brief Removes the given child object from this object's child list.
+     * @param child - Pointer to the child object to remove.
+     */
     void removeChild(SceneObject *child);
 
     // Interface methods
@@ -107,7 +124,7 @@ class SceneObject {
 
     GfxController *gfxController_;
     SceneObject *parent_ = nullptr;
-    vector<SceneObject *> children_;
+    std::set<SceneObject *> children_;
 
     mutex objectLock_;
 };
