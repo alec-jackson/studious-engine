@@ -6,6 +6,7 @@
  */
 #include <SceneObject.hpp>
 #include <cstdio>
+#include <algorithm>
 
 void SceneObject::updateModelMatrices() {
     vec3 pPos = vec3(0), pRot = vec3(0), pScale = vec3(0);
