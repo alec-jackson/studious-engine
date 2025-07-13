@@ -399,7 +399,7 @@ void GameInstance::updateInput() {
         } else if (event.type == SDL_JOYHATMOTION) {
             // Lock access to the input queue
             std::unique_lock<std::mutex> scopeLock(inputLock_);
-            printf("Hat pressed %d\n", event.jhat.value);
+            // printf("Hat pressed %d\n", event.jhat.value);
             // Let's just use the queue as a mailbox for now
             auto input = hatToInput(static_cast<Uint8>(event.jhat.value));
             if (inputQueue_.empty() && input != GameInput::NONE) {

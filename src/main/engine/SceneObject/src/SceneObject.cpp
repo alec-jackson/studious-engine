@@ -1,4 +1,11 @@
+/**
+ * @author Christian Galvez
+ * @date 2025-07-12
+ * @brief Implementation of some SceneObject methods.
+ * @copyright Copyright (c) 2025
+ */
 #include <SceneObject.hpp>
+#include <cstdio>
 
 void SceneObject::updateModelMatrices() {
     vec3 pPos = vec3(0), pRot = vec3(0), pScale = vec3(0);
@@ -28,14 +35,12 @@ void SceneObject::addChild(SceneObject *child) {
 }
 
 void SceneObject::setParent(SceneObject *parent) {
-    if (nullptr == parent) {
-        fprintf(stderr, "SceneObject::setParent: Passed in parent is null!\n");
-        return;
-    }
     // Update this object's parent
     parent_ = parent;
-    // Add this object as the parent's child
-    parent_->addChild(this);
+    if (nullptr != parent) {
+        // Add this object as the parent's child
+        parent_->addChild(this);
+    }
 }
 
 SceneObject::~SceneObject() {

@@ -167,6 +167,7 @@ gtest_discover_tests(gtest_PolygonTests)
 # ======================================== SpriteObjectTests ========================================
 add_executable(gtest_SpriteObjectTests
   src/main/engine/SceneObject/test/src/SpriteObjectTests.cpp
+  src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/SpriteObject.cpp
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
@@ -187,10 +188,30 @@ target_link_libraries(gtest_SpriteObjectTests
 )
 
 gtest_discover_tests(gtest_SpriteObjectTests)
+
+# ======================================== SceneObjectTests ========================================
+add_executable(gtest_SceneObjectTests
+  src/main/engine/SceneObject/test/SceneObjectTests.cpp
+  src/main/engine/SceneObject/src/SceneObject.cpp
+)
+
+target_include_directories(gtest_SceneObjectTests
+  PUBLIC ${SDL2_INCLUDE_DIRS}
+  PRIVATE src/main/engine/SceneObject/test/headers
+  PRIVATE src/main/engine/SceneObject/headers
+)
+
+target_link_libraries(gtest_SceneObjectTests
+  GTest::gtest_main
+  GTest::gmock
+)
+
+gtest_discover_tests(gtest_SceneObjectTests)
 # ======================================== AnimationControllerTests ========================================
 add_executable(gtest_AnimationControllerTests
   src/main/engine/AnimationController/test/src/AnimationControllerTests.cpp
   src/main/engine/AnimationController/src/AnimationController.cpp
+  src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/SpriteObject.cpp
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
