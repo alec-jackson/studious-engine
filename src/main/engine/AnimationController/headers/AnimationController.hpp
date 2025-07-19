@@ -149,6 +149,7 @@ class AnimationController {
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
+    float linearFloatTransform(float original, float desired, KeyFrame *keyFrame);
     template <typename T>
     /**
      * @brief Linearly transforms a vector's values given the current values, the original values and the desired values.
@@ -163,7 +164,7 @@ class AnimationController {
      */
     UpdateData<T> updateVector(T original, T desired, T current, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
-    UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
+    UpdateData<float> updateFloat(float original, float desired, KeyFrame *keyFrame);
     void playTrack(string trackName);
     void pauseTrack(string trackName);
     /**

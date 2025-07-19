@@ -5,6 +5,7 @@
  * @author Christian Galvez
  * @date 2025-04-13
  */
+#include "AnimationController.hpp"
 #include <gtest/gtest.h>
 #include <vector>
 #include <memory>
@@ -315,4 +316,43 @@ TEST_F(GivenAnAnimationControllerToTestRunning, WhenPausedInMiddleOfPlayback_The
 
     /* Validation - Make sure track is where it left off */
     validateActiveTracks(1, TrackState::RUNNING, INDEX_SHIFT * framesPassed);
+}
+
+/**
+ * @brief Ensures that float values are updated as expected for linear transformations. The scenario for updating the
+ * float value is described below:
+ *
+ * The current "keyframe" is created with the following parameters:
+ * - Original value = 1.0f
+ * - Target value = 5.0f
+ * - Current value = 3.0f
+ * - Target time = 2.0f
+ * - Current time = 0.5f
+ * - Deltatime = 0.4f
+ *
+ * What all of this means...
+ * - The keyframe was created with a float value of 1.0f. This represents the original state of the target SceneObject
+ *   for some attribute when the keyframe was created. This is tracked in the keyframe as a reference point for future
+ *   transformations.
+ * - The keyframe will transform the float value into whatever was set as the target value. Here, the target value of
+ *   5.0f means the transformation (keyframe) WILL end with the float being 5.0f if the appropriate amount of time has
+ *   passed.
+ *
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenUpdateFloatCalled_ThenFloatUpdated) {
+    /* Preparation */
+    float baseValue = 1.0f;
+    float desiredValue = 5.0f;
+    float currentValue = 3.0f;
+    float kfTargetTime = 2.0f;
+    float kfCurrentTime = 0.5f;
+    deltaTime = 0.4f;
+    auto keyframe = AnimationController::createKeyFrame(UPDATE_NONE, kfTargetTime);
+    keyframe->currentTime = kfCurrentTime;
+
+    /* Action */
+    auto result = animationController_.updateFloat(baseValue, desiredValue, currentValue, keyframe.get());
+
+    /* Validation */
+    ASSERT_FALSE(result.updateComplete_);
 }

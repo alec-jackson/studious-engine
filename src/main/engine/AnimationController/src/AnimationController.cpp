@@ -358,6 +358,12 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
     return (result.updateComplete_) ? COLOR_MET : UPDATE_NOT_COMPLETE;
 }
 
+float AnimationController::linearFloatTransform(float currentTime, float targetTime, float original, float desired) {
+    float delta = desired - original;  // Change in values
+    float timeScale = currentTime / targetTime; // % of transformation
+    return original + (delta * timeScale);
+}
+
 bool AnimationController::cap(float *cur, float target, float dv) {
         auto capped = false;
         auto direction = 0;
@@ -413,22 +419,26 @@ UpdateData<T> AnimationController::updateVector(T original, T desired, T current
     return UpdateData<T>(current, updateResult);
 }
 
-UpdateData<float> AnimationController::updateFloat(float original, float desired, float current, KeyFrame *keyFrame) {
+UpdateData<float> AnimationController::updateFloat(float original, float desired, KeyFrame *keyFrame) {
     // Caps the position when the position differs than the target
     auto matched = false;
     auto timeMet = 0;
     auto updateResult = false;
+    keyFrame->currentTime += deltaTime;
     // Translation delta is time per frame * totalTime
     auto tD = desired - original;
 
     auto timeScalar = static_cast<float>(deltaTime) / keyFrame->targetTime;
     current += (tD * timeScalar);
+    // Instead of doing this, just calculate the next current value immediately
 
     // Perform position locking when max time is met...
     if (keyFrame->currentTime >= keyFrame->targetTime) {
+        keyFrame->currentTime = keyFrame->targetTime;
         current = desired;
         timeMet = 1;
     }
+    auto current = linearFloatTransform(original, desired, keyFrame);
     // Perform float capping
     if (cap(&current, desired, tD)) matched = true;
     updateResult = (matched && timeMet);
