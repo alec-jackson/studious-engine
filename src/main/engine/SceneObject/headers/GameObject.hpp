@@ -24,7 +24,7 @@ class GameObject: public SceneObject {
     explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
             uint programId, string objectName, ObjectType type, GfxController *gfxController);
     explicit GameObject(GfxController *gfxController);
-    ~GameObject() override;
+    ~GameObject();
 
     // Setters
     inline void setDirectionalLight(vec3 directionalLight) { this->directionalLight = directionalLight; }

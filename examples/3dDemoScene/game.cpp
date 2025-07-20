@@ -11,6 +11,7 @@
  *
  */
 #include "GameInstance.hpp"
+#include "SceneObject.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -132,9 +133,28 @@ int runtime(GameInstance *currentGame) {
         texturePattern)
         .createPolygonFromFile();
 
+    auto companionPoly = ModelImport(
+        "src/resources/models/human.obj",
+        texturePath,
+        texturePattern)
+        .createPolygonFromFile();
+
     // Ready the gameObjectInfo for the player object
     playerRef = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
+    auto companion = currentGame->createGameObject(&companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion");
+    auto companion2 = currentGame->createGameObject(&companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion2");
+    auto companion3 = currentGame->createGameObject(&companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion3");
+    auto companion4 = currentGame->createGameObject(&companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion4");
+    playerRef->addChild(companion);
+    playerRef->addChild(companion2);
+    playerRef->addChild(companion3);
+    playerRef->addChild(companion4);
+    companion->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    companion2->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    companion3->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    companion4->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    playerRef->setRenderPriority(RENDER_PRIOR_LOW - 1);
     playerRef->createCollider();
 
     cout << "Creating wolf\n";
@@ -252,7 +272,11 @@ int runtime(GameInstance *currentGame) {
         pressUText,
         testSprite,
         testUi,
-        testText
+        testText,
+        companion,
+        companion2,
+        companion3,
+        companion4
     };
 
     // Add all objects to active camera

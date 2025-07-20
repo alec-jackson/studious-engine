@@ -78,6 +78,7 @@ void TileObject::processMapData() {
     for (auto entry : mapData_) {
         // We need to create the model matrix
         mat4 model = mat4(1.0f);
+        // Ignore parent rendering for tile maps... I don't see why we would want that
         model = glm::translate(model, vec3(entry.x * width_ * scale_, entry.y * height_ * scale_, 0.0f) + position);
         model = glm::scale(model, glm::vec3(scale_));
         modelMatrices.get()[index] = model;

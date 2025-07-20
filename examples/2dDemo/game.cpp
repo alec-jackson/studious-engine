@@ -88,7 +88,12 @@ int runtime(GameInstance *currentGame) {
     auto currentCamera = currentGame->createCamera(nullptr, vec3(0), 0.0, 16.0 / 9.0, 4.0, 90.0);
     auto player = currentGame->createSprite("src/resources/images/JTIconNoBackground.png", vec3(0), 0.5,
         ObjectAnchor::BOTTOM_LEFT, "player");
+    // Attach some other objects to the parent...
+    auto playerAccessory = currentGame->createSprite("src/resources/images/rockwall.jpg", vec3(0), -0.4, ObjectAnchor::BOTTOM_LEFT, "playerAcc1");
+    auto playerAccessoryToo = currentGame->createSprite("src/resources/images/rockwall.jpg", vec3(100, 100, 0), -0.4, ObjectAnchor::BOTTOM_LEFT, "playerAcc1");
 
+    playerAccessory->setParent(player);
+    playerAccessoryToo->setParent(player);
     player->createCollider();
 
     auto obstacle = currentGame->createSprite("src/resources/images/dot_image.png",
@@ -130,7 +135,9 @@ int runtime(GameInstance *currentGame) {
     vector<SceneObject *> targets = {
         obstacle,
         player,
-        tile
+        tile,
+        playerAccessory,
+        playerAccessoryToo
     };
 
     // Add all objects to active camera

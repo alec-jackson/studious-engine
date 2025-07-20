@@ -8,6 +8,7 @@
  */
 #pragma once
 #include <string>
+#include <set>
 #include <common.hpp>
 #include <GfxController.hpp>
 
@@ -52,7 +53,7 @@ class SceneObject {
             type_ { type }, gfxController_ { gfxController } {}
     inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController):
         objectName { objectName }, type_ { type }, gfxController_ { gfxController } {}
-    virtual ~SceneObject() = default;
+    virtual ~SceneObject();
     // Setter methods
     inline void setVpMatrix(mat4 vpMatrix) { vpMatrix_ = vpMatrix; }
     inline void setPosition(vec3 position) { this->position = position; }
@@ -75,6 +76,29 @@ class SceneObject {
     inline vec3 getResolution() const { return this->resolution_; }
     inline string getObjectName() const { return this->objectName; }
     inline ObjectType type() const { return type_; }
+
+    // Misc
+    /**
+     * @brief Updates translate, rotate and scale matrices. Will modify model attributes if the scene object has an
+     * associated parent.
+     */
+    void updateModelMatrices();
+    /**
+     * @brief Assigns the SceneObject a parent SceneObject. Will also add this current SceneObject to the parent's list
+     * of child objects if parent is not null.
+     * @param parent - Pointer to the parent SceneObject to assign to this object.
+     */
+    void setParent(SceneObject *parent);
+    /**
+     * @brief Assigns a child object to this SceneObject. Only used for tracking.
+     * @param child - Pointer to the child SceneObject to track from this SceneObject.
+     */
+    void addChild(SceneObject *child);
+    /**
+     * @brief Removes the given child object from this object's child list.
+     * @param child - Pointer to the child object to remove.
+     */
+    void removeChild(SceneObject *child);
 
     // Interface methods
     virtual void render() = 0;
@@ -99,6 +123,8 @@ class SceneObject {
     uint renderPriority_ = RENDER_PRIOR_HIGH;
 
     GfxController *gfxController_;
+    SceneObject *parent_ = nullptr;
+    std::set<SceneObject *> children_;
 
     mutex objectLock_;
 };
