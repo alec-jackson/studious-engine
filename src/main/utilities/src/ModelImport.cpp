@@ -16,7 +16,7 @@
 
 ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern) :
     modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern } {
-    cout << "ModelImport::ModelImport" << endl;
+    cout << "ModelImport::ModelImport: Importing " << modelPath << endl;
 }
 
 /**
@@ -43,7 +43,8 @@ Polygon ModelImport::createPolygonFromFile() {
     buildObject(currentObject - 1);
     polygon_.texturePath_ = texturePath_;
     polygon_.texturePattern_ = texturePattern_;
-    return polygon_;
+    // Call the move constructor to avoid unnecessary copies
+    return std::move(polygon_);
 }
 
 /**
