@@ -94,7 +94,8 @@ void Polygon::merge(const Polygon &polygon) {
 }
 
 Polygon::Polygon(Polygon&& other) {
-    cout << "Polygon::Polygon: Move constructor called: polyCount[" << polyCount << "] -> [" << polyCount + 1 << "]" << endl;
+    cout << "Polygon::Polygon: Move constructor called: polyCount[" <<
+        polyCount << "] -> [" << polyCount + 1 << "]" << endl;
     polyCount++;
     this->shapeBufferId = std::move(other.shapeBufferId);
     this->textureCoordsId = std::move(other.textureCoordsId);
