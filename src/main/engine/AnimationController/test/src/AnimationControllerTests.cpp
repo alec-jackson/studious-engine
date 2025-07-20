@@ -325,10 +325,8 @@ TEST_F(GivenAnAnimationControllerToTestRunning, WhenPausedInMiddleOfPlayback_The
  * The current "keyframe" is created with the following parameters:
  * - Original value = 1.0f
  * - Target value = 5.0f
- * - Current value = 3.0f
  * - Target time = 2.0f
  * - Current time = 0.5f
- * - Deltatime = 0.4f
  *
  * What all of this means...
  * - The keyframe was created with a float value of 1.0f. This represents the original state of the target SceneObject
@@ -337,22 +335,54 @@ TEST_F(GivenAnAnimationControllerToTestRunning, WhenPausedInMiddleOfPlayback_The
  * - The keyframe will transform the float value into whatever was set as the target value. Here, the target value of
  *   5.0f means the transformation (keyframe) WILL end with the float being 5.0f if the appropriate amount of time has
  *   passed.
- *
+ * - Target time is the amount of time the keyframe should process for. In this instance, a 2.0f second keyframe will
+ *   complete after two seconds have passed.
+ * - Current time is the current running some of the time that has passed in the keyframe so far. In this example, the
+ *   keyframe has already processed for a grand total of 0.5f seconds. This should never be greater than the target
+ *   time value after calls to update() complete.
  */
 TEST_F(GivenAnAnimationControllerReady, WhenUpdateFloatCalled_ThenFloatUpdated) {
     /* Preparation */
-    float baseValue = 1.0f;
+    float originalValue = 1.0f;
     float desiredValue = 5.0f;
-    float currentValue = 3.0f;
     float kfTargetTime = 2.0f;
     float kfCurrentTime = 0.5f;
-    deltaTime = 0.4f;
+    float expectedTransformation = originalValue + ((desiredValue - originalValue) * (kfCurrentTime / kfTargetTime));
     auto keyframe = AnimationController::createKeyFrame(UPDATE_NONE, kfTargetTime);
     keyframe->currentTime = kfCurrentTime;
 
     /* Action */
-    auto result = animationController_.updateFloat(baseValue, desiredValue, currentValue, keyframe.get());
+    auto result = animationController_.updateFloat(originalValue, desiredValue, keyframe.get());
 
     /* Validation */
+    // Ensure the update work as we expected it to
     ASSERT_FALSE(result.updateComplete_);
+    ASSERT_EQ(expectedTransformation, result.updatedValue_);
+}
+
+/**
+ * @brief Ensures that keyframes are marked as completed when the exact amount of time set in the target time
+ * has past.
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenUpdateFloatFinishesKeyFrameExactly_ThenUpdateDataIsComplete) {
+    /* Preparation */
+    float originalValue = 1.0f;
+    float desiredValue = 5.0f;
+    float kfTargetTime = 2.0f;
+    auto keyframe = AnimationController::createKeyFrame(UPDATE_NONE, kfTargetTime);
+    keyframe->currentTime = kfTargetTime;
+
+    /* Action */
+    auto result = animationController_.updateFloat(originalValue, desiredValue, keyframe.get());
+
+    /* Validation */
+    // Ensure the update work as we expected it to
+    ASSERT_TRUE(result.updateComplete_);
+    ASSERT_EQ(desiredValue, result.updatedValue_);
+    // Check that the keyframe's current time was updated
+    ASSERT_EQ(kfTargetTime, keyframe->currentTime);
+}
+
+
+TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameAddedForObject_ThenKeyFramePresentInStore) {
 }

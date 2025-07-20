@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <memory>
 #include <cmath>
+#include <algorithm>
 #include <AnimationController.hpp>
 
 std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
@@ -211,9 +212,10 @@ void AnimationController::update() {
 
         auto result = UPDATE_NOT_COMPLETE;
         auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET;
-
+        auto &currentTime = currentKf.get()->currentTime;
+        auto &targetTime = currentKf.get()->targetTime;
         // Update the time passed since keyframe has started
-        currentKf.get()->currentTime += deltaTime;
+        currentTime = std::min<float>(currentTime + deltaTime, targetTime);
         // Perform updates in keyframe
         result |= updatePosition(target, currentKf.get());
         result |= updateStretch(target, currentKf.get());
@@ -269,7 +271,6 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
     auto result = updateVector(
         keyFrame->pos.original,
         keyFrame->pos.desired,
-        target->getPosition(),
         keyFrame);
 
     target->setPosition(result.updatedValue_);
@@ -285,7 +286,6 @@ int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame)
     auto result = updateVector(
         keyFrame->rotation.original,
         keyFrame->rotation.desired,
-        target->getRotation(),
         keyFrame);
 
     target->setRotation(result.updatedValue_);
@@ -301,7 +301,6 @@ int AnimationController::updateScale(SceneObject *target, KeyFrame *keyFrame) {
     auto result = updateFloat(
         keyFrame->scale.original,
         keyFrame->scale.desired,
-        target->getScale(),
         keyFrame);
 
     target->setScale(result.updatedValue_);
@@ -325,7 +324,6 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
     UiObject *cTarget = reinterpret_cast<UiObject *>(target);
     auto updated = updateVector(keyFrame->stretch.original,
         keyFrame->stretch.desired,
-        cTarget->getStretch(),
         keyFrame);
     cTarget->setWStretch(updated.updatedValue_.x);
     cTarget->setHStretch(updated.updatedValue_.y);
@@ -350,7 +348,6 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
     auto result = updateVector(
         keyFrame->color.original,
         keyFrame->color.desired,
-        cTarget->getColor(),
         keyFrame);
 
     cTarget->setColor(result.updatedValue_);
@@ -358,90 +355,31 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
     return (result.updateComplete_) ? COLOR_MET : UPDATE_NOT_COMPLETE;
 }
 
-float AnimationController::linearFloatTransform(float currentTime, float targetTime, float original, float desired) {
+float AnimationController::linearFloatTransform(float original, float desired, KeyFrame *keyFrame) {
     float delta = desired - original;  // Change in values
-    float timeScale = currentTime / targetTime; // % of transformation
+    float timeScale = 1.0f;
+    if (keyFrame->targetTime != 0.0f)  // Safety
+        timeScale = keyFrame->currentTime / keyFrame->targetTime; // % of transformation
     return original + (delta * timeScale);
 }
 
-bool AnimationController::cap(float *cur, float target, float dv) {
-        auto capped = false;
-        auto direction = 0;
-        // Use dp to determine direction...
-        if (dv > 0.0f) {
-            direction = CAP_POS;
-        } else if (dv < 0.0f) {
-            direction = CAP_NEG;
-        }
-        switch (direction) {
-            case CAP_POS:
-                if (*cur > target) {
-                    capped = true;
-                    *cur = target;
-                }
-                break;
-            case CAP_NEG:
-                if (*cur < target) {
-                    capped = true;
-                    *cur = target;
-                }
-                break;
-            default:
-                break;
-        }
-        return  capped || *cur == target;
-}
-
 template <typename T>
-UpdateData<T> AnimationController::updateVector(T original, T desired, T current, KeyFrame *keyFrame) {
-    // Caps the position when the position differs than the target
-    uint matchedPos = 0;
-    auto timeMet = 0;
-    auto updateResult = false;
-    // Translation delta is time per frame * totalTime
-    auto tD = desired - original;
-
-    auto timeScalar = static_cast<float>(deltaTime) / keyFrame->targetTime;
-    current += (tD * timeScalar);
-
-    // Perform position locking when max time is met...
-    if (keyFrame->currentTime >= keyFrame->targetTime) {
-        current = desired;
-        timeMet = 1;
-    }
+UpdateData<T> AnimationController::updateVector(T original, T desired, KeyFrame *keyFrame) {
+    auto updateResult = keyFrame->currentTime >= keyFrame->targetTime;
     // Perform position capping for dimensions
     uint containerSize = sizeof(T) / sizeof(float);
+    T current;
     for (uint i = 0; i < containerSize; ++i) {
-        if (cap(&current[i], desired[i], tD[i]))
-        matchedPos++;
+        current[i] = linearFloatTransform(original[i], desired[i], keyFrame);
     }
-    updateResult = (matchedPos == containerSize && timeMet);
     return UpdateData<T>(current, updateResult);
 }
 
 UpdateData<float> AnimationController::updateFloat(float original, float desired, KeyFrame *keyFrame) {
     // Caps the position when the position differs than the target
-    auto matched = false;
-    auto timeMet = 0;
-    auto updateResult = false;
-    keyFrame->currentTime += deltaTime;
-    // Translation delta is time per frame * totalTime
-    auto tD = desired - original;
+    auto updateResult = keyFrame->currentTime >= keyFrame->targetTime;
 
-    auto timeScalar = static_cast<float>(deltaTime) / keyFrame->targetTime;
-    current += (tD * timeScalar);
-    // Instead of doing this, just calculate the next current value immediately
-
-    // Perform position locking when max time is met...
-    if (keyFrame->currentTime >= keyFrame->targetTime) {
-        keyFrame->currentTime = keyFrame->targetTime;
-        current = desired;
-        timeMet = 1;
-    }
     auto current = linearFloatTransform(original, desired, keyFrame);
-    // Perform float capping
-    if (cap(&current, desired, tD)) matched = true;
-    updateResult = (matched && timeMet);
     return UpdateData<float>(current, updateResult);
 }
 
