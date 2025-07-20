@@ -23,6 +23,14 @@ class Polygon {
     void merge(const Polygon&);
     ~Polygon();
 
+    /**
+     * @brief Move constructor definition for Polygon. This is only defined by us so we can
+     * increment the polyCount :)
+     * 
+     * @param other Polygon to move OUT from.
+     */
+    Polygon(Polygon&& other);
+
     vector<unsigned int> shapeBufferId;  // used for vertex buffer
     vector<unsigned int> textureCoordsId;  // used for texture coordinate buffer
     vector<unsigned int> textureId;  // ID for texture binding

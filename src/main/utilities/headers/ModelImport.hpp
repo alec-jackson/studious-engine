@@ -12,6 +12,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <utility>
 #include <Polygon.hpp>
 #include <winsup.hpp>
 #define DEFAULT_VECTOR_SIZE 256
@@ -27,7 +28,8 @@ class ModelImport {
  public:
       explicit ModelImport(string, vector<string>, vector<int>);
       Polygon createPolygonFromFile();
-      inline Polygon getPolygon() { return polygon_; }
+      // Using the move constructor so we don't need to define a copy constructor
+      inline Polygon getPolygon() { return std::move(polygon_); }
       int processLine(string, int);
       int buildObject(int objectId);
       ~ModelImport();
