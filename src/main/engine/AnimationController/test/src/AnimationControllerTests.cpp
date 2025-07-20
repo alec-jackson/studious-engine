@@ -887,7 +887,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenProcessTextTransformation_ThenTextTr
     string desiredText = "Hello, World!";
     /* This is one third of the desired text, which is what we expect after being one-third through the keyframe */
     string expected = "Hell";
-    TextObject obj("", vec3(0), 1.0f, testFontPath, 1.0f, 10, 0, TEST_OBJECT_NAME, ObjectType::TEXT_OBJECT, &dummyGfxController_);
+    TextObject obj("", vec3(0), 1.0f, testFontPath, 1.0f, 10, 0, TEST_OBJECT_NAME,
+        ObjectType::TEXT_OBJECT, &dummyGfxController_);
     float targetTime_1 = 3.0f;
     deltaTime = 1.0f;
 
@@ -901,7 +902,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenProcessTextTransformation_ThenTextTr
     /* Validation */
     // Make sure the first keyframe was removed
     ASSERT_EQ(1, animationController_.getKeyFrameStore().size());
-    ASSERT_TRUE(animationController_.getKeyFrameStore().find(TEST_OBJECT_NAME) != animationController_.getKeyFrameStore().end());
+    ASSERT_NE(animationController_.getKeyFrameStore().find(TEST_OBJECT_NAME),
+        animationController_.getKeyFrameStore().end());
     ASSERT_EQ(expected, obj.getMessage());
 }
 
@@ -912,7 +914,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenProcessTextTransformation_ThenTextTr
 TEST_F(GivenAnAnimationControllerReady, WhenTextTransformationCompletes_ThenTextUpdatedToDesired) {
     /* Preparation */
     string desiredText = "Hello, World!";
-    TextObject obj("", vec3(0), 1.0f, testFontPath, 1.0f, 10, 0, TEST_OBJECT_NAME, ObjectType::TEXT_OBJECT, &dummyGfxController_);
+    TextObject obj("", vec3(0), 1.0f, testFontPath, 1.0f, 10, 0, TEST_OBJECT_NAME,
+        ObjectType::TEXT_OBJECT, &dummyGfxController_);
     float targetTime_1 = 3.0f;
     deltaTime = 3.0f;
 

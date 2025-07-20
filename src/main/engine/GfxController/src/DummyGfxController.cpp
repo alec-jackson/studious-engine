@@ -43,7 +43,7 @@ GfxResult<uint> DummyGfxController::sendTextureData(uint width, uint height, Tex
 
 GfxResult<uint> DummyGfxController::sendTextureData3D(int offsetx, int offsety, int index, uint width, uint height,
     TexFormat format, void *data) {
-    printf("GfxController::sendTextureData3D: offsetx %d, offsety %d, index %d, width %u, height %u, format %d, data %p\n",
+    printf("GfxController::sendTextureData3D: ox %d, oy %d, index %d, width %u, height %u, format %d, data %p\n",
         offsetx, offsety, index, width, height,
         static_cast<std::underlying_type_t<TexFormat>>(format), data);
     return GFX_OK(uint);
