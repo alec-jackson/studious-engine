@@ -10,3 +10,4 @@
  */
 #pragma once
 #include <SceneObject.hpp>
+#include <TestObject.hpp>

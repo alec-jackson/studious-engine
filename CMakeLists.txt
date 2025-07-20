@@ -193,6 +193,7 @@ gtest_discover_tests(gtest_SpriteObjectTests)
 add_executable(gtest_SceneObjectTests
   src/main/engine/SceneObject/test/SceneObjectTests.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
+  src/main/engine/SceneObject/src/TestObject.cpp
 )
 
 target_include_directories(gtest_SceneObjectTests
@@ -211,6 +212,7 @@ gtest_discover_tests(gtest_SceneObjectTests)
 add_executable(gtest_AnimationControllerTests
   src/main/engine/AnimationController/test/src/AnimationControllerTests.cpp
   src/main/engine/AnimationController/src/AnimationController.cpp
+  src/main/engine/SceneObject/src/TestObject.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/SpriteObject.cpp
   src/main/engine/SceneObject/src/GameObject2D.cpp

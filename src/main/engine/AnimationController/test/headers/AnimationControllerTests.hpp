@@ -7,3 +7,4 @@
  */
 #pragma once
 #include <AnimationController.hpp>
+#include <TestObject.hpp>
