@@ -15,6 +15,7 @@
 #include <string>
 #include <SpriteObject.hpp>
 #include <MockGfxController.hpp>
+#include <DummyGfxController.hpp>
 
 using testing::_;
 
@@ -27,6 +28,7 @@ const int TARGET_FPS = 12;
 const int INDEX_SHIFT = 1;
 
 const char *testSpritePath = "../src/resources/images/test_image.png";
+const char *testFontPath = "../src/resources/fonts/AovelSans.ttf";
 /**
  * @brief Launches google test suite defined in file
  *
@@ -60,6 +62,7 @@ class GivenAnAnimationController {
     AnimationController animationController_;
     std::unique_ptr<SpriteObject> spriteObject_;
     testing::NiceMock<MockGfxController> mockGfxController_;
+    DummyGfxController dummyGfxController_;  // When mocks aren't important
     int width = 5;
     int height = 4;
     int bytesPerPixel = 3;
@@ -873,4 +876,55 @@ TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockO
     ASSERT_EQ(UPDATE_POS, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
     ASSERT_EQ(targetTime_2,
         animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->targetTime);
+}
+
+/**
+ * @brief Tests text-based transformations.
+ * 
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenProcessTextTransformation_ThenTextTransformationOccurs) {
+    /* Preparation */
+    string desiredText = "Hello, World!";
+    /* This is one third of the desired text, which is what we expect after being one-third through the keyframe */
+    string expected = "Hell";
+    TextObject obj("", vec3(0), 1.0f, testFontPath, 1.0f, 10, 0, TEST_OBJECT_NAME, ObjectType::TEXT_OBJECT, &dummyGfxController_);
+    float targetTime_1 = 3.0f;
+    deltaTime = 1.0f;
+
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_TEXT, targetTime_1);
+    keyFrame_1.get()->text.desired = desiredText;
+    animationController_.addKeyFrame(&obj, keyFrame_1);
+
+    /* Action */
+    animationController_.update();
+
+    /* Validation */
+    // Make sure the first keyframe was removed
+    ASSERT_EQ(1, animationController_.getKeyFrameStore().size());
+    ASSERT_TRUE(animationController_.getKeyFrameStore().find(TEST_OBJECT_NAME) != animationController_.getKeyFrameStore().end());
+    ASSERT_EQ(expected, obj.getMessage());
+}
+
+/**
+ * @brief Tests text-based transformations on completion
+ * 
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenTextTransformationCompletes_ThenTextUpdatedToDesired) {
+    /* Preparation */
+    string desiredText = "Hello, World!";
+    TextObject obj("", vec3(0), 1.0f, testFontPath, 1.0f, 10, 0, TEST_OBJECT_NAME, ObjectType::TEXT_OBJECT, &dummyGfxController_);
+    float targetTime_1 = 3.0f;
+    deltaTime = 3.0f;
+
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_TEXT, targetTime_1);
+    keyFrame_1.get()->text.desired = desiredText;
+    animationController_.addKeyFrame(&obj, keyFrame_1);
+
+    /* Action */
+    animationController_.update();
+
+    /* Validation */
+    // Make sure the first keyframe was removed
+    ASSERT_TRUE(animationController_.getKeyFrameStore().empty());
+    ASSERT_EQ(desiredText, obj.getMessage());
 }

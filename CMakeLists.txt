@@ -219,6 +219,7 @@ add_executable(gtest_AnimationControllerTests
   src/main/engine/SceneObject/src/ColliderObject.cpp
   src/main/engine/SceneObject/src/TextObject.cpp
   src/main/engine/SceneObject/src/UiObject.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
