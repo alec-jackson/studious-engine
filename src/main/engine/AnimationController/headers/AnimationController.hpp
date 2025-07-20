@@ -149,7 +149,7 @@ class AnimationController {
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
     static bool cap(float *cur, float target, float dv);
-    template <typename T>
+    float linearFloatTransform(float original, float desired, KeyFrame *keyFrame);
     /**
      * @brief Linearly transforms a vector's values given the current values, the original values and the desired values.
      * Uses deltaTime to determine updated values. Will set current = desired when the keyframe is finished.
@@ -161,9 +161,10 @@ class AnimationController {
      * @param keyFrame - The keyframe to process time data from.
      * @return UpdateData struct containing updated vector values.
      */
-    UpdateData<T> updateVector(T original, T desired, T current, KeyFrame *keyFrame);
+    template <typename T>
+    UpdateData<T> updateVector(T original, T desired, KeyFrame *keyFrame);
     UpdateData<string> updateString(string original, string desired, string current, KeyFrame *keyFrame);
-    UpdateData<float> updateFloat(float original, float desired, float current, KeyFrame *keyFrame);
+    UpdateData<float> updateFloat(float original, float desired, KeyFrame *keyFrame);
     void playTrack(string trackName);
     void pauseTrack(string trackName);
     /**

@@ -193,6 +193,7 @@ gtest_discover_tests(gtest_SpriteObjectTests)
 add_executable(gtest_SceneObjectTests
   src/main/engine/SceneObject/test/SceneObjectTests.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
+  src/main/engine/SceneObject/src/TestObject.cpp
 )
 
 target_include_directories(gtest_SceneObjectTests
@@ -211,12 +212,14 @@ gtest_discover_tests(gtest_SceneObjectTests)
 add_executable(gtest_AnimationControllerTests
   src/main/engine/AnimationController/test/src/AnimationControllerTests.cpp
   src/main/engine/AnimationController/src/AnimationController.cpp
+  src/main/engine/SceneObject/src/TestObject.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/SpriteObject.cpp
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
   src/main/engine/SceneObject/src/TextObject.cpp
   src/main/engine/SceneObject/src/UiObject.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp

@@ -20,9 +20,6 @@ using std::endl;
 using std::cout;
 using std::set;
 
-const char *TEST_OBJECT_NAME = "testObject";
-const char *PARENT_OBJECT_NAME = "parentObject";
-
 /**
  * @brief Launches google test suite defined in file
  *
@@ -43,34 +40,9 @@ int main(int argc, char **argv) {
     return result;
 }
 
-class FakeSceneObject : public SceneObject {
- public:
-    FakeSceneObject();
-    explicit FakeSceneObject(string name);
-    void render() override;
-    void update() override;
-    SceneObject *getParent() { return parent_; }
-    const set<SceneObject *> &getChildren() { return children_; }
-    const mat4 &getTranslationMatrix() { return translateMatrix_; }
-    const mat4 &getRotationMatrix() { return rotateMatrix_; }
-    const mat4 &getScaleMatrix() { return scaleMatrix_; }
-};
-
-FakeSceneObject::FakeSceneObject() : SceneObject(ObjectType::UNDEFINED, TEST_OBJECT_NAME, nullptr) {
-}
-
-FakeSceneObject::FakeSceneObject(string name) : SceneObject(ObjectType::UNDEFINED, name, nullptr) {
-}
-
-void FakeSceneObject::render() {
-}
-
-void FakeSceneObject::update() {
-}
-
 class GivenASceneObject: public ::testing::Test {
  protected:
-    FakeSceneObject object_;
+    TestObject object_;
 };
 
 /**
@@ -132,7 +104,7 @@ TEST_F(GivenASceneObject, WhenUpdateModelMatricesWithParent_ThenUpdatedWithParen
             vec3(0, 0, 1));
     mat4 expectedSm = glm::scale(vec3(exampleScale + parentScale));
 
-    FakeSceneObject parentObject;
+    TestObject parentObject;
     object_.setPosition(examplePosition);
     object_.setRotation(exampleRotation);
     object_.setScale(exampleScale);
@@ -156,7 +128,7 @@ TEST_F(GivenASceneObject, WhenUpdateModelMatricesWithParent_ThenUpdatedWithParen
  */
 TEST_F(GivenASceneObject, WhenSetParent_ThenSceneObjectsConnected) {
     /* Preparation */
-    FakeSceneObject parent(PARENT_OBJECT_NAME);
+    TestObject parent(PARENT_OBJECT_NAME);
 
     /* Action */
     object_.setParent(&parent);
@@ -174,7 +146,7 @@ TEST_F(GivenASceneObject, WhenSetParent_ThenSceneObjectsConnected) {
  */
 TEST_F(GivenASceneObject, WhenAddChild_ThenSceneObjectsConnected) {
     /* Preparation */
-    FakeSceneObject parent(PARENT_OBJECT_NAME);
+    TestObject parent(PARENT_OBJECT_NAME);
 
     /* Action */
     parent.addChild(&object_);
@@ -192,7 +164,7 @@ TEST_F(GivenASceneObject, WhenAddChild_ThenSceneObjectsConnected) {
  */
 TEST_F(GivenASceneObject, WhenAddSameChildTwice_ThenOnlyOneInSet) {
     /* Preparation */
-    FakeSceneObject parent(PARENT_OBJECT_NAME);
+    TestObject parent(PARENT_OBJECT_NAME);
 
     /* Action */
     parent.addChild(&object_);
@@ -208,15 +180,15 @@ TEST_F(GivenASceneObject, WhenAddSameChildTwice_ThenOnlyOneInSet) {
 
 class GivenASceneObjectWithParent: public ::testing::Test {
  protected:
-    std::unique_ptr<FakeSceneObject> parent_;
-    std::unique_ptr<FakeSceneObject> child_;
+    std::unique_ptr<TestObject> parent_;
+    std::unique_ptr<TestObject> child_;
     void SetUp() override;
 };
 
 void GivenASceneObjectWithParent::SetUp() {
     // Connect the child to the parent
-    parent_ = std::make_unique<FakeSceneObject>(PARENT_OBJECT_NAME);
-    child_ = std::make_unique<FakeSceneObject>(TEST_OBJECT_NAME);
+    parent_ = std::make_unique<TestObject>(PARENT_OBJECT_NAME);
+    child_ = std::make_unique<TestObject>(TEST_OBJECT_NAME);
 
     parent_.get()->addChild(child_.get());
     // Make sure parent/child relationship is configured

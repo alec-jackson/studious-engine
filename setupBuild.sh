@@ -106,7 +106,7 @@ else
         cmake --install .
     fi
     if [ "$runTests" == true ]; then
-        ctest --output-on-failure
+        ctest --output-on-failure -j 4
     else
         if [ "$runBuild" == true ]; then
             # Run program

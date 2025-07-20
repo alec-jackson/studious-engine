@@ -14,34 +14,42 @@
 #include <cstdio>
 #include <DummyGfxController.hpp>
 
-GfxResult<unsigned int> DummyGfxController::generateBuffer(unsigned int *bufferId) {
+GfxResult<uint> DummyGfxController::generateBuffer(uint *bufferId) {
     printf("GfxController::generateBuffer %p\n", bufferId);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::generateTexture(unsigned int *textureId) {
+GfxResult<uint> DummyGfxController::generateTexture(uint *textureId) {
     printf("GfxController::generateTexture %p\n", textureId);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::bindBuffer(unsigned int bufferId) {
+GfxResult<uint> DummyGfxController::bindBuffer(uint bufferId) {
     printf("GfxController::bindBuffer %d\n", bufferId);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::sendBufferData(size_t size, void *data) {
+GfxResult<uint> DummyGfxController::sendBufferData(size_t size, void *data) {
     printf("GfxController::sendBufferData: size %zu, data %p\n", size, data);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::sendTextureData(unsigned int width, unsigned int height, TexFormat format,
+GfxResult<uint> DummyGfxController::sendTextureData(uint width, uint height, TexFormat format,
     void *data) {
     printf("GfxController::sendTextureData: width %u, height %u, format %d, data %p\n",
         width, height, static_cast<std::underlying_type_t<TexFormat>>(format), data);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<int> DummyGfxController::getShaderVariable(unsigned int, const char *) {
+GfxResult<uint> DummyGfxController::sendTextureData3D(int offsetx, int offsety, int index, uint width, uint height,
+    TexFormat format, void *data) {
+    printf("GfxController::sendTextureData3D: ox %d, oy %d, index %d, width %u, height %u, format %d, data %p\n",
+        offsetx, offsety, index, width, height,
+        static_cast<std::underlying_type_t<TexFormat>>(format), data);
+    return GFX_OK(uint);
+}
+
+GfxResult<int> DummyGfxController::getShaderVariable(uint, const char *) {
     cout << "GfxController::getShaderVariable" << endl;
     return GFX_OK(int);
 }
@@ -51,14 +59,14 @@ GfxResult<int> DummyGfxController::cleanup() {
     return GFX_OK(int);
 }
 
-GfxResult<unsigned int> DummyGfxController::getProgramId(string programName) {
+GfxResult<uint> DummyGfxController::getProgramId(string programName) {
     cout << "GfxController::getProgramId" << endl;
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::loadShaders(string programName, string vertexPath, string fragmentPath) {
+GfxResult<uint> DummyGfxController::loadShaders(string programName, string vertexPath, string fragmentPath) {
     cout << "GfxController::loadShaders" << endl;
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
 void DummyGfxController::update() {
@@ -70,102 +78,120 @@ GfxResult<int> DummyGfxController::init() {
     return GFX_OK(int);
 }
 
-GfxResult<unsigned int> DummyGfxController::setProgram(unsigned int programId) {
+GfxResult<uint> DummyGfxController::setProgram(uint programId) {
     cout << "GfxController::setProgram" << endl;
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::sendFloat(unsigned int variableId, float data) {
+GfxResult<uint> DummyGfxController::sendFloat(uint variableId, float data) {
     printf("GfxController::sendFloat: variableId=[%u], data=[%f]", variableId, data);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::sendFloatVector(unsigned int variableId, size_t count, VectorType vType,
+GfxResult<uint> DummyGfxController::sendFloatVector(uint variableId, size_t count, VectorType vType,
     float *data) {
     printf("GfxController::sendFloatVector: variableId=[%u], count=[%zu], data=[%p]\n",
         variableId,
         count,
         data);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::polygonRenderMode(RenderMode mode) {
+GfxResult<uint> DummyGfxController::polygonRenderMode(RenderMode mode) {
     printf("GfxController::polygonRenderMode: mode=[%d]", static_cast<std::underlying_type_t<RenderMode>>(mode));
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::sendFloatMatrix(unsigned int variableId, size_t count, float *data) {
+GfxResult<uint> DummyGfxController::sendFloatMatrix(uint variableId, size_t count, float *data) {
     printf("GfxController::sendFloatMatrix: variableId=[%u], count=[%zu], data=[%p]\n",
         variableId,
         count,
         data);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::sendInteger(unsigned int variableId, int data) {
+GfxResult<uint> DummyGfxController::sendInteger(uint variableId, int data) {
     printf("GfxController::sendInteger: variableId=[%u], data=[%d]", variableId, data);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::bindTexture(unsigned int textureId, GfxTextureType type) {
+GfxResult<uint> DummyGfxController::bindTexture(uint textureId, GfxTextureType type) {
     printf("GfxController::bindTexture: textureId=[%u]", textureId);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::bindVao(unsigned int vao) {
+GfxResult<uint> DummyGfxController::bindVao(uint vao) {
     printf("GfxController::bindVao: VAO ID %d\n", vao);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::setCapability(GfxCapability capabilityId, bool enabled) {
+GfxResult<uint> DummyGfxController::setCapability(GfxCapability capabilityId, bool enabled) {
     printf("GfxController::setCapability: CAPABILITY: %d, enabled: %d\n",
         static_cast<std::underlying_type_t<GfxCapability>>(capabilityId), enabled);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::initVao(unsigned int *vao) {
+GfxResult<uint> DummyGfxController::initVao(uint *vao) {
     printf("GfxController::initVao: vao %p\n", vao);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::deleteTextures(unsigned int *tId) {
+GfxResult<uint> DummyGfxController::deleteTextures(uint *tId) {
     printf("GfxController::initVao: tId %p\n", tId);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::updateBufferData(const vector<float> &vertices, unsigned int vbo) {
+GfxResult<uint> DummyGfxController::updateBufferData(const vector<float> &vertices, uint vbo) {
     printf("GfxController::updateBufferData\n");
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::setTexParam(TexParam param, TexVal val, GfxTextureType type) {
+GfxResult<uint> DummyGfxController::setTexParam(TexParam param, TexVal val, GfxTextureType type) {
     printf("GfxController::setTexParam: param %d, val %d\n",
             static_cast<std::underlying_type_t<TexParam>>(param),
             static_cast<std::underlying_type_t<TexValType>>(val.type()));
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::generateMipMap() {
+GfxResult<uint> DummyGfxController::generateMipMap() {
     printf("GfxController::generateMipMap\n");
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::enableVertexAttArray(uint layout, int count, size_t size, void *offset) {
+GfxResult<uint> DummyGfxController::enableVertexAttArray(uint layout, int count, size_t size, void *offset) {
     printf("GfxController::enableVertexAttArray: layout %d, size %zu\n",
         layout, size);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::disableVertexAttArray(unsigned int layout) {
+GfxResult<uint> DummyGfxController::setVertexAttDivisor(uint layout, uint divisor) {
+    printf("GfxController::setVertexAttDivisor: layout %d, divisor %d\n",
+        layout, divisor);
+    return GFX_OK(uint);
+}
+
+GfxResult<uint> DummyGfxController::disableVertexAttArray(uint layout) {
     printf("GfxController::disableVertexAttArray: layout %d\n",
         layout);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
 }
 
-GfxResult<unsigned int> DummyGfxController::drawTriangles(unsigned int size) {
+GfxResult<uint> DummyGfxController::drawTriangles(uint size) {
     printf("GfxController::drawTriangles: size %d\n",
         size);
-    return GFX_OK(unsigned int);
+    return GFX_OK(uint);
+}
+
+GfxResult<uint> DummyGfxController::drawTrianglesInstanced(uint size, uint count) {
+    printf("GfxController::drawTrianglesInstanced: size %d, count %d\n",
+        size, count);
+    return GFX_OK(uint);
+}
+
+GfxResult<uint> DummyGfxController::allocateTexture3D(TexFormat format, uint width, uint height, uint layers) {
+    printf("GfxController::allocateTexture3D: format %d, width %u, height %u, layers %u\n",
+        static_cast<std::underlying_type_t<TexFormat>>(format), width, height, layers);
+    return GFX_OK(uint);
 }
 
 void DummyGfxController::clear(GfxClearMode clearMode) {
@@ -173,12 +199,12 @@ void DummyGfxController::clear(GfxClearMode clearMode) {
         static_cast<std::underlying_type_t<GfxClearMode>>(clearMode));
 }
 
-void DummyGfxController::deleteBuffer(unsigned int *bufferId) {
+void DummyGfxController::deleteBuffer(uint *bufferId) {
     printf("GfxController::deleteBuffer: %p\n",
         bufferId);
 }
 
-void DummyGfxController::deleteVao(unsigned int *vao) {
+void DummyGfxController::deleteVao(uint *vao) {
     printf("GfxController::deleteBuffer: %p\n",
         vao);
 }
