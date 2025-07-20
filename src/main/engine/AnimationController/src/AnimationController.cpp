@@ -359,7 +359,7 @@ float AnimationController::linearFloatTransform(float original, float desired, K
     float delta = desired - original;  // Change in values
     float timeScale = 1.0f;
     if (keyFrame->targetTime != 0.0f)  // Safety
-        timeScale = keyFrame->currentTime / keyFrame->targetTime; // % of transformation
+        timeScale = keyFrame->currentTime / keyFrame->targetTime;  // % of transformation
     return original + (delta * timeScale);
 }
 

@@ -5,7 +5,7 @@
  * @author Christian Galvez
  * @date 2025-04-13
  */
-#include "AnimationController.hpp"
+#include <AnimationControllerTests.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 #include <memory>
@@ -15,7 +15,6 @@
 #include <string>
 #include <SpriteObject.hpp>
 #include <MockGfxController.hpp>
-#include <AnimationControllerTests.hpp>
 
 using testing::_;
 
@@ -501,7 +500,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesMultipleTimes_ThenFlo
  * is updated multiple times to completion. When completed, the object should be in the desired state exactly.
  * 
  */
-TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesMultipleTimesToCompletion_ThenFinalFloatTransformationOccursForObject) {
+TEST_F(GivenAnAnimationControllerReady, WhenKFUpdatesMultTimesComplete_ThenFinalFloatTransformationOccursForObject) {
     /* Preparation */
     TestObject obj(DUMMY_OBJ_NAME);
     float originalScale = 1.0f;
@@ -590,7 +589,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdates_ThenVectorTransforma
     vec3 desiredPosition(6.0f, 5.0f, 4.0f);
     float targetTime = 3.0f;
     deltaTime = 1.0f;
-    vec3 expectedTransformation = originalPosition + ((desiredPosition - originalPosition) * vec3(deltaTime / targetTime));
+    vec3 expectedTransformation = originalPosition +
+        ((desiredPosition - originalPosition) * vec3(deltaTime / targetTime));
     int expectedKeyFrames = 1;
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
 
@@ -618,7 +618,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesTwice_ThenVectorTrans
     vec3 desiredPosition(6.0f, 5.0f, 4.0f);
     float targetTime = 3.0f;
     deltaTime = 1.0f;
-    vec3 expectedTransformation = originalPosition + ((desiredPosition - originalPosition) * vec3((deltaTime * 2) / targetTime));
+    vec3 expectedTransformation = originalPosition +
+        ((desiredPosition - originalPosition) * vec3((deltaTime * 2) / targetTime));
     int expectedKeyFrames = 1;
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
 
@@ -734,8 +735,10 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFramesAddedForMultipleObjects_The
     vec3 desiredPosition(6.0f, 5.0f, 4.0f);
     float targetTime = 3.0f;
     deltaTime = 1.0f;
-    vec3 expectedTransformation_1 = originalPosition_1 + ((desiredPosition - originalPosition_1) * vec3((deltaTime * 1) / targetTime));
-    vec3 expectedTransformation_2 = originalPosition_2 + ((desiredPosition - originalPosition_2) * vec3((deltaTime * 1) / targetTime));
+    vec3 expectedTransformation_1 = originalPosition_1 +
+        ((desiredPosition - originalPosition_1) * vec3((deltaTime * 1) / targetTime));
+    vec3 expectedTransformation_2 = originalPosition_2 +
+        ((desiredPosition - originalPosition_2) * vec3((deltaTime * 1) / targetTime));
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
     auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 
@@ -777,10 +780,11 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesForOneObject_ThenOt
     vec3 originalPosition_2(9.0f, 10.f, 11.0f);
     vec3 desiredPosition(6.0f, 5.0f, 4.0f);
     float targetTime_1 = 3.0f;
-    float targetTime_2 = 5.0f; // Different target time for the second object
+    float targetTime_2 = 5.0f;  // Different target time for the second object
     deltaTime = 4.0f;
-    vec3 expectedTransformation_1 = desiredPosition; // This keyframe should complete
-    vec3 expectedTransformation_2 = originalPosition_2 + ((desiredPosition - originalPosition_2) * vec3(deltaTime / targetTime_2));
+    vec3 expectedTransformation_1 = desiredPosition;  // This keyframe should complete
+    vec3 expectedTransformation_2 = originalPosition_2 +
+        ((desiredPosition - originalPosition_2) * vec3(deltaTime / targetTime_2));
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_1);
     auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_2);
 
@@ -844,7 +848,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockO
     /* Preparation */
     TestObject obj(DUMMY_OBJ_NAME);
     float targetTime_1 = 3.0f;
-    float targetTime_2 = 5.0f; // Different target time for the second keyframe
+    float targetTime_2 = 5.0f;  // Different target time for the second keyframe
     deltaTime = 3.0f;
 
     auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_2);
@@ -861,10 +865,12 @@ TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockO
     /* Validation */
     // Make sure the first keyframe was removed
     ASSERT_EQ(1, animationController_.getKeyFrameStore().size());
-    ASSERT_TRUE(animationController_.getKeyFrameStore().find(DUMMY_OBJ_NAME) != animationController_.getKeyFrameStore().end());
+    ASSERT_TRUE(animationController_.getKeyFrameStore().find(DUMMY_OBJ_NAME) !=
+        animationController_.getKeyFrameStore().end());
     // The second keyframe should be in the queue
     ASSERT_EQ(1, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.size());
     // The second keyframe should be the one we added
     ASSERT_EQ(UPDATE_POS, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
-    ASSERT_EQ(targetTime_2, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->targetTime);
+    ASSERT_EQ(targetTime_2,
+        animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->targetTime);
 }
