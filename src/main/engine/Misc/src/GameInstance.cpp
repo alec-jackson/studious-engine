@@ -111,6 +111,7 @@ vec3 GameInstance::getDirectionalLight() {
 }
 
 const bool GameInstance::getControllerInput(SDL_GameControllerButton button) {
+    if (!controllersConnected) return false;
     // Checks if a button was pressed against all connected controllers
     if (gameControllers[0] == nullptr) {
         return false;
