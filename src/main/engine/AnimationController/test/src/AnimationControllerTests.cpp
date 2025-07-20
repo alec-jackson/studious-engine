@@ -931,3 +931,29 @@ TEST_F(GivenAnAnimationControllerReady, WhenTextTransformationCompletes_ThenText
     ASSERT_TRUE(animationController_.getKeyFrameStore().empty());
     ASSERT_EQ(desiredText, obj.getMessage());
 }
+
+/**
+ * @brief Ensures that keyframes with a zero time do not crash the animation controller, and that
+ * the object is updated immediately to the desired state.
+ * 
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenZeroTimeKeyFrameUpdates_ThenObjectUpdatedImmediately) {
+    /* Preparation */
+    TestObject obj(DUMMY_OBJ_NAME);
+    float originalScale = 1.0f;
+    float desiredScale = 9.0f;
+    float targetTime = 0.0f;
+    deltaTime = 1.0f;
+    float expectedTransformation = desiredScale;  // Since target time is 0, we expect the desired value immediately
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+
+    obj.setScale(originalScale);
+    keyFrame_1.get()->scale.desired = desiredScale;
+    animationController_.addKeyFrame(&obj, keyFrame_1);
+
+    /* Action */
+    animationController_.update();
+
+    /* Validation */
+    ASSERT_EQ(expectedTransformation, obj.getScale());
+}
