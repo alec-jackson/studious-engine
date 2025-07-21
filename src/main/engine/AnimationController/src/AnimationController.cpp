@@ -176,65 +176,78 @@ int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFra
     return kfQueueSize;
 }
 
+UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, float timeChange) {
+    // If this is a brand new keyframe, set original values...
+    if (currentKf->isNew) {
+        currentKf->isNew = false;
+        currentKf->pos.original = target->getPosition();
+        currentKf->rotation.original = target->getRotation();
+        currentKf->scale.original = target->getScale();
+        // Use stretch if UI object
+        if (currentKf->type & UPDATE_STRETCH) {
+            assert(target->type() == ObjectType::UI_OBJECT);
+            auto cTarget = static_cast<UiObject *>(target);
+            currentKf->stretch.original = cTarget->getStretch();
+        }
+        if (currentKf->type & UPDATE_TEXT) {
+            assert(target->type() == ObjectType::TEXT_OBJECT);
+            auto cTarget = static_cast<TextObject *>(target);
+            currentKf->text.original = cTarget->getMessage();
+        }
+        if (currentKf->type & UPDATE_COLOR) {
+            assert(target->type() == ObjectType::TEXT_OBJECT);
+            auto cTarget = static_cast<TextObject *>(target);
+            currentKf->color.original = cTarget->getColor();
+        }
+    }
+
+    auto result = UPDATE_NOT_COMPLETE;
+    auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET;
+    auto &currentTime = currentKf.get()->currentTime;
+    auto &targetTime = currentKf.get()->targetTime;
+    auto overflowTime = currentTime + timeChange;
+    // Update the time passed since keyframe has started
+    currentTime = std::min<float>(overflowTime, targetTime);
+    // Perform updates in keyframe
+    result |= updatePosition(target, currentKf.get());
+    result |= updateStretch(target, currentKf.get());
+    result |= updateText(target, currentKf.get());
+    result |= updateTime(target, currentKf.get());
+    result |= updateRotation(target, currentKf.get());
+    result |= updateScale(target, currentKf.get());
+    result |= updateColor(target, currentKf.get());
+    return UpdateData<float>(overflowTime - targetTime, (result == done));
+}
+
 void AnimationController::update() {
     // Lock the controller
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     vector<std::function<void(void)>> callbacks;
     vector<string> deferredDelete;
+    auto isOverflow = false;
+    float timeChange = deltaTime;
     // Run update methods on each object here
     for (auto &entry : keyFrameStore_) {
-        // Grab the front keyFrame for the object
-        auto currentKf = entry.second.kQueue.front();
-        auto target = entry.second.target;
-        // If this is a brand new keyframe, set original values...
-        if (currentKf->isNew) {
-            currentKf->isNew = false;
-            currentKf->pos.original = target->getPosition();
-            currentKf->rotation.original = target->getRotation();
-            currentKf->scale.original = target->getScale();
-            // Use stretch if UI object
-            if (currentKf->type & UPDATE_STRETCH) {
-                assert(target->type() == ObjectType::UI_OBJECT);
-                auto cTarget = static_cast<UiObject *>(target);
-                currentKf->stretch.original = cTarget->getStretch();
+        do {
+            // Grab the front keyFrame for the object
+            auto currentKf = entry.second.kQueue.front();
+            auto target = entry.second.target;
+            auto result = updateKeyFrame(target, currentKf, timeChange);
+            // Only remove the keyframe when all updates are done...
+            if (result.updateComplete_) {
+                printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
+                // Remove the keyframe from the queue
+                entry.second.kQueue.pop();
+                // Call the callback associated with the keyframe
+                if (currentKf->hasCb) callbacks.push_back(currentKf->callback);
+                if (entry.second.kQueue.empty())
+                    deferredDelete.push_back(entry.first);
             }
-            if (currentKf->type & UPDATE_TEXT) {
-                assert(target->type() == ObjectType::TEXT_OBJECT);
-                auto cTarget = static_cast<TextObject *>(target);
-                currentKf->text.original = cTarget->getMessage();
-            }
-            if (currentKf->type & UPDATE_COLOR) {
-                assert(target->type() == ObjectType::TEXT_OBJECT);
-                auto cTarget = static_cast<TextObject *>(target);
-                currentKf->color.original = cTarget->getColor();
-            }
-        }
-
-        auto result = UPDATE_NOT_COMPLETE;
-        auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET;
-        auto &currentTime = currentKf.get()->currentTime;
-        auto &targetTime = currentKf.get()->targetTime;
-        // Update the time passed since keyframe has started
-        currentTime = std::min<float>(currentTime + deltaTime, targetTime);
-        // Perform updates in keyframe
-        result |= updatePosition(target, currentKf.get());
-        result |= updateStretch(target, currentKf.get());
-        result |= updateText(target, currentKf.get());
-        result |= updateTime(target, currentKf.get());
-        result |= updateRotation(target, currentKf.get());
-        result |= updateScale(target, currentKf.get());
-        result |= updateColor(target, currentKf.get());
-        // Only remove the keyframe when all updates are done...
-        if (result == done) {
-            printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
-            // Remove the keyframe from the queue
-            entry.second.kQueue.pop();
-            // Call the callback associated with the keyframe
-            if (currentKf->hasCb) callbacks.push_back(currentKf->callback);
-            if (entry.second.kQueue.empty())
-                deferredDelete.push_back(entry.first);
-        }
-        // Probably remove this entry from the map after this loop if empty...
+            // Move onto the next key frame if overflow time has been detected and a next keyframe exists
+            isOverflow = result.updatedValue_ > 0.0f && !entry.second.kQueue.empty();
+            timeChange = result.updatedValue_;
+        } while (isOverflow);
+        timeChange = deltaTime;  // Reset timeChange for the next keyframe
     }
     // Erase keys in the deferredDelete list
     for (auto item : deferredDelete) {
