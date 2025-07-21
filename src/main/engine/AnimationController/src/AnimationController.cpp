@@ -176,7 +176,8 @@ int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFra
     return kfQueueSize;
 }
 
-UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, float timeChange) {
+UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf,
+    float timeChange) {
     // If this is a brand new keyframe, set original values...
     if (currentKf->isNew) {
         currentKf->isNew = false;
