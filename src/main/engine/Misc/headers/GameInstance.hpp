@@ -186,19 +186,19 @@ class GameInstance {
      * @param scancode - The SDL_Scancode enum value to check for input state.
      * @return true if the button described in scancode is pressed down, false otherwise.
      */
-    const bool getKeyboardInput(SDL_Scancode scancode);
+    bool getKeyboardInput(SDL_Scancode scancode) const;
     /**
      * @brief Check if a SDL_GameControllerButton has been pressed.
      * @param button - The button to poll the input state of. Described by SDL_GameControllerButton.
      * @return true if the button is pressed down, false otherwise.
      */
-    const bool getControllerInput(SDL_GameControllerButton button);
+    bool getControllerInput(SDL_GameControllerButton button) const;
     /**
      * @brief Polls for a specific input across keyboard and controller input devices.
      * @param input - The input to check for.
      * @return true if the GameInput is being pressed by a keyboard or controller. False otherwise.
      */
-    const bool pollInput(GameInput input);
+    bool pollInput(GameInput input);
     controllerReadout *getControllers(int controllerIndex);
     int getControllersConnected();
     int playSound(string sfxName, bool loop, int volume);

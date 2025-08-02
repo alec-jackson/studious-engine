@@ -59,12 +59,13 @@ GfxResult<int> DummyGfxController::cleanup() {
     return GFX_OK(int);
 }
 
-GfxResult<uint> DummyGfxController::getProgramId(string programName) {
+GfxResult<uint> DummyGfxController::getProgramId([[maybe_unused]] string programName) {
     cout << "GfxController::getProgramId" << endl;
     return GFX_OK(uint);
 }
 
-GfxResult<uint> DummyGfxController::loadShaders(string programName, string vertexPath, string fragmentPath) {
+GfxResult<uint> DummyGfxController::loadShaders([[maybe_unused]] string programName, [[maybe_unused]] string vertexPath,
+    [[maybe_unused]] string fragmentPath) {
     cout << "GfxController::loadShaders" << endl;
     return GFX_OK(uint);
 }
@@ -78,7 +79,7 @@ GfxResult<int> DummyGfxController::init() {
     return GFX_OK(int);
 }
 
-GfxResult<uint> DummyGfxController::setProgram(uint programId) {
+GfxResult<uint> DummyGfxController::setProgram([[maybe_unused]] uint programId) {
     cout << "GfxController::setProgram" << endl;
     return GFX_OK(uint);
 }
@@ -88,7 +89,7 @@ GfxResult<uint> DummyGfxController::sendFloat(uint variableId, float data) {
     return GFX_OK(uint);
 }
 
-GfxResult<uint> DummyGfxController::sendFloatVector(uint variableId, size_t count, VectorType vType,
+GfxResult<uint> DummyGfxController::sendFloatVector(uint variableId, size_t count, [[maybe_unused]] VectorType vType,
     float *data) {
     printf("GfxController::sendFloatVector: variableId=[%u], count=[%zu], data=[%p]\n",
         variableId,
@@ -115,7 +116,7 @@ GfxResult<uint> DummyGfxController::sendInteger(uint variableId, int data) {
     return GFX_OK(uint);
 }
 
-GfxResult<uint> DummyGfxController::bindTexture(uint textureId, GfxTextureType type) {
+GfxResult<uint> DummyGfxController::bindTexture(uint textureId, [[maybe_unused]] GfxTextureType type) {
     printf("GfxController::bindTexture: textureId=[%u]", textureId);
     return GFX_OK(uint);
 }
@@ -141,12 +142,12 @@ GfxResult<uint> DummyGfxController::deleteTextures(uint *tId) {
     return GFX_OK(uint);
 }
 
-GfxResult<uint> DummyGfxController::updateBufferData(const vector<float> &vertices, uint vbo) {
+GfxResult<uint> DummyGfxController::updateBufferData([[maybe_unused]] const vector<float> &vertices, [[maybe_unused]] uint vbo) {
     printf("GfxController::updateBufferData\n");
     return GFX_OK(uint);
 }
 
-GfxResult<uint> DummyGfxController::setTexParam(TexParam param, TexVal val, GfxTextureType type) {
+GfxResult<uint> DummyGfxController::setTexParam(TexParam param, TexVal val, [[maybe_unused]] GfxTextureType type) {
     printf("GfxController::setTexParam: param %d, val %d\n",
             static_cast<std::underlying_type_t<TexParam>>(param),
             static_cast<std::underlying_type_t<TexValType>>(val.type()));
@@ -158,7 +159,7 @@ GfxResult<uint> DummyGfxController::generateMipMap() {
     return GFX_OK(uint);
 }
 
-GfxResult<uint> DummyGfxController::enableVertexAttArray(uint layout, int count, size_t size, void *offset) {
+GfxResult<uint> DummyGfxController::enableVertexAttArray(uint layout, [[maybe_unused]] int count, size_t size, [[maybe_unused]] void *offset) {
     printf("GfxController::enableVertexAttArray: layout %d, size %zu\n",
         layout, size);
     return GFX_OK(uint);

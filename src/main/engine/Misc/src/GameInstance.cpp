@@ -110,7 +110,7 @@ vec3 GameInstance::getDirectionalLight() {
     return directionalLight;
 }
 
-const bool GameInstance::getControllerInput(SDL_GameControllerButton button) {
+bool GameInstance::getControllerInput(SDL_GameControllerButton button) const {
     if (!controllersConnected) return false;
     // Checks if a button was pressed against all connected controllers
     if (gameControllers[0] == nullptr) {
@@ -119,11 +119,11 @@ const bool GameInstance::getControllerInput(SDL_GameControllerButton button) {
     return SDL_GameControllerGetButton(gameControllers[0], button);
 }
 
-const bool GameInstance::getKeyboardInput(SDL_Scancode scancode) {
+bool GameInstance::getKeyboardInput(SDL_Scancode scancode) const {
     return keystate[scancode];
 }
 
-const bool GameInstance::pollInput(GameInput input) {
+bool GameInstance::pollInput(GameInput input) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto pressed = false;
     // Check for the target input from either a controller or keyboard (will improve later)
