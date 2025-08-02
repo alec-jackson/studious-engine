@@ -213,7 +213,7 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
     result |= updatePosition(target, currentKf.get());
     result |= updateStretch(target, currentKf.get());
     result |= updateText(target, currentKf.get());
-    result |= updateTime(target, currentKf.get());
+    result |= updateTime(currentKf.get());
     result |= updateRotation(target, currentKf.get());
     result |= updateScale(target, currentKf.get());
     result |= updateColor(target, currentKf.get());
@@ -445,7 +445,7 @@ int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
     return result.updateComplete_ ? TEXT_MET : UPDATE_NOT_COMPLETE;
 }
 
-int AnimationController::updateTime(SceneObject *target, KeyFrame *keyFrame) {
+int AnimationController::updateTime(KeyFrame *keyFrame){
     // Literally just check if we've reached the time quota
     auto result = UPDATE_NOT_COMPLETE;
     if (keyFrame->currentTime >= keyFrame->targetTime) {

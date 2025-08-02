@@ -19,7 +19,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (NOT WIN32)
-add_compile_options(-Wall -Werror)
+add_compile_options(-Wall -Werror -Wextra)
 endif()
 
 if (APPLE)

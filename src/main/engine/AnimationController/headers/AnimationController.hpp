@@ -137,7 +137,7 @@ class AnimationController {
     int updateScale(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
-    int updateTime(SceneObject *target, KeyFrame *keyFrame);
+    int updateTime(KeyFrame *keyFrame);
     /**
      * @brief Processes the color keyframe if applicable using deltaTime.
      * @param target - The SceneObject to apply the animation to.
