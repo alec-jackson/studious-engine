@@ -46,7 +46,7 @@ AnimationController animationController;
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
 
-int main([[maybe_unused]] int argc,[[maybe_unused]]  char **argv) {
+int main() {
     int errorNum;
     configData config;
     int flag = loadConfig(&config, "src/resources/config.txt");
