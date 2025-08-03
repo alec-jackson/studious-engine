@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <cstdint>
+#include <memory>
 
 #define GIF_HEADER_BLOCK_SIZE 6
 #define GIF_LOGICAL_SCREEN_DESCRIPTOR_SIZE 7
@@ -16,8 +17,6 @@
 
 using std::string;
 using std::vector;
-
-typedef unsigned char byte;
 
 enum GifVersion {
     GIFNONE,
@@ -35,31 +34,31 @@ struct Image {
     bool interlaceFlag;
     bool sortFlag;
     unsigned int lctSize;
-    byte *imageData;
+    std::shared_ptr<uint8_t[]> imageData;
 };
 
 class GifLoader {
  public:
     explicit inline GifLoader(string imagePath) : imagePath_ { imagePath } { loadGif(); }
     void loadGif();
-    GifVersion getVersionFromStr(const byte *versionStr);
-    uint16_t getCanvasWidthFromStr(const byte *lsd);
-    uint16_t getCanvasHeightFromStr(const byte *lsd);
-    byte getPackedFieldFromStr(const byte *lsd);
-    byte getBackgroundColorIndexFromStr(const byte *lsd);
-    byte getPixelAspectRatioFromStr(const byte *lsd);
-    void unpackFields(byte packedField);
+    GifVersion getVersionFromStr(const uint8_t *versionStr);
+    uint16_t getCanvasWidthFromStr(const uint8_t *lsd);
+    uint16_t getCanvasHeightFromStr(const uint8_t *lsd);
+    uint8_t getPackedFieldFromStr(const uint8_t *lsd);
+    uint8_t getBackgroundColorIndexFromStr(const uint8_t *lsd);
+    uint8_t getPixelAspectRatioFromStr(const uint8_t *lsd);
+    void unpackFields(uint8_t packedField);
     unsigned int processExtension(std::ifstream &inputFile);
     void processGraphicsControlExtension(std::ifstream &inputFile);
-    void unpackImageDescriptor(const byte *id, Image *im);
+    void unpackImageDescriptor(const uint8_t *id, Image *im);
     void parseImageData(std::ifstream &inputFile);
-    void lzwDecompression(byte lzwMin, std::vector<byte> data);
+    void lzwDecompression(uint8_t lzwMin, std::vector<uint8_t> data);
     void processColorOutputForImage(const std::vector<string> &outputData);
-    int initializeColorCodeTable(byte lzwMin);
-    void writeBufferToImage(byte *outBuffer, uint16_t fWidth, uint16_t fHeight, uint16_t iLeft,
+    unsigned int initializeColorCodeTable(uint8_t lzwMin);
+    void writeBufferToImage(uint8_t *outBuffer, uint16_t fWidth, uint16_t fHeight, uint16_t iLeft,
         uint16_t iTop, Image *im);
 
-    const Image &getImage(int imIndex) const;
+    const Image &getImage(unsigned int imIndex) const;
 
     inline GifVersion getVersion() { return version_; }
     inline uint16_t getCanvasWidth() { return canvasWidth_; }
@@ -68,12 +67,12 @@ class GifLoader {
     inline unsigned int getColorResolution() { return colorResolution_; }
     inline unsigned int getSortFlag() { return sortFlag_; }
     inline unsigned int getGlobalColorTableSize() { return globalColorTableSize_; }
-    inline byte getBackgroundColorIndex() { return backgroundColorIndex_; }
-    inline byte getPixelAspectRatio() { return pixelAspectRatio_; }
+    inline uint8_t getBackgroundColorIndex() { return backgroundColorIndex_; }
+    inline uint8_t getPixelAspectRatio() { return pixelAspectRatio_; }
 
-    inline byte getGceBlockSize() { return gceBlockSize_; }
+    inline uint8_t getGceBlockSize() { return gceBlockSize_; }
     inline uint16_t getGceDelayTime() { return gceDelayTime_; }
-    inline byte getGceTransparentColorIndex() { return gceTransparentColorIndex_; }
+    inline uint8_t getGceTransparentColorIndex() { return gceTransparentColorIndex_; }
     inline const vector<Image> &getImages() const { return images_; }
 
  private:
@@ -89,16 +88,16 @@ class GifLoader {
     unsigned int globalColorTableSize_;
 
     // GCE variables
-    byte gceBlockSize_;
+    uint8_t gceBlockSize_;
     uint16_t gceDelayTime_;
-    byte gceTransparentColorIndex_;
+    uint8_t gceTransparentColorIndex_;
 
-    byte backgroundColorIndex_;
-    byte pixelAspectRatio_;
+    uint8_t backgroundColorIndex_;
+    uint8_t pixelAspectRatio_;
 
     GifVersion version_;
 
-    byte *globalColorTable_ = nullptr;
+    std::shared_ptr<uint8_t> globalColorTable_;
     vector<Image> images_;
     vector<string> colorCodeTable_;
 };

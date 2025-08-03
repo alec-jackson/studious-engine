@@ -4,18 +4,19 @@
  * @brief Implementation for GameObject
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <string>
 #include <cstdio>
 #include <iostream>
+#include <memory>
 #include <GameObject.hpp>
 
 /**
  * @brief GameObject constructor
- * 
+ *
  * @param characterModel Underlying Polygon object for rendering this GameObject
  * @param position Starting position of the GameObject
  * @param rotation Starting rotation of the GameObject
@@ -25,8 +26,8 @@
  * @param gfxController Graphics controller for rendering the game scene
  */
 GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
-    string objectName, ObjectType type, GfxController *gfxController):
-    SceneObject(position, rotation, objectName, scale, characterModel->programId, type, gfxController),
+    uint programId, string objectName, ObjectType type, GfxController *gfxController):
+    SceneObject(position, rotation, objectName, scale, programId, type, gfxController),
     model { characterModel } {
     configureOpenGl();
     luminance = 1.0f;
@@ -40,7 +41,7 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
             hasTexture.push_back(1);  // Texture found for obj i
         }
     }
-    scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
+    scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
     translateMatrix_ = glm::translate(mat4(1.0f), position);
     rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
@@ -56,6 +57,7 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
     vpMatrix_ = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
+// What is this used for?
 GameObject::GameObject(GfxController *gfxController) :
     SceneObject(ObjectType::GAME_OBJECT, "EmptyModel", gfxController) {
     model = nullptr;
@@ -63,7 +65,7 @@ GameObject::GameObject(GfxController *gfxController) :
 
 /**
  * @brief Configures the created object with OpenGL. This step is required for object rendering.
- * 
+ *
  * @param polygon to configure OpenGL context for.
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
@@ -78,12 +80,12 @@ void GameObject::configureOpenGl() {
         gfxController_->generateBuffer(&model->shapeBufferId[i]);
         gfxController_->bindBuffer(model->shapeBufferId[i]);
         gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 9, &model->vertices[i][0]);
-        gfxController_->enableVertexAttArray(0, 3);
+        gfxController_->enableVertexAttArray(0, 3, sizeof(float), 0);
         // Generate normal buffer
         gfxController_->generateBuffer(&model->normalBufferId[i]);
         gfxController_->bindBuffer(model->normalBufferId[i]);
         gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 9, &model->normalCoords[i][0]);
-        gfxController_->enableVertexAttArray(2, 3);
+        gfxController_->enableVertexAttArray(2, 3, sizeof(float), 0);
         // Specific case where the current object does not get a texture
         int size = static_cast<int>(model->texturePath_.size()) < 0 ? 0 : model->texturePath_.size();
         if (model->texturePath_.empty() || model->texturePattern_[i] >= size ||
@@ -94,6 +96,7 @@ void GameObject::configureOpenGl() {
             continue;
         }
         SDL_Surface *texture = IMG_Load(model->texturePath_[model->texturePattern_[i]].c_str());
+        cout << "Loading texture: " << model->texturePath_[model->texturePattern_[i]] << "\n";
         if (texture == NULL) {
             cerr << "Failed to create SDL_Surface texture!\n";
             gfxController_->bindVao(0);
@@ -105,24 +108,26 @@ void GameObject::configureOpenGl() {
         auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
         // Send texture image to OpenGL
         gfxController_->generateTexture(&model->textureId[i]);
-        gfxController_->bindTexture(model->textureId[i]);
+        gfxController_->bindTexture(model->textureId[i], GfxTextureType::NORMAL);
         gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
-        gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE));
-        gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE));
-        gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR));
-        gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP));
-        gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10));
+        gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+        gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+        gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR),
+            GfxTextureType::NORMAL);
+        gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP),
+            GfxTextureType::NORMAL);
+        gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10), GfxTextureType::NORMAL);
         gfxController_->generateMipMap();
 
         // Send texture coords to OpenGL
         gfxController_->generateBuffer(&model->textureCoordsId[i]);
         gfxController_->bindBuffer(model->textureCoordsId[i]);
         gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 6, &model->textureCoords[i][0]);
-        gfxController_->enableVertexAttArray(1, 2);
+        gfxController_->enableVertexAttArray(1, 2, sizeof(float), 0);
 
         SDL_FreeSurface(texture);
         gfxController_->bindVao(0);
-        gfxController_->bindTexture(0);
+        gfxController_->bindTexture(0, GfxTextureType::NORMAL);
         // ADD VAO TO LIST
         vaos_.push_back(vao);
     }
@@ -133,34 +138,37 @@ void GameObject::configureOpenGl() {
  * @brief GameObject destructor
  */
 GameObject::~GameObject() {
-    /// @todo: Run cleanup methods here
-    cout << "Destroying gameobject" << objectName << endl;
-    // Delete collider
-    if (collider_ != nullptr) delete collider_;
-    deleteTextures();
+    printf("GameObject::~GameObject: destroying %s\n", objectName.c_str());
 }
 
 /**
  * @brief Updates and returns the GameObject's collider
- * 
+ *
  * @return ColliderObject* for the GameObject
  */
 ColliderObject *GameObject::getCollider(void) {
     // Update collider before returning it
-    collider_->updateCollider();
-    return collider_;
+    collider_.get()->updateCollider();
+    return collider_.get();
 }
 
 /**
  * @brief Creates a collider for this game object
- * 
+ *
  * @param programId Program used to render the collider (collider shaders)
  */
-void GameObject::createCollider(int programId) {
+void GameObject::createCollider() {
     printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
     auto colliderName = objectName + "-Collider";
-    collider_ = new ColliderObject(this->getModel(), programId, translateMatrix_, scaleMatrix_, vpMatrix_,
-        ObjectType::GAME_OBJECT, colliderName, gfxController_);
+    auto colliderProg = gfxController_->getProgramId(COLLIDEROBJECT_PROG_NAME);
+    if (!colliderProg.isOk()) {
+        fprintf(stderr,
+            "GameObject::createCollider: Failed to create collider! '%s' shader not defined!\n",
+            COLLIDEROBJECT_PROG_NAME);
+        return;
+    }
+    collider_ = std::make_shared<ColliderObject>(this->getModel(), colliderProg.get(), &translateMatrix_, &scaleMatrix_,
+        &vpMatrix_, ObjectType::SPRITE_OBJECT, colliderName, gfxController_);
 }
 
 void GameObject::update() {
@@ -179,18 +187,12 @@ void GameObject::render() {
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::FILL);
         // Update our model transformation matrices
-        translateMatrix_ = glm::translate(mat4(1.0f), position);
-        rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
-                vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
-                vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
-                vec3(0, 0, 1));
-
-        scaleMatrix_ = glm::scale(vec3(scale, scale, scale));
+        updateModelMatrices();
         auto modelMatrix = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
         // Send our shared variables over to our program (shader)
         gfxController_->sendFloat(luminanceId, luminance);
         gfxController_->sendFloat(rollOffId, rollOff);
-        gfxController_->sendFloatVector(directionalLightId, 1, glm::value_ptr(directionalLight));
+        gfxController_->sendFloatVector(directionalLightId, 1, VectorType::GFX_3D, glm::value_ptr(directionalLight));
         gfxController_->sendFloatMatrix(vpId, 1, glm::value_ptr(vpMatrix_));
         gfxController_->sendFloatMatrix(modelId, 1, glm::value_ptr(modelMatrix));
         gfxController_->sendInteger(hasTextureId, hasTexture[i]);
@@ -199,22 +201,10 @@ void GameObject::render() {
             // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
             gfxController_->sendInteger(model->textureUniformId, 0);
             // Bind texture to sampler for polygon rendering below
-            gfxController_->bindTexture(model->textureId[i]);
+            gfxController_->bindTexture(model->textureId[i], GfxTextureType::NORMAL);
         }
         gfxController_->drawTriangles(model->pointCount[i] * 3);
         gfxController_->bindVao(0);
     }
-    if (collider_ != nullptr) collider_->update();
+    if (collider_.use_count() > 0) collider_.get()->update();
     }
-
-void GameObject::deleteTextures() {
-    if (model == nullptr) return;
-    cout << "GameObject::deleteTextures" << endl;
-    for (int i = 0; i < model->numberOfObjects; i++) {
-        if (hasTexture[i]) {
-            gfxController_->deleteTextures(&textureId);
-            hasTexture[i] = false;
-        }
-    }
-}
-

@@ -32,20 +32,22 @@ typedef struct Character {
 class TextObject : public SceneObject {
  public:
     // Constructors
-    /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
-    explicit TextObject(string message, vec3 position, float scale, string fontPath, unsigned int programId,
-        string objectName, ObjectType type, GfxController *gfxController);
-    ~TextObject() override;
+    explicit TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
+        uint programId, string objectName, ObjectType type, GfxController *gfxController);
+    ~TextObject();
 
     // Setters
     void setMessage(string message);
     inline void setCutoff(vec3 cutoff) { cutoff_ = cutoff; }
-    inline void setColor(vec3 color) { textColor_ = color; }
+    inline void setColor(vec4 color) { textColor_ = color; }
+    inline void setColor(vec3 color) { textColor_ = vec4(color, 1.0f); }  // Compatibility
+    inline void setCharPadding(float padding) { charPadding_ = padding; }
 
     // Getters
     inline string getMessage() { return this->message_; }
     inline vec3 getCutoff() { return cutoff_; }
-    inline vec3 getColor() { return textColor_; }
+    inline vec4 getColor() { return textColor_; }
+    inline float getCharPadding() { return charPadding_; }
 
     // Render method
     void render() override;
@@ -56,6 +58,7 @@ class TextObject : public SceneObject {
     unsigned char *rgbConversion(size_t size, unsigned char *data);
 
  private:
+    float charPadding_;
     string message_;
     string fontPath_;
     vector<unsigned int> vaos_;
@@ -66,7 +69,9 @@ class TextObject : public SceneObject {
     unsigned int cutoffId_;
     unsigned int projectionId_;
 
+    int charPoint_;
+
     mat4 modelMat_;
     vec3 cutoff_;
-    vec3 textColor_;
+    vec4 textColor_;
 };

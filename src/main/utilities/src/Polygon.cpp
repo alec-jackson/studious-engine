@@ -26,12 +26,10 @@ static int polyCount;
  * @param textures Texture coordinates for the polygon
  * @param normals Normal vector for the polygon tri faces
  */
-Polygon::Polygon(unsigned int triCount, unsigned int programId, vector<float> vertices, vector<float> textures,
-    vector<float> normals) : Polygon(triCount, programId, vertices) {
-    cout << "Polygon::Polygon: More complex constructor: polyCount[" << polyCount << "] -> [" << polyCount + 1 << "]"
+Polygon::Polygon(unsigned int triCount, vector<float> vertices, vector<float> textures,
+    vector<float> normals) : Polygon(triCount, vertices) {
+    cout << "Polygon::Polygon: More complex constructor: polyCount[" << polyCount << "]"
         << endl;
-
-    ++polyCount;
 
     /* Add textures*/
     this->textureCoords.push_back(textures);
@@ -45,8 +43,8 @@ Polygon::Polygon(unsigned int triCount, unsigned int programId, vector<float> ve
  * @param programId ProgramId used to identify the shader set associated with this polygon
  * @param vertices Vertex points for triangles making up the polygon
  */
-Polygon::Polygon(unsigned int pointCount, unsigned int programId, vector<float> vertices) :
-    pointCount { pointCount }, numberOfObjects { 1 }, textureUniformId { 0 }, programId { programId } {
+Polygon::Polygon(unsigned int pointCount, vector<float> vertices) :
+    pointCount { pointCount }, numberOfObjects { 1 }, textureUniformId { 0 } {
     cout << "Polygon::Polygon: Basic constructor: polyCount[" << polyCount << "] -> [" << polyCount + 1 << "]" << endl;
     ++polyCount;
 
@@ -75,7 +73,8 @@ Polygon::~Polygon() {
     --polyCount;
 }
 
-void Polygon::merge(Polygon &polygon) {
+void Polygon::merge(const Polygon &polygon) {
+    cout << "Polygon::merge: Merging polygons!" << endl;
     // Copy over VBO objects from other polygon
     this->vertices.insert(this->vertices.end(), polygon.vertices.begin(), polygon.vertices.end());
     this->textureCoords.insert(this->textureCoords.end(), polygon.textureCoords.begin(), polygon.textureCoords.end());
@@ -92,4 +91,22 @@ void Polygon::merge(Polygon &polygon) {
     this->pointCount.insert(this->pointCount.end(), polygon.pointCount.begin(), polygon.pointCount.end());
 
     this->numberOfObjects++;
+}
+
+Polygon::Polygon(Polygon&& other) {
+    cout << "Polygon::Polygon: Move constructor called: polyCount[" <<
+        polyCount << "] -> [" << polyCount + 1 << "]" << endl;
+    polyCount++;
+    this->shapeBufferId = std::move(other.shapeBufferId);
+    this->textureCoordsId = std::move(other.textureCoordsId);
+    this->textureId = std::move(other.textureId);
+    this->normalBufferId = std::move(other.normalBufferId);
+    this->vertices = std::move(other.vertices);
+    this->textureCoords = std::move(other.textureCoords);
+    this->normalCoords = std::move(other.normalCoords);
+    this->pointCount = std::move(other.pointCount);
+    this->numberOfObjects = other.numberOfObjects;
+    this->textureUniformId = other.textureUniformId;
+    this->texturePath_ = std::move(other.texturePath_);
+    this->texturePattern_ = std::move(other.texturePattern_);
 }

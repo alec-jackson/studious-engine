@@ -6,11 +6,17 @@ embeddedBuild=false
 debugBuild=false
 runTests=false
 singleJob=false
+buildAll=false
+installLib=false
+target=studious-3dExampleScene
 while [ $# -ne 0 ]; do
     arg="$1"
     case "$arg" in
         -clean)
             cleanBuild=true
+            ;;
+        -a)
+            buildAll=true
             ;;
         -d)
             debugBuild=true
@@ -22,10 +28,20 @@ while [ $# -ne 0 ]; do
             embeddedBuild=true
             ;;
         -r)
+            buildAll=true
             runBuild=true
             ;;
         -s)
             singleJob=true
+            ;;
+        -i)
+            # Installs the library on your system automatically
+            installLib=true
+            ;;
+        -target)
+            # This just modifies the run target, does not affect compilation
+            shift
+            target="$1"
             ;;
         *)
             echo "Unsupported arg $arg"
@@ -33,6 +49,8 @@ while [ $# -ne 0 ]; do
     esac
     shift
 done
+
+echo "Target: $target"
 
 if { [ "$cleanBuild" == true ]; } && [ -d build ]; then
     echo "Performing clean build"
@@ -55,30 +73,45 @@ if [ "$embeddedBuild" == true ]; then
     echo "Building EMBEDDED TARGET"
     ARGS="$ARGS -DGFX_EMBEDDED=1"
 fi
+if [ "$buildAll" == true ]; then
+    echo "Building with Examples"
+    ARGS="$ARGS -DEXAMPLES=1"
+fi
+if [ "$runTests" == true ]; then
+    echo "Compiling tests"
+    ARGS="$ARGS -DRUNTEST=1"
+fi
+
 cmake ${ARGS} ..
 
 # Build Project
 TYPE=`uname`
+JOBS=1
 if [ "$singleJob" != true ]; then
     if [ ${TYPE} = "Darwin" ]; then
-        make -j$(sysctl -n hw.physicalcpu)
+        JOBS=$(sysctl -n hw.physicalcpu)
     else
-        make -j$(nproc)
+        JOBS=$(nproc)
     fi
-else
-    echo "Single threaded build mode enabled"
-    make
 fi
+echo "Building with ${JOBS} threads."
+cmake --build . -j ${JOBS}
+
 if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
+    tput init
 else
+    if [ "$installLib" == true ]; then
+        echo "Installing studious library files"
+        cmake --install .
+    fi
     if [ "$runTests" == true ]; then
-        ctest --output-on-failure
+        ctest --output-on-failure -j 4
     else
         if [ "$runBuild" == true ]; then
             # Run program
             cd ..
-            ./engineExample
+            ./$target
         fi
     fi
 fi

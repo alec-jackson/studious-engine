@@ -10,6 +10,7 @@
  */
 #include <gtest/gtest.h>
 #include <iostream>
+#include <TestObject.hpp>
 #include <PhysicsControllerTests.hpp>
 
 // Test Fixtures
@@ -33,16 +34,15 @@ class GivenPhysicsControllerThreaded: public ::testing::Test {
 TEST_F(GivenPhysicsControllerThreaded, WhenShutdownSent_ThenSchedulerStops) {
     printf("Entered test\n");
     // Need a dummy polygon
-    GameObject items[2] = {
-        GameObject(&dummyPoly_, vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), 0.0f,
-            "TestObject", ObjectType::GAME_OBJECT, &gfxController_),
-        GameObject(&dummyPoly_, vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), 0.0f,
-            "TestObject", ObjectType::GAME_OBJECT, &gfxController_)
+    TestObject items[2] = {
+        TestObject("TestObject0"),
+        TestObject("TestObject1")
     };
     printf("Creating gameobjects\n");
     auto setShutdown = [this]() {
         printf("Entered shutdown thread\n");
         usleep(5000);  // Sleep for 5ms
+        printf("Running shutdown now...\n");
         physicsController_->shutdown();
     };
 
@@ -50,7 +50,7 @@ TEST_F(GivenPhysicsControllerThreaded, WhenShutdownSent_ThenSchedulerStops) {
     for (int i = 0; i < 2; i++) {
         printf("Adding gameobject %d\n", i);
         PhysicsParams params = { {0.0f, 0.0f, 0.0f}, true, true, 1.0f };
-        physicsController_->addGameObject(&items[i], params);
+        physicsController_->addSceneObject(&items[i], params);
     }
     // Send the sleep signal in 2 seconds and start the scheduler
     auto shutdownThread = std::thread(setShutdown);

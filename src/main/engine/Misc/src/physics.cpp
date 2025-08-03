@@ -11,41 +11,53 @@
 
 #include <physics.hpp>
 #include <string>
+#include <algorithm>
+#include <condition_variable>
 
 // Sleep the thread on the work safequeue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     while (1) {
         printf("physDoWork: Waiting for work\n");
-        // Signal when the thread first starts its work - used for checking idle status
-        completedWorkSignal_.notify_one();
-        // The notify needs to happen from within the pop function - The idle tracker could not be updated
-        auto po = workQueue_.pop();
-        if (po->workType == PhysicsWorkType::DIE) {
+        // Fetch work from the work queue if present
+        std::unique_lock <std::mutex> scopeLock(workQueueLock_);
+        workAvailableSignal_.wait(scopeLock, [this] () { return !workQueue_.empty(); });
+        assert(!workQueue_.empty());
+        auto physObj = workQueue_.front();
+        workQueue_.pop();
+        freeWorkers_ -= 1;
+        assert(freeWorkers_ >= 0);
+        scopeLock.unlock();  // No longer need lock after pulling work from queue
+        if (physObj->workType == PhysicsWorkType::DIE) {
             // Close the thread
             printf("PhysicsController::doWork: Closing on DIE message\n");
-            return PhysicsResult::PHYS_OK;
+            break;
         }
-        string name = po->gameObject->getObjectName();
-        printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), po->workType);
-        switch (po->workType) {
+        string name = physObj->target->getObjectName();
+        printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), physObj->workType);
+        switch (physObj->workType) {
             case PhysicsWorkType::POSITION:
                 // Perform work here, determine if another iteration is required
                 // Missing - ? Update Acceleration...
                 // Update velocity from acceleration - might have a cleaner way to do this
-                po->velocity[0] += po->acceleration[0];
-                po->velocity[1] += po->acceleration[1];
-                po->velocity[2] += po->acceleration[2];
+                physObj->velocity[0] += physObj->acceleration[0];
+                physObj->velocity[1] += physObj->acceleration[1];
+                physObj->velocity[2] += physObj->acceleration[2];
                 // Upate position from velocity
-                po->position[0] += po->velocity[0];
-                po->position[1] += po->velocity[1];
-                po->position[2] += po->velocity[2];
+                physObj->position[0] += physObj->velocity[0];
+                physObj->position[1] += physObj->velocity[1];
+                physObj->position[2] += physObj->velocity[2];
                 break;
             default:
                 printf("HORRIBLE BADNESS\n");
                 break;
         }
-        printf("physDoWork: Finished work [%s], work type [%d]\n", name.c_str(), po->workType);
+        printf("physDoWork: Finished work [%s], work type [%d]\n", name.c_str(), physObj->workType);
+        freeWorkers_ += 1;
+        workCompletedSignal_.notify_one();
     }
+    // Might not be necessary, but doing this to be safe for now
+    freeWorkers_ += 1;
+    assert(freeWorkers_ <= threadNum_);
     return PhysicsResult::PHYS_OK;
 }
 
@@ -93,14 +105,14 @@ TLDR; should somewhat resemble reality
  * @param gameObject to add to the list
  * @return PhysicsResult returns PHYS_OK 
  */
-PhysicsResult PhysicsController::addGameObject(GameObject *gameObject, PhysicsParams params) {
+PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, PhysicsParams params) {
     // Retrieve the exclusive lock for the game object list
     std::unique_lock<std::mutex> scopeLock(objectLock_);
 
     // Create a new physics profile for the object
     auto physicsObject = new PhysicsObject();
     if (physicsObject == nullptr) return PhysicsResult::PHYS_FAILURE;
-    physicsObject->gameObject = gameObject;
+    physicsObject->target = sceneObject;
     physicsObject->position = params.position;
     physicsObject->velocity = {0.0f, 0.0f, 0.0f};
     physicsObject->acceleration = {0.0f, 0.0f, 0.0f};
@@ -114,15 +126,15 @@ PhysicsResult PhysicsController::addGameObject(GameObject *gameObject, PhysicsPa
     return PhysicsResult::PHYS_OK;
 }
 
-PhysicsResult PhysicsController::removeGameObject(GameObject *gameObject) {
+PhysicsResult PhysicsController::removeSceneObject(SceneObject *sceneObject) {
     std::unique_lock<std::mutex> scopeLock(objectLock_);
-    auto compare = [&gameObject](PhysicsObject *po) {
-        return gameObject->getObjectName().compare(po->gameObject->getObjectName()) == 0;
+    auto compare = [&sceneObject](PhysicsObject *po) {
+        return sceneObject->getObjectName().compare(po->target->getObjectName()) == 0;
     };
     auto it = std::find_if(physicsObjects_.begin(), physicsObjects_.end(), compare);
     if (it != physicsObjects_.end()) {
         auto physObject = *it;
-        printf("PhysicsController::removeGameObject: Deleting object %p\n", gameObject);
+        printf("PhysicsController::removeGameObject: Deleting object %s\n", sceneObject->getObjectName().c_str());
         physicsObjects_.erase(it);
         delete physObject;
     }
@@ -153,6 +165,8 @@ PhysicsResult PhysicsController::unsubscribe(string name) {
 PhysicsController::PhysicsController(int threadNum) : threadNum_{threadNum} {
     printf("PhysicsController::PhysicsController: Entered constructor\n");
     if (threadNum_ > PHYS_MAX_THREADS) return;
+    // Set the initial free workers to threadNum
+    freeWorkers_ = threadNum;
     // Create thread pool for physics calculations
     for (int i = 0; i < threadNum_; ++i) {
         threads_.emplace_back(&PhysicsController::doWork, this);
@@ -161,15 +175,21 @@ PhysicsController::PhysicsController(int threadNum) : threadNum_{threadNum} {
 }
 
 PhysicsController::~PhysicsController() {
+    std::unique_lock<std::mutex> scopeLock(workQueueLock_);
+    printf("PhysicsController::~PhysicsController\n");
     shutdown();  // Mark the scheduler to shutdown
     PhysicsObject death;
     death.workType = PhysicsWorkType::DIE;
     // When we end, send kill signal to threads and join
-    for (auto i = threads_.begin(); i != threads_.end(); i++) {
+    for (int i = 0; i < threadNum_; ++i) {
+        printf("Sending kill to worker queue...\n");
         workQueue_.push(&death);
     }
-    for (auto i = threads_.begin(); i != threads_.end(); i++) {
-        i->join();
+    workAvailableSignal_.notify_all();
+    scopeLock.unlock();
+    for (auto &thread : threads_) {
+        printf("Joining worker thread...\n");
+        thread.join();
     }
 }
 
@@ -203,18 +223,27 @@ PhysicsResult PhysicsController::physicsScheduler() {
     printf("PhysicsController::physicsScheduler: Start\n");
     auto pipelineStage = PhysicsWorkType::POSITION;  // Start the pipeline at the POSITION step
     while (1) {
+        printf("PhysicsController::physicsScheduler: About to obtain objectLock_\n");
         std::unique_lock<std::mutex> scopeLock(objectLock_);
+        printf("PhysicsController::physicsScheduler: Obtained object lock\n");
         // Check if the shutdown signal was received
         if (shutdown_) break;
+        // Obtain the workQueue lock
+        workQueueLock_.lock();
+        printf("PhysicsController::physicsScheduler: Populating work queue\n");
         // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
         for (auto i = physicsObjects_.begin(); i != physicsObjects_.end(); i++) {
             (*i)->workType = pipelineStage;
             workQueue_.push(*i);
         }
-        // Don't proceed until all threads are done in this stage
-        completedWorkSignal_.wait(scopeLock, [this] { return workQueue_.size() == threadNum_; });
+        workQueueLock_.unlock();
+        printf("PhysicsController::physicsScheduler: Populated work queue\n");
+        workAvailableSignal_.notify_all();
         printf("PhysicsController::physicsScheduler: Completed initial\n");
-        break;
+        // Wait for all of the child threads to finish their work before scheduling more work
+        workCompletedSignal_.wait(scopeLock, [this]() { return freeWorkers_ == threadNum_ && workQueue_.empty(); });
+        printf("DANGER! PREMATURELY KILLING SCHEDULER!!!!!\n");
+        break;   ///@todo this is a time bomb. I'm assuming I put here to only run it through one iteration only.
     }
     printf("PhysicsController::physicsScheduler: Shutdown signal received\n");
     return PhysicsResult::PHYS_OK;

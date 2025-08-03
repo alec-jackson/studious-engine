@@ -6,72 +6,42 @@
  *       engine is compiled and ran.
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
+#include "GameInstance.hpp"
+#include "SceneObject.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
+#include <map>
 #include <game.hpp>
-#ifndef GFX_EMBEDDED
 #include <OpenGlGfxController.hpp>
-#else
-#include <OpenGlEsGfxController.hpp>
-#endif
 #include <AnimationController.hpp>
-/*
- IMPORTANT INFORMATION FOR LOADING SHADERS/SFX:
- Currently, the below global vectors are used for loading in sound effect files,
- texture files and shaders. Adding a new sound to the soundList allows the sound
- to be played by calling the GameInstance::playSound(int soundIndex, int loop)
- method (see documentation for use). When adding a new shader to be used in the
- program, it is IMPORTANT that you pair the vertex shader with the fragment
- shader you want to use together at the same index in the fragShaders and
- vertShaders vectors. For instance, if we had a shader called swamp.vert and
- swamp.frag, we would want both shaders to occur at the same spot in the vector
- (if we already have 2 shader files present, we would add swamp.vert as the
- third element in vertShaders, and swamp.frag as the third in fragShaders). After
- doing this, you should be able to set the programId using the
- GameInstance::getProgramID(int index) method to grab the programId for your
- gameObject. If the shader is in index 2, we would call getProgramID(2) to get
- the appropriate programId. For textures, we specify a path to an image that
- will be opened for a given texture, and specify the textures to use as a
- texture pattern (where each number in the vector corresponds to the index of
- the texture to use).
-*/
+
 // Global Variables, should eventually be moved to a config file
-vector<string> soundList = {
-    "src/resources/sfx/music/endlessNight.wav"
+map<string, string> soundList = {
+    { "bg_music", "src/resources/sfx/music/endlessNight.wav" }
 };  // A list of gameSounds to load
 
 // Lists of embedded/core shaders
 #ifndef GFX_EMBEDDED
-vector<string> fragShaders = {
-    "src/main/shaders/core/gameObject.frag",
-    "src/main/shaders/core/colliderObject.frag",
-    "src/main/shaders/core/textObject.frag",
-    "src/main/shaders/core/spriteObject.frag",
-    "src/main/shaders/core/uiObject.frag"
-};  // Contains collider renderer and basic object renderer.
-vector<string> vertShaders = {
-    "src/main/shaders/core/gameObject.vert",
-    "src/main/shaders/core/colliderObject.vert",
-    "src/main/shaders/core/textObject.vert",
-    "src/main/shaders/core/spriteObject.vert",
-    "src/main/shaders/core/uiObject.vert"
-};  // Contains collider renderer and basic object renderer.
+vector<ProgramData> programs = {
+    { "gameObject", "src/main/shaders/core/gameObject.vert", "src/main/shaders/core/gameObject.frag" },
+    { "colliderObject", "src/main/shaders/core/colliderObject.vert", "src/main/shaders/core/colliderObject.frag" },
+    { "textObject", "src/main/shaders/core/textObject.vert", "src/main/shaders/core/textObject.frag" },
+    { "spriteObject", "src/main/shaders/core/spriteObject.vert", "src/main/shaders/core/spriteObject.frag" },
+    { "uiObject", "src/main/shaders/core/uiObject.vert", "src/main/shaders/core/uiObject.frag" }
+};
 #else
-vector<string> fragShaders = {
-    "src/main/shaders/es/gameObject.frag",
-    "src/main/shaders/es/colliderObject.frag",
-    "src/main/shaders/es/textObject.frag"
-};  // Contains collider renderer and basic object renderer.
-vector<string> vertShaders = {
-    "src/main/shaders/es/gameObject.vert",
-    "src/main/shaders/es/colliderObject.vert",
-    "src/main/shaders/es/textObject.vert"
-};  // Contains collider renderer and basic object renderer.
+vector<ProgramData> programs = {
+    { "gameObject", "src/main/shaders/es/gameObject.vert", "src/main/shaders/es/gameObject.frag" },
+    { "colliderObject", "src/main/shaders/es/colliderObject.vert", "src/main/shaders/es/colliderObject.frag" },
+    { "textObject", "src/main/shaders/es/textObject.vert", "src/main/shaders/es/textObject.frag" },
+    { "spriteObject", "src/main/shaders/es/spriteObject.vert", "src/main/shaders/es/spriteObject.frag" },
+    { "uiObject", "src/main/shaders/es/uiObject.vert", "src/main/shaders/es/uiObject.frag" }
+};
 #endif
 
 vector<string> texturePathStage = {
@@ -88,14 +58,8 @@ TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
-#ifdef GFX_EMBEDDED
-OpenGlEsGfxController gfxController = OpenGlEsGfxController();
-#else
 OpenGlGfxController gfxController = OpenGlGfxController();
-#endif
 AnimationController animationController;
-
-double deltaTime = 0.0f;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -112,8 +76,12 @@ int main(int argc, char **argv) {
         width = 1280;
         height = 720;
     }
-    GameInstance currentGame(soundList, vertShaders, fragShaders, &gfxController, width, height);
-    currentGame.startGame(config);
+    GameInstance currentGame(&gfxController, &animationController, width, height);
+    currentGame.configureVsync(config.enableVsync);
+    // Load shader programs
+    for (auto program : programs) {
+        gfxController.loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
+    }
     errorNum = runtime(&currentGame);
     return errorNum;
 }
@@ -135,6 +103,13 @@ int runtime(GameInstance *currentGame) {
     bool isDone = false;
     cout << "Creating camera.\n";
 
+    // Initialize sfx
+    for (auto sfx : soundList) {
+        currentGame->loadSound(sfx.first, sfx.second);
+    }
+    // Start the background music
+    currentGame->playSound("bg_music", 1, 60);
+
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
     vector<int> texturePattern = {0, 1, 2, 3};
@@ -144,8 +119,7 @@ int runtime(GameInstance *currentGame) {
 
     auto mapPoly = ModelImport("src/resources/models/map3.obj",
         texturePathStage,
-        texturePatternStage,
-        gfxController.getProgramId(0).get())
+        texturePatternStage)
         .createPolygonFromFile();
 
     auto mapObject = currentGame->createGameObject(&mapPoly,
@@ -156,21 +130,38 @@ int runtime(GameInstance *currentGame) {
     auto playerPoly = ModelImport(
         "src/resources/models/Dracula.obj",
         texturePath,
-        texturePattern,
-        gfxController.getProgramId(0).get())
+        texturePattern)
+        .createPolygonFromFile();
+
+    auto companionPoly = ModelImport(
+        "src/resources/models/human.obj",
+        texturePath,
+        texturePattern)
         .createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
     playerRef = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
-    playerRef->createCollider(gfxController.getProgramId(1).get());
+    auto companion = currentGame->createGameObject(&companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion");
+    auto companion2 = currentGame->createGameObject(&companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion2");
+    auto companion3 = currentGame->createGameObject(&companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion3");
+    auto companion4 = currentGame->createGameObject(&companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion4");
+    playerRef->addChild(companion);
+    playerRef->addChild(companion2);
+    playerRef->addChild(companion3);
+    playerRef->addChild(companion4);
+    companion->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    companion2->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    companion3->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    companion4->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    playerRef->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    playerRef->createCollider();
 
     cout << "Creating wolf\n";
 
     auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
         texturePath,
-        texturePattern,
-        gfxController.getProgramId(0).get())
+        texturePattern)
         .createPolygonFromFile();
 
     auto wolfObject = currentGame->createGameObject(&wolfPoly,
@@ -191,7 +182,7 @@ int runtime(GameInstance *currentGame) {
     animationController.addKeyFrame(wolfObject, kf);
     animationController.addKeyFrame(wolfObject, kf1);
 
-    wolfObject->createCollider(gfxController.getProgramId(1).get());
+    wolfObject->createCollider();
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
@@ -200,7 +191,8 @@ int runtime(GameInstance *currentGame) {
         vec3(25.0f, 25.0f, 0.0f),               // Position
         1.0f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
-        gfxController.getProgramId(2).get(),    // ProgramId
+        5.0f,                                   // Char spacing
+        48,
         "studious-text");                       // ObjectName
 
     auto contactText = currentGame->createText(
@@ -208,7 +200,8 @@ int runtime(GameInstance *currentGame) {
         vec3(25.0f, 300.0f, 0.0f),              // Position
         0.7f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
-        gfxController.getProgramId(2).get(),    // ProgramId
+        0.0f,                                   // Char spacing
+        48,
         "contact-text");                        // ObjectName
 
     pressUText = currentGame->createText(
@@ -216,7 +209,8 @@ int runtime(GameInstance *currentGame) {
         vec3(800.0f, 670.0f, 0.0f),
         0.7f,
         "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(),
+        0.0f,
+        48,
         "contact-text");
 
     collDebugText = contactText;
@@ -226,33 +220,32 @@ int runtime(GameInstance *currentGame) {
         vec3(25.0f, 670.0f, 0.0f),
         0.7f,
         "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(),
+        0.0f,
+        48,
         "fps-text");
 
     auto testSprite = currentGame->createSprite(
         "src/resources/images/JTIconNoBackground.png",
         vec3(1250.0f, 50.0f, 0.0f),
         0.1f,
-        gfxController.getProgramId(3).get(),
         ObjectAnchor::CENTER,
         "test-sprite");
 
     auto testUi = currentGame->createUi(
         "src/resources/images/Message Bubble UI.png",   // image path
-        vec3(150.0f, 100.0f, 0.0f),                     // Position
+        vec3(80.0f, 160.0f, 0.0f),                     // Position
         0.5f,                                           // Scale
-        100.0f,                                         // Width
+        115.0f,                                         // Width
         0.0f,                                           // Height
-        gfxController.getProgramId(4).get(),            // Shader pair
         ObjectAnchor::CENTER,                           // Anchor
         "uiBubble");                                    // UI Bubble
-
     auto testText = currentGame->createText(
         "Textbox Example",
-        vec3(45.0f, 155.0f, 0.0f),
+        vec3(40.0f, 155.0f, 0.0f),
         0.6f,
         "src/resources/fonts/AovelSans.ttf",
-        gfxController.getProgramId(2).get(),
+        1.0f,
+        48,
         "test-text");
 
     fps_counter = fpsText;
@@ -279,7 +272,11 @@ int runtime(GameInstance *currentGame) {
         pressUText,
         testSprite,
         testUi,
-        testText
+        testText,
+        companion,
+        companion2,
+        companion3,
+        companion4
     };
 
     // Add all objects to active camera
@@ -301,8 +298,6 @@ int runtime(GameInstance *currentGame) {
     mainLoop(&currentGameInfo);
     isDone = true;
     rotThread.join();
-    cout << "Running cleanup\n";
-    currentGame->cleanup();
     return 0;
 }
 
@@ -316,17 +311,15 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int running = 1, collision = 0;
+    int collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
-    while (running) {
-        /// @todo Move these calls to a separate thread...
+    while (!currentGame->isShutDown()) {
         begin = SDL_GetPerformanceCounter();
-        running = currentGame->isWindowOpen();
-        error = currentGame->updateObjects();
-        error |= currentGame->updateWindow();
+        if (currentGame->pollInput(GameInput::QUIT)) currentGame->shutdown();
+        error = currentGame->update();
         if (error) {
             return error;
         }
@@ -338,10 +331,8 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
-        animationController.update();
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
-        currentGame->setDeltaTime(deltaTime);
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;

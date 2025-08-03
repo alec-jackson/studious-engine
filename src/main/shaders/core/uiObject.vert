@@ -16,32 +16,38 @@ int getCorner(int vertexIdx) {
     // Triangle layout is arbitrary, so these values are essentially just mapped
     /* Triangle topology
 
-    Triangle 1 has corners 0, 1, 2
-    0
-    |\
-    | \
-    |  \
+    Triangle 1 has corners 0, 1, 3
+    0---3
+    |  /
+    | /
+    |/
+    1
+
+    Triangle 2 has corners 1, 2, 3
+        3
+       /|
+      / |
+     /  |
     1---2
 
-    Triangle 2 has corners 0, 2, 3
-    0---3
-     \  |
-      \ |
-       \|
-        2
-
+    These map to the indexes:
+    0---2     3
+    |  /     /|
+    | /     / |
+    |/     /  |
+    1     4---5
     */
     switch (vertexIdx) {
         case 0:
-        case 3:
             return 0;
         case 1:
+        case 4:
             return 1;
         case 2:
-        case 4:
-            return 2;
-        case 5:
+        case 3:
             return 3;
+        case 5:
+            return 2;
         default:
             return -1;
     }
@@ -95,16 +101,16 @@ int stretchTriangle(int index, float horizontalScale, float verticalScale) {
         case 3:
         case 4:
         case 5:
-            if (corner == 1 || corner == 2) y -= verticalScale;
-            break;
-        case 6:
-        case 7:
-        case 8:
-            y -= verticalScale;
+            if (corner == 3 || corner == 0) y += verticalScale;
             break;
         case 0:
         case 1:
         case 2:
+            y += verticalScale;
+            break;
+        case 6:
+        case 7:
+        case 8:
         default:
             // Don't do anything here either
             break;

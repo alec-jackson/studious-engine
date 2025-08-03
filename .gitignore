@@ -9,6 +9,8 @@ engineExample
 *.DS_Store
 engineExample.xcodeproj/*
 *.log
+studious-*ExampleScene
+.cache
 
 # Cmake Temp Files #
 
@@ -24,6 +26,14 @@ latex/
 
 # Guilty As Charged #
 .vscode/
+
+# Windows #
+.vs/
+out/
+*.dll
+*.exe
+*.ilk
+*.pdb
 
 # Tests #
 gtest_*

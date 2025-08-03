@@ -1,18 +1,17 @@
-#version 100
-
+#version 310 es
 precision mediump float;
+in vec2 TexCoords;
+out vec4 color;
 
-attribute vec4 vertex; // <vec2 pos, vec2 tex>
-varying vec2 TexCoords;
-
-uniform mat4 projection;
-uniform mat4 model;
-uniform vec3 resolution;
+uniform sampler2D text;
+uniform vec4 textColor;
+uniform vec3 cutoff;
 
 void main() {
-    // Scale vertex points with resolution
-    float vx = resolution.x * vertex.x;
-    float vy = resolution.y * vertex.y;
-    gl_Position = projection * model * vec4(vx, vy, 0.0, 1.0);
-    TexCoords = vertex.zw;
+    // Check if we're above the y-cutoff point
+    if (gl_FragCoord.y > cutoff.y) {
+        discard;
+    }
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
+    color = textColor * sampled;
 }
