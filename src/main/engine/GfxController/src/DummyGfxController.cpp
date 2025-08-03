@@ -65,7 +65,10 @@ GfxResult<uint> DummyGfxController::getProgramId(string programName) {
 }
 
 GfxResult<uint> DummyGfxController::loadShaders(string programName, string vertexPath, string fragmentPath) {
-    cout << "GfxController::loadShaders: " << programName << "Vertex Path: " << vertexPath << "Fragment Path: " << fragmentPath << endl;
+    cout << "GfxController::loadShaders: "
+            << programName << "Vertex Path: "
+            << vertexPath << "Fragment Path: "
+            << fragmentPath << endl;
     return GFX_OK(uint);
 }
 
@@ -145,7 +148,7 @@ GfxResult<uint> DummyGfxController::deleteTextures(uint *tId) {
 GfxResult<uint> DummyGfxController::updateBufferData(const vector<float> &vertices, uint vbo) {
     printf("GfxController::updateBufferData vbo=[%u]\n", vbo);
 
-    for(float i : vertices)
+    for (float i : vertices)
         cout << i << " ";
 
     return GFX_OK(uint);
