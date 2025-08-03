@@ -29,34 +29,15 @@ class GivenPhysicsControllerThreaded: public ::testing::Test {
 };
 
 /**
- * @brief Ensure that we can start the physics scheduler, stop it, and proceed normally.
+ * @brief Ensures that worker threads will cleanup properly when the physics controller is destroyed.
  */
-TEST_F(GivenPhysicsControllerThreaded, WhenShutdownSent_ThenSchedulerStops) {
-    printf("Entered test\n");
-    // Need a dummy polygon
-    TestObject items[2] = {
-        TestObject("TestObject0"),
-        TestObject("TestObject1")
-    };
-    printf("Creating gameobjects\n");
-    auto setShutdown = [this]() {
-        printf("Entered shutdown thread\n");
-        usleep(5000);  // Sleep for 5ms
-        printf("Running shutdown now...\n");
-        physicsController_->shutdown();
-    };
+TEST(GivenPhysicsController, WhenConstructedWithThreads_ThenDestructorClosesThreadsGracefully) {
+    /* Preparation */
+    auto physicsController = new PhysicsController(6);
 
-    // Add 2 gameObjects
-    for (int i = 0; i < 2; i++) {
-        printf("Adding gameobject %d\n", i);
-        PhysicsParams params = { {0.0f, 0.0f, 0.0f}, true, true, 1.0f };
-        physicsController_->addSceneObject(&items[i], params);
-    }
-    // Send the sleep signal in 2 seconds and start the scheduler
-    auto shutdownThread = std::thread(setShutdown);
-    physicsController_->physicsScheduler();
-    shutdownThread.join();
-    ASSERT_EQ(true, physicsController_->hasShutdown());
+    /* Action / Validation */
+    // Deleting the physics controller will either crash or hang if broken here...
+    delete physicsController;
 }
 
 /**

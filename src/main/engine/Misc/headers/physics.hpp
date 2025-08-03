@@ -83,6 +83,7 @@ class PhysicsController {
     /// @todo WATCH - need to make sure we're handling memory correctly here...
     PhysicsResult notifySubscribers(PhysicsReport *rep);
     PhysicsResult physicsScheduler();
+    void update();
     PhysicsResult doWork();
     PhysicsResult shutdown();
     inline int hasShutdown() { return shutdown_; }

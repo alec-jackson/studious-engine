@@ -222,31 +222,31 @@ PhysicsController::~PhysicsController() {
 PhysicsResult PhysicsController::physicsScheduler() {
     printf("PhysicsController::physicsScheduler: Start\n");
     auto pipelineStage = PhysicsWorkType::POSITION;  // Start the pipeline at the POSITION step
-    while (1) {
-        printf("PhysicsController::physicsScheduler: About to obtain objectLock_\n");
-        std::unique_lock<std::mutex> scopeLock(objectLock_);
-        printf("PhysicsController::physicsScheduler: Obtained object lock\n");
-        // Check if the shutdown signal was received
-        if (shutdown_) break;
-        // Obtain the workQueue lock
-        workQueueLock_.lock();
-        printf("PhysicsController::physicsScheduler: Populating work queue\n");
-        // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
-        for (auto i = physicsObjects_.begin(); i != physicsObjects_.end(); i++) {
-            (*i)->workType = pipelineStage;
-            workQueue_.push(*i);
-        }
-        workQueueLock_.unlock();
-        printf("PhysicsController::physicsScheduler: Populated work queue\n");
-        workAvailableSignal_.notify_all();
-        printf("PhysicsController::physicsScheduler: Completed initial\n");
-        // Wait for all of the child threads to finish their work before scheduling more work
-        workCompletedSignal_.wait(scopeLock, [this]() { return freeWorkers_ == threadNum_ && workQueue_.empty(); });
-        printf("DANGER! PREMATURELY KILLING SCHEDULER!!!!!\n");
-        break;   ///@todo this is a time bomb. I'm assuming I put here to only run it through one iteration only.
+    printf("PhysicsController::physicsScheduler: About to obtain objectLock_\n");
+    std::unique_lock<std::mutex> scopeLock(objectLock_);
+    printf("PhysicsController::physicsScheduler: Obtained object lock\n");
+    // Check if the shutdown signal was received
+    if (shutdown_) return PHYS_OK;
+    // Obtain the workQueue lock
+    workQueueLock_.lock();
+    printf("PhysicsController::physicsScheduler: Populating work queue\n");
+    // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
+    for (auto i = physicsObjects_.begin(); i != physicsObjects_.end(); i++) {
+        (*i)->workType = pipelineStage;
+        workQueue_.push(*i);
     }
+    workQueueLock_.unlock();
+    printf("PhysicsController::physicsScheduler: Populated work queue\n");
+    workAvailableSignal_.notify_all();
+    printf("PhysicsController::physicsScheduler: Completed initial\n");
+    // Wait for all of the child threads to finish their work before scheduling more work
+    workCompletedSignal_.wait(scopeLock, [this]() { return freeWorkers_ == threadNum_ && workQueue_.empty(); });
     printf("PhysicsController::physicsScheduler: Shutdown signal received\n");
     return PhysicsResult::PHYS_OK;
+}
+
+void PhysicsController::update() {
+    physicsScheduler();
 }
 
 PhysicsResult PhysicsController::notifySubscribers(PhysicsReport *rep) {
