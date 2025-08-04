@@ -18,6 +18,7 @@
 #include <queue>
 #include <condition_variable>
 #include <atomic>
+#include <memory>
 #include <SceneObject.hpp>
 
 #define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
@@ -36,19 +37,19 @@ enum PhysicsWorkType {
 // Internal - used in physics component
 typedef struct PhysicsObject {
     SceneObject *        target;
-    vector<float>        position;
-    vector<float>        velocity;
-    vector<float>        acceleration;
+    vec3                 position;
+    vec3                 velocity;
+    vec3                 acceleration;
     bool                 isKinematic;
     bool                 obeyGravity;
-    vector<float>        impulse;
+    vec3                 impulse;
     float                elasticity;
     float                mass;
     PhysicsWorkType      workType;  // MIght want to move this to a work queue specific class...
 } PhysicsObject;
 
 typedef struct PhysicsParams {
-    vector<float>       position;
+    vec3                position;
     bool                isKinematic;
     bool                obeyGravity;
     float               elasticity;
@@ -66,9 +67,11 @@ typedef struct PhysicsSubscriber {
     SUBSCRIPTION_PARAM;
 } PhysicsSubscriber;
 
-enum PhysicsResult {
-    PHYS_OK,
-    PHYS_FAILURE
+enum class PhysicsResult {
+    OK,
+    FAILURE,
+    SHUTDOWN,
+    REPEAT_NEEDED
 };
 
 float basicPhysics(float* pos, float fallspeed);
@@ -77,27 +80,26 @@ class PhysicsController {
  public:
     explicit PhysicsController(int threadNum);
     PhysicsResult addSceneObject(SceneObject *, PhysicsParams params);
-    PhysicsResult removeSceneObject(SceneObject *);
-    PhysicsResult subscribe(string name, SUBSCRIPTION_PARAM);
-    PhysicsResult unsubscribe(string name);
-    /// @todo WATCH - need to make sure we're handling memory correctly here...
-    PhysicsResult notifySubscribers(PhysicsReport *rep);
-    PhysicsResult physicsScheduler();
+    PhysicsResult removeSceneObject(string objectName);
+    PhysicsResult updatePosition();
+    inline bool isPipelineComplete() { return freeWorkers_ == threadNum_ && workQueue_.empty(); }
+    PhysicsResult waitPipelineComplete();
     void update();
     PhysicsResult doWork();
     PhysicsResult shutdown();
     inline int hasShutdown() { return shutdown_; }
+    inline const vector<std::shared_ptr<PhysicsObject>> &getPhysicsObjects() { return physicsObjects_; }
     ~PhysicsController();
  private:
     const int threadNum_;
     int shutdown_ = 0;
     std::vector<std::thread> threads_;
-    std::mutex objectLock_;
+    std::mutex physicsObjectQueueLock_;
     std::mutex subscriberLock_;
     std::mutex workQueueLock_;
     std::atomic<int> freeWorkers_;
-    vector<PhysicsObject *> physicsObjects_;
-    queue<PhysicsObject *> workQueue_;
+    vector<std::shared_ptr<PhysicsObject>> physicsObjects_;
+    queue<std::shared_ptr<PhysicsObject>> workQueue_;
     vector<PhysicsSubscriber> subscribers_;
     std::condition_variable workAvailableSignal_;
     std::condition_variable workCompletedSignal_;

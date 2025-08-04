@@ -41,6 +41,38 @@ TEST(GivenPhysicsController, WhenConstructedWithThreads_ThenDestructorClosesThre
 }
 
 /**
+ * @brief Tests adding a scene object to the physics controller.
+ * 
+ */
+TEST_F(GivenPhysicsControllerThreaded, WhenSceneObjectAdded_ThenObjectPresentInsideController) {
+    /* Preparation */
+    string testObjectName = "testObject";
+    vec3 testObjectPosition = vec3(5);
+    bool isKinematic = true;
+    bool obeyGravity = false;
+    float elasticity = 1.0f;
+    int expectedObjects = 1;
+    auto testObject = TestObject(testObjectName);
+    PhysicsParams params = {
+        testObjectPosition,
+        isKinematic,
+        obeyGravity,
+        elasticity
+    };
+
+    /* Action */
+    physicsController_->addSceneObject(&testObject, params);
+
+    /* Validation */
+    auto objectList = physicsController_->getPhysicsObjects();
+    ASSERT_EQ(expectedObjects, objectList.size());
+    ASSERT_EQ(testObjectName, objectList.front().get()->target->getObjectName());
+    ASSERT_EQ(isKinematic, objectList.front().get()->isKinematic);
+    ASSERT_EQ(obeyGravity, objectList.front().get()->obeyGravity);
+    ASSERT_FLOAT_EQ(elasticity, objectList.front().get()->elasticity);
+}
+
+/**
  * @brief Launches google test suite defined in file
  * 
  * @param argc 

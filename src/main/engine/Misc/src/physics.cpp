@@ -58,7 +58,7 @@ PhysicsResult PhysicsController::doWork() {
     // Might not be necessary, but doing this to be safe for now
     freeWorkers_ += 1;
     assert(freeWorkers_ <= threadNum_);
-    return PhysicsResult::PHYS_OK;
+    return PhysicsResult::OK;
 }
 
 // Takes a pointer to the y postion the current fallspeed, returns the updated fallspeed
@@ -107,59 +107,42 @@ TLDR; should somewhat resemble reality
  */
 PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, PhysicsParams params) {
     // Retrieve the exclusive lock for the game object list
-    std::unique_lock<std::mutex> scopeLock(objectLock_);
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
 
     // Create a new physics profile for the object
-    auto physicsObject = new PhysicsObject();
-    if (physicsObject == nullptr) return PhysicsResult::PHYS_FAILURE;
-    physicsObject->target = sceneObject;
-    physicsObject->position = params.position;
-    physicsObject->velocity = {0.0f, 0.0f, 0.0f};
-    physicsObject->acceleration = {0.0f, 0.0f, 0.0f};
-    physicsObject->isKinematic = params.isKinematic;
-    physicsObject->obeyGravity = params.obeyGravity;
-    physicsObject->impulse = {0.0f, 0.0f, 0.0f};
-    physicsObject->elasticity = 0.0f;
+    auto physicsObject = std::make_shared<PhysicsObject>();
+    auto poPtr = physicsObject.get();
+    poPtr->target = sceneObject;
+    poPtr->position = params.position;
+    poPtr->velocity = {0.0f, 0.0f, 0.0f};
+    poPtr->acceleration = {0.0f, 0.0f, 0.0f};
+    poPtr->isKinematic = params.isKinematic;
+    poPtr->obeyGravity = params.obeyGravity;
+    poPtr->impulse = {0.0f, 0.0f, 0.0f};
+    poPtr->elasticity = params.elasticity;
 
     // Add the object to the physics object list
     physicsObjects_.push_back(physicsObject);
-    return PhysicsResult::PHYS_OK;
+    return PhysicsResult::OK;
 }
 
-PhysicsResult PhysicsController::removeSceneObject(SceneObject *sceneObject) {
-    std::unique_lock<std::mutex> scopeLock(objectLock_);
-    auto compare = [&sceneObject](PhysicsObject *po) {
-        return sceneObject->getObjectName().compare(po->target->getObjectName()) == 0;
+PhysicsResult PhysicsController::removeSceneObject(string objectName) {
+    auto res = PhysicsResult::OK;
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    auto compare = [&objectName](std::shared_ptr<PhysicsObject> po) {
+        return objectName.compare(po.get()->target->getObjectName()) == 0;
     };
     auto it = std::find_if(physicsObjects_.begin(), physicsObjects_.end(), compare);
     if (it != physicsObjects_.end()) {
-        auto physObject = *it;
-        printf("PhysicsController::removeGameObject: Deleting object %s\n", sceneObject->getObjectName().c_str());
+        printf("PhysicsController::removeGameObject: Deleting object %s\n", objectName.c_str());
         physicsObjects_.erase(it);
-        delete physObject;
+    } else {
+        fprintf(stderr,
+            "PhysicsController::removeSceneObject: %s is not present in the physics controller!\n",
+        objectName.c_str());
+        res = PhysicsResult::FAILURE;
     }
-    return PhysicsResult::PHYS_OK;
-}
-
-PhysicsResult PhysicsController::subscribe(string name, SUBSCRIPTION_PARAM) {
-    std::unique_lock<std::mutex> scopeLock(subscriberLock_);
-    auto physicsSubscriber = PhysicsSubscriber(name, callback);
-    subscribers_.push_back(physicsSubscriber);
-    return PHYS_OK;
-}
-
-PhysicsResult PhysicsController::unsubscribe(string name) {
-    std::unique_lock<std::mutex> scopeLock(subscriberLock_);
-    auto compare = [&name](PhysicsSubscriber sub) {
-        return name.compare(sub.name) == 0;
-    };
-    // Remove the subscriber from the subscriptions list
-    auto it = std::find_if(subscribers_.begin(), subscribers_.end(), compare);
-    if (it != subscribers_.end()) {
-        printf("PhysicsController::unsubscribe: Removed subscription %s\n", it->name.c_str());
-        subscribers_.erase(it);
-    }
-    return PHYS_OK;
+    return res;
 }
 
 PhysicsController::PhysicsController(int threadNum) : threadNum_{threadNum} {
@@ -178,12 +161,13 @@ PhysicsController::~PhysicsController() {
     std::unique_lock<std::mutex> scopeLock(workQueueLock_);
     printf("PhysicsController::~PhysicsController\n");
     shutdown();  // Mark the scheduler to shutdown
-    PhysicsObject death;
-    death.workType = PhysicsWorkType::DIE;
+    // Thread safety for this variable probably isn't super important...
+    auto deathMsg = std::make_shared<PhysicsObject>();
+    deathMsg.get()->workType = PhysicsWorkType::DIE;
     // When we end, send kill signal to threads and join
     for (int i = 0; i < threadNum_; ++i) {
         printf("Sending kill to worker queue...\n");
-        workQueue_.push(&death);
+        workQueue_.push(deathMsg);
     }
     workAvailableSignal_.notify_all();
     scopeLock.unlock();
@@ -219,50 +203,39 @@ PhysicsController::~PhysicsController() {
  * 
  * @return PhysicsResult 
  */
-PhysicsResult PhysicsController::physicsScheduler() {
-    printf("PhysicsController::physicsScheduler: Start\n");
-    auto pipelineStage = PhysicsWorkType::POSITION;  // Start the pipeline at the POSITION step
-    printf("PhysicsController::physicsScheduler: About to obtain objectLock_\n");
-    std::unique_lock<std::mutex> scopeLock(objectLock_);
-    printf("PhysicsController::physicsScheduler: Obtained object lock\n");
-    // Check if the shutdown signal was received
-    if (shutdown_) return PHYS_OK;
-    // Obtain the workQueue lock
+PhysicsResult PhysicsController::updatePosition() {
+    printf("PhysicsController::updatePosition: Enter\n");
+    if (shutdown_) return PhysicsResult::SHUTDOWN;
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
     workQueueLock_.lock();
-    printf("PhysicsController::physicsScheduler: Populating work queue\n");
     // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
-    for (auto i = physicsObjects_.begin(); i != physicsObjects_.end(); i++) {
-        (*i)->workType = pipelineStage;
-        workQueue_.push(*i);
+    for (auto physObj : physicsObjects_) {
+        physObj.get()->workType = PhysicsWorkType::POSITION;
+        workQueue_.push(physObj);
     }
     workQueueLock_.unlock();
-    printf("PhysicsController::physicsScheduler: Populated work queue\n");
     workAvailableSignal_.notify_all();
-    printf("PhysicsController::physicsScheduler: Completed initial\n");
-    // Wait for all of the child threads to finish their work before scheduling more work
-    workCompletedSignal_.wait(scopeLock, [this]() { return freeWorkers_ == threadNum_ && workQueue_.empty(); });
-    printf("PhysicsController::physicsScheduler: Shutdown signal received\n");
-    return PhysicsResult::PHYS_OK;
+    return PhysicsResult::OK;
+}
+
+PhysicsResult PhysicsController::waitPipelineComplete() {
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_, std::try_to_lock);
+    // If this assert line is hit, this function was called from a bad context (locked physicsObjectQueueLock_)
+    assert(scopeLock.owns_lock());
+    workCompletedSignal_.wait(scopeLock, [this]() { return isPipelineComplete() || shutdown_; });
+    return shutdown_ ? PhysicsResult::SHUTDOWN : PhysicsResult::OK;
 }
 
 void PhysicsController::update() {
-    physicsScheduler();
-}
-
-PhysicsResult PhysicsController::notifySubscribers(PhysicsReport *rep) {
-    // We need to lock the subscriber list when notifying
-    std::unique_lock<std::mutex> scopeLock(subscriberLock_);
-    for (auto sub = subscribers_.begin(); sub != subscribers_.end(); sub++) {
-        // Send the physics report to each registered callback
-        sub->callback(rep);
-    }
-    return PHYS_OK;
+    // Stop updating when shutdown received
+    // Physics pipeline updated here...
+    updatePosition();
 }
 
 PhysicsResult PhysicsController::shutdown() {
-    std::unique_lock<std::mutex> scopeLock(objectLock_);
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
     printf("PhysicsController::shutdown: Sending shutdown signal\n");
     // Mark the shutdown variable as true
     shutdown_ = 1;
-    return PhysicsResult::PHYS_OK;
+    return PhysicsResult::OK;
 }
