@@ -41,19 +41,21 @@ typedef struct PhysicsObject {
     vec3                 position;
     vec3                 velocity;
     vec3                 acceleration;
+    vec3                 jerk;
+    vec3                 force;
     bool                 isKinematic;
     bool                 obeyGravity;
     vec3                 impulse;
     float                elasticity;
     float                mass;
-    PhysicsWorkType      workType;  // MIght want to move this to a work queue specific class...
+    PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
 } PhysicsObject;
 
 typedef struct PhysicsParams {
-    vec3                position;
     bool                isKinematic;
     bool                obeyGravity;
     float               elasticity;
+    float               mass;
 } PhysicsParams;
 
 // External - published to subscribers

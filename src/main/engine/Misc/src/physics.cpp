@@ -113,13 +113,14 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     auto physicsObject = std::make_shared<PhysicsObject>();
     auto poPtr = physicsObject.get();
     poPtr->target = sceneObject;
-    poPtr->position = params.position;
+    poPtr->position = sceneObject->getPosition();
     poPtr->velocity = {0.0f, 0.0f, 0.0f};
     poPtr->acceleration = {0.0f, 0.0f, 0.0f};
     poPtr->isKinematic = params.isKinematic;
     poPtr->obeyGravity = params.obeyGravity;
     poPtr->impulse = {0.0f, 0.0f, 0.0f};
     poPtr->elasticity = params.elasticity;
+    poPtr->mass = params.mass;
 
     // Add the object to the physics object list
     assert(!sceneObject->getObjectName().empty());

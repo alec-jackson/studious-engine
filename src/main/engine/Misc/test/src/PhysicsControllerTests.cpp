@@ -47,17 +47,17 @@ TEST(GivenPhysicsController, WhenConstructedWithThreads_ThenDestructorClosesThre
  */
 TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAdded_ThenObjectPresentInsideController) {
     /* Preparation */
-    vec3 testObjectPosition = vec3(5);
     bool isKinematic = true;
     bool obeyGravity = false;
     float elasticity = 1.0f;
+    float mass = 2.0f;
     int expectedObjects = 1;
     auto testObject = TestObject(testObjectName);
     PhysicsParams params = {
-        testObjectPosition,
         isKinematic,
         obeyGravity,
-        elasticity
+        elasticity,
+        mass
     };
 
     /* Action */
@@ -72,6 +72,7 @@ TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAdded_ThenObjectPresentInsi
     ASSERT_EQ(isKinematic, oit->second.get()->isKinematic);
     ASSERT_EQ(obeyGravity, oit->second.get()->obeyGravity);
     ASSERT_FLOAT_EQ(elasticity, oit->second.get()->elasticity);
+    ASSERT_FLOAT_EQ(mass, oit->second.get()->mass);
 }
 
 /**
@@ -82,9 +83,9 @@ TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAddedThenRemoved_ThenSceneO
     /* Preparation */
     auto testObject = TestObject(testObjectName);
     PhysicsParams params = {
-        vec3(0),
         false,
         false,
+        0.0f,
         0.0f
     };
     physicsController_->addSceneObject(&testObject, params);
@@ -107,7 +108,6 @@ TEST_F(GivenPhysicsControllerGeneral, WhenUnknownSceneObjectRemoved_ThenOtherObj
     auto testObject = TestObject(testObjectName);
     int expectedObjects = 1;
     PhysicsParams params = {
-        vec3(0),
         false,
         false,
         0.0f
@@ -132,9 +132,9 @@ TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAdded_GetPhysicsObjectRetur
     /* Preparation */
     auto testObject = TestObject(testObjectName);
     PhysicsParams params = {
-        vec3(0),
         false,
         false,
+        0.0f,
         0.0f
     };
     physicsController_->addSceneObject(&testObject, params);
