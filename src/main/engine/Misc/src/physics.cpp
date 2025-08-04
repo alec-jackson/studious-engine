@@ -4,9 +4,9 @@
  * @brief Basic physics controller to apply to GameObjects in a GameInstance
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #include <physics.hpp>
@@ -101,9 +101,9 @@ TLDR; should somewhat resemble reality
 
 /**
  * @brief Adds a GameObject to the physics controller list
- * 
+ *
  * @param gameObject to add to the list
- * @return PhysicsResult returns PHYS_OK 
+ * @return PhysicsResult returns PHYS_OK
  */
 PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, PhysicsParams params) {
     // Retrieve the exclusive lock for the game object list
@@ -122,25 +122,36 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->elasticity = params.elasticity;
 
     // Add the object to the physics object list
-    physicsObjects_.push_back(physicsObject);
+    assert(!sceneObject->getObjectName().empty());
+    physicsObjects_[sceneObject->getObjectName()] = physicsObject;
     return PhysicsResult::OK;
 }
 
 PhysicsResult PhysicsController::removeSceneObject(string objectName) {
     auto res = PhysicsResult::OK;
     std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
-    auto compare = [&objectName](std::shared_ptr<PhysicsObject> po) {
-        return objectName.compare(po.get()->target->getObjectName()) == 0;
-    };
-    auto it = std::find_if(physicsObjects_.begin(), physicsObjects_.end(), compare);
-    if (it != physicsObjects_.end()) {
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
         printf("PhysicsController::removeGameObject: Deleting object %s\n", objectName.c_str());
-        physicsObjects_.erase(it);
+        physicsObjects_.erase(poit);
     } else {
         fprintf(stderr,
             "PhysicsController::removeSceneObject: %s is not present in the physics controller!\n",
         objectName.c_str());
         res = PhysicsResult::FAILURE;
+    }
+    return res;
+}
+
+std::shared_ptr<PhysicsObject> PhysicsController::getPhysicsObject(string objectName) {
+    auto poit = physicsObjects_.find(objectName);
+    std::shared_ptr<PhysicsObject> res;
+    if (poit != physicsObjects_.end()) {
+        res = poit->second;
+    } else {
+        fprintf(stderr,
+            "PhysicsController::getPhysicsObject: %s does not exist in phys controller\n",
+            objectName.c_str());
     }
     return res;
 }
@@ -181,27 +192,27 @@ PhysicsController::~PhysicsController() {
  * @brief Runs the physics scheduler for the physics controller.
  * The physics pipeline has four stages: position, collision, finalize, submit. Each phase can be parallelized
  * when run on its own, but multiple different stages in the pipeline should NOT be run simultaneously...
- * 
+ *
  * POSITION - This is the first step in the physics pipeline. At the start, just feed all of the physics objects
  * into the work queue to start. This will update the positions of each gameobject. This considers the object's
  * force (acceleration * mass), as well as other things.
- * 
+ *
  * COLLISION - This is the second step in the pipeline. After the positions of all objects has been updated, we can
  * start checking for collisions with each object. This is going to be a very heavy step. We're going to check for
  * collisions against all of the other objects in the scene. This can be optimized using object distances later, but for
  * V1 this is OK. We check for collisions and then report any collisions via physics reports. Subscribers to physics events
  * will be notified.
- * 
+ *
  * FINALIZE - This stage is going to handle the physics behind object collisions between two objects, We can calculate
  * impulse or whatever else we want here, and then update the object's acceleration/velocity/position again. When
  * objects collide here, we want to send those objects BACK into the POSITION workload. This will also require checking
  * for COLLISIONS again, and then finalizing again... We can run into infiite loops here if we're possible, but again
  * that's a V2 issue :)
- * 
+ *
  * SUBMIT - This may not actually be a separate step, but we'll need to see how this turns out. We want to make sure we
- * report all of the physics events to their subscribers. Maybe we'll only submit physics reports at this step? 
- * 
- * @return PhysicsResult 
+ * report all of the physics events to their subscribers. Maybe we'll only submit physics reports at this step?
+ *
+ * @return PhysicsResult
  */
 PhysicsResult PhysicsController::updatePosition() {
     printf("PhysicsController::updatePosition: Enter\n");
@@ -209,9 +220,9 @@ PhysicsResult PhysicsController::updatePosition() {
     std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
     workQueueLock_.lock();
     // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
-    for (auto physObj : physicsObjects_) {
-        physObj.get()->workType = PhysicsWorkType::POSITION;
-        workQueue_.push(physObj);
+    for (auto physObjEntry : physicsObjects_) {
+        physObjEntry.second.get()->workType = PhysicsWorkType::POSITION;
+        workQueue_.push(physObjEntry.second);
     }
     workQueueLock_.unlock();
     workAvailableSignal_.notify_all();

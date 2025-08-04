@@ -4,9 +4,9 @@
  * @brief Basic physics controller for GameObjects
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #pragma once
@@ -16,6 +16,7 @@
 #include <mutex>
 #include <thread>
 #include <queue>
+#include <map>
 #include <condition_variable>
 #include <atomic>
 #include <memory>
@@ -81,6 +82,7 @@ class PhysicsController {
     explicit PhysicsController(int threadNum);
     PhysicsResult addSceneObject(SceneObject *, PhysicsParams params);
     PhysicsResult removeSceneObject(string objectName);
+    std::shared_ptr<PhysicsObject> getPhysicsObject(string objectName);
     PhysicsResult updatePosition();
     inline bool isPipelineComplete() { return freeWorkers_ == threadNum_ && workQueue_.empty(); }
     PhysicsResult waitPipelineComplete();
@@ -88,7 +90,7 @@ class PhysicsController {
     PhysicsResult doWork();
     PhysicsResult shutdown();
     inline int hasShutdown() { return shutdown_; }
-    inline const vector<std::shared_ptr<PhysicsObject>> &getPhysicsObjects() { return physicsObjects_; }
+    inline const map<string, std::shared_ptr<PhysicsObject>> &getPhysicsObjects() { return physicsObjects_; }
     ~PhysicsController();
  private:
     const int threadNum_;
@@ -98,7 +100,7 @@ class PhysicsController {
     std::mutex subscriberLock_;
     std::mutex workQueueLock_;
     std::atomic<int> freeWorkers_;
-    vector<std::shared_ptr<PhysicsObject>> physicsObjects_;
+    map<string, std::shared_ptr<PhysicsObject>> physicsObjects_;
     queue<std::shared_ptr<PhysicsObject>> workQueue_;
     vector<PhysicsSubscriber> subscribers_;
     std::condition_variable workAvailableSignal_;
