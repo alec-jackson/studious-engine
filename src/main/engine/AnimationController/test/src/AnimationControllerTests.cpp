@@ -49,6 +49,14 @@ int main(int argc, char **argv) {
     return result;
 }
 
+template<typename T>
+void ASSERT_VEC_EQ(T actual, T expected) {
+    auto containerSize = sizeof(T) / sizeof(float);
+    for (uint i = 0; i < containerSize; ++i) {
+        ASSERT_FLOAT_EQ(actual[i], expected[i]);
+    }
+}
+
 class GivenAnAnimationController {
  public:
     void SetUp();
@@ -114,7 +122,7 @@ void GivenAnAnimationController::initMocks() {
     EXPECT_CALL(mockGfxController_, sendTextureData(_, _, _, _))
         .Times(numFrames + 1)
         .WillOnce([this](unsigned int w, unsigned int h,
-            TexFormat format, void *data) {
+            TexFormat format, [[maybe_unused]]void *data) {
             EXPECT_EQ(w, imageWidth);
             EXPECT_EQ(h, imageHeight);
             EXPECT_EQ(format, TexFormat::RGB);
@@ -388,7 +396,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenUpdateFloatFinishesKeyFrameExactly_T
 /**
  * @brief Ensures that a keyframe added to the animation controller will be present in the keyframe store for the
  * target object's name.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenFirstKeyFrameAddedForObject_ThenKeyFramePresentInStore) {
     /* Preparation */
@@ -414,7 +422,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenFirstKeyFrameAddedForObject_ThenKeyF
 
 /**
  * @brief Ensures that we can add more than one object to the keyframe queue.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenSecondKeyFrameAddedForObject_ThenBothKeyFramesPresentInStore) {
     /* Preparation */
@@ -445,7 +453,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenSecondKeyFrameAddedForObject_ThenBot
 
 /**
  * @brief Ensure that a keyframe update actually transforms an object as expected (FLOAT UPDATE).
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdates_ThenFloatTransformationOccursForObject) {
     /* Preparation */
@@ -473,7 +481,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdates_ThenFloatTransformat
 /**
  * @brief Ensure that a keyframe update actually transforms an object as expected (FLOAT UPDATE) when the keyframe
  * is updated multiple times.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesMultipleTimes_ThenFloatTransformationOccursForObject) {
     /* Preparation */
@@ -501,7 +509,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesMultipleTimes_ThenFlo
 /**
  * @brief Ensure that a keyframe update actually transforms an object as expected (FLOAT UPDATE) when the keyframe
  * is updated multiple times to completion. When completed, the object should be in the desired state exactly.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKFUpdatesMultTimesComplete_ThenFinalFloatTransformationOccursForObject) {
     /* Preparation */
@@ -530,7 +538,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKFUpdatesMultTimesComplete_ThenFinal
 /**
  * @brief Ensure that a keyframe update actually transforms an object as expected (FLOAT UPDATE) when the keyframe
  * is updated with a delta time equal to the target time.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenFloatKeyFrameCompletes_ThenFinalUpdateOccurs) {
     /* Preparation */
@@ -557,7 +565,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenFloatKeyFrameCompletes_ThenFinalUpda
 /**
  * @brief Ensure that a keyframe updates the target object to the desired state, even when the delta time
  * for the update would raise the current time beyond the target time.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenFloatKeyFrameCompletesWithOverflow_ThenFinalUpdateOccurs) {
     /* Preparation */
@@ -583,7 +591,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenFloatKeyFrameCompletesWithOverflow_T
 
 /**
  * @brief Ensure that a keyframe update actually transforms an object as expected (VECTOR UPDATE).
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdates_ThenVectorTransformationOccursForObject) {
     /* Preparation */
@@ -605,14 +613,14 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdates_ThenVectorTransforma
     animationController_.update();
 
     /* Validation */
-    ASSERT_EQ(expectedTransformation, obj.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation, obj.getPosition());
     ASSERT_EQ(expectedKeyFrames, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.size());
 }
 
 /**
  * @brief Ensure that a keyframe update actually transforms an object as expected (VECTOR UPDATE) when the keyframe
  * is updated multiple times.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesTwice_ThenVectorTransformationOccursForObject) {
     /* Preparation */
@@ -635,14 +643,14 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesTwice_ThenVectorTrans
     animationController_.update();
 
     /* Validation */
-    ASSERT_EQ(expectedTransformation, obj.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation, obj.getPosition());
     ASSERT_EQ(expectedKeyFrames, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.size());
 }
 
 /**
  * @brief Ensure that a keyframe update actually transforms an object as expected (VECTOR UPDATE) when the keyframe
  * is updated multiple times to completion. When completed, the object should be in the desired state exactly.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletes_ThenFinalVectorTransformationOccurs) {
     /* Preparation */
@@ -654,7 +662,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletes_ThenFinalVectorTra
     vec3 expectedTransformation = desiredPosition;
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 
-    obj.setPosition(expectedTransformation);
+    obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
     animationController_.addKeyFrame(&obj, keyFrame_1);
 
@@ -664,14 +672,14 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletes_ThenFinalVectorTra
     animationController_.update();
 
     /* Validation */
-    ASSERT_EQ(expectedTransformation, obj.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation, obj.getPosition());
     ASSERT_TRUE(animationController_.getKeyFrameStore().empty());
 }
 
 /**
  * @brief Ensure that a keyframe update actually transforms an object as expected (VECTOR UPDATE) when the keyframe
  * is updated with a delta time equal to the target time.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesEntirely_ThenFinalVectorTransformationOccurs) {
     /* Preparation */
@@ -683,7 +691,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesEntirely_ThenFinalV
     vec3 expectedTransformation = desiredPosition;
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 
-    obj.setPosition(expectedTransformation);
+    obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
     animationController_.addKeyFrame(&obj, keyFrame_1);
 
@@ -691,7 +699,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesEntirely_ThenFinalV
     animationController_.update();
 
     /* Validation */
-    ASSERT_EQ(expectedTransformation, obj.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation, obj.getPosition());
     ASSERT_TRUE(animationController_.getKeyFrameStore().empty());
 }
 
@@ -699,7 +707,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesEntirely_ThenFinalV
  * @brief Ensure that a keyframe update actually transforms an object as expected (VECTOR UPDATE) when the keyframe
  * is updated with a delta time greater than the target time. This should result in the object being
  * transformed to the desired state exactly.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesWithOverflow_ThenFinalVectorTransformationOccurs) {
     /* Preparation */
@@ -711,7 +719,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesWithOverflow_ThenFi
     vec3 expectedTransformation = desiredPosition;
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 
-    obj.setPosition(expectedTransformation);
+    obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
     animationController_.addKeyFrame(&obj, keyFrame_1);
 
@@ -719,13 +727,13 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesWithOverflow_ThenFi
     animationController_.update();
 
     /* Validation */
-    ASSERT_EQ(expectedTransformation, obj.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation, obj.getPosition());
     ASSERT_TRUE(animationController_.getKeyFrameStore().empty());
 }
 
 /**
  * @brief Ensures that multiple keyframes will be updated simultaneously when owned by different objects.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFramesAddedForMultipleObjects_ThenBothObjectsUpdateSimultaneously) {
     /* Preparation */
@@ -758,8 +766,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFramesAddedForMultipleObjects_The
     animationController_.update();
 
     /* Validation */
-    ASSERT_EQ(expectedTransformation_1, obj_1.getPosition());
-    ASSERT_EQ(expectedTransformation_2, obj_2.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation_1, obj_1.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation_2, obj_2.getPosition());
     ASSERT_EQ(2, animationController_.getKeyFrameStore().size());
     ASSERT_TRUE(animationController_.getKeyFrameStore().find(name_1) != animationController_.getKeyFrameStore().end());
     ASSERT_TRUE(animationController_.getKeyFrameStore().find(name_2) != animationController_.getKeyFrameStore().end());
@@ -771,7 +779,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFramesAddedForMultipleObjects_The
 /**
  * @brief Ensures that when multiple keyframes are present in the keyframe store, but only one of them completes,
  * the incomplete keyframe will be updated and present in the store.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesForOneObject_ThenOtherObjectRemainsInStore) {
     /* Preparation */
@@ -804,8 +812,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesForOneObject_ThenOt
     animationController_.update();
 
     /* Validation */
-    ASSERT_EQ(expectedTransformation_1, obj_1.getPosition());
-    ASSERT_EQ(expectedTransformation_2, obj_2.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation_1, obj_1.getPosition());
+    ASSERT_VEC_EQ(expectedTransformation_2, obj_2.getPosition());
     ASSERT_EQ(1, animationController_.getKeyFrameStore().size());
     ASSERT_TRUE(animationController_.getKeyFrameStore().find(name_1) == animationController_.getKeyFrameStore().end());
     ASSERT_TRUE(animationController_.getKeyFrameStore().find(name_2) != animationController_.getKeyFrameStore().end());
@@ -815,7 +823,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesForOneObject_ThenOt
 
 /**
  * @brief Checks that an associated callback is run when a keyframe completes.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletes_ThenCallBackIsRun) {
     /* Preparation */
@@ -845,7 +853,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletes_ThenCallBackIsRun)
  * another object dynamically upon a keyframe completing. This resulted in a deadlock due to the animation controller
  * lock being held by the update method. I added some changes that explicitly unlock the animation controller before
  * running callbacks to support this functionality. It's pretty niche, but it's useful sometimes. - Christian
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockOccurs) {
     /* Preparation */
@@ -880,7 +888,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockO
 
 /**
  * @brief Tests text-based transformations.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenProcessTextTransformation_ThenTextTransformationOccurs) {
     /* Preparation */
@@ -909,7 +917,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenProcessTextTransformation_ThenTextTr
 
 /**
  * @brief Tests text-based transformations on completion
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenTextTransformationCompletes_ThenTextUpdatedToDesired) {
     /* Preparation */
@@ -935,7 +943,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenTextTransformationCompletes_ThenText
 /**
  * @brief Ensures that keyframes with a zero time do not crash the animation controller, and that
  * the object is updated immediately to the desired state.
- * 
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenZeroTimeKeyFrameUpdates_ThenObjectUpdatedImmediately) {
     /* Preparation */
@@ -961,8 +969,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenZeroTimeKeyFrameUpdates_ThenObjectUp
 /**
  * @brief Tests animation keyframe bleed-through behavior. When a keyframe completes with excess time remaining, the
  * next keyframe should process with the remaining time after that keyframe completes. This should result for
- * smoother performance at lower framerates. 
- * 
+ * smoother performance at lower framerates.
+ *
  */
 TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameTimeOverflows_ThenNextKeyFramesProcesses) {
     /* Preparation */
