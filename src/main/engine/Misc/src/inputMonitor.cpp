@@ -288,6 +288,17 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (currentGame->getKeystateRaw()[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
         }
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_9]) {
+            // Rotate on X+ axis
+            auto currentRotation = currentGameInfo->gameCamera->getRotation();
+            currentRotation[0] += 1.0f;
+            currentGameInfo->gameCamera->setRotation(currentRotation);
+        } else if (currentGame->getKeystateRaw()[SDL_SCANCODE_0]) {
+            // Rotate on X- axis
+            auto currentRotation = currentGameInfo->gameCamera->getRotation();
+            currentRotation[0] -= 1.0f;
+            currentGameInfo->gameCamera->setRotation(currentRotation);
+        }
 
         if (currentGame->getKeystateRaw()[SDL_SCANCODE_U] && !uPressed) {
             uPressed = true;
