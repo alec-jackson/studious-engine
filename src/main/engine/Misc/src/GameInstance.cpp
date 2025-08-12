@@ -69,7 +69,7 @@ GameInstance::GameInstance(GfxController *gfxController, AnimationController *an
         width_ { width }, height_ { height },
         shutdown_(0) {
     luminance = 1.0f;  // Set default values
-    directionalLight = vec3(-100, 100, 100);
+    directionalLight_ = vec3(-100, 100, 100);
     controllersConnected = 0;
     init();
 }
@@ -107,7 +107,7 @@ vec3 GameInstance::getResolution() {
  in the scene.
  */
 vec3 GameInstance::getDirectionalLight() {
-    return directionalLight;
+    return directionalLight_;
 }
 
 bool GameInstance::getControllerInput(SDL_GameControllerButton button) const {
@@ -465,7 +465,7 @@ GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 positio
     }
     auto gameObject = std::make_shared<GameObject>(characterModel, position, rotation,
         scale, gameObjProg.get(), objectName, ObjectType::GAME_OBJECT, gfxController_);
-    gameObject.get()->setDirectionalLight(directionalLight);
+    gameObject.get()->setDirectionalLight(directionalLight_);
     gameObject.get()->setLuminance(luminance);
     gameObject.get()->setRenderPriority(RENDER_PRIOR_LOW);
     sceneObjects_.push_back(gameObject);
@@ -628,6 +628,19 @@ int GameInstance::getCollision2D(GameObject2D *object1, GameObject2D *object2, v
 */
 void GameInstance::setLuminance(float luminanceValue) {
     luminance = luminanceValue;
+}
+
+void GameInstance::setDirectionalLight(vec3 directionalLight) {
+    std::unique_lock<std::mutex> sceneLock(sceneLock_);
+    directionalLight_ = directionalLight;
+
+    // Send new directional light to 3D gameobjects
+    for (auto obj : sceneObjects_) {
+        if (obj->type() == GAME_OBJECT) {
+            GameObject *cObj = static_cast<GameObject *>(obj.get());
+            cObj->setDirectionalLight(directionalLight_);
+        }
+    }
 }
 
 /*

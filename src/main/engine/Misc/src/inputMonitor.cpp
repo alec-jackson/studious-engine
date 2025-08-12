@@ -289,6 +289,19 @@ void rotateShape(void *gameInfoStruct, void *target) {
             currentGame->changeWindowMode(0);
         }
 
+        // Move the directional light
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_7]) {
+            // Shift light origin diagonal pos
+            auto dirLight = currentGame->getDirectionalLight();
+            dirLight += vec3(1.0f);
+            currentGame->setDirectionalLight(dirLight);
+        } else if (currentGame->getKeystateRaw()[SDL_SCANCODE_8]) {
+            // Shift light origin diagonal neg
+            auto dirLight = currentGame->getDirectionalLight();
+            dirLight -= vec3(1.0f);
+            currentGame->setDirectionalLight(dirLight);
+        }
+
         if (currentGame->getKeystateRaw()[SDL_SCANCODE_U] && !uPressed) {
             uPressed = true;
             if (SDL_GetRelativeMouseMode() == SDL_FALSE) {

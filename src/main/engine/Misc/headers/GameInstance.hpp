@@ -87,7 +87,7 @@ class GameInstance {
     map<string, int> activeChannels_;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
-    vec3 directionalLight;
+    vec3 directionalLight_;
     float luminance;
     int width_, height_;
     int audioID, controllersConnected = 0;
@@ -213,6 +213,7 @@ class GameInstance {
     int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
     int getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving);
     void setLuminance(float luminanceValue);
+    void setDirectionalLight(vec3 directionalLight);
     void basicCollision(GameInstance* gameInstance);
     /**
      * @brief Updates controllers and game objects in the current game. Controllers updated with this function
