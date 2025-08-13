@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <atomic>
 #include <Polygon.hpp>
 #include <SceneObject.hpp>
 #include <GfxController.hpp>
