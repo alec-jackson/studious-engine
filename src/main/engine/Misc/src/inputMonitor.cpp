@@ -8,10 +8,10 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "ColliderObject.hpp"
 #include <iostream>
 #include <vector>
 #include <inputMonitor.hpp>
+#include <ColliderObject.hpp>
 // Analog joystick dead zone
 const int JOYSTICK_DEAD_ZONE = 4000;
 #define PI 3.14159265
