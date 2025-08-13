@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "ColliderObject.hpp"
 #include <iostream>
 #include <vector>
 #include <inputMonitor.hpp>
@@ -38,6 +39,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     float fallspeed = 0;
     bool trackMouse = false;
     bool uPressed = false;
+    bool lPressed = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
     if (numJoySticks < 1) {
@@ -324,6 +326,13 @@ void rotateShape(void *gameInfoStruct, void *target) {
             }
         } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_U] && uPressed) {
             uPressed = false;
+        }
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_L] && !lPressed) {
+            lPressed = true;
+            auto enableStatus = ColliderObject::getDrawCollider();
+            ColliderObject::setDrawCollider(!enableStatus);
+        } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_L] && lPressed) {
+            lPressed = false;
         }
         // Set character rotation based on joysticks
         // Left rotation
