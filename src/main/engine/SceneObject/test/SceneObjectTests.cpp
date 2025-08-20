@@ -20,6 +20,14 @@ using std::endl;
 using std::cout;
 using std::set;
 
+template<typename T>
+void ASSERT_VEC_EQ(T actual, T expected) {
+    auto containerSize = sizeof(T) / sizeof(float);
+    for (uint i = 0; i < containerSize; ++i) {
+        ASSERT_FLOAT_EQ(actual[i], expected[i]);
+    }
+}
+
 /**
  * @brief Launches google test suite defined in file
  *
@@ -157,6 +165,25 @@ TEST_F(GivenASceneObject, WhenAddChild_ThenSceneObjectsConnected) {
     ASSERT_EQ(&object_, *parent.getChildren().begin());
     // Make sure the parent is set as the fixture object's parent
     ASSERT_EQ(&parent, object_.getParent());
+}
+
+/**
+ * @brief Ensures that SceneObject member variables are zeroed after initialization with basic constructor.
+ */
+TEST(GivenABasicSceneObject, WhenBasicConstructSceneObject_ThenValuesAreZeroed) {
+    /* Preparation */
+    vec3 expectedPosition = vec3(0);
+    vec3 expectedRotation = vec3(0);
+    float expectedScale_ = 0.0f;
+
+    /* Action */
+    TestObject object(PARENT_OBJECT_NAME);
+
+    /* Validation */
+    // Make sure certain member variables are initialized to zero
+    ASSERT_VEC_EQ(object.getPosition(), expectedPosition);
+    ASSERT_VEC_EQ(object.getRotation(), expectedRotation);
+    ASSERT_FLOAT_EQ(object.getScale(), expectedScale_);
 }
 
 /**
