@@ -52,7 +52,7 @@ class SceneObject {
             position(position), rotation(rotation), objectName(objectName), scale_(scale), programId_(programId),
             type_ { type }, gfxController_ { gfxController } {}
     inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController):
-        position { 0 }, rotation { 0 }, objectName { objectName }, scale_ { 0 }, type_ { type },
+        position { 0 }, rotation { 0 }, objectName { objectName }, scale_ { 0.0f }, type_ { type },
         gfxController_ { gfxController } {}
     virtual ~SceneObject();
     // Setter methods
