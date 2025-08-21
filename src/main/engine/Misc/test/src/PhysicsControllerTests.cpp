@@ -14,7 +14,18 @@
 #include <PhysicsControllerTests.hpp>
 #include <memory>
 
+extern double deltaTime;
+
 string testObjectName = "testObject";
+
+// Helper function to check for vec3 float equality
+template<typename T>
+void ASSERT_VEC_EQ(const T &expected, const T &actual) {
+    uint containerSize = sizeof(T) / sizeof(float);
+    for (uint i = 0; i < containerSize; ++i) {
+        ASSERT_FLOAT_EQ(expected[i], actual[i]);
+    }
+}
 
 // Test Fixtures
 class GivenPhysicsControllerGeneral: public ::testing::Test {
@@ -169,6 +180,13 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
         physicsController_ = new PhysicsController(6);
         // Create a sample test object and add it to the physics controller
         testObject_ = std::make_unique<TestObject>(testObjectName);
+        testObject_.get()->setPosition(vec3(0));
+        PhysicsParams params;
+        params.elasticity = 0.0f;
+        params.isKinematic = false;
+        params.mass = 5.0f;
+        params.obeyGravity = false;
+        physicsController_->addSceneObject(testObject_.get(), {});
     }
     void TearDown() override {
         delete physicsController_;
@@ -179,7 +197,85 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
 
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenPositionUpdateCalled_ThenPositionUpdated) {
     /* Preparation */
+    deltaTime = 1.0f;
+    vec3 startingPosition = vec3(1.0f, 0.0f, 0.0f);
+    vec3 expectedPosition = vec3(5.0f, 4.0f, 3.0f);
+    testObject_->setPosition(startingPosition);
+    physicsController_->setPosition(testObjectName, expectedPosition);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
+}
+
+TEST_F(GivenPhysicsControllerPositionPipeline, WhenVelocityUpdateCalled_ThenPositionUpdated) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 startingPosition = vec3(1.0f, 0.0f, 0.0f);
+    vec3 targetVelocity = vec3(4.0f, 4.0f, 3.0f);
+    vec3 expectedPosition = vec3(5.0f, 4.0f, 3.0f);
+    testObject_->setPosition(startingPosition);
+    /* The physics object needs to be updated explicitly because the position
+     * is set when the object is inserted. Setting the object's position here
+     * directly via the SceneObject setter is meaningless...
+     */
+    physicsController_->setPosition(testObjectName, startingPosition);
+    physicsController_->setVelocity(testObjectName, targetVelocity);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
+}
+
+TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalled_ThenPositionUpdated) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 startingPosition = vec3(1.0f, 0.0f, 0.0f);
+    vec3 targetAcceleration = vec3(1.0f, 1.0f, 1.0f);
+    vec3 expectedPosition = vec3(1.5f, 0.5f, 0.5f);
+    testObject_->setPosition(startingPosition);
+    /* The physics object needs to be updated explicitly because the position
+     * is set when the object is inserted. Setting the object's position here
+     * directly via the SceneObject setter is meaningless...
+     */
+    physicsController_->setPosition(testObjectName, startingPosition);
+    physicsController_->setAcceleration(testObjectName, targetAcceleration);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
+}
+
+TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalledTwice_ThenPositionUpdated) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 startingPosition = vec3(1.0f, 0.0f, 0.0f);
+    vec3 targetAcceleration = vec3(1.0f, 1.0f, 1.0f);
+    vec3 expectedPosition_2 = vec3(5.5f, 4.5f, 4.5f);
+    testObject_->setPosition(startingPosition);
+    /* The physics object needs to be updated explicitly because the position
+     * is set when the object is inserted. Setting the object's position here
+     * directly via the SceneObject setter is meaningless...
+     */
+    physicsController_->setPosition(testObjectName, startingPosition);
+    physicsController_->setAcceleration(testObjectName, targetAcceleration);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+
+    /* Action */
+    physicsController_->update();
+    physicsController_->update();
+
+    /* Validation */
+    ASSERT_VEC_EQ(expectedPosition_2, testObject_->getPosition());
 }
 
 /**

@@ -244,6 +244,7 @@ gtest_discover_tests(gtest_AnimationControllerTests)
 add_executable(gtest_PhysicsControllerTests
   src/main/engine/Misc/test/src/PhysicsControllerTests.cpp
   src/main/engine/Misc/src/physics.cpp
+  src/main/engine/Misc/src/DeltaTime.cpp
   src/main/utilities/src/Polygon.cpp
   src/main/engine/SceneObject/src/TestObject.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp

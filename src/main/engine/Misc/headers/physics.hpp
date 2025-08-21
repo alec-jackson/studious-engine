@@ -85,6 +85,11 @@ class PhysicsController {
     PhysicsResult addSceneObject(SceneObject *, PhysicsParams params);
     PhysicsResult removeSceneObject(string objectName);
     std::shared_ptr<PhysicsObject> getPhysicsObject(string objectName);
+    PhysicsResult setPosition(string objectName, vec3 position);
+    PhysicsResult setVelocity(string objectName, vec3 velocity);
+    PhysicsResult setAcceleration(string objectName, vec3 acceleration);
+    PhysicsResult setForce(string objectName, vec3 force);
+    PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult updatePosition();
     inline bool isPipelineComplete() { return freeWorkers_ == threadNum_ && workQueue_.empty(); }
     PhysicsResult waitPipelineComplete();

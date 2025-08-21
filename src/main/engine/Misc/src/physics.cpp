@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <condition_variable>
 
+extern double deltaTime;
+
 // Sleep the thread on the work safequeue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     while (1) {
@@ -33,19 +35,26 @@ PhysicsResult PhysicsController::doWork() {
             break;
         }
         string name = physObj->target->getObjectName();
+        // Position function defined here...
+        /**         1    2
+         *  D(t) =  _ a t  + v t + x
+         *          2
+         */
+        // Use OpenCL to speed this up maybe? - move this to PhysicsObject as a method
+        auto distFunc = [] (vec3 position, vec3 velocity, vec3 acceleration, float deltaTime) {
+            // Acceleration
+            auto newPos = vec3(0.5f) * acceleration * (deltaTime * deltaTime);
+            // Velocity
+            newPos += (velocity * deltaTime);
+            // Position
+            newPos += position;
+            return newPos;
+        };
         printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), physObj->workType);
         switch (physObj->workType) {
             case PhysicsWorkType::POSITION:
-                // Perform work here, determine if another iteration is required
-                // Missing - ? Update Acceleration...
-                // Update velocity from acceleration - might have a cleaner way to do this
-                physObj->velocity[0] += physObj->acceleration[0];
-                physObj->velocity[1] += physObj->acceleration[1];
-                physObj->velocity[2] += physObj->acceleration[2];
-                // Upate position from velocity
-                physObj->position[0] += physObj->velocity[0];
-                physObj->position[1] += physObj->velocity[1];
-                physObj->position[2] += physObj->velocity[2];
+                physObj->target->setPosition(distFunc(physObj->position, physObj->velocity, physObj->acceleration,
+                    deltaTime));
                 break;
             default:
                 printf("HORRIBLE BADNESS\n");
@@ -242,6 +251,7 @@ void PhysicsController::update() {
     // Stop updating when shutdown received
     // Physics pipeline updated here...
     updatePosition();
+    waitPipelineComplete();
 }
 
 PhysicsResult PhysicsController::shutdown() {
@@ -250,4 +260,69 @@ PhysicsResult PhysicsController::shutdown() {
     // Mark the shutdown variable as true
     shutdown_ = 1;
     return PhysicsResult::OK;
+}
+
+PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    auto result = PhysicsResult::FAILURE;
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
+        poit->second.get()->position = position;
+        result = PhysicsResult::OK;
+    } else {
+        printf("PhysicsController::setPosition: %s not found", objectName.c_str());
+    }
+    return result;
+}
+
+PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    auto result = PhysicsResult::FAILURE;
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
+        poit->second.get()->velocity = velocity;
+        result = PhysicsResult::OK;
+    } else {
+        printf("PhysicsController::setVelocity: %s not found", objectName.c_str());
+    }
+    return result;
+}
+
+PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceleration) {
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    auto result = PhysicsResult::FAILURE;
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
+        poit->second.get()->acceleration = acceleration;
+        result = PhysicsResult::OK;
+    } else {
+        printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());
+    }
+    return result;
+}
+
+PhysicsResult PhysicsController::setForce(string objectName, vec3 force) {
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    auto result = PhysicsResult::FAILURE;
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
+        poit->second.get()->force = force;
+        result = PhysicsResult::OK;
+    } else {
+        printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());
+    }
+    return result;
+}
+
+PhysicsResult PhysicsController::translate(string objectName, vec3 translation) {
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    auto result = PhysicsResult::FAILURE;
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
+        poit->second.get()->position += translation;
+        result = PhysicsResult::OK;
+    } else {
+        printf("PhysicsController::translate: %s not found", objectName.c_str());
+    }
+    return result;
 }
