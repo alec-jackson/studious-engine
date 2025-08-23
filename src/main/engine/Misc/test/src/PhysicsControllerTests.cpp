@@ -140,7 +140,7 @@ TEST_F(GivenPhysicsControllerGeneral, WhenUnknownSceneObjectRemoved_ThenOtherObj
  * @brief Ensures getting a physics object works as expected.
  *
  */
-TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAdded_GetPhysicsObjectReturnsIt) {
+TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAdded_ThenGetPhysicsObjectReturnsIt) {
     /* Preparation */
     auto testObject = TestObject(testObjectName);
     PhysicsParams params = {

@@ -247,9 +247,7 @@ PhysicsResult PhysicsController::updatePosition() {
 }
 
 PhysicsResult PhysicsController::waitPipelineComplete() {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_, std::try_to_lock);
-    // If this assert line is hit, this function was called from a bad context (locked physicsObjectQueueLock_)
-    assert(scopeLock.owns_lock());
+    std::unique_lock<std::mutex> scopeLock(workQueueLock_);
     workCompletedSignal_.wait(scopeLock, [this]() { return isPipelineComplete() || shutdown_; });
     return shutdown_ ? PhysicsResult::SHUTDOWN : PhysicsResult::OK;
 }
