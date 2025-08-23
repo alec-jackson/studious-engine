@@ -16,6 +16,21 @@
 
 extern double deltaTime;
 
+void PhysicsObject::basePosUpdate() {
+    runningTime += deltaTime;
+    vec3 pos;
+    // Acceleration
+    pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
+    // Velocity
+    pos += (velocity * vec3(runningTime));
+    // Position
+    pos += position;
+
+    // Update the position of the target object
+    target->setPosition(pos);
+    printf("PhysicsObject::basePosUpdate: Updated position is %f, %f, %f\n", pos.x, pos.y, pos.z);
+}
+
 // Sleep the thread on the work safequeue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     while (1) {
@@ -41,20 +56,11 @@ PhysicsResult PhysicsController::doWork() {
          *          2
          */
         // Use OpenCL to speed this up maybe? - move this to PhysicsObject as a method
-        auto distFunc = [] (vec3 position, vec3 velocity, vec3 acceleration, float deltaTime) {
-            // Acceleration
-            auto newPos = vec3(0.5f) * acceleration * (deltaTime * deltaTime);
-            // Velocity
-            newPos += (velocity * deltaTime);
-            // Position
-            newPos += position;
-            return newPos;
-        };
+
         printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), physObj->workType);
         switch (physObj->workType) {
             case PhysicsWorkType::POSITION:
-                physObj->target->setPosition(distFunc(physObj->position, physObj->velocity, physObj->acceleration,
-                    deltaTime));
+                physObj->basePosUpdate();
                 break;
             default:
                 printf("HORRIBLE BADNESS\n");
@@ -130,6 +136,7 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->impulse = {0.0f, 0.0f, 0.0f};
     poPtr->elasticity = params.elasticity;
     poPtr->mass = params.mass;
+    poPtr->runningTime = 0.0;
 
     // Add the object to the physics object list
     assert(!sceneObject->getObjectName().empty());
@@ -280,6 +287,9 @@ PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
+        // On velocity change, flush object position and reset time
+        poit->second.get()->flushPosition();
+        poit->second.get()->resetTime();
         poit->second.get()->velocity = velocity;
         result = PhysicsResult::OK;
     } else {
@@ -293,6 +303,9 @@ PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceler
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
+        // On acceleration change, flush object position and reset time
+        poit->second.get()->flushPosition();
+        poit->second.get()->resetTime();
         poit->second.get()->acceleration = acceleration;
         result = PhysicsResult::OK;
     } else {

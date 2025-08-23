@@ -36,7 +36,8 @@ enum PhysicsWorkType {
 };
 
 // Internal - used in physics component
-typedef struct PhysicsObject {
+typedef class PhysicsObject {
+ public:
     SceneObject *        target;
     vec3                 position;
     vec3                 velocity;
@@ -48,7 +49,12 @@ typedef struct PhysicsObject {
     vec3                 impulse;
     float                elasticity;
     float                mass;
+    double               runningTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
+    void basePosUpdate();
+    inline void flushPosition() { position = target->getPosition(); }
+    inline void resetTime() { runningTime = 0.0; }
+ private:
 } PhysicsObject;
 
 typedef struct PhysicsParams {

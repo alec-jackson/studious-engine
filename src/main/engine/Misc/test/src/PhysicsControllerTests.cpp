@@ -260,7 +260,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalledTwice
     deltaTime = 1.0f;
     vec3 startingPosition = vec3(1.0f, 0.0f, 0.0f);
     vec3 targetAcceleration = vec3(1.0f, 1.0f, 1.0f);
-    vec3 expectedPosition_2 = vec3(5.5f, 4.5f, 4.5f);
+    vec3 expectedPosition_2 = vec3(3.0f, 2.0f, 2.0f);
     testObject_->setPosition(startingPosition);
     /* The physics object needs to be updated explicitly because the position
      * is set when the object is inserted. Setting the object's position here
