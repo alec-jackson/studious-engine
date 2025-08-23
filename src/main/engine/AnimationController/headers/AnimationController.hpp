@@ -131,12 +131,13 @@ class AnimationController {
     int addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame);
     void addTrack(TrackExt *target, string trackName, vector<int> trackData, int fps, bool loop);
     void update();
+    UpdateData<float> updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, float timeChange);
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateRotation(SceneObject *target, KeyFrame *keyFrame);
     int updateScale(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
-    int updateTime(SceneObject *target, KeyFrame *keyFrame);
+    int updateTime(KeyFrame *keyFrame);
     /**
      * @brief Processes the color keyframe if applicable using deltaTime.
      * @param target - The SceneObject to apply the animation to.

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <inputMonitor.hpp>
+#include <ColliderObject.hpp>
 // Analog joystick dead zone
 const int JOYSTICK_DEAD_ZONE = 4000;
 #define PI 3.14159265
@@ -38,6 +39,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     float fallspeed = 0;
     bool trackMouse = false;
     bool uPressed = false;
+    bool lPressed = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
     if (numJoySticks < 1) {
@@ -288,6 +290,30 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (currentGame->getKeystateRaw()[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
         }
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_9]) {
+            // Rotate on X+ axis
+            auto currentRotation = currentGameInfo->gameCamera->getRotation();
+            currentRotation[0] += 1.0f;
+            currentGameInfo->gameCamera->setRotation(currentRotation);
+        } else if (currentGame->getKeystateRaw()[SDL_SCANCODE_0]) {
+            // Rotate on X- axis
+            auto currentRotation = currentGameInfo->gameCamera->getRotation();
+            currentRotation[0] -= 1.0f;
+            currentGameInfo->gameCamera->setRotation(currentRotation);
+        }
+
+        // Move the directional light
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_7]) {
+            // Shift light origin diagonal pos
+            auto dirLight = currentGame->getDirectionalLight();
+            dirLight += vec3(1.0f);
+            currentGame->setDirectionalLight(dirLight);
+        } else if (currentGame->getKeystateRaw()[SDL_SCANCODE_8]) {
+            // Shift light origin diagonal neg
+            auto dirLight = currentGame->getDirectionalLight();
+            dirLight -= vec3(1.0f);
+            currentGame->setDirectionalLight(dirLight);
+        }
 
         if (currentGame->getKeystateRaw()[SDL_SCANCODE_U] && !uPressed) {
             uPressed = true;
@@ -300,6 +326,13 @@ void rotateShape(void *gameInfoStruct, void *target) {
             }
         } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_U] && uPressed) {
             uPressed = false;
+        }
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_L] && !lPressed) {
+            lPressed = true;
+            auto enableStatus = ColliderObject::getDrawCollider();
+            ColliderObject::setDrawCollider(!enableStatus);
+        } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_L] && lPressed) {
+            lPressed = false;
         }
         // Set character rotation based on joysticks
         // Left rotation

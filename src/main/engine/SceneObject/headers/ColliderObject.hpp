@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <atomic>
 #include <Polygon.hpp>
 #include <SceneObject.hpp>
 #include <GfxController.hpp>
@@ -33,6 +34,8 @@ class ColliderObject : public SceneObject {
     inline vec4 center() { return center_; }
     inline vec4 offset() { return offset_; }
     ~ColliderObject();
+    inline static void setDrawCollider(bool enable) { drawCollider_ = enable; }
+    inline static bool getDrawCollider() { return drawCollider_; }
 
  private:
     vec4 offset_;
@@ -46,4 +49,5 @@ class ColliderObject : public SceneObject {
     mat4 *pScaleMatrix_;
     mat4 *pVpMatrix_;
     int mvpId_;
+    inline static std::atomic<bool> drawCollider_;
 };

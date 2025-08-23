@@ -50,12 +50,11 @@ int main(int argc, char **argv) {
     return result;
 }
 
-// Helper function to check for vec3 float equality
 template<typename T>
-void ASSERT_VEC_EQ(const T &expected, const T &actual) {
-    uint containerSize = sizeof(T) / sizeof(float);
+void ASSERT_VEC_EQ(T actual, T expected) {
+    auto containerSize = sizeof(T) / sizeof(float);
     for (uint i = 0; i < containerSize; ++i) {
-        ASSERT_FLOAT_EQ(expected[i], actual[i]);
+        ASSERT_FLOAT_EQ(actual[i], expected[i]);
     }
 }
 
@@ -124,7 +123,7 @@ void GivenAnAnimationController::initMocks() {
     EXPECT_CALL(mockGfxController_, sendTextureData(_, _, _, _))
         .Times(numFrames + 1)
         .WillOnce([this](unsigned int w, unsigned int h,
-            TexFormat format, void *data) {
+            TexFormat format, [[maybe_unused]]void *data) {
             EXPECT_EQ(w, imageWidth);
             EXPECT_EQ(h, imageHeight);
             EXPECT_EQ(format, TexFormat::RGB);
@@ -966,4 +965,42 @@ TEST_F(GivenAnAnimationControllerReady, WhenZeroTimeKeyFrameUpdates_ThenObjectUp
 
     /* Validation */
     ASSERT_EQ(expectedTransformation, obj.getScale());
+}
+
+/**
+ * @brief Tests animation keyframe bleed-through behavior. When a keyframe completes with excess time remaining, the
+ * next keyframe should process with the remaining time after that keyframe completes. This should result for
+ * smoother performance at lower framerates.
+ *
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameTimeOverflows_ThenNextKeyFramesProcesses) {
+    /* Preparation */
+    TestObject obj(DUMMY_OBJ_NAME);
+    float originalScale = 1.0f;
+    float desiredScale_1 = 9.0f;
+    float desiredScale_2 = 15.0f;
+    float desiredScale_3 = 20.0f;
+    float targetTime_1 = 3.0f;
+    float targetTime_2 = 2.0f;
+    float targetTime_3 = 1.0f;
+    deltaTime = 6.0f;
+    float expectedTransformation = desiredScale_3;
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime_1);
+    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime_2);
+    auto keyFrame_3 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime_3);
+
+    obj.setScale(originalScale);
+    keyFrame_1.get()->scale.desired = desiredScale_1;
+    keyFrame_2.get()->scale.desired = desiredScale_2;
+    keyFrame_3.get()->scale.desired = desiredScale_3;
+    animationController_.addKeyFrame(&obj, keyFrame_1);
+    animationController_.addKeyFrame(&obj, keyFrame_2);
+    animationController_.addKeyFrame(&obj, keyFrame_3);
+
+    /* Action */
+    animationController_.update();
+
+    /* Validation */
+    ASSERT_EQ(expectedTransformation, obj.getScale());
+    ASSERT_TRUE(animationController_.getKeyFrameStore().empty());
 }

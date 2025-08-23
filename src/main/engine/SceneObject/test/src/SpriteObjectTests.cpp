@@ -120,10 +120,11 @@ void GivenASpriteObject::initMocks() {
     EXPECT_CALL(mockGfxController_, sendTextureData(_, _, _, _))
         .Times(numFrames + 1)
         .WillOnce([this](unsigned int w, unsigned int h,
-            TexFormat format, void *data) {
+            TexFormat format, [[maybe_unused]]void *data) {
             EXPECT_EQ(w, imageWidth);
             EXPECT_EQ(h, imageHeight);
             EXPECT_EQ(format, TexFormat::RGB);
+
             return GFX_OK(unsigned int);
         })
         .WillRepeatedly([this](unsigned int w, unsigned int h,

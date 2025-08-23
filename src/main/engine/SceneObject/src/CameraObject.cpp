@@ -32,6 +32,10 @@ void CameraObject::render() {
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
     mat4 viewMatrix(1.0f);
+    rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
+            vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1]),
+            vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2]),
+            vec3(0, 0, 1));
     vpMatrixOrthographic_ = orthographicMatrix_;
     if (target_ != nullptr) {
         /* If there is a target, aim the camera at it */
@@ -45,7 +49,7 @@ void CameraObject::render() {
             viewMatrix = lookAt(eye, center, vec3(0, 1, 0));
         }
     }
-    vpMatrixPerspective_ = projectionMatrix * viewMatrix;
+    vpMatrixPerspective_ = projectionMatrix * viewMatrix * rotateMatrix_;
 }
 
 void CameraObject::update() {

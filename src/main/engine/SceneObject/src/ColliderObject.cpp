@@ -111,7 +111,7 @@ int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
 void ColliderObject::update() {
     // Easy wireframe rendering is unsupported in OpenGL ES
 #ifndef GFX_EMBEDDED
-    render();
+    if (drawCollider_) render();
 #endif  // GFX_EMBEDDED
 }
 
