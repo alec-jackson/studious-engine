@@ -121,6 +121,7 @@ TEST_F(GivenPhysicsControllerGeneral, WhenUnknownSceneObjectRemoved_ThenOtherObj
     PhysicsParams params = {
         false,
         false,
+        0.0f,
         0.0f
     };
     physicsController_->addSceneObject(&testObject, params);
