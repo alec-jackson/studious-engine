@@ -263,10 +263,6 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalledTwice
     vec3 targetAcceleration = vec3(1.0f, 1.0f, 1.0f);
     vec3 expectedPosition_2 = vec3(3.0f, 2.0f, 2.0f);
     testObject_->setPosition(startingPosition);
-    /* The physics object needs to be updated explicitly because the position
-     * is set when the object is inserted. Setting the object's position here
-     * directly via the SceneObject setter is meaningless...
-     */
     physicsController_->setPosition(testObjectName, startingPosition);
     physicsController_->setAcceleration(testObjectName, targetAcceleration);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
@@ -277,6 +273,69 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalledTwice
 
     /* Validation */
     ASSERT_VEC_EQ(expectedPosition_2, testObject_->getPosition());
+}
+
+TEST_F(GivenPhysicsControllerPositionPipeline, WhenComplexAccelerationVelPosUpdateCalled_ThenPositionAccurate) {
+    /* Preparation */
+    deltaTime = 5.67f;
+    vec3 startingPosition = vec3(65.4f, 21.0f, 0.9f);
+    vec3 velocity = vec3(5.0f, 0.0f, 3.2f);
+    vec3 acceleration = vec3(5.7f, -9.81f, 91.0f);
+    vec3 expectedPosition = vec3(185.37436f, -136.69035f, 1481.819f);
+    testObject_->setPosition(startingPosition);
+    physicsController_->setPosition(testObjectName, startingPosition);
+    physicsController_->setVelocity(testObjectName, velocity);
+    physicsController_->setAcceleration(testObjectName, acceleration);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
+}
+
+TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledThenVelocityChanges_ThenPositionTimeFlush) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    auto physicsObject = physicsController_->getPhysicsObject(testObjectName);
+    // Going to keep calculations 1 dimensional so it's easier to follow :)
+    vec3 startingPosition = vec3(1.0f, 0.0f, 0.0f);
+    vec3 velocity = vec3(1.0f, 0.0f, 0.0f);
+    vec3 acceleration = vec3(1.0f, 0.0f, 0.0f);
+    vec3 expectedPosition_1 = vec3(5.0f, 0.0f, 0.0f);
+    vec3 expectedPosition_2 = vec3(6.5f, 0.0f, 0.0f);
+    testObject_->setPosition(startingPosition);
+    physicsController_->setPosition(testObjectName, startingPosition);
+    physicsController_->setVelocity(testObjectName, velocity);
+    physicsController_->setAcceleration(testObjectName, acceleration);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+
+    // Run update twice - this basically sets t = 2 seconds
+    physicsController_->update();
+    physicsController_->update();
+
+    // The position here should be 5...
+    ASSERT_VEC_EQ(expectedPosition_1, testObject_->getPosition());
+
+    // The physics object itself should still hold the original reference pos
+    ASSERT_VEC_EQ(startingPosition, physicsObject->position);
+
+    // We're going to reset the velocity, which will reset the running time counter...
+    physicsController_->setVelocity(testObjectName, velocity);
+
+    // ... and also set the current position as the new reference position
+    ASSERT_VEC_EQ(expectedPosition_1, physicsObject->position);
+
+    /* Action */
+    // Run update again - should calculate with t = 1 second now...
+    physicsController_->update();
+
+    /* Validation */
+    // Position is 6.5f now because t = 1 second instead of 3.
+    ASSERT_VEC_EQ(expectedPosition_2, testObject_->getPosition());
+    // Without the time reset & position flush, the last update call would set the
+    // position to 8.5, because t = 3 and pos = 1. Now it's t = 1 but pos = 5.
 }
 
 /**
