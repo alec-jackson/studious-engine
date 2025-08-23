@@ -240,6 +240,33 @@ target_link_libraries(gtest_AnimationControllerTests
 )
 
 gtest_discover_tests(gtest_AnimationControllerTests)
+# ======================================== PhysicsControllerTests ========================================
+add_executable(gtest_PhysicsControllerTests
+  src/main/engine/Misc/test/src/PhysicsControllerTests.cpp
+  src/main/engine/Misc/src/physics.cpp
+  src/main/engine/Misc/src/DeltaTime.cpp
+  src/main/utilities/src/Polygon.cpp
+  src/main/engine/SceneObject/src/TestObject.cpp
+  src/main/engine/SceneObject/src/SceneObject.cpp
+  src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
+)
+
+target_include_directories(gtest_PhysicsControllerTests
+  PRIVATE
+    src/main/engine/Misc/test/headers
+  PUBLIC
+    ${SDL2_INCLUDE_DIRS}
+)
+
+target_link_libraries(gtest_PhysicsControllerTests
+  PUBLIC
+  GTest::gtest_main
+  GTest::gmock
+  ${FREETYPE_LIBRARIES}
+)
+
+gtest_discover_tests(gtest_PhysicsControllerTests)
 # ======================================== END OF GTESTS ========================================
 endif()
 
