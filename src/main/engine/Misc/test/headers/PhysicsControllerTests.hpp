@@ -8,4 +8,5 @@
  * @copyright Copyright (c) 2024
  *
  */
+#pragma once
 #include <physics.hpp>

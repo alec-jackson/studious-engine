@@ -25,8 +25,6 @@
 #define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
 #define PHYS_MAX_THREADS 256
 
-//static int PHYSICS_TRACE = 0;
-
 enum PhysicsWorkType {
     POSITION,
     COLLISION,

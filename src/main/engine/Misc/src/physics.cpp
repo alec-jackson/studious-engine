@@ -13,6 +13,8 @@
 #include <string>
 #include <algorithm>
 #include <condition_variable>
+#include <memory>
+#include <cstdio>
 
 extern double deltaTime;
 
@@ -52,7 +54,7 @@ void PhysicsObject::fullFlush() {
     runningTime = 0.0;
 }
 
-// Sleep the thread on the work safequeue until work becomes available
+// Sleep the thread on the work queue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     while (1) {
         printf("physDoWork: Waiting for work\n");

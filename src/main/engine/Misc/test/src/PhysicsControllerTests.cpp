@@ -10,13 +10,14 @@
  */
 #include <gtest/gtest.h>
 #include <iostream>
+#include <memory>
+#include <string>
 #include <TestObject.hpp>
 #include <PhysicsControllerTests.hpp>
-#include <memory>
 
 extern double deltaTime;
 
-string testObjectName = "testObject";
+const char *testObjectName = "testObject";
 float testMassKg = 5.0f;
 
 // Helper function to check for vec3 float equality
@@ -160,7 +161,7 @@ TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAdded_ThenGetPhysicsObjectR
     auto physObj = physicsController_->getPhysicsObject(testObjectName);
 
     /* Validation */
-    ASSERT_TRUE(physObj.use_count() > 0);  // use_count is used to determine if pointer is active
+    ASSERT_GT(physObj.use_count(), 0);  // use_count is used to determine if pointer is active
     ASSERT_EQ(testObjectName, physObj.get()->target->getObjectName());
 }
 
@@ -174,7 +175,7 @@ TEST_F(GivenPhysicsControllerGeneral, WhenNoPhysObjectsPresent_ThenInvalidPointe
     auto physObj = physicsController_->getPhysicsObject(testObjectName);
 
     /* Validation */
-    ASSERT_TRUE(physObj.use_count() == 0);  // use_count is used to determine if pointer is active
+    ASSERT_EQ(physObj.use_count(), 0);  // use_count is used to determine if pointer is active
 }
 
 /* PHYSICS POSITION PIPELINE TESTS */
@@ -222,7 +223,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenPositionUpdateCalled_ThenPosi
 }
 
 /**
- * @brief Ensures that setting the velocity and calling update() updates the position as 
+ * @brief Ensures that setting the velocity and calling update() updates the position as
  * expected for the amount of time passed.
  */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenVelocityUpdateCalled_ThenPositionUpdated) {
@@ -248,7 +249,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenVelocityUpdateCalled_ThenPosi
 }
 
 /**
- * @brief Ensures that setting the acceleration and calling update() updates the position as 
+ * @brief Ensures that setting the acceleration and calling update() updates the position as
  * expected for the amount of time passed.
  */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalled_ThenPositionUpdated) {
@@ -274,7 +275,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalled_Then
 }
 
 /**
- * @brief Ensures that setting the acceleration and calling update() updates the position as 
+ * @brief Ensures that setting the acceleration and calling update() updates the position as
  * expected for the amount of time accumulated after each update call.
  */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalledTwice_ThenPositionUpdated) {
@@ -321,7 +322,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenComplexAccelerationVelPosUpda
 }
 
 /**
- * @brief Ensures that changing an object's velocity after time has accumulated (after update has been called at 
+ * @brief Ensures that changing an object's velocity after time has accumulated (after update has been called at
  * least once) results in expected object transformations from subsequent update calls.
  */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterVelocityChanges_ThenPositionTimeFlush) {
