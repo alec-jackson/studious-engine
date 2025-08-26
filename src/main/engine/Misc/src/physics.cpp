@@ -18,9 +18,8 @@ extern double deltaTime;
 
 void PhysicsObject::basePosUpdate() {
     runningTime += deltaTime;
-    vec3 pos;
     // Acceleration
-    pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
+    vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
     // Velocity
     pos += (velocity * vec3(runningTime));
     // Position
@@ -29,6 +28,28 @@ void PhysicsObject::basePosUpdate() {
     // Update the position of the target object
     target->setPosition(pos);
     printf("PhysicsObject::basePosUpdate: Updated position is %f, %f, %f\n", pos.x, pos.y, pos.z);
+}
+
+void PhysicsObject::flushPosition() {
+    // Flush updated position to reference position
+    position = target->getPosition();
+}
+
+void PhysicsObject::flushVelocity() {
+    // Update velocity using acceleration
+    velocity = (acceleration * vec3(runningTime)) + velocity;
+}
+
+// Does nothing for now, but will be used when jerk implemented...
+// DELETE if we never implement jerk :)
+void PhysicsObject::flushAcceleration() {
+}
+
+void PhysicsObject::fullFlush() {
+    flushPosition();
+    flushVelocity();
+    flushAcceleration();
+    runningTime = 0.0;
 }
 
 // Sleep the thread on the work safequeue until work becomes available
@@ -129,11 +150,11 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     auto poPtr = physicsObject.get();
     poPtr->target = sceneObject;
     poPtr->position = sceneObject->getPosition();
-    poPtr->velocity = {0.0f, 0.0f, 0.0f};
-    poPtr->acceleration = {0.0f, 0.0f, 0.0f};
+    poPtr->velocity = vec3(0);
+    poPtr->acceleration = vec3(0);
     poPtr->isKinematic = params.isKinematic;
     poPtr->obeyGravity = params.obeyGravity;
-    poPtr->impulse = {0.0f, 0.0f, 0.0f};
+    poPtr->impulse = vec3(0);
     poPtr->elasticity = params.elasticity;
     poPtr->mass = params.mass;
     poPtr->runningTime = 0.0;
@@ -272,6 +293,7 @@ PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
+        poit->second.get()->fullFlush();
         poit->second.get()->position = position;
         result = PhysicsResult::OK;
     } else {
@@ -286,8 +308,7 @@ PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         // On velocity change, flush object position and reset time
-        poit->second.get()->flushPosition();
-        poit->second.get()->resetTime();
+        poit->second.get()->fullFlush();
         poit->second.get()->velocity = velocity;
         result = PhysicsResult::OK;
     } else {
@@ -302,8 +323,7 @@ PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceler
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         // On acceleration change, flush object position and reset time
-        poit->second.get()->flushPosition();
-        poit->second.get()->resetTime();
+        poit->second.get()->fullFlush();
         poit->second.get()->acceleration = acceleration;
         result = PhysicsResult::OK;
     } else {
@@ -312,12 +332,20 @@ PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceler
     return result;
 }
 
-PhysicsResult PhysicsController::setForce(string objectName, vec3 force) {
+PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
     std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
-        poit->second.get()->force = force;
+        poit->second.get()->fullFlush();
+        // Check if the mass is zero
+        if (0.0 != poit->second.get()->mass) {
+            poit->second.get()->acceleration += (force / vec3(poit->second.get()->mass));
+        } else {
+            fprintf(stderr,
+                "PhysicsController::applyForce: Failed to apply force! Target object %s has no mass set!",
+                poit->second.get()->target->getObjectName().c_str());
+        }
         result = PhysicsResult::OK;
     } else {
         printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());

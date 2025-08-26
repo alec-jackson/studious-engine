@@ -43,7 +43,6 @@ typedef class PhysicsObject {
     vec3                 velocity;
     vec3                 acceleration;
     vec3                 jerk;
-    vec3                 force;
     bool                 isKinematic;
     bool                 obeyGravity;
     vec3                 impulse;
@@ -52,7 +51,15 @@ typedef class PhysicsObject {
     double               runningTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
     void basePosUpdate();
-    inline void flushPosition() { position = target->getPosition(); }
+    /**
+     * Flush operation:
+     *
+     * flush f(t) = f'(t) + f(t)
+     */
+    inline void flushPosition();
+    inline void flushVelocity();
+    inline void flushAcceleration();
+    inline void fullFlush();
     inline void resetTime() { runningTime = 0.0; }
  private:
 } PhysicsObject;
@@ -94,7 +101,7 @@ class PhysicsController {
     PhysicsResult setPosition(string objectName, vec3 position);
     PhysicsResult setVelocity(string objectName, vec3 velocity);
     PhysicsResult setAcceleration(string objectName, vec3 acceleration);
-    PhysicsResult setForce(string objectName, vec3 force);
+    PhysicsResult applyForce(string objectName, vec3 force);
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult updatePosition();
     inline bool isPipelineComplete() { return freeWorkers_ == threadNum_ && workQueue_.empty(); }
@@ -105,6 +112,7 @@ class PhysicsController {
     inline int hasShutdown() { return shutdown_; }
     inline const map<string, std::shared_ptr<PhysicsObject>> &getPhysicsObjects() { return physicsObjects_; }
     ~PhysicsController();
+
  private:
     const int threadNum_;
     int shutdown_ = 0;

@@ -17,6 +17,7 @@
 extern double deltaTime;
 
 string testObjectName = "testObject";
+float testMassKg = 5.0f;
 
 // Helper function to check for vec3 float equality
 template<typename T>
@@ -26,6 +27,10 @@ void ASSERT_VEC_EQ(const T &expected, const T &actual) {
         ASSERT_FLOAT_EQ(expected[i], actual[i]);
     }
 }
+
+// Making this a macro to preserve line number in assert
+#define ASSERT_VEC_EQ(expected, actual) \
+for (uint i = 0; i < (sizeof(actual) / sizeof(float)); ++i) ASSERT_FLOAT_EQ(expected[i], actual[i]);
 
 // Test Fixtures
 class GivenPhysicsControllerGeneral: public ::testing::Test {
@@ -185,9 +190,9 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
         PhysicsParams params;
         params.elasticity = 0.0f;
         params.isKinematic = false;
-        params.mass = 5.0f;
+        params.mass = testMassKg;
         params.obeyGravity = false;
-        physicsController_->addSceneObject(testObject_.get(), {});
+        physicsController_->addSceneObject(testObject_.get(), params);
     }
     void TearDown() override {
         delete physicsController_;
@@ -196,6 +201,10 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
     std::unique_ptr<TestObject> testObject_;
 };
 
+/**
+ * @brief Ensures that setting the position in the physics controller updates the target object's position
+ * on the next update.
+ */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenPositionUpdateCalled_ThenPositionUpdated) {
     /* Preparation */
     deltaTime = 1.0f;
@@ -212,6 +221,10 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenPositionUpdateCalled_ThenPosi
     ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 }
 
+/**
+ * @brief Ensures that setting the velocity and calling update() updates the position as 
+ * expected for the amount of time passed.
+ */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenVelocityUpdateCalled_ThenPositionUpdated) {
     /* Preparation */
     deltaTime = 1.0f;
@@ -234,6 +247,10 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenVelocityUpdateCalled_ThenPosi
     ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 }
 
+/**
+ * @brief Ensures that setting the acceleration and calling update() updates the position as 
+ * expected for the amount of time passed.
+ */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalled_ThenPositionUpdated) {
     /* Preparation */
     deltaTime = 1.0f;
@@ -256,6 +273,10 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalled_Then
     ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 }
 
+/**
+ * @brief Ensures that setting the acceleration and calling update() updates the position as 
+ * expected for the amount of time accumulated after each update call.
+ */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalledTwice_ThenPositionUpdated) {
     /* Preparation */
     deltaTime = 1.0f;
@@ -275,6 +296,10 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalledTwice
     ASSERT_VEC_EQ(expectedPosition_2, testObject_->getPosition());
 }
 
+/**
+ * @brief Validates overall physics calculations for position with complex values for position, velocity
+ * and acceleration.
+ */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenComplexAccelerationVelPosUpdateCalled_ThenPositionAccurate) {
     /* Preparation */
     deltaTime = 5.67f;
@@ -295,6 +320,10 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenComplexAccelerationVelPosUpda
     ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 }
 
+/**
+ * @brief Ensures that changing an object's velocity after time has accumulated (after update has been called at 
+ * least once) results in expected object transformations from subsequent update calls.
+ */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterVelocityChanges_ThenPositionTimeFlush) {
     /* Preparation */
     deltaTime = 1.0f;
@@ -338,6 +367,10 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterVelocityChan
     // position to 8.5, because t = 3 and pos = 1. Now it's t = 1 but pos = 5.
 }
 
+/**
+ * @brief Ensures that changing an object's acceleration after time has accumulated (after update has been called at
+ * least once) results in expected object transformations from subsequent update calls.
+ */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterAccelerationChanges_ThenPositionTimeFlush) {
     /* Preparation */
     deltaTime = 1.0f;
@@ -347,7 +380,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterAcceleration
     vec3 velocity = vec3(1.0f, 0.0f, 0.0f);
     vec3 acceleration = vec3(1.0f, 0.0f, 0.0f);
     vec3 expectedPosition_1 = vec3(5.0f, 0.0f, 0.0f);
-    vec3 expectedPosition_2 = vec3(6.5f, 0.0f, 0.0f);
+    vec3 expectedPosition_2 = vec3(8.5f, 0.0f, 0.0f);
     testObject_->setPosition(startingPosition);
     physicsController_->setPosition(testObjectName, startingPosition);
     physicsController_->setVelocity(testObjectName, velocity);
@@ -375,10 +408,77 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterAcceleration
     physicsController_->update();
 
     /* Validation */
-    // Position is 6.5f now because t = 1 second instead of 3.
+    /*
+    Setting the acceleration above does some interesting stuff. We "flush" the position
+    and velocity values using acceleration/velocity to bake the old runningTime variable
+    into the new values. This is what this calculation looks like:
+
+    ========== BEFORE FLUSH ==================
+    acceleration = 1.0
+    velocity = 1.0
+    position = 1.0
+    runningTime = 2.0
+
+    ========== AFTER FLUSH (IN ORDER) ========
+                1.    2
+    position =  _ (a)t  + (v)t + position
+                2
+
+                     2
+    -> 0.5 (1.0)(2.0)  + (1.0)(2.0) + 1.0
+
+    -> 2.0 + 2.0 + 1.0 = 5.0
+
+    velocity = (a)t + v -> (1.0)(2.0) + (1.0) = 3.0
+
+    acceleration = 1.0 (nothing changes :)
+
+    runningTime -> 0.0 (reset)
+
+    The idea behind this is that the momentum from the acceleration is PRESERVED in the velocity,
+    so the object continues to travel as expected. This avoids a jittering effect when objects have
+    their position/velocity/acceleration attributes changed, or when a new force is applied to an
+    object.
+
+    ========== UPDATE ==========
+
+    When update is called, we calculate the new position using the updated flushed values.
+
+    position = 5.0
+    velocity = 3.0
+    acceleration = 1.0
+    runningTime = 1.0
+
+                     2
+    -> 0.5 (1.0)(1.0)  + (3.0)(1.0) + 5.0 = 8.5
+
+    Notice this is the same expected position if we had not done the acceleration flush!
+                           2
+    p(3.0) = 0.5 (1.0)(3.0)  + (1.0)(3.0) + 1.0 = 8.5
+    */
     ASSERT_VEC_EQ(expectedPosition_2, testObject_->getPosition());
-    // Without the time reset & position flush, the last update call would set the
-    // position to 8.5, because t = 3 and pos = 1. Now it's t = 1 but pos = 5.
+}
+
+/**
+ * @brief Validates applyForce functionality. This basically just adds acceleration but consider's
+ * an object's mass (F = ma).
+ */
+TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyForce_ThenPositionUpdatesAsExpected) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    auto physicsObject = physicsController_->getPhysicsObject(testObjectName);
+    vec3 startingPosition = vec3(1.0f, 10.0f, 7.0f);
+    vec3 force = vec3(5.0f, 3.0f, 6.0f);
+    vec3 expectedPosition = vec3(1.5f, 10.3f, 7.6f);
+    testObject_->setPosition(startingPosition);
+    physicsController_->applyForce(testObjectName, force);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 }
 
 /**
