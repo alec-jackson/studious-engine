@@ -8,10 +8,17 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "inputMonitor.hpp"
+#include "CameraObject.hpp"
+#include <SDL_scancode.h>
 #include <iostream>
 #include <vector>
-#include <inputMonitor.hpp>
+#include <string>
+#include <cstdio>
+#include <cmath>
 #include <ColliderObject.hpp>
+#include <ModelImport.hpp>
+#include <AnimationController.hpp>
 // Analog joystick dead zone
 const int JOYSTICK_DEAD_ZONE = 4000;
 #define PI 3.14159265
@@ -32,6 +39,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     /// @todo Refactor and remove reinterpret_casts if re-using this code
     gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
+    CameraObject *renderer = currentGameInfo->gameCamera;
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
     float rotateSpeed = 1.0f, offsetSpeed = 0.1f, currentLuminance = 1.0f;
     vec3 cameraOffset = vec3(7.140022f, 1.349999f, 2.309998f), angles = vec3(0),
@@ -333,6 +341,40 @@ void rotateShape(void *gameInfoStruct, void *target) {
             ColliderObject::setDrawCollider(!enableStatus);
         } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_L] && lPressed) {
             lPressed = false;
+        }
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_BACKSPACE]) {
+            static int bulletCount;
+            // Instantiate a bullet and shoot it
+            currentGame->protectedGfxRequest([currentGame, character, angle] () {
+                auto imp = ModelImport("src/resources/models/bullet.obj", {}, {})
+                    .createPolygonFromFile();
+                currentGame->createGameObject(imp, character->getPosition(), vec3(angle, 0, angle - 180.0f), 0.005f,
+                    string("bullet") + std::to_string(bulletCount++));
+            });
+            auto bulletName = string("bullet") + std::to_string(bulletCount - 1);
+            auto bulletObj = currentGame->getSceneObject(bulletName);
+            auto expireTime = 5.0f;
+            if (nullptr == bulletObj) {
+                fprintf(stderr, "rotateShape: Failed to create bullet object!");
+            } else {
+                bulletObj->setRenderPriority(RENDER_PRIOR_LOW - 1);
+                // Decay the bullet after 5 seconds
+                auto delcb = [bulletName, currentGame] () {
+                    currentGame->removeSceneObject(bulletName);
+                };
+                auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
+                animationController.addKeyFrame(bulletObj, bkf);
+                renderer->addSceneObject(bulletObj);
+                PhysicsParams params(true, false, 0.0f, 1.0f);
+                physicsController.addSceneObject(bulletObj, params);
+                // Convert angles[1] to a direction????
+                auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
+                auto anglez = std::sin(angles.y * (PI/180.0) + (PI/2.0));
+                auto charAngle = character->getRotation();
+                // angles.y is the rotation of the character on some axis??
+                printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
+                physicsController.applyForce(bulletName, vec3(anglex, 0.0f, anglez));
+            }
         }
         // Set character rotation based on joysticks
         // Left rotation

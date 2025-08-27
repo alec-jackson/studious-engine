@@ -28,7 +28,7 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(Polygon *target, unsigned int programId, mat4 *translateMatrix,
+ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, unsigned int programId, mat4 *translateMatrix,
     mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
     SceneObject(type, objectName, gfxController), target_ { target }, pTranslateMatrix_ { translateMatrix },
     pScaleMatrix_ { scaleMatrix }, pVpMatrix_ { vpMatrix } {
@@ -56,8 +56,7 @@ ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int pr
         }
         vertices.push_back(vertTexData.at(i));
     }
-    Polygon tempPoly(vertices.size(), vertices);
-    target_ = &tempPoly;
+    target_ = std::make_shared<Polygon>(vertices.size(), vertices);
     createCollider();
 }
 

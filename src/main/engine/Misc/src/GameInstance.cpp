@@ -65,9 +65,9 @@ map<Uint8, GameInput> hatInputMap = {
  (void) startGameInstance does not return any value.
  */
 GameInstance::GameInstance(GfxController *gfxController, AnimationController *animationController,
-        int width, int height) : gfxController_ { gfxController }, animationController_ { animationController },
-        width_ { width }, height_ { height },
-        shutdown_(0) {
+        PhysicsController *physicsController, int width, int height) : gfxController_ { gfxController },
+        animationController_ { animationController }, physicsController_ { physicsController }, width_ { width },
+        height_ { height }, shutdown_(0) {
     luminance = 1.0f;  // Set default values
     directionalLight_ = vec3(-100, 100, 100);
     controllersConnected = 0;
@@ -289,6 +289,7 @@ void GameInstance::shutdown() {
     // Complete all protectedGfxRequests
     runGfxRequests();
     shutdown_ = 1;
+    physicsController_->shutdown();
     // Notify condition variables of shutdown
     inputCv_.notify_all();
     progressCv_.notify_all();
@@ -452,8 +453,8 @@ bool GameInstance::waitForInput(GameInput input) {
     return curInput == input;
 }
 
-GameObject *GameInstance::createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
-    string objectName) {
+GameObject *GameInstance::createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation,
+    float scale, string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     printf("GameInstance::createGameObject: Creating GameObject %zu\n", sceneObjects_.size());
     auto gameObjProg = gfxController_->getProgramId(GAMEOBJECT_PROG_NAME);
@@ -569,12 +570,14 @@ int GameInstance::update() {
     error |= updateWindow();
     updateInput();
     animationController_->update();
+    physicsController_->update();
     return error;
 }
 
 int GameInstance::removeSceneObject(string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     animationController_->removeSceneObject(objectName);
+    physicsController_->removeSceneObject(objectName);
     // Search for the object by name
     auto objectIt = std::find_if(sceneObjects_.begin(), sceneObjects_.end(),
         [&objectName](std::shared_ptr<SceneObject> obj) {

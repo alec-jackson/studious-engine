@@ -75,7 +75,6 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObject/src/TileObject.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
   src/main/utilities/src/GifLoader.cpp
-  src/main/engine/Misc/src/inputMonitor.cpp
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
@@ -297,10 +296,8 @@ install (FILES
   src/main/engine/SceneObjectExt/headers/TrackExt.hpp
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp
-  src/main/engine/Misc/headers/game.hpp
   src/main/engine/Misc/headers/GameInstance.hpp
   src/main/engine/Misc/headers/Image.hpp
-  src/main/engine/Misc/headers/inputMonitor.hpp
   src/main/engine/Misc/headers/physics.hpp
   src/main/misc/headers/config.hpp
   src/main/engine/AnimationController/headers/AnimationController.hpp

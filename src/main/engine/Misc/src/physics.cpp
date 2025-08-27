@@ -29,7 +29,9 @@ void PhysicsObject::basePosUpdate() {
 
     // Update the position of the target object
     target->setPosition(pos);
+#if (PHYS_TRACE == 1)
     printf("PhysicsObject::basePosUpdate: Updated position is %f, %f, %f\n", pos.x, pos.y, pos.z);
+#endif
 }
 
 void PhysicsObject::flushPosition() {
@@ -57,7 +59,9 @@ void PhysicsObject::fullFlush() {
 // Sleep the thread on the work queue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     while (1) {
+#if (PHYS_TRACE == 1)
         printf("physDoWork: Waiting for work\n");
+#endif
         // Fetch work from the work queue if present
         std::unique_lock <std::mutex> scopeLock(workQueueLock_);
         workAvailableSignal_.wait(scopeLock, [this] () { return !workQueue_.empty(); });
@@ -79,8 +83,9 @@ PhysicsResult PhysicsController::doWork() {
          *          2
          */
         // Use OpenCL to speed this up maybe? - move this to PhysicsObject as a method
-
+#if (PHYS_TRACE == 1)
         printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), physObj->workType);
+#endif
         switch (physObj->workType) {
             case PhysicsWorkType::POSITION:
                 physObj->basePosUpdate();
@@ -89,9 +94,16 @@ PhysicsResult PhysicsController::doWork() {
                 printf("HORRIBLE BADNESS\n");
                 break;
         }
+#if (PHYS_TRACE == 1)
         printf("physDoWork: Finished work [%s], work type [%d]\n", name.c_str(), physObj->workType);
+#endif
         freeWorkers_ += 1;
-        workCompletedSignal_.notify_one();
+        assert(freeWorkers_ <= threadNum_);
+        if (freeWorkers_ == threadNum_) {
+            // The conditional variables are NOT thread safe and need to be protected too
+            std::unique_lock<std::mutex> completedLock(workQueueLock_);
+            workCompletedSignal_.notify_one();
+        }
     }
     // Might not be necessary, but doing this to be safe for now
     freeWorkers_ += 1;
@@ -172,7 +184,7 @@ PhysicsResult PhysicsController::removeSceneObject(string objectName) {
     std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
-        printf("PhysicsController::removeGameObject: Deleting object %s\n", objectName.c_str());
+        printf("PhysicsController::removeSceneObject: Deleting object %s\n", objectName.c_str());
         physicsObjects_.erase(poit);
     } else {
         fprintf(stderr,
@@ -255,7 +267,6 @@ PhysicsController::~PhysicsController() {
  * @return PhysicsResult
  */
 PhysicsResult PhysicsController::updatePosition() {
-    printf("PhysicsController::updatePosition: Enter\n");
     if (shutdown_) return PhysicsResult::SHUTDOWN;
     std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
     workQueueLock_.lock();
@@ -264,12 +275,13 @@ PhysicsResult PhysicsController::updatePosition() {
         physObjEntry.second.get()->workType = PhysicsWorkType::POSITION;
         workQueue_.push(physObjEntry.second);
     }
-    workQueueLock_.unlock();
     workAvailableSignal_.notify_all();
+    workQueueLock_.unlock();
     return PhysicsResult::OK;
 }
 
 PhysicsResult PhysicsController::waitPipelineComplete() {
+    // Is it okay to use the workCompletedSignal here instead of the work available signal???
     std::unique_lock<std::mutex> scopeLock(workQueueLock_);
     workCompletedSignal_.wait(scopeLock, [this]() { return isPipelineComplete() || shutdown_; });
     return shutdown_ ? PhysicsResult::SHUTDOWN : PhysicsResult::OK;

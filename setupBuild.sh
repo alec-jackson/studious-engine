@@ -8,6 +8,7 @@ runTests=false
 singleJob=false
 buildAll=false
 installLib=false
+physicsThreads=1
 target=studious-3dExampleScene
 while [ $# -ne 0 ]; do
     arg="$1"
@@ -33,6 +34,10 @@ while [ $# -ne 0 ]; do
             ;;
         -s)
             singleJob=true
+            ;;
+        -physThreads)
+            shift
+            physThreads="$1"
             ;;
         -i)
             # Installs the library on your system automatically
@@ -81,6 +86,8 @@ if [ "$runTests" == true ]; then
     echo "Compiling tests"
     ARGS="$ARGS -DRUNTEST=1"
 fi
+# Pass phys threads through
+ARGS="$ARGS -DPHYS_THREADS=$physThreads"
 
 cmake ${ARGS} ..
 

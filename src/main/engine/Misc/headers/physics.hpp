@@ -24,6 +24,11 @@
 
 #define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
 #define PHYS_MAX_THREADS 256
+#define PHYS_TRACE 0
+#ifndef PHYS_THREADS
+// Default thread count when not defined
+#define PHYS_THREADS 1
+#endif
 
 enum PhysicsWorkType {
     POSITION,
@@ -67,6 +72,8 @@ typedef struct PhysicsParams {
     bool                obeyGravity;
     float               elasticity;
     float               mass;
+    inline PhysicsParams(bool isKinematic, bool obeyGravity, float elasticity, float mass) :
+        isKinematic { isKinematic }, obeyGravity { obeyGravity }, elasticity { elasticity }, mass { mass } {}
 } PhysicsParams;
 
 // External - published to subscribers
@@ -102,7 +109,7 @@ class PhysicsController {
     PhysicsResult applyForce(string objectName, vec3 force);
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult updatePosition();
-    inline bool isPipelineComplete() { return freeWorkers_ == threadNum_ && workQueue_.empty(); }
+    inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
     PhysicsResult waitPipelineComplete();
     void update();
     PhysicsResult doWork();
@@ -112,7 +119,7 @@ class PhysicsController {
     ~PhysicsController();
 
  private:
-    const int threadNum_;
+    std::atomic<int> threadNum_;
     int shutdown_ = 0;
     std::vector<std::thread> threads_;
     std::mutex physicsObjectQueueLock_;

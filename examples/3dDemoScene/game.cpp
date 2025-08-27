@@ -16,7 +16,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
-#include <game.hpp>
+#include "game.hpp"
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>
 
@@ -60,6 +60,7 @@ TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
 OpenGlGfxController gfxController = OpenGlGfxController();
 AnimationController animationController;
+PhysicsController physicsController(PHYS_THREADS);
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -76,7 +77,7 @@ int main() {
         width = 1280;
         height = 720;
     }
-    GameInstance currentGame(&gfxController, &animationController, width, height);
+    GameInstance currentGame(&gfxController, &animationController, &physicsController, width, height);
     currentGame.configureVsync(config.enableVsync);
     // Load shader programs
     for (auto program : programs) {
@@ -108,7 +109,7 @@ int runtime(GameInstance *currentGame) {
         currentGame->loadSound(sfx.first, sfx.second);
     }
     // Start the background music
-    currentGame->playSound("bg_music", 1, 60);
+    //currentGame->playSound("bg_music", 1, 60);
 
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
@@ -122,7 +123,7 @@ int runtime(GameInstance *currentGame) {
         texturePatternStage)
         .createPolygonFromFile();
 
-    auto mapObject = currentGame->createGameObject(&mapPoly,
+    auto mapObject = currentGame->createGameObject(mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
 
     cout << "Creating Player\n";
@@ -140,12 +141,12 @@ int runtime(GameInstance *currentGame) {
         .createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
-    playerRef = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
+    playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
-    auto companion = currentGame->createGameObject(&companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion");
-    auto companion2 = currentGame->createGameObject(&companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion2");
-    auto companion3 = currentGame->createGameObject(&companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion3");
-    auto companion4 = currentGame->createGameObject(&companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion4");
+    auto companion = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion");
+    auto companion2 = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion2");
+    auto companion3 = currentGame->createGameObject(companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion3");
+    auto companion4 = currentGame->createGameObject(companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion4");
     playerRef->addChild(companion);
     playerRef->addChild(companion2);
     playerRef->addChild(companion3);
@@ -164,7 +165,7 @@ int runtime(GameInstance *currentGame) {
         texturePattern)
         .createPolygonFromFile();
 
-    auto wolfObject = currentGame->createGameObject(&wolfPoly,
+    auto wolfObject = currentGame->createGameObject(wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
 
     // Make the wolf spin :)
