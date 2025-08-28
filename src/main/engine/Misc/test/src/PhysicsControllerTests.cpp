@@ -188,11 +188,7 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
         // Create a sample test object and add it to the physics controller
         testObject_ = std::make_unique<TestObject>(testObjectName);
         testObject_.get()->setPosition(vec3(0));
-        PhysicsParams params;
-        params.elasticity = 0.0f;
-        params.isKinematic = false;
-        params.mass = testMassKg;
-        params.obeyGravity = false;
+        PhysicsParams params(false, false, 0.0f, testMassKg);
         physicsController_->addSceneObject(testObject_.get(), params);
     }
     void TearDown() override {

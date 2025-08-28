@@ -85,7 +85,8 @@ void GameObject::configureOpenGl() {
         // Generate normal buffer
         gfxController_->generateBuffer(&model_.get()->normalBufferId[i]);
         gfxController_->bindBuffer(model_.get()->normalBufferId[i]);
-        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 9, &model_.get()->normalCoords[i][0]);
+        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 9,
+            &model_.get()->normalCoords[i][0]);
         gfxController_->enableVertexAttArray(2, 3, sizeof(float), 0);
         // Specific case where the current object does not get a texture
         int size = static_cast<int>(model_.get()->texturePath_.size()) < 0 ? 0 : model_.get()->texturePath_.size();
@@ -123,7 +124,8 @@ void GameObject::configureOpenGl() {
         // Send texture coords to OpenGL
         gfxController_->generateBuffer(&model_.get()->textureCoordsId[i]);
         gfxController_->bindBuffer(model_.get()->textureCoordsId[i]);
-        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 6, &model_.get()->textureCoords[i][0]);
+        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 6,
+            &model_.get()->textureCoords[i][0]);
         gfxController_->enableVertexAttArray(1, 2, sizeof(float), 0);
 
         SDL_FreeSurface(texture);
