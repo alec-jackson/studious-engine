@@ -48,6 +48,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     bool trackMouse = false;
     bool uPressed = false;
     bool lPressed = false;
+    bool delPressed = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
     if (numJoySticks < 1) {
@@ -342,7 +343,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_L] && lPressed) {
             lPressed = false;
         }
-        if (currentGame->getKeystateRaw()[SDL_SCANCODE_BACKSPACE]) {
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && !delPressed) {
+            delPressed = true;
             static int bulletCount;
             // Instantiate a bullet and shoot it
             currentGame->protectedGfxRequest([currentGame, character, angle] () {
@@ -371,10 +373,13 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
                 auto anglez = std::sin(angles.y * (PI/180.0) + (PI/2.0));
                 auto charAngle = character->getRotation();
+                float magnitude = 0.3f;
                 // angles.y is the rotation of the character on some axis??
                 printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
-                physicsController.applyForce(bulletName, vec3(anglex, 0.0f, anglez));
+                physicsController.applyForce(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
             }
+        } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && delPressed) {
+            delPressed = false;
         }
         // Set character rotation based on joysticks
         // Left rotation

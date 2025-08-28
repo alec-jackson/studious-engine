@@ -8,7 +8,7 @@ runTests=false
 singleJob=false
 buildAll=false
 installLib=false
-physicsThreads=1
+physThreads=1
 target=studious-3dExampleScene
 while [ $# -ne 0 ]; do
     arg="$1"
@@ -86,6 +86,7 @@ if [ "$runTests" == true ]; then
     echo "Compiling tests"
     ARGS="$ARGS -DRUNTEST=1"
 fi
+echo "Building with $physThreads threads!"
 # Pass phys threads through
 ARGS="$ARGS -DPHYS_THREADS=$physThreads"
 

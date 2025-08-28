@@ -209,7 +209,7 @@ std::shared_ptr<PhysicsObject> PhysicsController::getPhysicsObject(string object
 }
 
 PhysicsController::PhysicsController(int threadNum) : threadNum_{threadNum} {
-    printf("PhysicsController::PhysicsController: Entered constructor\n");
+    printf("PhysicsController::PhysicsController: Creating with %d threads\n", threadNum);
     if (threadNum_ > PHYS_MAX_THREADS) return;
     // Set the initial free workers to threadNum
     freeWorkers_ = threadNum;
@@ -229,13 +229,15 @@ PhysicsController::~PhysicsController() {
     deathMsg.get()->workType = PhysicsWorkType::DIE;
     // When we end, send kill signal to threads and join
     for (int i = 0; i < threadNum_; ++i) {
-        printf("Sending kill to worker queue...\n");
+        printf("PhysicsController::~PhysicsController: Sending kill to worker queue...\n");
         workQueue_.push(deathMsg);
     }
     workAvailableSignal_.notify_all();
     scopeLock.unlock();
+    int tCount = 0;
     for (auto &thread : threads_) {
-        printf("Joining worker thread...\n");
+        printf("PhysicsController::~PhysicsController: Joining worker thread %d\n",
+            tCount);
         thread.join();
     }
 }
