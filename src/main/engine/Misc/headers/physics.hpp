@@ -53,17 +53,29 @@ typedef class PhysicsObject {
     float                mass;
     double               runningTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
+    /**
+     * @brief Updates the position of the target object using the position formula.
+     */
     void basePosUpdate();
     /**
-     * Flush operation:
-     *
-     * flush f(t) = f'(t) + f(t)
+     * @brief Resets the reference position to the object's real position to allow the runningTime
+     * counter to be reset without moving the object backwards.
      */
     inline void flushPosition();
+    /**
+     * @brief Updates the reference velocity to velocity + acceleration * runningTime to maintain
+     * momentum of objects before a runningTime reset.
+     */
     inline void flushVelocity();
+    /**
+     * @brief Does nothing for now, but will be useful when jerk is implemented.
+     */
     inline void flushAcceleration();
+    /**
+     * @brief Runs position, velocity, acceleration flushes and resets the runningTime counter back
+     * to zero.
+     */
     inline void fullFlush();
-    inline void resetTime() { runningTime = 0.0; }
  private:
 } PhysicsObject;
 
@@ -99,10 +111,40 @@ float basicPhysics(float* pos, float fallspeed);
 
 class PhysicsController {
  public:
+    /**
+     * @brief Creates a new physics controller with a given number of worker threads.
+     * @param threadNum Number of worker threads to create for the PhysicsController.
+     */
     explicit PhysicsController(int threadNum);
-    PhysicsResult addSceneObject(SceneObject *, PhysicsParams params);
+    /**
+     * @brief Adds a SceneObject to the PhysicsController for it to operate on.
+     * @param object Target object for physics controller to update.
+     * @param params Physical attributes of object being added to PhysicsController.
+     * @return PhysicsResult::OK when object added successfully.
+     */
+    PhysicsResult addSceneObject(SceneObject *object, PhysicsParams params);
+    /**
+     * @brief Removes a scene object from the physics controller.
+     * @param objectName Name of SceneObject to remove from PhysicsController.
+     * @return PhysicsResult::OK when object is discovered and removed. PhysicsObject::FAILURE when object is
+     * not discovered, so nothing happens.
+     */
     PhysicsResult removeSceneObject(string objectName);
+    /**
+     * @brief Fetches a physics object from the PhysicsController. This is not thread safe, and is designed to
+     * only be used in unit tests.
+     * @param objectName Object to fetch from the PhysicsController.
+     * @return shared pointer containing the discovered object if present. Invalid shared pointer is returned when
+     * the object is not discovered.
+     */
     std::shared_ptr<PhysicsObject> getPhysicsObject(string objectName);
+    /**
+     * @brief Sets the reference position of a SceneObject in the PhysicsController.
+     * @param objectName SceneObject in the PhysicsController to set the reference position to.
+     * @param position New reference position to set for the SceneObject.
+     * @return PhysicsResult::OK when an object is discovered and has its position set. Otherwise,
+     * PhysicsResult::FAILURE is returned and no objects are changed.
+     */
     PhysicsResult setPosition(string objectName, vec3 position);
     PhysicsResult setVelocity(string objectName, vec3 velocity);
     PhysicsResult setAcceleration(string objectName, vec3 acceleration);

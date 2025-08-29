@@ -86,7 +86,6 @@ if [ "$runTests" == true ]; then
     echo "Compiling tests"
     ARGS="$ARGS -DRUNTEST=1"
 fi
-echo "Building with $physThreads threads!"
 # Pass phys threads through
 ARGS="$ARGS -DPHYS_THREADS=$physThreads"
 

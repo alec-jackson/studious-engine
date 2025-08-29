@@ -237,7 +237,7 @@ PhysicsController::~PhysicsController() {
     int tCount = 0;
     for (auto &thread : threads_) {
         printf("PhysicsController::~PhysicsController: Joining worker thread %d\n",
-            tCount);
+            tCount++);
         thread.join();
     }
 }
