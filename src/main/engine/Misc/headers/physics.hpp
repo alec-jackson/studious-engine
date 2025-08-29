@@ -38,8 +38,32 @@ enum PhysicsWorkType {
     DIE
 };
 
+class PhysicsForce {
+ public:
+    vec3 getForceForTime(float time);
+    inline bool isDone() { return currentTime_ >= duration_; }
+    inline PhysicsForce(vec3 force, float duration) :
+        force_ { force }, duration_ { duration }, currentTime_ { 0.0f } {}
+ private:
+    vec3 force_;
+    float duration_;
+    float currentTime_;
+    // Maybe we can add callbacks here that run when a force is complete?
+    
+};
+
+class PhysicsForces {
+ public:
+    vec3 getCumulativeForceForTime(float time);
+    void addWork(vec3 force, float duration);
+    void clearForces();
+ private:
+    std::vector<PhysicsForce> forces_;
+    std::mutex forcesLock_;
+};
+
 // Internal - used in physics component
-typedef class PhysicsObject {
+class PhysicsObject {
  public:
     SceneObject *        target;
     vec3                 position;
@@ -53,6 +77,7 @@ typedef class PhysicsObject {
     float                mass;
     double               runningTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
+    PhysicsForces        forces;
     /**
      * @brief Updates the position of the target object using the position formula.
      */
@@ -61,44 +86,45 @@ typedef class PhysicsObject {
      * @brief Resets the reference position to the object's real position to allow the runningTime
      * counter to be reset without moving the object backwards.
      */
-    inline void flushPosition();
+    void flushPosition();
     /**
      * @brief Updates the reference velocity to velocity + acceleration * runningTime to maintain
      * momentum of objects before a runningTime reset.
      */
-    inline void flushVelocity();
+    void flushVelocity();
     /**
      * @brief Does nothing for now, but will be useful when jerk is implemented.
      */
-    inline void flushAcceleration();
+    void flushAcceleration();
     /**
      * @brief Runs position, velocity, acceleration flushes and resets the runningTime counter back
      * to zero.
      */
-    inline void fullFlush();
+    void fullFlush();
+    void addWork(vec3 force, float duration);
  private:
-} PhysicsObject;
+};
 
-typedef struct PhysicsParams {
+struct PhysicsParams {
     bool                isKinematic;
     bool                obeyGravity;
     float               elasticity;
     float               mass;
     inline PhysicsParams(bool isKinematic, bool obeyGravity, float elasticity, float mass) :
         isKinematic { isKinematic }, obeyGravity { obeyGravity }, elasticity { elasticity }, mass { mass } {}
-} PhysicsParams;
+};
 
 // External - published to subscribers
-typedef struct PhysicsReport {
+struct PhysicsReport {
     SceneObject *parentObject;
     vector<SceneObject *> collisions;
-} PhysicsReport;
+};
 
-typedef struct PhysicsSubscriber {
+struct PhysicsSubscriber {
     inline PhysicsSubscriber(string name, SUBSCRIPTION_PARAM) : name(name), callback(callback) {}
     string name;
     SUBSCRIPTION_PARAM;
-} PhysicsSubscriber;
+};
 
 enum class PhysicsResult {
     OK,
@@ -149,6 +175,7 @@ class PhysicsController {
     PhysicsResult setVelocity(string objectName, vec3 velocity);
     PhysicsResult setAcceleration(string objectName, vec3 acceleration);
     PhysicsResult applyForce(string objectName, vec3 force);
+    PhysicsResult applyWork(string objectName, vec3 force, float duration);
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult updatePosition();
     inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
