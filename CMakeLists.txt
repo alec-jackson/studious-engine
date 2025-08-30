@@ -11,6 +11,9 @@ endif()
 if (GFX_EMBEDDED)
   add_compile_options(-DGFX_EMBEDDED)
 endif()
+if (PHYS_THREADS)
+  add_compile_options(-DPHYS_THREADS=${PHYS_THREADS})
+endif()
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -75,7 +78,6 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObject/src/TileObject.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
   src/main/utilities/src/GifLoader.cpp
-  src/main/engine/Misc/src/inputMonitor.cpp
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
@@ -240,6 +242,33 @@ target_link_libraries(gtest_AnimationControllerTests
 )
 
 gtest_discover_tests(gtest_AnimationControllerTests)
+# ======================================== PhysicsControllerTests ========================================
+add_executable(gtest_PhysicsControllerTests
+  src/main/engine/Misc/test/src/PhysicsControllerTests.cpp
+  src/main/engine/Misc/src/physics.cpp
+  src/main/engine/Misc/src/DeltaTime.cpp
+  src/main/utilities/src/Polygon.cpp
+  src/main/engine/SceneObject/src/TestObject.cpp
+  src/main/engine/SceneObject/src/SceneObject.cpp
+  src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
+)
+
+target_include_directories(gtest_PhysicsControllerTests
+  PRIVATE
+    src/main/engine/Misc/test/headers
+  PUBLIC
+    ${SDL2_INCLUDE_DIRS}
+)
+
+target_link_libraries(gtest_PhysicsControllerTests
+  PUBLIC
+  GTest::gtest_main
+  GTest::gmock
+  ${FREETYPE_LIBRARIES}
+)
+
+gtest_discover_tests(gtest_PhysicsControllerTests)
 # ======================================== END OF GTESTS ========================================
 endif()
 
@@ -270,10 +299,8 @@ install (FILES
   src/main/engine/SceneObjectExt/headers/TrackExt.hpp
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp
-  src/main/engine/Misc/headers/game.hpp
   src/main/engine/Misc/headers/GameInstance.hpp
   src/main/engine/Misc/headers/Image.hpp
-  src/main/engine/Misc/headers/inputMonitor.hpp
   src/main/engine/Misc/headers/physics.hpp
   src/main/misc/headers/config.hpp
   src/main/engine/AnimationController/headers/AnimationController.hpp

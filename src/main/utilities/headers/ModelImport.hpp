@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <memory>
 #include <Polygon.hpp>
 #include <winsup.hpp>
 #define DEFAULT_VECTOR_SIZE 256
@@ -27,9 +28,9 @@ using std::ifstream;
 class ModelImport {
  public:
       explicit ModelImport(string, vector<string>, vector<int>);
-      Polygon createPolygonFromFile();
+      std::shared_ptr<Polygon> createPolygonFromFile();
       // Using the move constructor so we don't need to define a copy constructor
-      inline Polygon getPolygon() { return std::move(polygon_); }
+      inline std::shared_ptr<Polygon> getPolygon() { return polygon_; }
       int processLine(string, int);
       int buildObject(int objectId);
       ~ModelImport();
@@ -42,5 +43,5 @@ class ModelImport {
       vector<float> normalFrame_;  // Unique normal points
       vector<float> textureFrame_;  // Unique texture points
       vector<int> commands_;  // Commands in obj file to build buffers
-      Polygon polygon_;
+      std::shared_ptr<Polygon> polygon_;
 };

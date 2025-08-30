@@ -11,11 +11,11 @@
  *
  */
 #include "GameInstance.hpp"
+#include <physics.hpp>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <cstdio>
-#include <game.hpp>
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>
 
@@ -40,29 +40,22 @@ vector<ProgramData> programs = {
 };
 #endif
 
-OpenGlGfxController gfxController = OpenGlGfxController();
-AnimationController animationController;
+extern std::unique_ptr<GfxController> gfxController;
+extern std::unique_ptr<AnimationController> animationController;
+extern std::unique_ptr<PhysicsController> physicsController;
 
 int runtime(GameInstance *currentGame);
-int mainLoop(gameInfo *gamein);
+int mainLoop(GameInstance *currentGame);
 
 int main() {
     int errorNum;
-    configData config;
-    int flag = loadConfig(&config, "src/resources/config.txt");
-    int width, height;
-    if (!flag) {
-        width = config.resX;
-        height = config.resY;
-    } else {
-        width = 1280;
-        height = 720;
-    }
-    GameInstance currentGame(&gfxController, &animationController, width, height);
-    currentGame.configureVsync(config.enableVsync);
+    auto config = StudiousConfig("src/resources/config.txt");
+
+    GameInstance currentGame(config);
+
     // Load shader programs
     for (auto program : programs) {
-        gfxController.loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
+        gfxController.get()->loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
     }
     errorNum = runtime(&currentGame);
     return errorNum;
@@ -81,8 +74,6 @@ int main() {
 int runtime(GameInstance *currentGame) {
     cout << "Building game scene!\n";
     SDL_SetRelativeMouseMode(SDL_FALSE);
-    struct gameInfo currentGameInfo;
-    bool isDone = false;
     cout << "Creating camera.\n";
 
     auto currentCamera = currentGame->createCamera(nullptr, vec3(0), 0.0, 16.0 / 9.0, 4.0, 90.0);
@@ -106,19 +97,19 @@ int runtime(GameInstance *currentGame) {
     vector<int> animationTrack = {
         0, 1, 2, 3
     };
-    animationController.addTrack(
+    animationController.get()->addTrack(
         obstacle,
         "one to four",
         animationTrack,
         1,
         true);
-    animationController.addTrack(
+    animationController.get()->addTrack(
         obstacle,
         "all frames",
         {},
         12,
         true);
-    animationController.playTrack("all frames");
+    animationController.get()->playTrack("all frames");
 
     // Create a new tile object and add it to the scene
     auto tile = currentGame->createTileMap(
@@ -145,19 +136,10 @@ int runtime(GameInstance *currentGame) {
         cout << "Adding to camera: " << (*it)->getObjectName() << endl;
         currentCamera->addSceneObject(*it);
     }
-
-    currentGameInfo.isDone = &isDone;
-    currentGameInfo.gameCamera = currentCamera;
-    currentGameInfo.currentGame = currentGame;
     /*
      End Scene Loading
      */
-    // Additional threads should be added, pipes will most likely be required
-    // Might also be a good idea to keep the parent thread local to watch for
-    // unexpected failures and messages from children
-    // thread rotThread(rotateShape, &currentGameInfo, playerRef);
-    mainLoop(&currentGameInfo);
-    isDone = true;
+    mainLoop(currentGame);
     // rotThread.join();
     return 0;
 }
@@ -170,10 +152,9 @@ int runtime(GameInstance *currentGame) {
  (int) mainLoop returns 0 when closed successfully. When an error occurs and the
  mainLoop closes prematurely, an error code is returned.
 */
-int mainLoop(gameInfo* gamein) {
+int mainLoop(GameInstance *currentGame) {
     Uint64 begin, end;
     double currentTime = 0.0, sampleTime = 1.0;
-    GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
     auto playerPtr = reinterpret_cast<GameObject2D *>(currentGame->getSceneObject("player"));
@@ -199,11 +180,11 @@ int mainLoop(gameInfo* gamein) {
         if (currentGame->pollInput(GameInput::X) && !eDown) {
             printf("E pressed!\n");
             eDown = true;
-            animationController.pauseTrack("obstacle");
+            animationController.get()->pauseTrack("obstacle");
         } else if (!currentGame->pollInput(GameInput::X) && eDown) {
             printf("E released!\n");
             eDown = false;
-            animationController.playTrack("one to four");
+            animationController.get()->playTrack("one to four");
         }
         newPos = playerPtr->getPosition(offset);
         playerPtr->setPosition(newPos);

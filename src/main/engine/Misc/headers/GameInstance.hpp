@@ -29,6 +29,7 @@
 #include <UiObject.hpp>
 #include <TileObject.hpp>
 #include <config.hpp>
+#include <physics.hpp>
 #include <AnimationController.hpp>
 
 // Number of samples to use for anti-aliasing
@@ -73,6 +74,7 @@ class GameInstance {
     const Uint8 *keystate;
     GfxController *gfxController_;
     AnimationController *animationController_;
+    PhysicsController *physicsController_;
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Event event;
@@ -149,11 +151,10 @@ class GameInstance {
     void resetController();
 
  public:
-    GameInstance(GfxController *gfxController, AnimationController *animationController, int width,
-        int height);
+    explicit GameInstance(const StudiousConfig &config);
     ~GameInstance();
     void init();
-    GameObject *createGameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
+    GameObject *createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping);
@@ -259,4 +260,5 @@ class GameInstance {
      * @brief Enables/disables use of Vsync.
      */
     void configureVsync(bool enable);
+    void processConfig(const StudiousConfig &config);
 };

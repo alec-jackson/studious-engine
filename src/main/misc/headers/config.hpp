@@ -10,19 +10,35 @@
  */
 #pragma once
 #include <string>
+#include <map>
 #include <common.hpp>
+#define DEFAULT_WIDTH 1280
+#define DEFAULT_HEIGHT 720
+#define DEFAULT_VSYNC 1
+#define DEFAULT_GFX "OpenGL"
 
-/*
- configData contains data parsed from a configuration file for the purposes of
- creating an new SDL window instance. The following struct members are described
- below:
- * (int) resX - Width of the SDL window in pixels.
- * (int) resY - Height of the SDL window in pixels.
-*/
-typedef struct configData {
-  int resX;
-  int resY;
-  bool enableVsync;
-} configData;
+enum class ConfigStatus {
+  SUCCESS,
+  FAILURE
+};
 
-int loadConfig(configData* config, string filename);
+template<typename T>
+class ConfigResult {
+ public:
+  T data;
+  ConfigStatus status;
+  inline bool success() const { return status == ConfigStatus::SUCCESS; }
+  inline explicit ConfigResult(T d, ConfigStatus s) :
+    data { d }, status { s } {}
+};
+
+class StudiousConfig {
+ public:
+  explicit StudiousConfig(string configPath);
+  ConfigResult<int> getIField(string fieldName) const;
+  ConfigResult<uint> getUField(string fieldName) const;
+  ConfigResult<string> getSField(string fieldName) const;
+ private:
+  std::map<string, string> configMap_;
+};
+

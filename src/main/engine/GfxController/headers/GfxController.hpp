@@ -17,6 +17,9 @@
 #define GFX_OK(gType) GfxResult<gType>(GfxApiResult::OK, 0)
 #define GFX_FAILURE(gType) GfxResult<gType>(GfxApiResult::FAILURE, -1)
 
+#define GFX_OPENGL_CFG_STRING "OpenGL"
+#define GFX_VULKAN_CFG_STRING "Vulkan"
+
 enum class GfxApiResult {
     OK,
     FAILURE

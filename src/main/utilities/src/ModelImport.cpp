@@ -15,12 +15,14 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
 
 // Include Internal Headers
 #include <ModelImport.hpp>
 
 ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern) :
-    modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern } {
+    modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
+    polygon_ { std::make_shared<Polygon>() } {
     cout << "ModelImport::ModelImport: Importing " << modelPath << endl;
 }
 
@@ -29,7 +31,7 @@ ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<in
  * 
  * @return Polygon* created using .obj file passed into the constructor.
  */
-Polygon ModelImport::createPolygonFromFile() {
+std::shared_ptr<Polygon> ModelImport::createPolygonFromFile() {
     // File is closed when ifstream is destroyed
     ifstream file;  // Read file as read only
     file.open(modelPath_);
@@ -46,10 +48,9 @@ Polygon ModelImport::createPolygonFromFile() {
     }
     // Create the final object in the polygon
     buildObject(currentObject - 1);
-    polygon_.texturePath_ = texturePath_;
-    polygon_.texturePattern_ = texturePattern_;
-    // Call the move constructor to avoid unnecessary copies
-    return std::move(polygon_);
+    polygon_.get()->texturePath_ = texturePath_;
+    polygon_.get()->texturePattern_ = texturePattern_;
+    return polygon_;
 }
 
 /**
@@ -158,7 +159,7 @@ int ModelImport::buildObject(int objectId) {
         }
     }
     auto newPolygon = Polygon(triCount, vertexVbo, textureVbo, normalVbo);
-    polygon_.merge(newPolygon);
+    polygon_.get()->merge(newPolygon);
     return 0;
 }
 

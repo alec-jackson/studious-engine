@@ -8,6 +8,8 @@ runTests=false
 singleJob=false
 buildAll=false
 installLib=false
+filter_tests=false
+physThreads=1
 target=studious-3dExampleScene
 while [ $# -ne 0 ]; do
     arg="$1"
@@ -24,6 +26,11 @@ while [ $# -ne 0 ]; do
         -t)
             runTests=true
             ;;
+        -tf)
+            shift
+            test_filter="$1"
+            filter_tests=true
+            ;;
         -e)
             embeddedBuild=true
             ;;
@@ -33,6 +40,10 @@ while [ $# -ne 0 ]; do
             ;;
         -s)
             singleJob=true
+            ;;
+        -physThreads)
+            shift
+            physThreads="$1"
             ;;
         -i)
             # Installs the library on your system automatically
@@ -81,6 +92,8 @@ if [ "$runTests" == true ]; then
     echo "Compiling tests"
     ARGS="$ARGS -DRUNTEST=1"
 fi
+# Pass phys threads through
+ARGS="$ARGS -DPHYS_THREADS=$physThreads"
 
 cmake ${ARGS} ..
 
@@ -106,7 +119,11 @@ else
         cmake --install .
     fi
     if [ "$runTests" == true ]; then
-        ctest --output-on-failure -j 4
+        if [ "$filter_tests" == true ]; then
+            ctest --output-on-failure -j 4 -R $test_filter
+        else
+            ctest --output-on-failure -j 4
+        fi
     else
         if [ "$runBuild" == true ]; then
             # Run program

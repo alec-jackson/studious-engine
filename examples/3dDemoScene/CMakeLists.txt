@@ -4,6 +4,7 @@ project(studious-3dExampleScene VERSION 1.0.0)
 
 add_executable(studious-3dExampleScene
 	game.cpp
+	inputMonitor.cpp
 )
 
 target_link_libraries(studious-3dExampleScene
