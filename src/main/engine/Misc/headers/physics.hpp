@@ -116,7 +116,7 @@ class PhysicsController {
      * @brief Creates a new physics controller with a given number of worker threads.
      * @param threadNum Number of worker threads to create for the PhysicsController.
      */
-    explicit PhysicsController(int threadNum);
+    explicit PhysicsController(uint threadNum);
     /**
      * @brief Adds a SceneObject to the PhysicsController for it to operate on.
      * @param object Target object for physics controller to update.
@@ -161,15 +161,16 @@ class PhysicsController {
     inline int hasShutdown() { return shutdown_; }
     inline const map<string, std::shared_ptr<PhysicsObject>> &getPhysicsObjects() { return physicsObjects_; }
     ~PhysicsController();
+    static uint getDefaultThreadSize();
 
  private:
-    std::atomic<int> threadNum_;
+    std::atomic<uint> threadNum_;
     int shutdown_ = 0;
     std::vector<std::thread> threads_;
     std::mutex physicsObjectQueueLock_;
     std::mutex subscriberLock_;
     std::mutex workQueueLock_;
-    std::atomic<int> freeWorkers_;
+    std::atomic<uint> freeWorkers_;
     map<string, std::shared_ptr<PhysicsObject>> physicsObjects_;
     queue<std::shared_ptr<PhysicsObject>> workQueue_;
     vector<PhysicsSubscriber> subscribers_;

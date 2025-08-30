@@ -40,30 +40,22 @@ vector<ProgramData> programs = {
 };
 #endif
 
-OpenGlGfxController gfxController = OpenGlGfxController();
-AnimationController animationController;
-PhysicsController physicsController(PHYS_THREADS);
+extern std::unique_ptr<GfxController> gfxController;
+extern std::unique_ptr<AnimationController> animationController;
+extern std::unique_ptr<PhysicsController> physicsController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(GameInstance *currentGame);
 
 int main() {
     int errorNum;
-    configData config;
-    int flag = loadConfig(&config, "src/resources/config.txt");
-    int width, height;
-    if (!flag) {
-        width = config.resX;
-        height = config.resY;
-    } else {
-        width = 1280;
-        height = 720;
-    }
-    GameInstance currentGame(&gfxController, &animationController, &physicsController, width, height);
-    currentGame.configureVsync(config.enableVsync);
+    auto config = StudiousConfig("src/resources/config.txt");
+
+    GameInstance currentGame(config);
+
     // Load shader programs
     for (auto program : programs) {
-        gfxController.loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
+        gfxController.get()->loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
     }
     errorNum = runtime(&currentGame);
     return errorNum;
@@ -105,19 +97,19 @@ int runtime(GameInstance *currentGame) {
     vector<int> animationTrack = {
         0, 1, 2, 3
     };
-    animationController.addTrack(
+    animationController.get()->addTrack(
         obstacle,
         "one to four",
         animationTrack,
         1,
         true);
-    animationController.addTrack(
+    animationController.get()->addTrack(
         obstacle,
         "all frames",
         {},
         12,
         true);
-    animationController.playTrack("all frames");
+    animationController.get()->playTrack("all frames");
 
     // Create a new tile object and add it to the scene
     auto tile = currentGame->createTileMap(
@@ -188,11 +180,11 @@ int mainLoop(GameInstance *currentGame) {
         if (currentGame->pollInput(GameInput::X) && !eDown) {
             printf("E pressed!\n");
             eDown = true;
-            animationController.pauseTrack("obstacle");
+            animationController.get()->pauseTrack("obstacle");
         } else if (!currentGame->pollInput(GameInput::X) && eDown) {
             printf("E released!\n");
             eDown = false;
-            animationController.playTrack("one to four");
+            animationController.get()->playTrack("one to four");
         }
         newPos = playerPtr->getPosition(offset);
         playerPtr->setPosition(newPos);

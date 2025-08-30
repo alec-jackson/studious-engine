@@ -20,6 +20,11 @@
 #include <queue>
 #include <GameInstance.hpp>
 #include <SceneObject.hpp>
+#include <OpenGlGfxController.hpp>
+
+std::unique_ptr<GfxController> gfxController;
+std::unique_ptr<AnimationController> animationController;
+std::unique_ptr<PhysicsController> physicsController;
 
 // GameInput maps for input devices
 map<SDL_Scancode, GameInput> keyboardInputMap = {
@@ -64,13 +69,11 @@ map<Uint8, GameInput> hatInputMap = {
 
  (void) startGameInstance does not return any value.
  */
-GameInstance::GameInstance(GfxController *gfxController, AnimationController *animationController,
-        PhysicsController *physicsController, int width, int height) : gfxController_ { gfxController },
-        animationController_ { animationController }, physicsController_ { physicsController }, width_ { width },
-        height_ { height }, shutdown_(0) {
+GameInstance::GameInstance(const StudiousConfig &config): shutdown_(0) {
     luminance = 1.0f;  // Set default values
     directionalLight_ = vec3(-100, 100, 100);
     controllersConnected = 0;
+    processConfig(config);
     init();
 }
 
@@ -806,4 +809,43 @@ GameInput GameInstance::buttonToInput(SDL_GameControllerButton button) {
 
 const Uint8 *GameInstance::getKeystateRaw() {
     return keystate;
+}
+
+void GameInstance::processConfig(const StudiousConfig &config) {
+    // Read in configuration data - use defaults if missing
+    auto cfgWidth = config.getIField("resX");
+    auto cfgHeight = config.getIField("resY");
+    auto cfgVsync = config.getIField("enableVsync");
+    auto cfgPhysThreads = config.getUField("physThreads");
+    auto cfgGfx = config.getSField("gfx");
+    width_ = cfgWidth.success() ? cfgWidth.data : DEFAULT_WIDTH;
+    height_ = cfgHeight.success() ? cfgHeight.data : DEFAULT_HEIGHT;
+    int vsync = cfgVsync.success() ? cfgVsync.data : DEFAULT_VSYNC;
+    uint physThreads = cfgPhysThreads.success() ? cfgPhysThreads.data : PhysicsController::getDefaultThreadSize();
+    string gfxBackend = cfgGfx.success() ? cfgGfx.data : DEFAULT_GFX;
+
+    // Width/height are configured, just need to configure vsync now...
+    configureVsync(vsync);
+
+    // Load in controllers based on settings
+    if (gfxBackend.compare(GFX_OPENGL_CFG_STRING) == 0) {
+        printf("GameInstance::processConfig: Detected OpenGL\n");
+        gfxController = std::make_unique<OpenGlGfxController>();
+    } else if (gfxBackend.compare(GFX_VULKAN_CFG_STRING) == 0) {
+        printf("GameInstance::processConfig: Detected Vulkan\n");
+        fprintf(stderr, "GameInstance::processConfig: ERROR! Vulkan not yet supported\n");
+        assert(0);
+    } else {
+        printf("GameInstance::processConfig: Unknown gfx backend %s, defaulting to OpenGL\n",
+            gfxBackend.c_str());
+        gfxController = std::make_unique<OpenGlGfxController>();
+    }
+
+    animationController = std::make_unique<AnimationController>();
+    physicsController = std::make_unique<PhysicsController>(physThreads);
+
+    // Populate internal pointers to keep things easy
+    gfxController_ = gfxController.get();
+    physicsController_ = physicsController.get();
+    animationController_ = animationController.get();
 }

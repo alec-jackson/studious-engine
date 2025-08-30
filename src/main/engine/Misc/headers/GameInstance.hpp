@@ -151,8 +151,7 @@ class GameInstance {
     void resetController();
 
  public:
-    GameInstance(GfxController *gfxController, AnimationController *animationController,
-        PhysicsController *physicsController, int width, int height);
+    explicit GameInstance(const StudiousConfig &config);
     ~GameInstance();
     void init();
     GameObject *createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
@@ -261,4 +260,5 @@ class GameInstance {
      * @brief Enables/disables use of Vsync.
      */
     void configureVsync(bool enable);
+    void processConfig(const StudiousConfig &config);
 };

@@ -58,30 +58,23 @@ TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
-OpenGlGfxController gfxController = OpenGlGfxController();
-AnimationController animationController;
-PhysicsController physicsController(PHYS_THREADS);
+
+extern std::unique_ptr<GfxController> gfxController;
+extern std::unique_ptr<AnimationController> animationController;
+extern std::unique_ptr<PhysicsController> physicsController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
 
 int main() {
     int errorNum;
-    configData config;
-    int flag = loadConfig(&config, "src/resources/config.txt");
-    int width, height;
-    if (!flag) {
-        width = config.resX;
-        height = config.resY;
-    } else {
-        width = 1280;
-        height = 720;
-    }
-    GameInstance currentGame(&gfxController, &animationController, &physicsController, width, height);
-    currentGame.configureVsync(config.enableVsync);
+    auto config = StudiousConfig("src/resources/config.txt");
+
+    GameInstance currentGame(config);
+
     // Load shader programs
     for (auto program : programs) {
-        gfxController.loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
+        gfxController.get()->loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
     }
     errorNum = runtime(&currentGame);
     return errorNum;
@@ -180,8 +173,8 @@ int runtime(GameInstance *currentGame) {
 
     kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
     kf1->pos.desired = wolfObject->getPosition() + vec3(0.07f, 0.0f, 0.05f);
-    animationController.addKeyFrame(wolfObject, kf);
-    animationController.addKeyFrame(wolfObject, kf1);
+    animationController.get()->addKeyFrame(wolfObject, kf);
+    animationController.get()->addKeyFrame(wolfObject, kf1);
 
     wolfObject->createCollider();
     wolfRef = wolfObject;

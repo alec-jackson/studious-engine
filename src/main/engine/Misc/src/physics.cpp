@@ -70,7 +70,6 @@ PhysicsResult PhysicsController::doWork() {
         auto physObj = workQueue_.front();
         workQueue_.pop();
         freeWorkers_ -= 1;
-        assert(freeWorkers_ >= 0);
         scopeLock.unlock();  // No longer need lock after pulling work from queue
         if (physObj->workType == PhysicsWorkType::DIE) {
             // Close the thread
@@ -209,13 +208,13 @@ std::shared_ptr<PhysicsObject> PhysicsController::getPhysicsObject(string object
     return res;
 }
 
-PhysicsController::PhysicsController(int threadNum) : threadNum_{threadNum} {
+PhysicsController::PhysicsController(uint threadNum) : threadNum_{threadNum} {
     printf("PhysicsController::PhysicsController: Creating with %d threads\n", threadNum);
     if (threadNum_ > PHYS_MAX_THREADS) return;
     // Set the initial free workers to threadNum
     freeWorkers_ = threadNum;
     // Create thread pool for physics calculations
-    for (int i = 0; i < threadNum_; ++i) {
+    for (uint i = 0; i < threadNum_; ++i) {
         threads_.emplace_back(&PhysicsController::doWork, this);
     }
     printf("PhysicsController::PhysicsController: Exit\n");
@@ -229,7 +228,7 @@ PhysicsController::~PhysicsController() {
     auto deathMsg = std::make_shared<PhysicsObject>();
     deathMsg.get()->workType = PhysicsWorkType::DIE;
     // When we end, send kill signal to threads and join
-    for (int i = 0; i < threadNum_; ++i) {
+    for (uint i = 0; i < threadNum_; ++i) {
         printf("PhysicsController::~PhysicsController: Sending kill to worker queue...\n");
         workQueue_.push(deathMsg);
     }
@@ -404,4 +403,14 @@ PhysicsResult PhysicsController::translate(string objectName, vec3 translation) 
         printf("PhysicsController::translate: %s not found", objectName.c_str());
     }
     return result;
+}
+
+uint PhysicsController::getDefaultThreadSize() {
+    auto poolSize = std::thread::hardware_concurrency();
+    // Check if poolSize is valid
+    if (poolSize == 0) {
+        poolSize = PHYS_MAX_THREADS;
+    }
+    printf("PhysicsController::getDefaultThreadSize: %u\n", poolSize);
+    return poolSize;
 }

@@ -40,6 +40,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
     gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
     CameraObject *renderer = currentGameInfo->gameCamera;
+    AnimationController *ac = animationController.get();
+    PhysicsController *pc = physicsController.get();
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
     float rotateSpeed = 1.0f, offsetSpeed = 0.1f, currentLuminance = 1.0f;
     vec3 cameraOffset = vec3(7.140022f, 1.349999f, 2.309998f), angles = vec3(0),
@@ -365,10 +367,10 @@ void rotateShape(void *gameInfoStruct, void *target) {
                     currentGame->removeSceneObject(bulletName);
                 };
                 auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
-                animationController.addKeyFrame(bulletObj, bkf);
+                ac->addKeyFrame(bulletObj, bkf);
                 renderer->addSceneObject(bulletObj);
                 PhysicsParams params(true, false, 0.0f, 1.0f);
-                physicsController.addSceneObject(bulletObj, params);
+                pc->addSceneObject(bulletObj, params);
                 // Convert angles[1] to a direction????
                 auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
                 auto anglez = std::sin(angles.y * (PI/180.0) + (PI/2.0));
@@ -376,7 +378,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 float magnitude = 0.3f;
                 // angles.y is the rotation of the character on some axis??
                 printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
-                physicsController.applyForce(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
+                pc->applyForce(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
             }
         } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && delPressed) {
             delPressed = false;
