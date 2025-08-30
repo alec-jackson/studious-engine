@@ -19,7 +19,8 @@
 extern double deltaTime;
 
 void PhysicsObject::basePosUpdate() {
-    runningTime += deltaTime;
+    float cappedTime = CAP_TIME(deltaTime);
+    runningTime += cappedTime;
     // Acceleration
     vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
     // Velocity
@@ -357,6 +358,30 @@ PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
         // Check if the mass is zero
         if (0.0 != poit->second.get()->mass) {
             poit->second.get()->acceleration += (force / vec3(poit->second.get()->mass));
+        } else {
+            fprintf(stderr,
+                "PhysicsController::applyForce: Failed to apply force! Target object %s has no mass set!",
+                poit->second.get()->target->getObjectName().c_str());
+        }
+        result = PhysicsResult::OK;
+    } else {
+        printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());
+    }
+    return result;
+}
+
+PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force) {
+    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    auto result = PhysicsResult::FAILURE;
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
+        poit->second.get()->fullFlush();
+        // Check if the mass is zero
+        if (0.0 != poit->second.get()->mass) {
+            float cappedTime = CAP_TIME(deltaTime);
+            // Velocity is 
+            poit->second.get()->velocity += vec3(0.5f) * (force / vec3(poit->second.get()->mass)) * vec3(cappedTime);
+            printf("PhysicsController::applyInstantForce: Capped time %f\n", cappedTime);
         } else {
             fprintf(stderr,
                 "PhysicsController::applyForce: Failed to apply force! Target object %s has no mass set!",

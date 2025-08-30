@@ -479,6 +479,48 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyForce_ThenPos
 }
 
 /**
+ * @brief Validates applyInstantForce functionality.
+ */
+TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyInstantForce_ThenPositionUpdatedAsExpected) {
+    /* Preparation */
+    deltaTime = 3.0f;
+    auto physicsObject = physicsController_->getPhysicsObject(testObjectName);
+    vec3 startingPosition = vec3(0.0f, 0.0f, 0.0f);
+    vec3 force = vec3(5.0f, 3.0f, 6.0f);
+    vec3 expectedPosition = vec3(4.5f, 2.7f, 5.4f);
+    testObject_->setPosition(startingPosition);
+    physicsController_->applyInstantForce(testObjectName, force);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
+}
+
+/**
+ * @brief Validates applyInstantForce time capping.
+ */
+TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyInstantForceTooLong_ThenPositionUpdatedWithCapping) {
+    /* Preparation */
+    deltaTime = 900.0f;
+    auto physicsObject = physicsController_->getPhysicsObject(testObjectName);
+    vec3 startingPosition = vec3(0.0f, 0.0f, 0.0f);
+    vec3 force = vec3(5.0f, 3.0f, 6.0f);
+    vec3 expectedPosition = ((vec3(0.5f) * force) / testMassKg) * (MAX_PHYSICS_UPDATE_TIME * MAX_PHYSICS_UPDATE_TIME);
+    testObject_->setPosition(startingPosition);
+    physicsController_->applyInstantForce(testObjectName, force);
+    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
+}
+
+/**
  * @brief Launches google test suite defined in file
  *
  * @param argc
