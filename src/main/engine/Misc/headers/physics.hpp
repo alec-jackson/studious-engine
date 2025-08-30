@@ -13,11 +13,11 @@
 
 #include <vector>
 #include <string>
-#include <mutex>
-#include <thread>
+#include <mutex> //NOLINT
+#include <thread> //NOLINT
 #include <queue>
 #include <map>
-#include <condition_variable>
+#include <condition_variable> //NOLINT
 #include <atomic>
 #include <memory>
 #include <SceneObject.hpp>

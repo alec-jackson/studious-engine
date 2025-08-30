@@ -12,7 +12,7 @@
 #include <physics.hpp>
 #include <string>
 #include <algorithm>
-#include <condition_variable>
+#include <condition_variable> //NOLINT
 #include <memory>
 #include <cstdio>
 
@@ -379,7 +379,6 @@ PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force
         // Check if the mass is zero
         if (0.0 != poit->second.get()->mass) {
             float cappedTime = CAP_TIME(deltaTime);
-            // Velocity is 
             poit->second.get()->velocity += vec3(0.5f) * (force / vec3(poit->second.get()->mass)) * vec3(cappedTime);
             printf("PhysicsController::applyInstantForce: Capped time %f\n", cappedTime);
         } else {
