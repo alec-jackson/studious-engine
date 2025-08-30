@@ -18,80 +18,6 @@
 
 extern double deltaTime;
 
-/**
- * When the duration completes, we will have added the entire force to velocity. Is there a formula
- * that allows us to do this? I think so. Velocity is linear, so we can literally just do something like:
- *
- * Wait, let's put the velocity stuff on hold for now... I actually want to try just processing the force itself.
- * How do we actually get a usable product out of force directly? Net force? Maybe we create a secondary for instead
- * of just modifying the acceleration? Or does that not matter since acceleration is just a scalar?
- *
- * We can... I guess just add force vectors. But everytime a force is completed, we'd need to flush.
- * We flush the acceleration into velocity. What to do... Maybe I am overcomplicating this...
- *
- * We have the force vector <1, 1, 1> and we apply it for 0.5 seconds. What does this look like?
- *
- * 1.0N -> 1.0 m/s^2 -> 1/2 (1.0)(0.5)^2 -> 1/8.
- *
- * When the force expires, we could just add that individual force to the velocity, but we would need to pass the mass
- * of the object into the force object... Unless we can just find the total end velocity when a force dies and use that
- * in the PhysicsObject to add to the reference velocity.
- *
- * Maybe we just update the reference velocity with EACH update? How do we do this with the time slices? Maybe we
- * linearly interpolate a lesser force when we exceed the time slot? Since the force is going to be gone after the
- * update anyway...
- *
- * The flush is going to happen at the very end. The total force should be sustained the entire time until the end.
- * At the very end we can reduce the effective force so the work stays the same.
- *
- */
-vec3 PhysicsForce::getForceForTime(float time) {
-    // Applying force over a time interval is just applying work... so we're going to need to figure out what
-    // percentage of work we've already done, and how much is left.
-
-    // Figure out if we're going to overflow or not. If we're not going to overflow, then don't do anything to
-    // the force coming out
-    currentTime_ += time;
-    // Is the current time greater than the duration?
-    float dt = currentTime_ - duration_;
-    vec3 resForce = force_;
-    if (dt > currentTime_) {
-        // time / dt = overflow percentage of work
-        float workPercent = time / dt;
-        resForce *= workPercent;
-    }
-    return resForce;
-}
-
-vec3 PhysicsForces::getCumulativeForceForTime(float time) {
-    std::unique_lock<std::mutex> scopeLock(forcesLock_);
-    vec3 totalForce(0.0);
-    for (auto &physForce : forces_) {
-        totalForce += physForce.getForceForTime(time);
-    }
-#if (PHYS_TRACE == 1)
-    printf("Returning effective force of %f %f %f\n",
-        totalForce.x, totalForce.y, totalForce.z);
-#endif
-    // Filter out force objects that are complete
-    forces_.erase(std::remove_if(forces_.begin(), forces_.end(), [] (PhysicsForce &force) {
-        return force.isDone();
-    }), forces_.end());
-
-    return totalForce;
-}
-
-void PhysicsForces::addWork(vec3 force, float duration) {
-    std::unique_lock<std::mutex> scopeLock(forcesLock_);
-    PhysicsForce newForce(force, duration);
-    forces_.push_back(std::move(newForce));
-}
-
-void PhysicsForces::clearForces() {
-    std::unique_lock<std::mutex> scopeLock(forcesLock_);
-    forces_.clear();
-}
-
 void PhysicsObject::basePosUpdate() {
     runningTime += deltaTime;
     // Acceleration
@@ -130,27 +56,6 @@ void PhysicsObject::fullFlush() {
     runningTime = 0.0;
 }
 
-void PhysicsObject::addWork(vec3 force, float duration) {
-    forces.addWork(force, duration);
-}
-
-void PhysicsObject::updateAcceleration() {
-    // Has the force changed?
-    vec3 totalForce = forces.getCumulativeForceForTime(deltaTime);
-    if (lastForce == totalForce || mass == 0.0f) {
-        // Don't need to update acceleration
-        return;
-    }
-    vec3 lastAccel = lastForce / mass;
-    vec3 totalAccel = totalForce / mass;
-    acceleration -= lastAccel;  // Reset to base acceleration
-
-    // Add the new acceleration
-    acceleration += totalAccel;
-    lastForce = totalForce;
-}
-
-
 // Sleep the thread on the work queue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     while (1) {
@@ -183,7 +88,6 @@ PhysicsResult PhysicsController::doWork() {
 #endif
         switch (physObj->workType) {
             case PhysicsWorkType::POSITION:
-                physObj->updateAcceleration();
                 physObj->basePosUpdate();
                 break;
             default:
@@ -262,7 +166,6 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->position = sceneObject->getPosition();
     poPtr->velocity = vec3(0);
     poPtr->acceleration = vec3(0);
-    poPtr->lastForce = vec3(0);
     poPtr->isKinematic = params.isKinematic;
     poPtr->obeyGravity = params.obeyGravity;
     poPtr->impulse = vec3(0);
@@ -459,19 +362,6 @@ PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
                 "PhysicsController::applyForce: Failed to apply force! Target object %s has no mass set!",
                 poit->second.get()->target->getObjectName().c_str());
         }
-        result = PhysicsResult::OK;
-    } else {
-        printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());
-    }
-    return result;
-}
-
-PhysicsResult PhysicsController::applyWork(string objectName, vec3 force, float duration) {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
-    auto result = PhysicsResult::FAILURE;
-    auto poit = physicsObjects_.find(objectName);
-    if (poit != physicsObjects_.end()) {
-        poit->second.get()->forces.addWork(force, duration);
         result = PhysicsResult::OK;
     } else {
         printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());

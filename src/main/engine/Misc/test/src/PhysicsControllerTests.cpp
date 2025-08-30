@@ -479,51 +479,6 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyForce_ThenPos
 }
 
 /**
- * @brief Validates addWork functionality. Makes sure forces are calculated as expected.
- */
-TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyWork_ThenPositionUpdatedAsExpected) {
-    /* Preparation */
-    float timeSlice = 1.0f;
-    deltaTime = timeSlice;  // Do a complete work calculation for this test
-    auto physicsObject = physicsController_->getPhysicsObject(testObjectName);
-    vec3 startingPosition = vec3(0.0f, 0.0f, 0.0f);
-    vec3 force = vec3(5.0f, 5.0f, 5.0f);
-    vec3 expectedPosition = vec3(0.5f, 0.5f, 0.5f);
-    testObject_->setPosition(startingPosition);
-    physicsController_->applyWork(testObjectName, force, timeSlice);
-    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
-
-    /* Action */
-    physicsController_->update();
-
-    /* Validation */
-    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
-}
-
-/**
- * @brief Validates addWork functionality. Makes sure forces are calculated as expected.
- */
-TEST_F(GivenPhysicsControllerPositionPipeline, WhenMultiPartUpdateAfterApplyWork_ThenPositionUpdatedAsExpected) {
-    /* Preparation */
-    float timeSlice = 0.3f;
-    deltaTime = timeSlice;  // Do a complete work calculation for this test
-    auto physicsObject = physicsController_->getPhysicsObject(testObjectName);
-    vec3 startingPosition = vec3(0.0f, 0.0f, 0.0f);
-    vec3 force = vec3(5.0f, 5.0f, 5.0f);
-    vec3 expectedPosition = vec3(0.5f, 0.5f, 0.5f);
-    testObject_->setPosition(startingPosition);
-    physicsController_->applyWork(testObjectName, force, timeSlice);
-    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
-
-    /* Action */
-    physicsController_->update();
-    //physicsController_->update();
-
-    /* Validation */
-    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
-}
-
-/**
  * @brief Launches google test suite defined in file
  *
  * @param argc

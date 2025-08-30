@@ -24,7 +24,7 @@
 
 #define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
 #define PHYS_MAX_THREADS 256
-#define PHYS_TRACE 0
+#define PHYS_TRACE 1
 #ifndef PHYS_THREADS
 // Default thread count when not defined
 #define PHYS_THREADS 1
@@ -38,30 +38,6 @@ enum PhysicsWorkType {
     DIE
 };
 
-class PhysicsForce {
- public:
-    vec3 getForceForTime(float time);
-    inline bool isDone() { return currentTime_ >= duration_; }
-    inline PhysicsForce(vec3 force, float duration) :
-        force_ { force }, duration_ { duration }, currentTime_ { 0.0f } {}
- private:
-    vec3 force_;
-    float duration_;
-    float currentTime_;
-    // Maybe we can add callbacks here that run when a force is complete?
-
-};
-
-class PhysicsForces {
- public:
-    vec3 getCumulativeForceForTime(float time);
-    void addWork(vec3 force, float duration);
-    void clearForces();
- private:
-    std::vector<PhysicsForce> forces_;
-    std::mutex forcesLock_;
-};
-
 // Internal - used in physics component
 class PhysicsObject {
  public:
@@ -69,7 +45,6 @@ class PhysicsObject {
     vec3                 position;
     vec3                 velocity;
     vec3                 acceleration;
-    vec3                 lastForce;
     vec3                 jerk;
     bool                 isKinematic;
     bool                 obeyGravity;
@@ -78,7 +53,6 @@ class PhysicsObject {
     float                mass;
     double               runningTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
-    PhysicsForces        forces;
     /**
      * @brief Updates the position of the target object using the position formula.
      */
@@ -102,9 +76,6 @@ class PhysicsObject {
      * to zero.
      */
     void fullFlush();
-    void updateAcceleration();
-    void addWork(vec3 force, float duration);
- private:
 };
 
 struct PhysicsParams {
@@ -177,7 +148,6 @@ class PhysicsController {
     PhysicsResult setVelocity(string objectName, vec3 velocity);
     PhysicsResult setAcceleration(string objectName, vec3 acceleration);
     PhysicsResult applyForce(string objectName, vec3 force);
-    PhysicsResult applyWork(string objectName, vec3 force, float duration);
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult updatePosition();
     inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
