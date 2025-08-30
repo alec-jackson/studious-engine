@@ -24,7 +24,7 @@
 
 #define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
 #define PHYS_MAX_THREADS 256
-#define PHYS_TRACE 1
+#define PHYS_TRACE 0
 #define MAX_PHYSICS_UPDATE_TIME 10.0f
 #define CAP_TIME(ucTime) ucTime > MAX_PHYSICS_UPDATE_TIME ? MAX_PHYSICS_UPDATE_TIME : ucTime
 #ifndef PHYS_THREADS
