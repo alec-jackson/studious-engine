@@ -49,7 +49,7 @@ class PhysicsForce {
     float duration_;
     float currentTime_;
     // Maybe we can add callbacks here that run when a force is complete?
-    
+
 };
 
 class PhysicsForces {
@@ -69,6 +69,7 @@ class PhysicsObject {
     vec3                 position;
     vec3                 velocity;
     vec3                 acceleration;
+    vec3                 lastForce;
     vec3                 jerk;
     bool                 isKinematic;
     bool                 obeyGravity;
@@ -101,6 +102,7 @@ class PhysicsObject {
      * to zero.
      */
     void fullFlush();
+    void updateAcceleration();
     void addWork(vec3 force, float duration);
  private:
 };

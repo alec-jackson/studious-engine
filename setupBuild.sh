@@ -8,6 +8,7 @@ runTests=false
 singleJob=false
 buildAll=false
 installLib=false
+filter_tests=false
 physThreads=1
 target=studious-3dExampleScene
 while [ $# -ne 0 ]; do
@@ -24,6 +25,11 @@ while [ $# -ne 0 ]; do
             ;;
         -t)
             runTests=true
+            ;;
+        -tf)
+            shift
+            test_filter="$1"
+            filter_tests=true
             ;;
         -e)
             embeddedBuild=true
@@ -113,7 +119,11 @@ else
         cmake --install .
     fi
     if [ "$runTests" == true ]; then
-        ctest --output-on-failure -j 4
+        if [ "$filter_tests" == true ]; then
+            ctest --output-on-failure -j 4 -R $test_filter
+        else
+            ctest --output-on-failure -j 4
+        fi
     else
         if [ "$runBuild" == true ]; then
             # Run program

@@ -21,29 +21,29 @@ extern double deltaTime;
 /**
  * When the duration completes, we will have added the entire force to velocity. Is there a formula
  * that allows us to do this? I think so. Velocity is linear, so we can literally just do something like:
- * 
+ *
  * Wait, let's put the velocity stuff on hold for now... I actually want to try just processing the force itself.
  * How do we actually get a usable product out of force directly? Net force? Maybe we create a secondary for instead
  * of just modifying the acceleration? Or does that not matter since acceleration is just a scalar?
- * 
+ *
  * We can... I guess just add force vectors. But everytime a force is completed, we'd need to flush.
  * We flush the acceleration into velocity. What to do... Maybe I am overcomplicating this...
- * 
+ *
  * We have the force vector <1, 1, 1> and we apply it for 0.5 seconds. What does this look like?
- * 
+ *
  * 1.0N -> 1.0 m/s^2 -> 1/2 (1.0)(0.5)^2 -> 1/8.
- * 
+ *
  * When the force expires, we could just add that individual force to the velocity, but we would need to pass the mass
  * of the object into the force object... Unless we can just find the total end velocity when a force dies and use that
  * in the PhysicsObject to add to the reference velocity.
- * 
+ *
  * Maybe we just update the reference velocity with EACH update? How do we do this with the time slices? Maybe we
  * linearly interpolate a lesser force when we exceed the time slot? Since the force is going to be gone after the
  * update anyway...
- * 
+ *
  * The flush is going to happen at the very end. The total force should be sustained the entire time until the end.
  * At the very end we can reduce the effective force so the work stays the same.
- * 
+ *
  */
 vec3 PhysicsForce::getForceForTime(float time) {
     // Applying force over a time interval is just applying work... so we're going to need to figure out what
@@ -76,7 +76,7 @@ vec3 PhysicsForces::getCumulativeForceForTime(float time) {
     // Filter out force objects that are complete
     forces_.erase(std::remove_if(forces_.begin(), forces_.end(), [] (PhysicsForce &force) {
         return force.isDone();
-    }));
+    }), forces_.end());
 
     return totalForce;
 }
@@ -134,6 +134,23 @@ void PhysicsObject::addWork(vec3 force, float duration) {
     forces.addWork(force, duration);
 }
 
+void PhysicsObject::updateAcceleration() {
+    // Has the force changed?
+    vec3 totalForce = forces.getCumulativeForceForTime(deltaTime);
+    if (lastForce == totalForce || mass == 0.0f) {
+        // Don't need to update acceleration
+        return;
+    }
+    vec3 lastAccel = lastForce / mass;
+    vec3 totalAccel = totalForce / mass;
+    acceleration -= lastAccel;  // Reset to base acceleration
+
+    // Add the new acceleration
+    acceleration += totalAccel;
+    lastForce = totalForce;
+}
+
+
 // Sleep the thread on the work queue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     while (1) {
@@ -166,6 +183,7 @@ PhysicsResult PhysicsController::doWork() {
 #endif
         switch (physObj->workType) {
             case PhysicsWorkType::POSITION:
+                physObj->updateAcceleration();
                 physObj->basePosUpdate();
                 break;
             default:
@@ -244,6 +262,7 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->position = sceneObject->getPosition();
     poPtr->velocity = vec3(0);
     poPtr->acceleration = vec3(0);
+    poPtr->lastForce = vec3(0);
     poPtr->isKinematic = params.isKinematic;
     poPtr->obeyGravity = params.obeyGravity;
     poPtr->impulse = vec3(0);
