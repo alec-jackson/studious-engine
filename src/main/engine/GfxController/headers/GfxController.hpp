@@ -104,6 +104,7 @@ struct ProgramData {
 
 class GfxController {
  public:
+    virtual ~GfxController() = default;
     virtual GfxResult<int> init() = 0;
     virtual GfxResult<uint> generateBuffer(uint *bufferId) = 0;
     virtual GfxResult<uint> generateTexture(uint *textureId) = 0;

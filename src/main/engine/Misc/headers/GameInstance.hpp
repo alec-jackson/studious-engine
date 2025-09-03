@@ -92,6 +92,7 @@ class GameInstance {
     vec3 directionalLight_;
     float luminance;
     int width_, height_;
+    int vsync_;
     int audioID, controllersConnected = 0;
     std::atomic<int> shutdown_;
     mutex sceneLock_;

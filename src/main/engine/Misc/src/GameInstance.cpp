@@ -687,6 +687,7 @@ void GameInstance::initWindow() {
 }
 
 void GameInstance::configureVsync(bool enable) {
+    printf("GameInstance::configureVsync: Enabled? %d\n", enable);
     SDL_GL_SetSwapInterval(enable);  // 0 - Disable VSYNC / 1 - Enable VSYNC
 }
 
@@ -769,6 +770,7 @@ void GameInstance::resetController() {
 
 void GameInstance::initApplication() {
     gfxController_->init();
+    configureVsync(vsync_);
 }
 
 int GameInstance::lockScene() {
@@ -820,12 +822,9 @@ void GameInstance::processConfig(const StudiousConfig &config) {
     auto cfgGfx = config.getSField("gfx");
     width_ = cfgWidth.success() ? cfgWidth.data : DEFAULT_WIDTH;
     height_ = cfgHeight.success() ? cfgHeight.data : DEFAULT_HEIGHT;
-    int vsync = cfgVsync.success() ? cfgVsync.data : DEFAULT_VSYNC;
+    vsync_ = cfgVsync.success() ? cfgVsync.data : DEFAULT_VSYNC;
     uint physThreads = cfgPhysThreads.success() ? cfgPhysThreads.data : PhysicsController::getDefaultThreadSize();
     string gfxBackend = cfgGfx.success() ? cfgGfx.data : DEFAULT_GFX;
-
-    // Width/height are configured, just need to configure vsync now...
-    configureVsync(vsync);
 
     // Load in controllers based on settings
     if (gfxBackend.compare(GFX_OPENGL_CFG_STRING) == 0) {
