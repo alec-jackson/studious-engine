@@ -16,8 +16,9 @@
 #include <SceneObject.hpp>
 #include <ColliderObject.hpp>
 #include <TrackExt.hpp>
+#include <ImageExt.hpp>
 
-class GameObject2D : public SceneObject, public TrackExt {
+class GameObject2D : public SceneObject, public TrackExt, public ImageExt {
  public:
     // Constructors
     /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...

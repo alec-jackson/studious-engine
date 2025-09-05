@@ -8,14 +8,14 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <TextObject.hpp>
 #include <cstdio>
 #include <vector>
 #include <string>
-#include <TextObject.hpp>
 
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
     uint programId, string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
-    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController), charPadding_ { charSpacing },
+    vec3(0.0f, 0.0f, 0.0f), scale, programId, type, objectName, gfxController), charPadding_ { charSpacing },
     message_  { message }, fontPath_ { fontPath }, charPoint_ { charPoint }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) },
     textColor_ { vec4(1.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());

@@ -47,8 +47,8 @@ enum ObjectAnchor {
 class SceneObject {
  public:
     // Constructors
-    inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, float scale, unsigned int programId,
-        ObjectType type, GfxController *gfxController):
+    inline explicit SceneObject(vec3 position, vec3 rotation, float scale, unsigned int programId,
+        ObjectType type, string objectName, GfxController *gfxController):
             position(position), rotation(rotation), objectName(objectName), scale_(scale), programId_(programId),
             type_ { type }, gfxController_ { gfxController } {}
     inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController):

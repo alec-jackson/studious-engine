@@ -17,8 +17,8 @@
 
 TileObject::TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
     float scale, ObjectType type, uint programId, string objectName,
-    ObjectAnchor anchor, GfxController *gfxController) : SceneObject(position, rotation, objectName, scale,
-    programId, type, gfxController), mapData_ { mapData }, anchor_ { anchor }, tint_ { vec3(0) } {
+    ObjectAnchor anchor, GfxController *gfxController) : SceneObject(position, rotation, scale,
+    programId, type, objectName, gfxController), mapData_ { mapData }, anchor_ { anchor } {
     // Generate texture array based on the provided textures
     generateTextureData(textures);
     sanityCheck();
