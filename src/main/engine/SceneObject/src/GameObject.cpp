@@ -8,12 +8,11 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "SceneObject.hpp"
+#include <GameObject.hpp>
 #include <string>
 #include <cstdio>
 #include <iostream>
 #include <memory>
-#include <GameObject.hpp>
 
 /**
  * @brief GameObject constructor

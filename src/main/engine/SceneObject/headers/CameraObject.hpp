@@ -41,6 +41,7 @@ class CameraObject : public SceneObject {
     void removeSceneObject(string objectName);
     void resetRenderPriorityMap();
     inline void clearSceneObjects() { sceneObjects_.clear(); sceneObjectsOrdered_.clear(); }
+
  private:
     void resetRenderPriorityMap_();
     SceneObject *target_;

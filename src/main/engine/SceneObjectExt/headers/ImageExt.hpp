@@ -1,3 +1,11 @@
+/**
+ * @file ImageExt.hpp
+ * @author Christian Galvez
+ * @brief Header file for ImageExt class extension for SceneObjects. This allows SceneObjects to
+ * implement Image based transformations in the AnimationController.
+ * @date 09-05-2025
+ * @copyright studious-engine 2025
+ */
 #pragma once
 #include <glm/glm.hpp>
 

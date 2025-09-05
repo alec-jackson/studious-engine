@@ -8,16 +8,15 @@
  * @copyright Copyright (c) 2024
  *
  */
-
-#include <ImageExt.hpp>
-#include <SceneObject.hpp>
+#include <AnimationController.hpp>
 #include <vector>
 #include <string>
 #include <cstdio>
 #include <memory>
 #include <cmath>
 #include <algorithm>
-#include <AnimationController.hpp>
+#include <ImageExt.hpp>
+#include <SceneObject.hpp>
 
 std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
     auto keyframe = createKeyFrame(type, time);

@@ -8,11 +8,10 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "SceneObject.hpp"
+#include <TextObject.hpp>
 #include <cstdio>
 #include <vector>
 #include <string>
-#include <TextObject.hpp>
 
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
     uint programId, string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,

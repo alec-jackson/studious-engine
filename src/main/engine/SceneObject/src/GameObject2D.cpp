@@ -8,14 +8,12 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "SceneObject.hpp"
-#include "TrackExt.hpp"
+#include <GameObject2D.hpp>
 #include <string>
 #include <cstdio>
 #include <iostream>
 #include <vector>
 #include <memory>
-#include <GameObject2D.hpp>
 
 GameObject2D::GameObject2D(string texturePath, vec3 position, float scale, unsigned int programId,
     string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,

@@ -8,7 +8,6 @@
  * @copyright Copyright studious-engine 2025
  *
  */
-#include "SceneObject.hpp"
 #include <TileObject.hpp>
 #include <vector>
 #include <string>
