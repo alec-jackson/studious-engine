@@ -223,6 +223,7 @@ add_executable(gtest_AnimationControllerTests
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
+  src/main/engine/SceneObjectExt/src/ImageExt.cpp
   src/main/engine/Misc/src/Image.cpp
 )
 

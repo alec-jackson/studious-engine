@@ -22,6 +22,7 @@
 #include <TrackExt.hpp>
 #include <UiObject.hpp>
 #include <TextObject.hpp>
+#include <SpriteObject.hpp>
 
 // Update return values
 #define UPDATE_NOT_COMPLETE 0
@@ -32,6 +33,7 @@
 #define ROTATION_MET 16
 #define SCALE_MET 32
 #define COLOR_MET 64
+#define TINT_MET 128
 
 // Update Types
 #define UPDATE_NONE 0
@@ -42,6 +44,7 @@
 #define UPDATE_ROTATION 16
 #define UPDATE_SCALE 32
 #define UPDATE_COLOR 64
+#define UPDATE_TINT 128
 
 // MISC
 #define CAP_POS 1
@@ -113,6 +116,7 @@ struct KeyFrame {
     AnimationData<vec3> rotation;
     AnimationData<float> scale;
     AnimationData<vec4> color;
+    AnimationData<vec4> tint;
     float targetTime;
     float currentTime = 0.0f;
     int type;
@@ -146,6 +150,7 @@ class AnimationController {
      * returned when a color change does not exist for the current keyframe.
      */
     int updateColor(SceneObject *target, KeyFrame *keyFrame);
+    int updateTint(SceneObject *target, KeyFrame *keyFrame);
     bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);

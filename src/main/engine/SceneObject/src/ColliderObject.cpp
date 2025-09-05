@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include "SceneObject.hpp"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -30,7 +31,7 @@
  */
 ColliderObject::ColliderObject(Polygon *target, unsigned int programId, mat4 *translateMatrix,
     mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
-    SceneObject(type, objectName, gfxController), target_ { target }, pTranslateMatrix_ { translateMatrix },
+    SceneObject(type, BASIC_CAPABILITY, objectName, gfxController), target_ { target }, pTranslateMatrix_ { translateMatrix },
     pScaleMatrix_ { scaleMatrix }, pVpMatrix_ { vpMatrix } {
     programId_ = programId;
     createCollider();
@@ -41,7 +42,7 @@ ColliderObject::ColliderObject(Polygon *target, unsigned int programId, mat4 *tr
  */
 ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, mat4 *translateMatrix,
     mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
-    SceneObject(type, objectName, gfxController), pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix },
+    SceneObject(type, BASIC_CAPABILITY, objectName, gfxController), pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix },
     pVpMatrix_ { vpMatrix } {
     programId_ = programId;
     // Separate vertex data from vertTexData

@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "SceneObject.hpp"
 #include <string>
 #include <cstdio>
 #include <iostream>
@@ -16,8 +17,8 @@
 #include <GameObject2D.hpp>
 
 GameObject2D::GameObject2D(string texturePath, vec3 position, float scale, unsigned int programId,
-        string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,
-    vec3(0.0f, 0.0f, 0.0f), objectName, scale, programId, type, gfxController),
+    string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): SceneObject(position,
+    vec3(0.0f, 0.0f, 0.0f), scale, programId, type, TRACK_EXT_CAPABILITY | IMAGE_EXT_CAPABILITY, objectName, gfxController),
     TrackExt(texturePath, this, gfxController), texturePath_ { texturePath },
     anchor_ { anchor } {
     printf("GameObject2D::GameObject2D: Creating 2D object %s\n", objectName.c_str());

@@ -27,6 +27,10 @@
 #define RENDER_PRIOR_HIGH 40
 #define RENDER_PRIOR_HIGHEST 100
 
+#define BASIC_CAPABILITY 0
+#define TRACK_EXT_CAPABILITY 1
+#define IMAGE_EXT_CAPABILITY 2
+
 /// @todo Add SceneObject grouping for shared model changes
 enum ObjectType {
     UNDEFINED,
@@ -47,12 +51,12 @@ enum ObjectAnchor {
 class SceneObject {
  public:
     // Constructors
-    inline explicit SceneObject(vec3 position, vec3 rotation, string objectName, float scale, unsigned int programId,
-        ObjectType type, GfxController *gfxController):
+    inline explicit SceneObject(vec3 position, vec3 rotation, float scale, unsigned int programId,
+        ObjectType type, int capabilities, string objectName, GfxController *gfxController):
             position(position), rotation(rotation), objectName(objectName), scale_(scale), programId_(programId),
-            type_ { type }, gfxController_ { gfxController } {}
-    inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController):
-        objectName { objectName }, type_ { type }, gfxController_ { gfxController } {}
+            type_ { type }, capabilities_ { capabilities }, gfxController_ { gfxController } {}
+    inline explicit SceneObject(ObjectType type, int capabilities, string objectName, GfxController *gfxController):
+        objectName { objectName }, type_ { type }, capabilities_ { capabilities }, gfxController_ { gfxController } {}
     virtual ~SceneObject();
     // Setter methods
     inline void setVpMatrix(mat4 vpMatrix) { vpMatrix_ = vpMatrix; }
@@ -75,6 +79,7 @@ class SceneObject {
     inline uint getRenderPriority() const { return this->renderPriority_; }
     inline vec3 getResolution() const { return this->resolution_; }
     inline string getObjectName() const { return this->objectName; }
+    inline int getCapabilities() const { return this->capabilities_; }
     inline ObjectType type() const { return type_; }
 
     // Misc
@@ -119,6 +124,7 @@ class SceneObject {
     unsigned int programId_;
     unsigned int vao_;
     ObjectType type_;
+    int capabilities_;
 
     uint renderPriority_ = RENDER_PRIOR_HIGH;
 

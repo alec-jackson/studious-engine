@@ -9,6 +9,8 @@
  *
  */
 
+#include "ImageExt.hpp"
+#include "SceneObject.hpp"
 #include <vector>
 #include <string>
 #include <cstdio>
@@ -200,10 +202,15 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
             auto cTarget = static_cast<TextObject *>(target);
             currentKf->color.original = cTarget->getColor();
         }
+        if (currentKf->type & UPDATE_TINT) {
+            assert(target->getCapabilities() & IMAGE_EXT_CAPABILITY);
+            auto cTarget = static_cast<ImageExt *>(target);
+            currentKf->tint.original = cTarget->getTint();
+        }
     }
 
     auto result = UPDATE_NOT_COMPLETE;
-    auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET;
+    auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET | TINT_MET;
     auto &currentTime = currentKf.get()->currentTime;
     auto &targetTime = currentKf.get()->targetTime;
     auto overflowTime = currentTime + timeChange;
@@ -217,6 +224,7 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
     result |= updateRotation(target, currentKf.get());
     result |= updateScale(target, currentKf.get());
     result |= updateColor(target, currentKf.get());
+    result |= updateTint(target, currentKf.get());
     return UpdateData<float>(overflowTime - targetTime, (result == done));
 }
 
@@ -367,6 +375,30 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
     cTarget->setColor(result.updatedValue_);
 
     return (result.updateComplete_) ? COLOR_MET : UPDATE_NOT_COMPLETE;
+}
+
+int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
+    // Only update if the keyframe type has COLOR
+    if (!(keyFrame->type & UPDATE_TINT)) {
+        return TINT_MET;
+    }
+    // Check if the target is a text object
+    if (target->type() != ObjectType::SPRITE_OBJECT) {
+        // This is horrible, log the error and assert
+        fprintf(stderr,
+            "AnimationController::updateColor: Attempting to update non-sprite object %s!\n",
+            target->getObjectName().c_str());
+        assert(false);
+    }
+    auto cTarget = reinterpret_cast<SpriteObject *>(target);
+    auto result = updateVector(
+        keyFrame->tint.original,
+        keyFrame->tint.desired,
+        keyFrame);
+
+    cTarget->setTint(result.updatedValue_);
+
+    return (result.updateComplete_) ? TINT_MET : UPDATE_NOT_COMPLETE;
 }
 
 float AnimationController::linearFloatTransform(float original, float desired, KeyFrame *keyFrame) {

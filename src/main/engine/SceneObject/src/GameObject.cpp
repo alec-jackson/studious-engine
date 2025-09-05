@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "SceneObject.hpp"
 #include <string>
 #include <cstdio>
 #include <iostream>
@@ -27,7 +28,7 @@
  */
 GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
     uint programId, string objectName, ObjectType type, GfxController *gfxController):
-    SceneObject(position, rotation, objectName, scale, programId, type, gfxController),
+    SceneObject(position, rotation, scale, programId, type, BASIC_CAPABILITY, objectName, gfxController),
     model { characterModel } {
     configureOpenGl();
     luminance = 1.0f;
@@ -59,7 +60,7 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
 
 // What is this used for?
 GameObject::GameObject(GfxController *gfxController) :
-    SceneObject(ObjectType::GAME_OBJECT, "EmptyModel", gfxController) {
+    SceneObject(ObjectType::GAME_OBJECT, BASIC_CAPABILITY, "EmptyModel", gfxController) {
     model = nullptr;
 }
 

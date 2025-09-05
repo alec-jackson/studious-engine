@@ -16,7 +16,7 @@
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): GameObject2D(
-            spritePath, position, scale, programId, objectName, type, anchor, gfxController), tint_ { vec3(0) } {
+            spritePath, position, scale, programId, objectName, type, anchor, gfxController), tint_ { vec4(0) } {
     printf("SpriteObject::SpriteObject: Creating sprite %s\n", objectName.c_str());
     GameObject2D::initializeTextureData();
     initializeVertexData();
@@ -85,7 +85,7 @@ void SpriteObject::render() {
     gfxController_->polygonRenderMode(RenderMode::FILL);
     // Send shader variables
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(model));
-    gfxController_->sendFloatVector(tintId_, 1, VectorType::GFX_3D, glm::value_ptr(tint_));
+    gfxController_->sendFloatVector(tintId_, 1, VectorType::GFX_4D, glm::value_ptr(tint_));
     gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     // Find a more clever solution
     gfxController_->bindVao(vao_);

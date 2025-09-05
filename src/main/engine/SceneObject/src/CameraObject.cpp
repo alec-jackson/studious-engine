@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "SceneObject.hpp"
 #include <string>
 #include <cstdio>
 #include <algorithm>
@@ -16,7 +17,7 @@
 
 CameraObject::CameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
-    SceneObject(type, objectName, gfxController), target_ { target }, offset_ { offset }, cameraAngle_ { cameraAngle },
+    SceneObject(type, BASIC_CAPABILITY, objectName, gfxController), target_ { target }, offset_ { offset }, cameraAngle_ { cameraAngle },
     aspectRatio_ { aspectRatio }, nearClipping_ { nearClipping }, farClipping_ { farClipping } {
         initialTargetPos_ = target != nullptr ? target->getPosition() : vec3(0);
     }
