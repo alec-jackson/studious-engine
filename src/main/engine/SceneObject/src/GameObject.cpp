@@ -26,17 +26,19 @@
  * @param objectName Friendly name for the object used to identify it in the scene
  * @param gfxController Graphics controller for rendering the game scene
  */
-GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
+GameObject::GameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
     uint programId, string objectName, ObjectType type, GfxController *gfxController):
-    SceneObject(position, rotation, scale, programId, type, BASIC_CAPABILITY, objectName, gfxController),
-    model { characterModel } {
+    SceneObject(position, rotation, scale, programId, type, objectName, gfxController),
+    model_ { characterModel } {
+    // Enforce the model is VALID!
+    assert(model_.get() != nullptr);
     configureOpenGl();
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
     // Populate the hasTexture vector with texture info
-    for (int i = 0; i < model->numberOfObjects; i++) {
-        if (model->textureCoordsId[i] == UINT_MAX) {
+    for (int i = 0; i < model_.get()->numberOfObjects; i++) {
+        if (model_.get()->textureCoordsId[i] == UINT_MAX) {
             hasTexture.push_back(0);  // No texture found for obj i
         } else {
             hasTexture.push_back(1);  // Texture found for obj i
@@ -60,8 +62,7 @@ GameObject::GameObject(Polygon *characterModel, vec3 position, vec3 rotation, fl
 
 // What is this used for?
 GameObject::GameObject(GfxController *gfxController) :
-    SceneObject(ObjectType::GAME_OBJECT, BASIC_CAPABILITY, "EmptyModel", gfxController) {
-    model = nullptr;
+    SceneObject(ObjectType::GAME_OBJECT, "EmptyModel", gfxController) {
 }
 
 /**
@@ -72,32 +73,33 @@ GameObject::GameObject(GfxController *gfxController) :
  */
 void GameObject::configureOpenGl() {
     printf("GameObject::configureOpenGl: Configuring for %s with %d objects\n", objectName.c_str(),
-        model->numberOfObjects);
-    for (auto i = 0; i < model->numberOfObjects; ++i) {
+        model_.get()->numberOfObjects);
+    for (auto i = 0; i < model_.get()->numberOfObjects; ++i) {
         unsigned int vao;
         gfxController_->initVao(&vao);
         gfxController_->bindVao(vao);
         // Generate vertex buffer
-        gfxController_->generateBuffer(&model->shapeBufferId[i]);
-        gfxController_->bindBuffer(model->shapeBufferId[i]);
-        gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 9, &model->vertices[i][0]);
+        gfxController_->generateBuffer(&model_.get()->shapeBufferId[i]);
+        gfxController_->bindBuffer(model_.get()->shapeBufferId[i]);
+        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 9, &model_.get()->vertices[i][0]);
         gfxController_->enableVertexAttArray(0, 3, sizeof(float), 0);
         // Generate normal buffer
-        gfxController_->generateBuffer(&model->normalBufferId[i]);
-        gfxController_->bindBuffer(model->normalBufferId[i]);
-        gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 9, &model->normalCoords[i][0]);
+        gfxController_->generateBuffer(&model_.get()->normalBufferId[i]);
+        gfxController_->bindBuffer(model_.get()->normalBufferId[i]);
+        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 9,
+            &model_.get()->normalCoords[i][0]);
         gfxController_->enableVertexAttArray(2, 3, sizeof(float), 0);
         // Specific case where the current object does not get a texture
-        int size = static_cast<int>(model->texturePath_.size()) < 0 ? 0 : model->texturePath_.size();
-        if (model->texturePath_.empty() || model->texturePattern_[i] >= size ||
-            model->texturePattern_[i] == -1) {
+        int size = static_cast<int>(model_.get()->texturePath_.size()) < 0 ? 0 : model_.get()->texturePath_.size();
+        if (model_.get()->texturePath_.empty() || model_.get()->texturePattern_[i] >= size ||
+            model_.get()->texturePattern_[i] == -1) {
             gfxController_->bindVao(0);
             // ADD VAO TO LIST
             vaos_.push_back(vao);
             continue;
         }
-        SDL_Surface *texture = IMG_Load(model->texturePath_[model->texturePattern_[i]].c_str());
-        cout << "Loading texture: " << model->texturePath_[model->texturePattern_[i]] << "\n";
+        SDL_Surface *texture = IMG_Load(model_.get()->texturePath_[model_.get()->texturePattern_[i]].c_str());
+        cout << "Loading texture: " << model_.get()->texturePath_[model_.get()->texturePattern_[i]] << "\n";
         if (texture == NULL) {
             cerr << "Failed to create SDL_Surface texture!\n";
             gfxController_->bindVao(0);
@@ -108,8 +110,8 @@ void GameObject::configureOpenGl() {
 
         auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
         // Send texture image to OpenGL
-        gfxController_->generateTexture(&model->textureId[i]);
-        gfxController_->bindTexture(model->textureId[i], GfxTextureType::NORMAL);
+        gfxController_->generateTexture(&model_.get()->textureId[i]);
+        gfxController_->bindTexture(model_.get()->textureId[i], GfxTextureType::NORMAL);
         gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
         gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
         gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
@@ -121,9 +123,10 @@ void GameObject::configureOpenGl() {
         gfxController_->generateMipMap();
 
         // Send texture coords to OpenGL
-        gfxController_->generateBuffer(&model->textureCoordsId[i]);
-        gfxController_->bindBuffer(model->textureCoordsId[i]);
-        gfxController_->sendBufferData(sizeof(float) * model->pointCount[i] * 6, &model->textureCoords[i][0]);
+        gfxController_->generateBuffer(&model_.get()->textureCoordsId[i]);
+        gfxController_->bindBuffer(model_.get()->textureCoordsId[i]);
+        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 6,
+            &model_.get()->textureCoords[i][0]);
         gfxController_->enableVertexAttArray(1, 2, sizeof(float), 0);
 
         SDL_FreeSurface(texture);
@@ -132,7 +135,7 @@ void GameObject::configureOpenGl() {
         // ADD VAO TO LIST
         vaos_.push_back(vao);
     }
-    model->textureUniformId = gfxController_->getShaderVariable(programId_, "mytexture").get();
+    model_.get()->textureUniformId = gfxController_->getShaderVariable(programId_, "mytexture").get();
 }
 
 /**
@@ -181,10 +184,10 @@ void GameObject::update() {
  * models connected to it, which can have their own textures, etc.
  */
 void GameObject::render() {
-    if (model == nullptr) return;
+    if (model_.get() == nullptr) return;
     // Send GameObject to render method
     // Draw each shape individually
-    for (int i = 0; i < model->numberOfObjects; i++) {
+    for (int i = 0; i < model_.get()->numberOfObjects; i++) {
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::FILL);
         // Update our model transformation matrices
@@ -200,11 +203,11 @@ void GameObject::render() {
         gfxController_->bindVao(vaos_[i]);
         if (hasTexture[i]) {
             // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
-            gfxController_->sendInteger(model->textureUniformId, 0);
+            gfxController_->sendInteger(model_.get()->textureUniformId, 0);
             // Bind texture to sampler for polygon rendering below
-            gfxController_->bindTexture(model->textureId[i], GfxTextureType::NORMAL);
+            gfxController_->bindTexture(model_.get()->textureId[i], GfxTextureType::NORMAL);
         }
-        gfxController_->drawTriangles(model->pointCount[i] * 3);
+        gfxController_->drawTriangles(model_.get()->pointCount[i] * 3);
         gfxController_->bindVao(0);
     }
     if (collider_.use_count() > 0) collider_.get()->update();

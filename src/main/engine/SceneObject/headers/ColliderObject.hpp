@@ -21,7 +21,7 @@
 
 class ColliderObject : public SceneObject {
  public:
-    ColliderObject(Polygon *target, unsigned int programId, mat4 *translateMatrix, mat4 *scaleMatrix,
+    ColliderObject(std::shared_ptr<Polygon> target, unsigned int programId, mat4 *translateMatrix, mat4 *scaleMatrix,
         mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController);
     ColliderObject(const vector<float> &vertTexData, unsigned int programId, mat4 *translateMatrix, mat4 *scaleMatrix,
         mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController);
@@ -44,7 +44,7 @@ class ColliderObject : public SceneObject {
     vec4 center_;
     vec4 originalCenter_;
     std::shared_ptr<Polygon> poly_;
-    Polygon *target_;
+    std::shared_ptr<Polygon> target_;
     // Use pointers to the parent object's transform matrices
     mat4 *pTranslateMatrix_;
     mat4 *pScaleMatrix_;

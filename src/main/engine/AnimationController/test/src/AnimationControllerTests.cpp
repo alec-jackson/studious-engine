@@ -29,6 +29,7 @@ const int INDEX_SHIFT = 1;
 
 const char *testSpritePath = "../src/resources/images/test_image.png";
 const char *testFontPath = "../src/resources/fonts/AovelSans.ttf";
+
 /**
  * @brief Launches google test suite defined in file
  *
@@ -747,9 +748,9 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFramesAddedForMultipleObjects_The
     float targetTime = 3.0f;
     deltaTime = 1.0f;
     vec3 expectedTransformation_1 = originalPosition_1 +
-        ((desiredPosition - originalPosition_1) * vec3((deltaTime * 1) / targetTime));
+        ((desiredPosition - originalPosition_1) * vec3((deltaTime) / targetTime));
     vec3 expectedTransformation_2 = originalPosition_2 +
-        ((desiredPosition - originalPosition_2) * vec3((deltaTime * 1) / targetTime));
+        ((desiredPosition - originalPosition_2) * vec3((deltaTime) / targetTime));
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
     auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 

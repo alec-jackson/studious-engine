@@ -203,7 +203,6 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
             currentKf->color.original = cTarget->getColor();
         }
         if (currentKf->type & UPDATE_TINT) {
-            assert(target->getCapabilities() & IMAGE_EXT_CAPABILITY);
             auto imEx = static_cast<ImageExt *>(target->getExtension(ExtType::IMAGE));
             currentKf->tint.original = imEx->getTint();
         }

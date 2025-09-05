@@ -17,6 +17,9 @@
 #define GFX_OK(gType) GfxResult<gType>(GfxApiResult::OK, 0)
 #define GFX_FAILURE(gType) GfxResult<gType>(GfxApiResult::FAILURE, -1)
 
+#define GFX_OPENGL_CFG_STRING "OpenGL"
+#define GFX_VULKAN_CFG_STRING "Vulkan"
+
 enum class GfxApiResult {
     OK,
     FAILURE
@@ -101,6 +104,7 @@ struct ProgramData {
 
 class GfxController {
  public:
+    virtual ~GfxController() = default;
     virtual GfxResult<int> init() = 0;
     virtual GfxResult<uint> generateBuffer(uint *bufferId) = 0;
     virtual GfxResult<uint> generateTexture(uint *textureId) = 0;

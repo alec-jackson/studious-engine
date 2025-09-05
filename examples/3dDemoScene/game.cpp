@@ -16,7 +16,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
-#include <game.hpp>
+#include "game.hpp"
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>
 
@@ -58,29 +58,23 @@ TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
-OpenGlGfxController gfxController = OpenGlGfxController();
-AnimationController animationController;
+
+extern std::unique_ptr<GfxController> gfxController;
+extern std::unique_ptr<AnimationController> animationController;
+extern std::unique_ptr<PhysicsController> physicsController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
 
 int main() {
     int errorNum;
-    configData config;
-    int flag = loadConfig(&config, "src/resources/config.txt");
-    int width, height;
-    if (!flag) {
-        width = config.resX;
-        height = config.resY;
-    } else {
-        width = 1280;
-        height = 720;
-    }
-    GameInstance currentGame(&gfxController, &animationController, width, height);
-    currentGame.configureVsync(config.enableVsync);
+    auto config = StudiousConfig("src/resources/config.txt");
+
+    GameInstance currentGame(config);
+
     // Load shader programs
     for (auto program : programs) {
-        gfxController.loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
+        gfxController.get()->loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
     }
     errorNum = runtime(&currentGame);
     return errorNum;
@@ -122,7 +116,7 @@ int runtime(GameInstance *currentGame) {
         texturePatternStage)
         .createPolygonFromFile();
 
-    auto mapObject = currentGame->createGameObject(&mapPoly,
+    auto mapObject = currentGame->createGameObject(mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
 
     cout << "Creating Player\n";
@@ -140,12 +134,12 @@ int runtime(GameInstance *currentGame) {
         .createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
-    playerRef = currentGame->createGameObject(&playerPoly, vec3(0.0f, 0.0f, -1.0f),
+    playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
-    auto companion = currentGame->createGameObject(&companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion");
-    auto companion2 = currentGame->createGameObject(&companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion2");
-    auto companion3 = currentGame->createGameObject(&companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion3");
-    auto companion4 = currentGame->createGameObject(&companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion4");
+    auto companion = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion");
+    auto companion2 = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion2");
+    auto companion3 = currentGame->createGameObject(companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion3");
+    auto companion4 = currentGame->createGameObject(companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion4");
     playerRef->addChild(companion);
     playerRef->addChild(companion2);
     playerRef->addChild(companion3);
@@ -164,7 +158,7 @@ int runtime(GameInstance *currentGame) {
         texturePattern)
         .createPolygonFromFile();
 
-    auto wolfObject = currentGame->createGameObject(&wolfPoly,
+    auto wolfObject = currentGame->createGameObject(wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
 
     // Make the wolf spin :)
@@ -179,8 +173,8 @@ int runtime(GameInstance *currentGame) {
 
     kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
     kf1->pos.desired = wolfObject->getPosition() + vec3(0.07f, 0.0f, 0.05f);
-    animationController.addKeyFrame(wolfObject, kf);
-    animationController.addKeyFrame(wolfObject, kf1);
+    animationController.get()->addKeyFrame(wolfObject, kf);
+    animationController.get()->addKeyFrame(wolfObject, kf1);
 
     wolfObject->createCollider();
     wolfRef = wolfObject;

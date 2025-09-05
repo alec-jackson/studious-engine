@@ -29,9 +29,9 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(Polygon *target, unsigned int programId, mat4 *translateMatrix,
+ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, unsigned int programId, mat4 *translateMatrix,
     mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
-    SceneObject(type, BASIC_CAPABILITY, objectName, gfxController), target_ { target }, pTranslateMatrix_ { translateMatrix },
+    SceneObject(type, objectName, gfxController), target_ { target }, pTranslateMatrix_ { translateMatrix },
     pScaleMatrix_ { scaleMatrix }, pVpMatrix_ { vpMatrix } {
     programId_ = programId;
     createCollider();
@@ -42,7 +42,7 @@ ColliderObject::ColliderObject(Polygon *target, unsigned int programId, mat4 *tr
  */
 ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, mat4 *translateMatrix,
     mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
-    SceneObject(type, BASIC_CAPABILITY, objectName, gfxController), pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix },
+    SceneObject(type, objectName, gfxController), pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix },
     pVpMatrix_ { vpMatrix } {
     programId_ = programId;
     // Separate vertex data from vertTexData
@@ -57,8 +57,7 @@ ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int pr
         }
         vertices.push_back(vertTexData.at(i));
     }
-    Polygon tempPoly(vertices.size(), vertices);
-    target_ = &tempPoly;
+    target_ = std::make_shared<Polygon>(vertices.size(), vertices);
     createCollider();
 }
 
@@ -72,6 +71,13 @@ void ColliderObject::updateCollider() {
     }
 }
 
+/**
+ * @brief Checks if this collider is colliding or about to collide with another collider
+ *
+ * @param object other collider to check collision with
+ * @param moving the current object's translation
+ * @return int -1 if error, 0 for no collision, 1 for colliding, 2 for about to collide
+ */
 int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
     int matching = 0;  // Number of axis that have collided
     if (object == nullptr) {

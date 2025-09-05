@@ -21,7 +21,7 @@
 class GameObject: public SceneObject {
  public:
     // Constructurs
-    explicit GameObject(Polygon *characterModel, vec3 position, vec3 rotation, float scale,
+    explicit GameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
             uint programId, string objectName, ObjectType type, GfxController *gfxController);
     explicit GameObject(GfxController *gfxController);
     ~GameObject();
@@ -37,7 +37,7 @@ class GameObject: public SceneObject {
     inline unsigned int getProgramId() { return this->programId_; }
 
     // Special Getters
-    inline Polygon *getModel() { return model; }
+    inline std::shared_ptr<Polygon> getModel() { return model_; }
     ColliderObject *getCollider();
 
     // Other methods
@@ -50,7 +50,7 @@ class GameObject: public SceneObject {
     inline void *getExtension([[maybe_unused]]ExtType type) override { return nullptr; }
 
  private:
-    Polygon *model;  // Change this to a proper class at some point
+    std::shared_ptr<Polygon> model_;
 
     unsigned int vpId, modelId,
         hasTextureId, directionalLightId, luminanceId, rollOffId;

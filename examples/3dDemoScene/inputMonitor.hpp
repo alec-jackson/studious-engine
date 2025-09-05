@@ -10,9 +10,12 @@
  */
 
 #pragma once
-#include <game.hpp>
+#include "game.hpp"
 #include <AnimationController.hpp>
-extern AnimationController animationController;
+#include <physics.hpp>
+extern std::unique_ptr<GfxController> gfxController;
+extern std::unique_ptr<AnimationController> animationController;
+extern std::unique_ptr<PhysicsController> physicsController;
 extern double deltaTime;
 void rotateShape(void *gameInfoStruct, void *target);
 float convertNegToDeg(float degree);
