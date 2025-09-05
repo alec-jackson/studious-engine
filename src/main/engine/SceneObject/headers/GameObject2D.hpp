@@ -37,7 +37,6 @@ class GameObject2D : public SceneObject, public TrackExt, public ImageExt {
     void initializeVertexData();
     void createCollider();
     void setDimensions(int width, int height);
-    void *getExtension(ExtType type) override;
 
  protected:
     string texturePath_;

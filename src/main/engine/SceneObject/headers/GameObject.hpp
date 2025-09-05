@@ -47,8 +47,6 @@ class GameObject: public SceneObject {
     void render() override;
     void update() override;
 
-    inline void *getExtension([[maybe_unused]]ExtType type) override { return nullptr; }
-
  private:
     std::shared_ptr<Polygon> model_;
 

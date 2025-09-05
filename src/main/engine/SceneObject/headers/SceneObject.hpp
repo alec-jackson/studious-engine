@@ -44,11 +44,6 @@ enum ObjectAnchor {
     TOP_LEFT
 };
 
-enum class ExtType {
-    IMAGE,
-    TRACK
-};
-
 class SceneObject {
  public:
     // Constructors
@@ -109,7 +104,6 @@ class SceneObject {
     // Interface methods
     virtual void render() = 0;
     virtual void update() = 0;
-    virtual void *getExtension(ExtType type) = 0;
 
  protected:
     mat4 translateMatrix_;

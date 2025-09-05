@@ -28,7 +28,6 @@ class TileObject : public SceneObject, public ImageExt {
         GfxController *gfxController);
     void update() override;
     void render() override;
-    void *getExtension(ExtType type) override;
 
  private:
     void generateTextureData(map<string, string> textures);

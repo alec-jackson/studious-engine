@@ -56,7 +56,6 @@ class TextObject : public SceneObject {
     void initializeText();
     void initializeShaderVars();
     unsigned char *rgbConversion(size_t size, unsigned char *data);
-    inline void *getExtension([[maybe_unused]]ExtType type) override { return nullptr; }
 
  private:
     float charPadding_;

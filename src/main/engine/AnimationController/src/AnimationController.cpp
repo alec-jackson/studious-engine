@@ -9,8 +9,8 @@
  *
  */
 
-#include "ImageExt.hpp"
-#include "SceneObject.hpp"
+#include <ImageExt.hpp>
+#include <SceneObject.hpp>
 #include <vector>
 #include <string>
 #include <cstdio>
@@ -203,7 +203,7 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
             currentKf->color.original = cTarget->getColor();
         }
         if (currentKf->type & UPDATE_TINT) {
-            auto imEx = static_cast<ImageExt *>(target->getExtension(ExtType::IMAGE));
+            auto imEx = dynamic_cast<ImageExt *>(target);
             currentKf->tint.original = imEx->getTint();
         }
     }
@@ -381,21 +381,21 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
     if (!(keyFrame->type & UPDATE_TINT)) {
         return TINT_MET;
     }
-    // Check if the target is a text object
-    if (target->type() != ObjectType::SPRITE_OBJECT) {
-        // This is horrible, log the error and assert
+    // This is the pattern that should be followed for stuff like this:
+    auto imEx = dynamic_cast<ImageExt *>(target);
+    if (!imEx) {
         fprintf(stderr,
-            "AnimationController::updateColor: Attempting to update non-sprite object %s!\n",
+            "AnimationController::updateTint: Image Extension NOT present in object %s!\n",
             target->getObjectName().c_str());
-        assert(false);
+        assert(0);
+        return TINT_MET;
     }
-    auto cTarget = reinterpret_cast<SpriteObject *>(target);
     auto result = updateVector(
         keyFrame->tint.original,
         keyFrame->tint.desired,
         keyFrame);
 
-    cTarget->setTint(result.updatedValue_);
+    imEx->setTint(result.updatedValue_);
 
     return (result.updateComplete_) ? TINT_MET : UPDATE_NOT_COMPLETE;
 }

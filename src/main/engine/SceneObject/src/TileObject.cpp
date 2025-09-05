@@ -188,16 +188,3 @@ void TileObject::render() {
     gfxController_->drawTrianglesInstanced(6, mapData_.size());
     gfxController_->bindVao(0);
 }
-
-void *TileObject::getExtension(ExtType type) {
-    void *ext = nullptr;
-    switch (type) {
-        case ExtType::IMAGE:
-            ext = static_cast<void *>(static_cast<ImageExt *>(this));
-            break;
-        default:
-            printf("TileObject::getExtension: Extension unsupported\n");
-            break;
-    }
-    return ext;
-}

@@ -110,19 +110,3 @@ ColliderObject *GameObject2D::getCollider() {
     collider_.get()->updateCollider();
     return collider_.get();
 }
-
-void *GameObject2D::getExtension(ExtType type) {
-    void *ext = nullptr;
-    switch (type) {
-        case ExtType::IMAGE:
-            ext = static_cast<void *>(static_cast<ImageExt *>(this));
-            break;
-        case ExtType::TRACK:
-            ext = static_cast<void *>(static_cast<TrackExt *>(this));
-            break;
-        default:
-            printf("GameObject2D::getExtension: Extension unsupported\n");
-            break;
-    }
-    return ext;
-}
