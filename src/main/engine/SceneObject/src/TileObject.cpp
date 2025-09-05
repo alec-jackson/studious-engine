@@ -19,7 +19,7 @@
 TileObject::TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
     float scale, ObjectType type, uint programId, string objectName,
     ObjectAnchor anchor, GfxController *gfxController) : SceneObject(position, rotation, scale,
-    programId, type, IMAGE_EXT_CAPABILITY, objectName, gfxController), mapData_ { mapData }, anchor_ { anchor }, tint_ { vec3(0) } {
+    programId, type, IMAGE_EXT_CAPABILITY, objectName, gfxController), mapData_ { mapData }, anchor_ { anchor } {
     // Generate texture array based on the provided textures
     generateTextureData(textures);
     sanityCheck();
@@ -187,4 +187,17 @@ void TileObject::render() {
     gfxController_->bindTexture(texArr_, GfxTextureType::ARRAY);
     gfxController_->drawTrianglesInstanced(6, mapData_.size());
     gfxController_->bindVao(0);
+}
+
+void *TileObject::getExtension(ExtType type) {
+    void *ext = nullptr;
+    switch (type) {
+        case ExtType::IMAGE:
+            ext = static_cast<void *>(static_cast<ImageExt *>(this));
+            break;
+        default:
+            printf("TileObject::getExtension: Extension unsupported\n");
+            break;
+    }
+    return ext;
 }

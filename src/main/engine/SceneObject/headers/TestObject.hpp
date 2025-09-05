@@ -4,9 +4,9 @@
  * @brief Basic implementation of a SceneObject for testing.
  * @version 0.1
  * @date 2025-07-19
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 #pragma once
 #include <set>
@@ -29,4 +29,5 @@ class TestObject : public SceneObject {
     inline const mat4 &getTranslationMatrix() { return translateMatrix_; }
     inline const mat4 &getRotationMatrix() { return rotateMatrix_; }
     inline const mat4 &getScaleMatrix() { return scaleMatrix_; }
+    inline void *getExtension([[maybe_unused]]ExtType type) override { return nullptr; }
 };

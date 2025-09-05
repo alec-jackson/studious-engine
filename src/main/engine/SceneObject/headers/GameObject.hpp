@@ -47,6 +47,8 @@ class GameObject: public SceneObject {
     void render() override;
     void update() override;
 
+    inline void *getExtension([[maybe_unused]]ExtType type) override { return nullptr; }
+
  private:
     Polygon *model;  // Change this to a proper class at some point
 

@@ -36,6 +36,7 @@ class ColliderObject : public SceneObject {
     ~ColliderObject();
     inline static void setDrawCollider(bool enable) { drawCollider_ = enable; }
     inline static bool getDrawCollider() { return drawCollider_; }
+    inline void *getExtension([[maybe_unused]]ExtType type) override { return nullptr; }
 
  private:
     vec4 offset_;

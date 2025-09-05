@@ -204,8 +204,8 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
         }
         if (currentKf->type & UPDATE_TINT) {
             assert(target->getCapabilities() & IMAGE_EXT_CAPABILITY);
-            auto cTarget = static_cast<ImageExt *>(target);
-            currentKf->tint.original = cTarget->getTint();
+            auto imEx = static_cast<ImageExt *>(target->getExtension(ExtType::IMAGE));
+            currentKf->tint.original = imEx->getTint();
         }
     }
 
