@@ -8,11 +8,11 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include <ColliderObject.hpp>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <memory>
-#include <ColliderObject.hpp>
 
 /** @todo Update - this is the old struct info
  * @brief Stores info about a GameObject's internal collider object.
@@ -72,9 +72,9 @@ void ColliderObject::updateCollider() {
 
 /**
  * @brief Checks if this collider is colliding or about to collide with another collider
- * 
+ *
  * @param object other collider to check collision with
- * @param moving the current object's translation 
+ * @param moving the current object's translation
  * @return int -1 if error, 0 for no collision, 1 for colliding, 2 for about to collide
  */
 int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {

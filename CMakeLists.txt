@@ -77,6 +77,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObject/src/ColliderObject.cpp
   src/main/engine/SceneObject/src/TileObject.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
+  src/main/engine/SceneObjectExt/src/ImageExt.cpp
   src/main/utilities/src/GifLoader.cpp
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
@@ -176,6 +177,7 @@ add_executable(gtest_SpriteObjectTests
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/Image.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
+  src/main/engine/SceneObjectExt/src/ImageExt.cpp
 )
 
 target_include_directories(gtest_SpriteObjectTests
@@ -225,6 +227,7 @@ add_executable(gtest_AnimationControllerTests
   src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
+  src/main/engine/SceneObjectExt/src/ImageExt.cpp
   src/main/engine/Misc/src/Image.cpp
 )
 
@@ -297,6 +300,7 @@ install (FILES
   src/main/engine/SceneObject/headers/UiObject.hpp
   src/main/engine/SceneObject/headers/TileObject.hpp
   src/main/engine/SceneObjectExt/headers/TrackExt.hpp
+  src/main/engine/SceneObjectExt/headers/ImageExt.hpp
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp
   src/main/engine/Misc/headers/GameInstance.hpp

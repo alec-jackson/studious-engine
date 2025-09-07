@@ -29,15 +29,6 @@ class SpriteObject : public GameObject2D {
     void render() override;
     void update() override;
 
-    // Getters
-    inline vec3 getTint() { return tint_; }
-
-    // Setters
-    inline void setTint(vec3 tint) { tint_ = tint; }
-
     // AnimationFuncs
     void createAnimation(int width, int height, int frameCount) override;
-
- private:
-    vec3 tint_;
 };

@@ -8,11 +8,11 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <CameraObject.hpp>
 #include <string>
 #include <cstdio>
 #include <algorithm>
 #include <vector>
-#include <CameraObject.hpp>
 
 CameraObject::CameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :

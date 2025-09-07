@@ -4,9 +4,9 @@
  * @brief Basic implementation of a SceneObject for testing.
  * @version 0.1
  * @date 2025-07-19
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 #pragma once
 #include <set>

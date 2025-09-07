@@ -8,11 +8,11 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <GameObject.hpp>
 #include <string>
 #include <cstdio>
 #include <iostream>
 #include <memory>
-#include <GameObject.hpp>
 
 /**
  * @brief GameObject constructor
@@ -27,7 +27,7 @@
  */
 GameObject::GameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
     uint programId, string objectName, ObjectType type, GfxController *gfxController):
-    SceneObject(position, rotation, objectName, scale, programId, type, gfxController),
+    SceneObject(position, rotation, scale, programId, type, objectName, gfxController),
     model_ { characterModel } {
     // Enforce the model is VALID!
     assert(model_.get() != nullptr);

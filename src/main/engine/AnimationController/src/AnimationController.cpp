@@ -8,14 +8,15 @@
  * @copyright Copyright (c) 2024
  *
  */
-
+#include <AnimationController.hpp>
 #include <vector>
 #include <string>
 #include <cstdio>
 #include <memory>
 #include <cmath>
 #include <algorithm>
-#include <AnimationController.hpp>
+#include <ImageExt.hpp>
+#include <SceneObject.hpp>
 
 std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
     auto keyframe = createKeyFrame(type, time);
@@ -200,10 +201,14 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
             auto cTarget = static_cast<TextObject *>(target);
             currentKf->color.original = cTarget->getColor();
         }
+        if (currentKf->type & UPDATE_TINT) {
+            auto imEx = dynamic_cast<ImageExt *>(target);
+            currentKf->tint.original = imEx->getTint();
+        }
     }
 
     auto result = UPDATE_NOT_COMPLETE;
-    auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET;
+    auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET | TINT_MET;
     auto &currentTime = currentKf.get()->currentTime;
     auto &targetTime = currentKf.get()->targetTime;
     auto overflowTime = currentTime + timeChange;
@@ -217,6 +222,7 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
     result |= updateRotation(target, currentKf.get());
     result |= updateScale(target, currentKf.get());
     result |= updateColor(target, currentKf.get());
+    result |= updateTint(target, currentKf.get());
     return UpdateData<float>(overflowTime - targetTime, (result == done));
 }
 
@@ -367,6 +373,30 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
     cTarget->setColor(result.updatedValue_);
 
     return (result.updateComplete_) ? COLOR_MET : UPDATE_NOT_COMPLETE;
+}
+
+int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
+    // Only update if the keyframe type has COLOR
+    if (!(keyFrame->type & UPDATE_TINT)) {
+        return TINT_MET;
+    }
+    // This is the pattern that should be followed for stuff like this:
+    auto imEx = dynamic_cast<ImageExt *>(target);
+    if (!imEx) {
+        fprintf(stderr,
+            "AnimationController::updateTint: Image Extension NOT present in object %s!\n",
+            target->getObjectName().c_str());
+        assert(0);
+        return TINT_MET;
+    }
+    auto result = updateVector(
+        keyFrame->tint.original,
+        keyFrame->tint.desired,
+        keyFrame);
+
+    imEx->setTint(result.updatedValue_);
+
+    return (result.updateComplete_) ? TINT_MET : UPDATE_NOT_COMPLETE;
 }
 
 float AnimationController::linearFloatTransform(float original, float desired, KeyFrame *keyFrame) {
