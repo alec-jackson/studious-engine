@@ -5,3 +5,6 @@
  * @date 09-05-2025
  * @copyright studious-engine 2025
  */
+#include <ImageExt.hpp>
+
+ImageExt::ImageExt() : tint_ { 0 } {}

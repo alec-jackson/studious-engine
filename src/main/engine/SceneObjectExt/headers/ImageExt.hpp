@@ -13,6 +13,7 @@ using glm::vec4;
 
 class ImageExt {
  public:
+    ImageExt();
     inline void setTint(vec4 tint) { tint_ = tint; }
     inline vec4 getTint() const { return tint_; }
  protected:
