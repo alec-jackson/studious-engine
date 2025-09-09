@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <GfxController.hpp>
 #include <OpenGlGfxController.hpp>
+#include <Logger.hpp>
 
 /**
  * @brief Generates a buffer in the OpenGL context
@@ -324,7 +325,7 @@ void OpenGlGfxController::update() {
  * @return GfxResult<int> OK if successful; FAILURE otherwise
  */
 GfxResult<int> OpenGlGfxController::init() {
-    cout << "OpenGlGfxController::init" << endl;
+    Log::INFO("OpenGlGfxController::init");
 #ifdef GFX_EMBEDDED
     if (!gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress)) {
         cerr << "Error: Failed to initialize GLAD!\n";

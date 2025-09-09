@@ -79,6 +79,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
   src/main/engine/SceneObjectExt/src/ImageExt.cpp
   src/main/utilities/src/GifLoader.cpp
+  src/main/utilities/src/Logger.cpp
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
@@ -286,6 +287,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 install (FILES
+  src/main/utilities/headers/Logger.hpp
   src/main/utilities/headers/ModelImport.hpp
   src/main/utilities/headers/Polygon.hpp
   src/main/common/headers/common.hpp
