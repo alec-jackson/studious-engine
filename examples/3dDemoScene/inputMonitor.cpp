@@ -39,7 +39,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
     /// @todo Refactor and remove reinterpret_casts if re-using this code
     gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
-    CameraObject *renderer = currentGameInfo->gameCamera;
     AnimationController *ac = animationController.get();
     PhysicsController *pc = physicsController.get();
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
@@ -368,7 +367,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 };
                 auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
                 ac->addKeyFrame(bulletObj, bkf);
-                renderer->addSceneObject(bulletObj);
                 PhysicsParams params(true, false, 0.0f, 1.0f);
                 pc->addSceneObject(bulletObj, params);
                 // Convert angles[1] to a direction????

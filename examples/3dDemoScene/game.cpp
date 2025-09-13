@@ -71,6 +71,7 @@ int main() {
     auto config = StudiousConfig("src/resources/config.txt");
 
     GameInstance currentGame(config);
+    currentGame.createGameScene("3d-demo-scene");
 
     // Load shader programs
     for (auto program : programs) {
@@ -116,7 +117,7 @@ int runtime(GameInstance *currentGame) {
         texturePatternStage)
         .createPolygonFromFile();
 
-    auto mapObject = currentGame->createGameObject(mapPoly,
+    currentGame->createGameObject(mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
 
     cout << "Creating Player\n";
@@ -180,7 +181,7 @@ int runtime(GameInstance *currentGame) {
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
-    auto engineText = currentGame->createText(
+    currentGame->createText(
         "Studious Engine 2025",                 // Message
         vec3(25.0f, 25.0f, 0.0f),               // Position
         1.0f,                                   // Scale
@@ -218,14 +219,14 @@ int runtime(GameInstance *currentGame) {
         48,
         "fps-text");
 
-    auto testSprite = currentGame->createSprite(
+    currentGame->createSprite(
         "src/resources/images/JTIconNoBackground.png",
         vec3(1250.0f, 50.0f, 0.0f),
         0.1f,
         ObjectAnchor::CENTER,
         "test-sprite");
 
-    auto testUi = currentGame->createUi(
+    currentGame->createUi(
         "src/resources/images/Message Bubble UI.png",   // image path
         vec3(80.0f, 160.0f, 0.0f),                     // Position
         0.5f,                                           // Scale
@@ -233,7 +234,7 @@ int runtime(GameInstance *currentGame) {
         0.0f,                                           // Height
         ObjectAnchor::CENTER,                           // Anchor
         "uiBubble");                                    // UI Bubble
-    auto testText = currentGame->createText(
+    currentGame->createText(
         "Textbox Example",
         vec3(40.0f, 155.0f, 0.0f),
         0.6f,
@@ -246,7 +247,7 @@ int runtime(GameInstance *currentGame) {
     fps_counter->setMessage("FPS: 0");
 
     auto currentCamera = currentGame->createCamera(playerRef,
-        vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f);
+        vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f, "mainCamera");
     playerRef->setRotation(vec3(0, 0, 0));
     cout << "currentGameObject tag is " << playerRef->getObjectName()
         << '\n';
@@ -254,30 +255,6 @@ int runtime(GameInstance *currentGame) {
     playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
     playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
     playerRef->setScale(0.0062f);
-
-    // Add objects to camera
-    vector<SceneObject *> targets = {
-        mapObject,
-        playerRef,
-        wolfObject,
-        engineText,
-        contactText,
-        fpsText,
-        pressUText,
-        testSprite,
-        testUi,
-        testText,
-        companion,
-        companion2,
-        companion3,
-        companion4
-    };
-
-    // Add all objects to active camera
-    for (auto it = targets.begin(); it != targets.end(); ++it) {
-        cout << "Adding to camera: " << (*it)->getObjectName() << endl;
-        currentCamera->addSceneObject(*it);
-    }
 
     currentGameInfo.isDone = &isDone;
     currentGameInfo.gameCamera = currentCamera;

@@ -76,7 +76,7 @@ int runtime(GameInstance *currentGame) {
     SDL_SetRelativeMouseMode(SDL_FALSE);
     cout << "Creating camera.\n";
 
-    auto currentCamera = currentGame->createCamera(nullptr, vec3(0), 0.0, 16.0 / 9.0, 4.0, 90.0);
+    currentGame->createCamera(nullptr, vec3(0), 0.0, 16.0 / 9.0, 4.0, 90.0, "mainCamera");
     auto player = currentGame->createSprite("src/resources/images/JTIconNoBackground.png", vec3(0), 0.5,
         ObjectAnchor::BOTTOM_LEFT, "player");
     // Attach some other objects to the parent...
@@ -112,7 +112,7 @@ int runtime(GameInstance *currentGame) {
     animationController.get()->playTrack("all frames");
 
     // Create a new tile object and add it to the scene
-    auto tile = currentGame->createTileMap(
+    currentGame->createTileMap(
         {{ "floor_0", "src/resources/images/rock_texture.jpg" }},
         {{ 0, 0, "floor_0" },
         { 0, 1, "floor_0" },
@@ -122,20 +122,7 @@ int runtime(GameInstance *currentGame) {
         0.1f,
         ObjectAnchor::BOTTOM_LEFT,
         "test-tile");
-    // Add objects to camera
-    vector<SceneObject *> targets = {
-        obstacle,
-        player,
-        tile,
-        playerAccessory,
-        playerAccessoryToo
-    };
 
-    // Add all objects to active camera
-    for (auto it = targets.begin(); it != targets.end(); ++it) {
-        cout << "Adding to camera: " << (*it)->getObjectName() << endl;
-        currentCamera->addSceneObject(*it);
-    }
     /*
      End Scene Loading
      */

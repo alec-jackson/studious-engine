@@ -53,68 +53,7 @@ void CameraObject::render() {
 }
 
 void CameraObject::update() {
-    std::unique_lock<std::mutex> scopeLock(objectLock_);
     // Update aspect ratio
     setAspectRatio(resolution_.x / resolution_.y);
     render();
-
-    for (auto &obj : sceneObjectsOrdered_) {
-        // Send the current screen res to each object
-        /// @todo Maybe use a global variable for resolution?
-        auto objList = obj.second;
-        for (auto objPtr : objList) {
-            objPtr->setResolution(resolution_);
-            // Check if the object is ORTHO or PERSPECTIVE
-            switch (objPtr->type()) {
-                case GAME_OBJECT:
-                    objPtr->setVpMatrix(vpMatrixPerspective_);
-                    break;
-                case UI_OBJECT:
-                    /* Do not apply view to UI */
-                    objPtr->setVpMatrix(orthographicMatrix_);
-                    break;
-                case SPRITE_OBJECT:
-                case TEXT_OBJECT:
-                case TILE_OBJECT:
-                    objPtr->setVpMatrix(vpMatrixOrthographic_);
-                    break;
-                default:
-                    printf("CameraObject::update: Ignoring object [%s] type [%d]\n", objPtr->getObjectName().c_str(),
-                        objPtr->type());
-                    break;
-            }
-            // Render the object -> the map iterator will sort keys automatically
-            objPtr->update();
-        }
-    }
-}
-
-void CameraObject::addSceneObject(SceneObject *sceneObject) {
-    std::unique_lock<std::mutex> scopeLock(objectLock_);
-    sceneObjects_.push_back(sceneObject);
-    // Add the scene objects to the list
-    sceneObjectsOrdered_[sceneObject->getRenderPriority()].push_back(sceneObject);
-}
-
-void CameraObject::resetRenderPriorityMap() {
-    std::unique_lock<std::mutex> scopeLock(objectLock_);
-    resetRenderPriorityMap_();
-}
-
-void CameraObject::resetRenderPriorityMap_() {
-    sceneObjectsOrdered_.clear();
-    for (auto obj : sceneObjects_) {
-        sceneObjectsOrdered_[obj->getRenderPriority()].push_back(obj);
-    }
-}
-
-void CameraObject::removeSceneObject(string objectName) {
-    std::unique_lock<std::mutex> scopeLock(objectLock_);
-    auto objectIt = std::find_if(sceneObjects_.begin(), sceneObjects_.end(),
-        [objectName](SceneObject *obj) {
-            return obj->getObjectName().compare(objectName) == 0;
-        });
-    sceneObjects_.erase(objectIt);
-    // Reset the render priority map after a delete
-    resetRenderPriorityMap_();
 }
