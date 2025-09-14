@@ -10,6 +10,9 @@ void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
         return;
     }
     assert(!sceneObject->getObjectName().empty());
+    // SANITY CHECK - ENFORCE OBJECTS CANNOT HAVE SAME NAME!!!!!!!!
+    auto soit = sceneObjects_.find(sceneObject->getObjectName());
+    assert(soit == sceneObjects_.end());
     sceneObjects_[sceneObject->getObjectName()] = sceneObject;
     renderPriorityMap_[sceneObject->getRenderPriority()].push_back(sceneObject);
 }

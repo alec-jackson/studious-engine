@@ -206,7 +206,7 @@ int runtime(GameInstance *currentGame) {
         "src/resources/fonts/AovelSans.ttf",
         0.0f,
         48,
-        "contact-text");
+        "pressUText");
 
     collDebugText = contactText;
     collDebugText->setMessage("Contact: False");

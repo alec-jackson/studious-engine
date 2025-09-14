@@ -153,7 +153,7 @@ class GameInstance {
      */
     void resetController();
 
-    void addSceneObject(std::shared_ptr<SceneObject> sceneObject);
+    bool addSceneObject(std::shared_ptr<SceneObject> sceneObject);
     std::shared_ptr<GameScene> getGameScene_(string sceneName);
 
  public:

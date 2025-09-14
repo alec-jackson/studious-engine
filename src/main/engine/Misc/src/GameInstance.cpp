@@ -11,6 +11,7 @@
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
+#include <algorithm>
 #include <condition_variable> //NOLINT
 #include <cstdio>
 #include <iostream>
@@ -451,13 +452,14 @@ bool GameInstance::waitForInput(GameInput input) {
     return curInput == input;
 }
 
-void GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
+bool GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
     if (!activeScene_.get()) {
         fprintf(stderr, "GameInstance::addSceneObject: No active scene! Ignoring game object %s\n",
             sceneObject.get()->getObjectName().c_str());
-        return;
+        return false;
     }
     activeScene_.get()->addSceneObject(sceneObject);
+    return true;
 }
 
 GameObject *GameInstance::createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation,
@@ -478,8 +480,7 @@ GameObject *GameInstance::createGameObject(std::shared_ptr<Polygon> characterMod
     }
     gameObject.get()->setLuminance(luminance);
     gameObject.get()->setRenderPriority(RENDER_PRIOR_LOW);
-    addSceneObject(gameObject);
-    return gameObject.get();
+    return addSceneObject(gameObject) ? gameObject.get() : nullptr;
 }
 
 CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
@@ -509,8 +510,7 @@ TextObject *GameInstance::createText(string message, vec3 position, float scale,
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
         charSpacing, charPoint, textProg.get(), objectName, ObjectType::TEXT_OBJECT, gfxController_);
     text.get()->setRenderPriority(RENDER_PRIOR_HIGH);
-    addSceneObject(text);
-    return text.get();
+    return addSceneObject(text) ? text.get() : nullptr;
 }
 
 SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float scale,
@@ -525,8 +525,7 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
     auto sprite = std::make_shared<SpriteObject>(spritePath, position, scale, spriteProg.get(), objectName,
         ObjectType::SPRITE_OBJECT, anchor, gfxController_);
     sprite.get()->setRenderPriority(RENDER_PRIOR_LOW);
-    addSceneObject(sprite);
-    return sprite.get();
+    return addSceneObject(sprite) ? sprite.get() : nullptr;
 }
 
 UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
@@ -541,8 +540,7 @@ UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, 
     auto ui = std::make_shared<UiObject>(spritePath, position, scale, wScale, hScale, uiProg.get(), objectName,
         ObjectType::UI_OBJECT, anchor, gfxController_);
     ui.get()->setRenderPriority(RENDER_PRIOR_MEDIUM);
-    addSceneObject(ui);
-    return ui.get();
+    return addSceneObject(ui) ? ui.get() : nullptr;
 }
 
 TileObject *GameInstance::createTileMap(map<string, string> textures, vector<TileData> mapData,
@@ -557,8 +555,7 @@ TileObject *GameInstance::createTileMap(map<string, string> textures, vector<Til
     auto tile = std::make_shared<TileObject>(textures, mapData, position, vec3(0.0f), scale, ObjectType::TILE_OBJECT,
     tileProg.get(), objectName, anchor, gfxController_);
     tile.get()->setRenderPriority(RENDER_PRIOR_LOWEST);
-    addSceneObject(tile);
-    return tile.get();
+    return addSceneObject(tile) ? tile.get() : nullptr;
 }
 
 SceneObject *GameInstance::getSceneObject(string objectName) {
@@ -593,6 +590,7 @@ int GameInstance::removeSceneObject(string objectName) {
         // Time will tell if we need to remove object from ALL scenes or just active...
         activeScene_.get()->removeSceneObject(objectName);
     }
+    printf("Remove game scene end\n");
     return 0;
 }
 
@@ -864,7 +862,8 @@ vec3 GameInstance::getDirectionalLight() {
 }
 
 void GameInstance::createGameScene(string sceneName) {
-    auto gameScene = getGameScene(sceneName);
+    std::unique_lock<std::mutex> scopeLock(sceneLock_);
+    auto gameScene = getGameScene_(sceneName);
     if (gameScene.get()) {
         printf("GameInstance::createGameScene: Scene %s will be clobbered\n",
             sceneName.c_str());
@@ -886,7 +885,7 @@ void GameInstance::setActiveScene(string sceneName) {
         printf("GameInstance::setActiveScene: %s is already the active scene!\n",
             sceneName.c_str());
     }
-    auto gameScene = getGameScene(sceneName);
+    auto gameScene = getGameScene_(sceneName);
     if (!gameScene.get()) {
         fprintf(stderr,
             "GameInstance::setActiveScene: %s not found! Not updating scene.\n",
