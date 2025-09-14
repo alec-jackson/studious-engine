@@ -116,7 +116,7 @@ if [ $? != 0 ]; then
 else
     if [ "$installLib" == true ]; then
         echo "Installing studious library files"
-        cmake --install .
+        sudo cmake --install .
     fi
     if [ "$runTests" == true ]; then
         if [ "$filter_tests" == true ]; then
