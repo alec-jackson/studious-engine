@@ -20,7 +20,12 @@ void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
     assert(!sceneObject->getObjectName().empty());
     // SANITY CHECK - ENFORCE OBJECTS CANNOT HAVE SAME NAME!!!!!!!!
     auto soit = sceneObjects_.find(sceneObject->getObjectName());
-    assert(soit == sceneObjects_.end());
+    if (soit != sceneObjects_.end()) {
+        fprintf(stderr,
+            "GameScene::addSceneObject: ERROR! Cannot add two objects with the same name! [%s]\n",
+            sceneObject->getObjectName().c_str());
+        assert(0);
+    }
     sceneObjects_[sceneObject->getObjectName()] = sceneObject;
     renderPriorityMap_[sceneObject->getRenderPriority()].push_back(sceneObject);
 }

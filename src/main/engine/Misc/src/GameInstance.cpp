@@ -456,6 +456,8 @@ bool GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
     if (!activeScene_.get()) {
         fprintf(stderr, "GameInstance::addSceneObject: No active scene! Ignoring game object %s\n",
             sceneObject.get()->getObjectName().c_str());
+        printf("GameInstance::addSceneObject: Please bind an active scene and try again.\n");
+        assert(false);
         return false;
     }
     activeScene_.get()->addSceneObject(sceneObject);
@@ -839,7 +841,11 @@ void GameInstance::processConfig(const StudiousConfig &config) {
 
 std::shared_ptr<GameScene> GameInstance::getGameScene(string sceneName) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
-    return getGameScene_(sceneName);
+    auto gamescene = getGameScene_(sceneName);
+    if (!gamescene.get())
+        fprintf(stderr, "GameInstance::getGameScene: %s does not exist!\n",
+            sceneName.c_str());
+    return gamescene;
 }
 
 std::shared_ptr<GameScene> GameInstance::getGameScene_(string sceneName) {
@@ -847,9 +853,6 @@ std::shared_ptr<GameScene> GameInstance::getGameScene_(string sceneName) {
     auto gsit = gameScenes_.find(sceneName);
     if (gsit != gameScenes_.end()) {
         result = gsit->second;
-    } else {
-        fprintf(stderr, "GameInstance::getGameScene: %s does not exist!\n",
-            sceneName.c_str());
     }
     return result;
 }

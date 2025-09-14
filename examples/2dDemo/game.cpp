@@ -52,6 +52,7 @@ int main() {
     auto config = StudiousConfig("src/resources/config.txt");
 
     GameInstance currentGame(config);
+    currentGame.createGameScene("2d-demo-scene");
 
     // Load shader programs
     for (auto program : programs) {
@@ -81,7 +82,7 @@ int runtime(GameInstance *currentGame) {
         ObjectAnchor::BOTTOM_LEFT, "player");
     // Attach some other objects to the parent...
     auto playerAccessory = currentGame->createSprite("src/resources/images/rockwall.jpg", vec3(0), -0.4, ObjectAnchor::BOTTOM_LEFT, "playerAcc1");
-    auto playerAccessoryToo = currentGame->createSprite("src/resources/images/rockwall.jpg", vec3(100, 100, 0), -0.4, ObjectAnchor::BOTTOM_LEFT, "playerAcc1");
+    auto playerAccessoryToo = currentGame->createSprite("src/resources/images/rockwall.jpg", vec3(100, 100, 0), -0.4, ObjectAnchor::BOTTOM_LEFT, "playerAcc2");
 
     playerAccessory->setParent(player);
     playerAccessoryToo->setParent(player);

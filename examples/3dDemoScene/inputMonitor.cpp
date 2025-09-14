@@ -48,6 +48,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     float fallspeed = 0;
     bool trackMouse = false;
     bool uPressed = false;
+    bool sixPressed = false;
     bool lPressed = false;
     bool delPressed = false;
     SDL_GameController *gameController1 = NULL;
@@ -336,6 +337,20 @@ void rotateShape(void *gameInfoStruct, void *target) {
             }
         } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_U] && uPressed) {
             uPressed = false;
+        }
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_6] && !sixPressed) {
+            sixPressed = true;
+            if (currentGame->getActiveScene().get()->getSceneName().compare("3d-demo-scene") == 0) {
+                currentGame->setActiveScene("alternate-3d-scene");
+                auto altPlayer = currentGame->getSceneObject("alt");
+                currentGameInfo->gameCamera->setTarget(altPlayer);
+            } else {
+                currentGame->setActiveScene("3d-demo-scene");
+                auto altPlayer = currentGame->getSceneObject("player");
+                currentGameInfo->gameCamera->setTarget(altPlayer);
+            }
+        } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_6] && sixPressed) {
+            sixPressed = false;
         }
         if (currentGame->getKeystateRaw()[SDL_SCANCODE_L] && !lPressed) {
             lPressed = true;

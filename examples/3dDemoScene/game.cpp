@@ -65,6 +65,7 @@ extern std::unique_ptr<PhysicsController> physicsController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
+void decorateAltScene(GameInstance *currentGame);
 
 int main() {
     int errorNum;
@@ -72,13 +73,30 @@ int main() {
 
     GameInstance currentGame(config);
     currentGame.createGameScene("3d-demo-scene");
+    currentGame.createGameScene("alternate-3d-scene");
 
     // Load shader programs
     for (auto program : programs) {
         gfxController.get()->loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
     }
+    decorateAltScene(&currentGame);
+    currentGame.setActiveScene("3d-demo-scene");
     errorNum = runtime(&currentGame);
     return errorNum;
+}
+
+void decorateAltScene(GameInstance *currentGame) {
+    currentGame->setActiveScene("alternate-3d-scene");
+    auto playerPoly = ModelImport(
+        "src/resources/models/Dracula.obj",
+        {},
+        {})
+        .createPolygonFromFile();
+
+    currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
+        vec3(0.0f, 0.0f, 0.0f), 0.005f, "alt");
+    currentGame->createSprite("src/resources/images/JTIconNoBackground.png", vec3(0), 0.5,
+        ObjectAnchor::BOTTOM_LEFT, "altim");
 }
 
 /*
