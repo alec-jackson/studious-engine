@@ -1,6 +1,14 @@
-#include "SceneObject.hpp"
+/**
+ * @file GameScene.cpp
+ * @brief Implementation for GameScene class. The GameScene contains a collection of SceneObjects
+ * that define a scene.
+ * @author Christian Galvez
+ * @date 09-13-2025
+ * @copyright Studious Engine 2025
+ */
 #include <GameScene.hpp>
 #include <cassert>
+#include <SceneObject.hpp>
 
 void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
@@ -99,4 +107,14 @@ void GameScene::setDirectionalLight(vec3 directionalLight) {
             cObj->setDirectionalLight(directionalLight);
         }
     }
+}
+
+void loadGameScene(std::string path) {
+    // Use YAML parser here ...
+    printf("Not implemented yet! %s\n", path.c_str());
+}
+
+void saveGameScene(std::string path) {
+    // Use YAML writer here...
+    printf("Not implemented yet! %s\n", path.c_str());
 }
