@@ -872,9 +872,14 @@ void GameInstance::createGameScene(string sceneName) {
             sceneName.c_str());
     }
     gameScenes_[sceneName] = std::make_shared<GameScene>(sceneName);
+    printf("GameInstance::createGameScene: Created gameScene %s successfully!\n",
+        sceneName.c_str());
     // Auto set active scene if none currently set
-    if (!activeScene_.get())
+    if (!activeScene_.get()) {
         activeScene_ = gameScenes_.at(sceneName);
+        printf("GameInstance::createGameScene: GameScene %s is now bound.\n",
+            sceneName.c_str());
+    }
 }
 
 void loadGameSceneFromFile(string path) {
