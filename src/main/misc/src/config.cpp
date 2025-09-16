@@ -4,9 +4,9 @@
  * @brief Configures runtime application settings
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <string>
 #include <cstdio>
@@ -49,7 +49,7 @@ ConfigResult<int> StudiousConfig::getIField(string fieldName) const {
 ConfigResult<uint> StudiousConfig::getUField(string fieldName) const {
     const auto query = getIField(fieldName);
     ConfigResult result = ConfigResult(0u, ConfigStatus::FAILURE);
-    if (ConfigStatus::SUCCESS == result.status) {
+    if (ConfigStatus::SUCCESS == query.status) {
         result = ConfigResult(static_cast<uint>(query.data), query.status);
     }
     return result;
@@ -64,4 +64,3 @@ ConfigResult<string> StudiousConfig::getSField(string fieldName) const {
     }
     return result;
 }
-

@@ -32,22 +32,17 @@ class CameraObject : public SceneObject {
     inline vec3 getOffset() { return offset_; }
     inline SceneObject *getTarget() { return target_; }
     inline float getAspectRatio() { return aspectRatio_; }
-    inline vector<SceneObject *> getSceneObjects() const { return sceneObjects_; }
+    inline mat4 getPerspective() const { return vpMatrixPerspective_; }
+    inline mat4 getOrthographic() const { return vpMatrixOrthographic_; }
+    inline mat4 getOrthographicBase() const { return orthographicMatrix_; }
 
     // Camera Specific Methods
     void render() override;
     void update() override;
-    void addSceneObject(SceneObject *gameObject);
-    void removeSceneObject(string objectName);
-    void resetRenderPriorityMap();
-    inline void clearSceneObjects() { sceneObjects_.clear(); sceneObjectsOrdered_.clear(); }
 
  private:
     void resetRenderPriorityMap_();
     SceneObject *target_;
-    vector<SceneObject *> sceneObjects_;
-    // Render priority to list of scene objects
-    map<uint, vector<SceneObject *>> sceneObjectsOrdered_;
     vec3 offset_;
     vec3 initialTargetPos_;
     mat4 vpMatrixPerspective_;

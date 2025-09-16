@@ -31,6 +31,7 @@
 #include <config.hpp>
 #include <physics.hpp>
 #include <AnimationController.hpp>
+#include <GameScene.hpp>
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
@@ -79,8 +80,8 @@ class GameInstance {
     SDL_Renderer *renderer;
     SDL_Event event;
     SDL_GLContext mainContext;
-    vector<std::shared_ptr<SceneObject>> sceneObjects_;
     vector<std::shared_ptr<CameraObject>> cameras_;
+    std::shared_ptr<CameraObject> activeCamera_;
     vector<string> vertShaders_;
     vector<string> fragShaders_;
     vector<string> texturePathStage_;
@@ -89,7 +90,6 @@ class GameInstance {
     map<string, int> activeChannels_;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
-    vec3 directionalLight_;
     float luminance;
     int width_, height_;
     int vsync_;
@@ -106,6 +106,8 @@ class GameInstance {
     queue<std::function<void(void)>> protectedGfxReqs_;
     queue<GameInput> inputQueue_;
     bool audioInitialized_ = false;
+    std::shared_ptr<GameScene> activeScene_;
+    map<string, std::shared_ptr<GameScene>> gameScenes_;
 
     void initWindow();
     void initAudio();
@@ -151,6 +153,9 @@ class GameInstance {
      */
     void resetController();
 
+    bool addSceneObject(std::shared_ptr<SceneObject> sceneObject);
+    std::shared_ptr<GameScene> getGameScene_(string sceneName);
+
  public:
     explicit GameInstance(const StudiousConfig &config);
     ~GameInstance();
@@ -158,7 +163,7 @@ class GameInstance {
     GameObject *createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
-              float nearClipping, float farClipping);
+              float nearClipping, float farClipping, string cameraName);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing,
         int charPoint, string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale,
@@ -262,4 +267,9 @@ class GameInstance {
      */
     void configureVsync(bool enable);
     void processConfig(const StudiousConfig &config);
+    void createGameScene(string sceneName);
+    void loadGameSceneFromFile(string path);
+    inline std::shared_ptr<GameScene> getActiveScene() { return activeScene_; }
+    void setActiveScene(string sceneName);
+    std::shared_ptr<GameScene> getGameScene(string sceneName);
 };

@@ -128,4 +128,5 @@ class SceneObject {
     std::set<SceneObject *> children_;
 
     mutex objectLock_;
+    bool visible_ = true;
 };

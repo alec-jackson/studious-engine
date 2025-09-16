@@ -11,9 +11,11 @@
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
+#include <algorithm>
 #include <condition_variable> //NOLINT
 #include <cstdio>
 #include <iostream>
+#include <mutex> //NOLINT
 #include <string>
 #include <vector>
 #include <memory>
@@ -71,7 +73,6 @@ map<Uint8, GameInput> hatInputMap = {
  */
 GameInstance::GameInstance(const StudiousConfig &config): shutdown_(0) {
     luminance = 1.0f;  // Set default values
-    directionalLight_ = vec3(-100, 100, 100);
     controllersConnected = 0;
     processConfig(config);
     init();
@@ -103,14 +104,6 @@ int GameInstance::getHeight() {
 
 vec3 GameInstance::getResolution() {
     return vec3(static_cast<float>(width_), static_cast<float>(height_), 0.0f);
-}
-
-/*
- (vec3) getDirectionalLight returns the current location of the directionalLight
- in the scene.
- */
-vec3 GameInstance::getDirectionalLight() {
-    return directionalLight_;
 }
 
 bool GameInstance::getControllerInput(SDL_GameControllerButton button) const {
@@ -359,6 +352,9 @@ int GameInstance::updateObjects() {
         camera->setResolution(this->getResolution());
         camera->update();
     }
+    // Update the current scene
+    if (activeScene_.get() && activeCamera_.get())
+        activeScene_.get()->update(activeCamera_.get());
     return 0;
 }
 
@@ -456,10 +452,21 @@ bool GameInstance::waitForInput(GameInput input) {
     return curInput == input;
 }
 
+bool GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
+    if (!activeScene_.get()) {
+        fprintf(stderr, "GameInstance::addSceneObject: No active scene! Ignoring game object %s\n",
+            sceneObject.get()->getObjectName().c_str());
+        printf("GameInstance::addSceneObject: Please bind an active scene and try again.\n");
+        assert(false);
+        return false;
+    }
+    activeScene_.get()->addSceneObject(sceneObject);
+    return true;
+}
+
 GameObject *GameInstance::createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation,
     float scale, string objectName) {
-    std::unique_lock<std::mutex> lock(sceneLock_);
-    printf("GameInstance::createGameObject: Creating GameObject %zu\n", sceneObjects_.size());
+    printf("GameInstance::createGameObject: Creating GameObject %s\n", objectName.c_str());
     auto gameObjProg = gfxController_->getProgramId(GAMEOBJECT_PROG_NAME);
     if (!gameObjProg.isOk()) {
         fprintf(stderr,
@@ -469,28 +476,32 @@ GameObject *GameInstance::createGameObject(std::shared_ptr<Polygon> characterMod
     }
     auto gameObject = std::make_shared<GameObject>(characterModel, position, rotation,
         scale, gameObjProg.get(), objectName, ObjectType::GAME_OBJECT, gfxController_);
-    gameObject.get()->setDirectionalLight(directionalLight_);
+    if (activeScene_.get()) {
+        auto dirLight = activeScene_.get()->getDirectionalLight();
+        gameObject.get()->setDirectionalLight(dirLight);
+    }
     gameObject.get()->setLuminance(luminance);
     gameObject.get()->setRenderPriority(RENDER_PRIOR_LOW);
-    sceneObjects_.push_back(gameObject);
-    return gameObject.get();
+    return addSceneObject(gameObject) ? gameObject.get() : nullptr;
 }
 
 CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
-              float nearClipping, float farClipping) {
-    std::unique_lock<std::mutex> lock(sceneLock_);
-    printf("GameInstance::createCamera: Creating CameraObject %zu\n", sceneObjects_.size());
-    auto cameraName = "Camera" + std::to_string(sceneObjects_.size());
+              float nearClipping, float farClipping, string cameraName) {
+    printf("GameInstance::createCamera: Creating CameraObject %s\n", cameraName.c_str());
     auto gameCamera = std::make_shared<CameraObject>(target, offset, cameraAngle,
         aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
+    if (!activeCamera_.get()) {
+        printf("GameInstance::createCamera: No active cameras detected. Setting camera %s as new active camera.\n",
+                cameraName.c_str());
+        activeCamera_ = gameCamera;
+    }
     cameras_.push_back(gameCamera);
     return gameCamera.get();
 }
 
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
     float charSpacing, int charPoint, string objectName) {
-    std::unique_lock<std::mutex> lock(sceneLock_);
-    printf("GameInstance::createText: Creating TextObject %zu\n", sceneObjects_.size());
+    printf("GameInstance::createText: Creating TextObject %s\n", objectName.c_str());
     auto textProg = gfxController_->getProgramId(TEXTOBJECT_PROG_NAME);
     if (!textProg.isOk()) {
         fprintf(stderr,
@@ -501,13 +512,11 @@ TextObject *GameInstance::createText(string message, vec3 position, float scale,
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
         charSpacing, charPoint, textProg.get(), objectName, ObjectType::TEXT_OBJECT, gfxController_);
     text.get()->setRenderPriority(RENDER_PRIOR_HIGH);
-    sceneObjects_.push_back(text);
-    return text.get();
+    return addSceneObject(text) ? text.get() : nullptr;
 }
 
 SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float scale,
     ObjectAnchor anchor, string objectName) {
-    std::unique_lock<std::mutex> lock(sceneLock_);
     auto spriteProg = gfxController_->getProgramId(SPRITEOBJECT_PROG_NAME);
     if (!spriteProg.isOk()) {
         fprintf(stderr,
@@ -518,13 +527,11 @@ SpriteObject *GameInstance::createSprite(string spritePath, vec3 position, float
     auto sprite = std::make_shared<SpriteObject>(spritePath, position, scale, spriteProg.get(), objectName,
         ObjectType::SPRITE_OBJECT, anchor, gfxController_);
     sprite.get()->setRenderPriority(RENDER_PRIOR_LOW);
-    sceneObjects_.push_back(sprite);
-    return sprite.get();
+    return addSceneObject(sprite) ? sprite.get() : nullptr;
 }
 
 UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,
     ObjectAnchor anchor, string objectName) {
-    std::unique_lock<std::mutex> lock(sceneLock_);
     auto uiProg = gfxController_->getProgramId(UIOBJECT_PROG_NAME);
     if (!uiProg.isOk()) {
         fprintf(stderr,
@@ -535,14 +542,11 @@ UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, 
     auto ui = std::make_shared<UiObject>(spritePath, position, scale, wScale, hScale, uiProg.get(), objectName,
         ObjectType::UI_OBJECT, anchor, gfxController_);
     ui.get()->setRenderPriority(RENDER_PRIOR_MEDIUM);
-    sceneObjects_.push_back(ui);
-    return ui.get();
+    return addSceneObject(ui) ? ui.get() : nullptr;
 }
 
 TileObject *GameInstance::createTileMap(map<string, string> textures, vector<TileData> mapData,
     vec3 position, float scale, ObjectAnchor anchor, string objectName) {
-    std::unique_lock<std::mutex> lock(sceneLock_);
-    printf("GameInstance::createTileMap: Creating TextObject %zu\n", sceneObjects_.size());
     auto tileProg = gfxController_->getProgramId(TILEOBJECT_PROG_NAME);
     if (!tileProg.isOk()) {
         fprintf(stderr,
@@ -553,16 +557,19 @@ TileObject *GameInstance::createTileMap(map<string, string> textures, vector<Til
     auto tile = std::make_shared<TileObject>(textures, mapData, position, vec3(0.0f), scale, ObjectType::TILE_OBJECT,
     tileProg.get(), objectName, anchor, gfxController_);
     tile.get()->setRenderPriority(RENDER_PRIOR_LOWEST);
-    sceneObjects_.push_back(tile);
-    return tile.get();
+    return addSceneObject(tile) ? tile.get() : nullptr;
 }
 
 SceneObject *GameInstance::getSceneObject(string objectName) {
-    std::unique_lock<std::mutex> lock(sceneLock_);
     SceneObject *result = nullptr;
-    for (auto it = sceneObjects_.begin(); it != sceneObjects_.end(); ++it) {
-        if ((*it).get()->getObjectName().compare(objectName) == 0) result = (*it).get();
+    // Attempt to find the scene object in the current scene
+    if (!activeScene_.get()) {
+        fprintf(stderr,
+            "GameInstance::getSceneObject: Unable to find %s, no active scene!",
+            objectName.c_str());
+        return result;
     }
+    result = activeScene_.get()->getSceneObject(objectName).get();
     return result;
 }
 
@@ -581,21 +588,11 @@ int GameInstance::removeSceneObject(string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
     animationController_->removeSceneObject(objectName);
     physicsController_->removeSceneObject(objectName);
-    // Search for the object by name
-    auto objectIt = std::find_if(sceneObjects_.begin(), sceneObjects_.end(),
-        [&objectName](std::shared_ptr<SceneObject> obj) {
-            return obj->getObjectName().compare(objectName) == 0;
-        });
-
-    if (objectIt == sceneObjects_.end()) {
-        fprintf(stderr, "GameInstance::removeSceneObject: Not found (%s)\n",
-            objectName.c_str());
-        return -1;
+    if (activeScene_.get()) {
+        // Time will tell if we need to remove object from ALL scenes or just active...
+        activeScene_.get()->removeSceneObject(objectName);
     }
-    for (auto camera : cameras_) {
-        camera->removeSceneObject(objectName);
-    }
-    sceneObjects_.erase(objectIt);
+    printf("Remove game scene end\n");
     return 0;
 }
 
@@ -637,15 +634,8 @@ void GameInstance::setLuminance(float luminanceValue) {
 }
 
 void GameInstance::setDirectionalLight(vec3 directionalLight) {
-    std::unique_lock<std::mutex> sceneLock(sceneLock_);
-    directionalLight_ = directionalLight;
-
-    // Send new directional light to 3D gameobjects
-    for (auto obj : sceneObjects_) {
-        if (obj->type() == GAME_OBJECT) {
-            GameObject *cObj = static_cast<GameObject *>(obj.get());
-            cObj->setDirectionalLight(directionalLight_);
-        }
+    if (activeScene_.get()) {
+        activeScene_.get()->setDirectionalLight(directionalLight);
     }
 }
 
@@ -847,4 +837,68 @@ void GameInstance::processConfig(const StudiousConfig &config) {
     gfxController_ = gfxController.get();
     physicsController_ = physicsController.get();
     animationController_ = animationController.get();
+}
+
+std::shared_ptr<GameScene> GameInstance::getGameScene(string sceneName) {
+    std::unique_lock<std::mutex> scopeLock(sceneLock_);
+    auto gamescene = getGameScene_(sceneName);
+    if (!gamescene.get())
+        fprintf(stderr, "GameInstance::getGameScene: %s does not exist!\n",
+            sceneName.c_str());
+    return gamescene;
+}
+
+std::shared_ptr<GameScene> GameInstance::getGameScene_(string sceneName) {
+    std::shared_ptr<GameScene> result;
+    auto gsit = gameScenes_.find(sceneName);
+    if (gsit != gameScenes_.end()) {
+        result = gsit->second;
+    }
+    return result;
+}
+
+vec3 GameInstance::getDirectionalLight() {
+    vec3 res = vec3(0);
+    if (activeScene_.get())
+        res = activeScene_.get()->getDirectionalLight();
+    return res;
+}
+
+void GameInstance::createGameScene(string sceneName) {
+    std::unique_lock<std::mutex> scopeLock(sceneLock_);
+    auto gameScene = getGameScene_(sceneName);
+    if (gameScene.get()) {
+        printf("GameInstance::createGameScene: Scene %s will be clobbered\n",
+            sceneName.c_str());
+    }
+    gameScenes_[sceneName] = std::make_shared<GameScene>(sceneName);
+    printf("GameInstance::createGameScene: Created gameScene %s successfully!\n",
+        sceneName.c_str());
+    // Auto set active scene if none currently set
+    if (!activeScene_.get()) {
+        activeScene_ = gameScenes_.at(sceneName);
+        printf("GameInstance::createGameScene: GameScene %s is now bound.\n",
+            sceneName.c_str());
+    }
+}
+
+void loadGameSceneFromFile(string path) {
+    printf("Unsupported %s\n", path.c_str());
+}
+
+void GameInstance::setActiveScene(string sceneName) {
+    std::unique_lock<std::mutex> scopeLock(sceneLock_);
+    if (activeScene_.get() &&
+        activeScene_.get()->getSceneName().compare(sceneName) == 0) {
+        printf("GameInstance::setActiveScene: %s is already the active scene!\n",
+            sceneName.c_str());
+    }
+    auto gameScene = getGameScene_(sceneName);
+    if (!gameScene.get()) {
+        fprintf(stderr,
+            "GameInstance::setActiveScene: %s not found! Not updating scene.\n",
+            sceneName.c_str());
+    } else {
+        activeScene_ = gameScene;
+    }
 }

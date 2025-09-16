@@ -39,7 +39,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
     /// @todo Refactor and remove reinterpret_casts if re-using this code
     gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
-    CameraObject *renderer = currentGameInfo->gameCamera;
     AnimationController *ac = animationController.get();
     PhysicsController *pc = physicsController.get();
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
@@ -49,6 +48,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
     float fallspeed = 0;
     bool trackMouse = false;
     bool uPressed = false;
+    bool sixPressed = false;
     bool lPressed = false;
     bool delPressed = false;
     SDL_GameController *gameController1 = NULL;
@@ -338,6 +338,20 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_U] && uPressed) {
             uPressed = false;
         }
+        if (currentGame->getKeystateRaw()[SDL_SCANCODE_6] && !sixPressed) {
+            sixPressed = true;
+            if (currentGame->getActiveScene().get()->getSceneName().compare("3d-demo-scene") == 0) {
+                currentGame->setActiveScene("alternate-3d-scene");
+                auto altPlayer = currentGame->getSceneObject("alt");
+                currentGameInfo->gameCamera->setTarget(altPlayer);
+            } else {
+                currentGame->setActiveScene("3d-demo-scene");
+                auto altPlayer = currentGame->getSceneObject("player");
+                currentGameInfo->gameCamera->setTarget(altPlayer);
+            }
+        } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_6] && sixPressed) {
+            sixPressed = false;
+        }
         if (currentGame->getKeystateRaw()[SDL_SCANCODE_L] && !lPressed) {
             lPressed = true;
             auto enableStatus = ColliderObject::getDrawCollider();
@@ -368,7 +382,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 };
                 auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
                 ac->addKeyFrame(bulletObj, bkf);
-                renderer->addSceneObject(bulletObj);
                 PhysicsParams params(true, false, 0.0f, 1.0f);
                 pc->addSceneObject(bulletObj, params);
                 // Convert angles[1] to a direction????
