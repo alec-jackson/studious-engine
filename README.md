@@ -65,7 +65,7 @@ If you'd like to use it right now you'll probably need to do a fair amount of wo
 
 ## Installing The Studious Library
 
-The studious library can be installde by simply passing the `-i` argument to the buildScript. This will run cmake --install on your build directory, and add the compiled library and headers to your sysroot. The complete command to execute from the project's directory is:
+The studious library can be installed by simply passing the `-i` argument to the buildScript. This will run cmake --install on your build directory, and add the compiled library and headers to your sysroot. The complete command to execute from the project's directory is:
 
 `./setupBuild.sh -i`
 
