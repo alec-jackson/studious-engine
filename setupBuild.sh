@@ -9,6 +9,7 @@ singleJob=false
 buildAll=false
 installLib=false
 filter_tests=false
+suppressLogs=none
 physThreads=1
 target=studious-3dExampleScene
 while [ $# -ne 0 ]; do
@@ -40,6 +41,10 @@ while [ $# -ne 0 ]; do
             ;;
         -s)
             singleJob=true
+            ;;
+        -sl)
+            shift
+            suppressLogs="$1"
             ;;
         -physThreads)
             shift
@@ -92,6 +97,20 @@ if [ "$runTests" == true ]; then
     echo "Compiling tests"
     ARGS="$ARGS -DRUNTEST=1"
 fi
+case "$suppressLogs" in 
+    -none)
+        ARGS="$ARGS -DSUPPRESS_LOGS=SUPPRESS_NONE"
+        ;;
+    -info)
+        ARGS="$ARGS -DSUPPRESS_LOGS=SUPPRESS_INFO"
+        ;;
+    -warn)
+        ARGS="$ARGS -DSUPPRESS_LOGS=SUPPRESS_WARN"
+        ;;
+    -error)
+        ARGS="$ARGS -DSUPPRESS_LOGS=SUPPRESS_ERROR"
+        ;;
+esac
 # Pass phys threads through
 ARGS="$ARGS -DPHYS_THREADS=$physThreads"
 

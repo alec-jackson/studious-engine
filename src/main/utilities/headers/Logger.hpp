@@ -1,6 +1,20 @@
 #include <iostream>
 #include <string>
 
+#if (SUPPRESS_LOGS == SUPPRESS_INFO)
+#define INFO(x...)
+#endif
+#if (SUPPRESS_LOGS == SUPPRESS_WARN)
+#define INFO(x...)
+#define WARN(x...)
+#endif
+#if (SUPPRESS_LOGS == SUPPRESS_ERROR)
+#define INFO(x...)
+#define WARN(x...)
+#define ERROR(x...)
+#endif
+
+// TODO: move Logger.cpp contents to Logger.hpp to avoid linker error
 
 namespace Log {
     enum class LogLevels {
