@@ -4,9 +4,9 @@
  * @brief Loads .OBJ files into the app as Polygons that can be rendered in the GameInstance
  * @version 0.1
  * @date 2023-07-28
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 // Include External Libraries
@@ -20,18 +20,18 @@
 // Include Internal Headers
 #include <ModelImport.hpp>
 
-ModelImport::ModelImport(string modelPath, vector<string> texturePath, vector<int> texturePattern) :
-    modelPath_ { modelPath }, texturePath_ { texturePath }, texturePattern_ { texturePattern },
-    polygon_ { std::make_shared<Polygon>() } {
+ModelImport::ModelImport(string modelPath, string materialPath) :
+    modelPath_ { modelPath }, materialPath_ { materialPath } {
     cout << "ModelImport::ModelImport: Importing " << modelPath << endl;
 }
 
 /**
  * @brief Attempts to create a Polygon using the .obj file located in modelPath. modelPath is set via the constructor.
- * 
+ *
  * @return Polygon* created using .obj file passed into the constructor.
  */
 std::shared_ptr<Polygon> ModelImport::createPolygonFromFile() {
+    polygon_ = std::make_shared<Polygon>();
     // File is closed when ifstream is destroyed
     ifstream file;  // Read file as read only
     file.open(modelPath_);
@@ -48,14 +48,47 @@ std::shared_ptr<Polygon> ModelImport::createPolygonFromFile() {
     }
     // Create the final object in the polygon
     buildObject(currentObject - 1);
-    polygon_.get()->texturePath_ = texturePath_;
-    polygon_.get()->texturePattern_ = texturePattern_;
+    // Read mat
+    processMaterialFile();
     return polygon_;
+}
+
+void ModelImport::processMaterialFile() {
+    if (materialPath_.empty()) {
+        return;
+    }
+    // Read the material file
+    ifstream file;
+    file.open(materialPath_);
+    if (!file.is_open()) {  // If the file does not exist or cannot be opened
+        cerr << "Model path does not exist!";
+        throw runtime_error("Material path does not exist");
+    }
+    string charBuffer;
+    string currentMaterial;
+    while (getline(file, charBuffer)) {
+        if (charBuffer.size() > 0 && charBuffer.front() == '#') {
+            continue;  // Ignore comment lines
+        }
+        if (charBuffer.compare(0, 6, "newmtl")) {
+            // This is the material definition line, configure as current material
+            char buffer[64];
+            sscanf(charBuffer.c_str(), "newmtl %s\n", buffer);
+            currentMaterial = buffer;  // Set current material
+            polygon_.get()->materialMap[currentMaterial].name = currentMaterial;
+        } else if (charBuffer.compare(0, 2, "Ns")) {
+            sscanf(charBuffer.c_str(), "Ns %f\n", &polygon_.get()->materialMap[currentMaterial].Ns);
+        } else if (charBuffer.compare(0, 6, "map_Kd")) {
+            char buffer[64];
+            sscanf(charBuffer.c_str(), "map_Kd %s\n", buffer);
+            polygon_.get()->materialMap[currentMaterial].map_Kd = buffer;
+        }
+    }
 }
 
 /**
  * @brief Processes the current line in the .obj file at modelPath
- * 
+ *
  * @param charBuffer A string containing data from the current line in the object file.
  * @param currentObject Index of current object in obj file. Obj files often times contain multiple sub-objects that make up one main object.
  * @param polygon The Polygon that is currently being built
@@ -107,6 +140,12 @@ int ModelImport::processLine(string charBuffer, int currentObject) {
             commands_.push_back(*it);  // Add commands from temp to main vec
         }
     } else if (charBuffer.compare(0, 2, "o ") == 0) {
+        char bufferString[64];
+        memset(bufferString, 0, sizeof(bufferString));
+        sscanf(charBuffer.c_str(), "o %s\n", bufferString);
+        string objectName(bufferString);
+        // add objectName to the queue
+        objectNames.push(objectName);
         if (currentObject) {  // Ignore first object
             // Merge polygon into master polygon object
             buildObject(currentObject - 1);  // Start index at zero just because
@@ -114,15 +153,21 @@ int ModelImport::processLine(string charBuffer, int currentObject) {
             commands_.clear();
         }
         ++currentObject;
+    } else if (charBuffer.size() > 7 && charBuffer.compare(0, 2, "usemtl ") == 0) {
+        char bufferString[64];
+        memset(bufferString, 0, sizeof(bufferString));
+        sscanf(charBuffer.c_str(), "usemtl %s\n", bufferString);
+        string materialName(bufferString);
+        matName = materialName;
     }
     return currentObject;
 }
 
 /**
  * @brief Creates a new Polygon object that can be merged into a parent Polygon object
- * 
+ *
  * @param objectId The index of the current object being created relative to other objects in the obj file.
- * @return int 
+ * @return int
  * @todo Double check the doxygen comments in here
  */
 int ModelImport::buildObject(int objectId) {
@@ -158,8 +203,13 @@ int ModelImport::buildObject(int objectId) {
             }
         }
     }
-    auto newPolygon = Polygon(triCount, vertexVbo, textureVbo, normalVbo);
-    polygon_.get()->merge(newPolygon);
+    auto newModel = Model(triCount, vertexVbo, textureVbo, normalVbo);
+    newModel.materialName = matName;
+    // Fetch the object name from the queue...
+    assert(objectNames.size() > 0);
+    string objectName = objectNames.front();
+    objectNames.pop();
+    polygon_.get()->modelMap[objectName] = newModel;
     return 0;
 }
 

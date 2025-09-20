@@ -89,8 +89,7 @@ void decorateAltScene(GameInstance *currentGame) {
     currentGame->setActiveScene("alternate-3d-scene");
     auto playerPoly = ModelImport(
         "src/resources/models/Dracula.obj",
-        {},
-        {})
+        "")
         .createPolygonFromFile();
 
     currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
@@ -131,8 +130,7 @@ int runtime(GameInstance *currentGame) {
     cout << "Creating Map.\n";
 
     auto mapPoly = ModelImport("src/resources/models/map3.obj",
-        texturePathStage,
-        texturePatternStage)
+        "src/resources/models/map3.mtl")
         .createPolygonFromFile();
 
     currentGame->createGameObject(mapPoly,
@@ -142,14 +140,12 @@ int runtime(GameInstance *currentGame) {
 
     auto playerPoly = ModelImport(
         "src/resources/models/Dracula.obj",
-        texturePath,
-        texturePattern)
+        "")
         .createPolygonFromFile();
 
     auto companionPoly = ModelImport(
         "src/resources/models/human.obj",
-        texturePath,
-        texturePattern)
+        "")
         .createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
@@ -173,8 +169,7 @@ int runtime(GameInstance *currentGame) {
     cout << "Creating wolf\n";
 
     auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
-        texturePath,
-        texturePattern)
+        "")
         .createPolygonFromFile();
 
     auto wolfObject = currentGame->createGameObject(wolfPoly,

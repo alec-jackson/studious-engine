@@ -115,7 +115,7 @@ void ColliderObject::update() {
 }
 
 void ColliderObject::render() {
-    if (poly_.get()->numberOfObjects > 0) {
+    for (auto &modelPair : poly_.get()->modelMap) {
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::LINE);
         gfxController_->setCapability(GfxCapability::CULL_FACE, false);
@@ -123,7 +123,7 @@ void ColliderObject::render() {
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         // HINT: Render loops should really just be (bind Vao, draw triangles)
         gfxController_->bindVao(vao_);
-        gfxController_->drawTriangles(poly_.get()->pointCount[0]);
+        gfxController_->drawTriangles(modelPair.second.pointCount);
     }
 }
 
