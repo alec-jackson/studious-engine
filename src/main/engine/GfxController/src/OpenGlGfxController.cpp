@@ -215,7 +215,7 @@ GfxResult<uint> OpenGlGfxController::loadShaders(string programName, string vert
     while (getline(file, tempLine)) {
         vertShader.append(tempLine + '\n');
     }
-    cout << "Now compiling " << vertexShader << "...\n";
+    Log::INFO("Now compiling %i", vertexShader);
     vector<const char *> vertShaderInfo(1);
     vertShaderInfo[0] = reinterpret_cast<const char *>(vertShader.c_str());
     glShaderSource(vertexShaderID, 1, &vertShaderInfo[0], NULL);
