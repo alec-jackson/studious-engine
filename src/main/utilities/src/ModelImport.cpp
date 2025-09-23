@@ -24,11 +24,7 @@ Result processObjectFile(string modelPath, std::shared_ptr<Polygon> polygon);
 Result processMaterialFile(string modelPath, std::shared_ptr<Polygon> polygon);
 std::shared_ptr<Model> buildModel(string matName, const vector<float> &vF, const vector<float> &tF,
     const vector<float> &nF, const vector<int> &commands);
-/**
-    * @brief Attempts to create a Polygon using the .obj file located in modelPath. modelPath is set via the constructor.
-    *
-    * @return Polygon* created using .obj file passed into the constructor.
-    */
+
 std::shared_ptr<Polygon> createPolygonFromFile(string modelPath) {
     auto polygon = std::make_shared<Polygon>();
     processObjectFile(modelPath, polygon);
@@ -80,14 +76,6 @@ Result processMaterialFile(string modelPath, std::shared_ptr<Polygon> polygon) {
     return Result::OK;
 }
 
-/**
-    * @brief Processes the current line in the .obj file at modelPath
-    *
-    * @param charBuffer A string containing data from the current line in the object file.
-    * @param currentObject Index of current object in obj file. Obj files often times contain multiple sub-objects that make up one main object.
-    * @param polygon The Polygon that is currently being built
-    * @return int containing the current object index - incremented when a new object line is hit in the obj file.
-    */
 Result processObjectFile(string modelPath, std::shared_ptr<Polygon> polygon) {
     ifstream file;  // Read file as read only
     file.open(modelPath);

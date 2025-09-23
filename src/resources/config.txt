@@ -1,5 +1,5 @@
-resX=2560
-resY=1440
+resX=1280
+resY=720
 enableVsync=1
 physThreads=10
 gfx=OpenGL
