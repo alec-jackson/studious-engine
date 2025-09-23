@@ -57,7 +57,6 @@ class GameObject: public SceneObject {
     float rollOff;
 
     vector<int> hasTexture;
-    vector<unsigned int> vaos_;  // Temporary?
     vec3 directionalLight;
 
     std::shared_ptr<ColliderObject> collider_;

@@ -15,4 +15,3 @@
 - [ ] I added unit tests to relevant code.
 - [ ] I can compile using G++.
 - [ ] I am passing all unit tests. (`./setupBuild.sh -t`)
-- [ ] I updated the basic template project if necessary (https://github.com/Weetsy/studious-template)
