@@ -56,7 +56,8 @@ ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int pr
         }
         vertices.push_back(vertTexData.at(i));
     }
-    target_ = std::make_shared<Polygon>(vertices.size(), vertices);
+    target_ = std::make_shared<Polygon>();
+    target_.get()->modelMap["generatedCollider"] = std::make_shared<Model>(vertices.size() / 3, vertices);
     createCollider();
 }
 
@@ -123,7 +124,7 @@ void ColliderObject::render() {
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         // HINT: Render loops should really just be (bind Vao, draw triangles)
         gfxController_->bindVao(vao_);
-        gfxController_->drawTriangles(modelPair.second.pointCount);
+        gfxController_->drawTriangles(modelPair.second.get()->pointCount);
     }
 }
 
@@ -137,12 +138,12 @@ void ColliderObject::createCollider() {
     // Set MVP ID for collider object
     mvpId_ = gfxController_->getShaderVariable(programId_, "MVP").get();
     // Go through objects and get absolute min/max points
-    for (auto it = target_->vertices.begin(); it != target_->vertices.end(); ++it) {
+    for (auto &model : target_.get()->modelMap) {
         for (int i = 0; i < 3; i++) {
             // Calculate min
-            tempMin[i] = getColliderVertices((*it), i, [](float a, float b) { return a < b; });
+            tempMin[i] = getColliderVertices((model.second.get()->vertices), i, [](float a, float b) { return a < b; });
             // Calculate max
-            tempMax[i] = getColliderVertices((*it), i, [](float a, float b) { return a > b; });
+            tempMax[i] = getColliderVertices((model.second.get()->vertices), i, [](float a, float b) { return a > b; });
             if (tempMin[i] < min[i]) {
                 min[i] = tempMin[i];
             }
@@ -197,9 +198,11 @@ void ColliderObject::createCollider() {
         min[0], min[1], max[2]
     };
     auto pointCount = colliderVertices.size() / 3;
-    poly_ = std::make_shared<Polygon>(pointCount, colliderVertices);
-    gfxController_->generateBuffer(&poly_.get()->shapeBufferId[0]);
-    gfxController_->bindBuffer(poly_.get()->shapeBufferId[0]);
+    poly_ = std::make_shared<Polygon>();
+    auto model = std::make_shared<Model>(pointCount, colliderVertices);
+    poly_.get()->modelMap["generatedCollider3D"] = model;
+    gfxController_->generateBuffer(&model.get()->shapeBufferId);
+    gfxController_->bindBuffer(model.get()->shapeBufferId);
     gfxController_->sendBufferData(sizeof(float) * colliderVertices.size(), &colliderVertices[0]);
     gfxController_->enableVertexAttArray(0, 3, sizeof(float), 0);
     // Set the correct center points

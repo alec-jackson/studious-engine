@@ -27,7 +27,7 @@ using std::ifstream;
 */
 class ModelImport {
  public:
-      explicit ModelImport(string modelPath, string materialPath);
+      explicit ModelImport(string modelPath);
       std::shared_ptr<Polygon> createPolygonFromFile();
       void processMaterialFile();
       // Using the move constructor so we don't need to define a copy constructor
@@ -37,7 +37,6 @@ class ModelImport {
       ~ModelImport();
  private:
       string modelPath_;
-      string materialPath_;
       vector<string> texturePath_;
       vector<int> texturePattern_;
       int textureCount_;  // Size of the texturePath vector

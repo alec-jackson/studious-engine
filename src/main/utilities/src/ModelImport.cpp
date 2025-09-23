@@ -20,8 +20,8 @@
 // Include Internal Headers
 #include <ModelImport.hpp>
 
-ModelImport::ModelImport(string modelPath, string materialPath) :
-    modelPath_ { modelPath }, materialPath_ { materialPath } {
+ModelImport::ModelImport(string modelPath) :
+    modelPath_ { modelPath } {
     cout << "ModelImport::ModelImport: Importing " << modelPath << endl;
 }
 
@@ -54,15 +54,20 @@ std::shared_ptr<Polygon> ModelImport::createPolygonFromFile() {
 }
 
 void ModelImport::processMaterialFile() {
-    if (materialPath_.empty()) {
-        return;
+    // Find the material path
+    // Check if this works on Windows later
+    auto lastPathDelim = modelPath_.find_last_of('/');
+    string objectDirectory;
+    if (std::string::npos != lastPathDelim) {
+        objectDirectory = modelPath_.substr(0, lastPathDelim) + "/";
     }
+    string materialPath = objectDirectory + polygon_.get()->materialLibrary;
     // Read the material file
     ifstream file;
-    file.open(materialPath_);
+    file.open(materialPath);
     if (!file.is_open()) {  // If the file does not exist or cannot be opened
-        cerr << "Model path does not exist!";
-        throw runtime_error("Material path does not exist");
+        cerr << "Material path does not exist!" << materialPath << endl;
+        return;  // No material processing is done
     }
     string charBuffer;
     string currentMaterial;
@@ -70,18 +75,21 @@ void ModelImport::processMaterialFile() {
         if (charBuffer.size() > 0 && charBuffer.front() == '#') {
             continue;  // Ignore comment lines
         }
-        if (charBuffer.compare(0, 6, "newmtl")) {
+        if (charBuffer.compare(0, 6, "newmtl") == 0) {
             // This is the material definition line, configure as current material
             char buffer[64];
-            sscanf(charBuffer.c_str(), "newmtl %s\n", buffer);
+            assert(sscanf(charBuffer.c_str(), "newmtl %s\n", buffer) != EOF);
+            fprintf(stderr, "Creating new material %s\n", buffer);
             currentMaterial = buffer;  // Set current material
-            polygon_.get()->materialMap[currentMaterial].name = currentMaterial;
-        } else if (charBuffer.compare(0, 2, "Ns")) {
-            sscanf(charBuffer.c_str(), "Ns %f\n", &polygon_.get()->materialMap[currentMaterial].Ns);
-        } else if (charBuffer.compare(0, 6, "map_Kd")) {
+            polygon_.get()->materialMap[currentMaterial] = std::make_shared<Material>();
+            polygon_.get()->materialMap[currentMaterial].get()->name = std::string(buffer);
+        } else if (charBuffer.compare(0, 2, "Ns") == 0) {
+            sscanf(charBuffer.c_str(), "Ns %f\n", &polygon_.get()->materialMap[currentMaterial].get()->Ns);
+        } else if (charBuffer.compare(0, 6, "map_Kd") == 0) {
             char buffer[64];
             sscanf(charBuffer.c_str(), "map_Kd %s\n", buffer);
-            polygon_.get()->materialMap[currentMaterial].map_Kd = buffer;
+            polygon_.get()->materialMap[currentMaterial].get()->map_Kd = buffer;
+            polygon_.get()->materialMap[currentMaterial].get()->pathToTextureFile = objectDirectory + std::string(buffer);
         }
     }
 }
@@ -153,12 +161,21 @@ int ModelImport::processLine(string charBuffer, int currentObject) {
             commands_.clear();
         }
         ++currentObject;
-    } else if (charBuffer.size() > 7 && charBuffer.compare(0, 2, "usemtl ") == 0) {
+    } else if (charBuffer.size() > 7 && charBuffer.compare(0, 7, "usemtl ") == 0) {
         char bufferString[64];
         memset(bufferString, 0, sizeof(bufferString));
         sscanf(charBuffer.c_str(), "usemtl %s\n", bufferString);
         string materialName(bufferString);
         matName = materialName;
+    } else if (charBuffer.size() > 7 && charBuffer.compare(0, 7, "mtllib ") == 0) {
+        char bufferString[64];
+        memset(bufferString, 0, sizeof(bufferString));
+        sscanf(charBuffer.c_str(), "mtllib %s\n", bufferString);
+        string matlib(bufferString);
+        polygon_.get()->materialLibrary = matlib;
+    } else {
+        fprintf(stderr, "ModelImport::processLine: Discarding line %s\n",
+            charBuffer.c_str());
     }
     return currentObject;
 }
@@ -203,8 +220,8 @@ int ModelImport::buildObject(int objectId) {
             }
         }
     }
-    auto newModel = Model(triCount, vertexVbo, textureVbo, normalVbo);
-    newModel.materialName = matName;
+    auto newModel = std::make_shared<Model>(triCount, vertexVbo, textureVbo, normalVbo);
+    newModel.get()->materialName = matName;
     // Fetch the object name from the queue...
     assert(objectNames.size() > 0);
     string objectName = objectNames.front();

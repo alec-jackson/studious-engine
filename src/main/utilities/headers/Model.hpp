@@ -25,7 +25,7 @@ class Model {
         vertices { std::move(vertices) }, pointCount(pointCount) {}
 
     uint shapeBufferId;  // used for vertex buffer
-    uint textureCoordsId;  // used for texture coordinate buffer
+    uint textureCoordsId = UINT_MAX;  // used for texture coordinate buffer
     uint textureId;  // ID for texture binding
     uint normalBufferId;
     vector<float> vertices;  // 2D vector for vertices
@@ -33,4 +33,5 @@ class Model {
     vector<float> normalCoords;  // 2D vector for normal coord data
     uint pointCount;  // no. of distinct points in shape
     string materialName;
+    uint vao;
 };

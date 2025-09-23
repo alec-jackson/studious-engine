@@ -11,12 +11,15 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <memory>
 #include <Model.hpp>
 #include <common.hpp>
 #include <winsup.hpp>
 
 class Polygon {
  public:
-    map<string, Model> modelMap;
-    map<string, Material> materialMap;
+    map<string, std::shared_ptr<Model>> modelMap;
+    map<string, std::shared_ptr<Material>> materialMap;
+    uint textureUniformId;
+    string materialLibrary;
 };

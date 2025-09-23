@@ -14,4 +14,7 @@ struct Material {
     float d;
     string name;
     string map_Kd;
+
+    // Used for texture loading - TODO check if we should do texture loading from ModelImport?
+    string pathToTextureFile;
 };

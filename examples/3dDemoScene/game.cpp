@@ -88,8 +88,7 @@ int main() {
 void decorateAltScene(GameInstance *currentGame) {
     currentGame->setActiveScene("alternate-3d-scene");
     auto playerPoly = ModelImport(
-        "src/resources/models/Dracula.obj",
-        "")
+        "src/resources/models/Dracula.obj")
         .createPolygonFromFile();
 
     currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
@@ -129,8 +128,7 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
 
-    auto mapPoly = ModelImport("src/resources/models/map3.obj",
-        "src/resources/models/map3.mtl")
+    auto mapPoly = ModelImport("src/resources/models/map3.obj")
         .createPolygonFromFile();
 
     currentGame->createGameObject(mapPoly,
@@ -139,13 +137,11 @@ int runtime(GameInstance *currentGame) {
     cout << "Creating Player\n";
 
     auto playerPoly = ModelImport(
-        "src/resources/models/Dracula.obj",
-        "")
+        "src/resources/models/shrek/shrek.obj")
         .createPolygonFromFile();
 
     auto companionPoly = ModelImport(
-        "src/resources/models/human.obj",
-        "")
+        "src/resources/models/human.obj")
         .createPolygonFromFile();
 
     // Ready the gameObjectInfo for the player object
@@ -168,8 +164,7 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating wolf\n";
 
-    auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
-        "")
+    auto wolfPoly = ModelImport("src/resources/models/wolf.obj")
         .createPolygonFromFile();
 
     auto wolfObject = currentGame->createGameObject(wolfPoly,
