@@ -1,3 +1,10 @@
+/**
+ * @file Material.hpp
+ * @author Christian Galvez
+ * @brief Contains information for the Material struct used by the Model Importer and GameObject.
+ * @date 09-22-2025
+ * @copyright Studious Engine 2025
+ */
 #pragma once
 #include <string>
 #include <glm/glm.hpp>

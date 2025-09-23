@@ -73,7 +73,8 @@ Result processMaterialFile(string modelPath, std::shared_ptr<Polygon> polygon) {
         } else if (charBuffer.compare(0, 6, "map_Kd") == 0) {
             sscanf(charBuffer.c_str(), "map_Kd %s\n", miscbuffer);
             polygon.get()->materialMap[currentMaterial].get()->map_Kd = miscbuffer;
-            polygon.get()->materialMap[currentMaterial].get()->pathToTextureFile = objectDirectory + std::string(miscbuffer);
+            polygon.get()->materialMap[currentMaterial].get()->pathToTextureFile = objectDirectory +
+                std::string(miscbuffer);
         }
     }
     return Result::OK;
@@ -223,5 +224,4 @@ std::shared_ptr<Model> buildModel(string matName, const vector<float> &vF, const
     newModel.get()->materialName = matName;
     return newModel;
 }
-
-}
+}  // namespace ModelImport

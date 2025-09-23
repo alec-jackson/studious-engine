@@ -71,13 +71,14 @@ void GameObject::configureOpenGl() {
         // Generate vertex buffer
         gfxController_->generateBuffer(&modelPair.second.get()->shapeBufferId);
         gfxController_->bindBuffer(modelPair.second.get()->shapeBufferId);
-        gfxController_->sendBufferData(sizeof(float) * modelPair.second.get()->pointCount * 9, &modelPair.second.get()->vertices[0]);  // try vertices.data later
+        gfxController_->sendBufferData(sizeof(float) * modelPair.second.get()->pointCount * 9,
+            modelPair.second.get()->vertices.data());
         gfxController_->enableVertexAttArray(0, 3, sizeof(float), 0);
         // Generate normal buffer
         gfxController_->generateBuffer(&modelPair.second.get()->normalBufferId);
         gfxController_->bindBuffer(modelPair.second.get()->normalBufferId);
         gfxController_->sendBufferData(sizeof(float) * modelPair.second.get()->pointCount * 9,
-            &modelPair.second.get()->normalCoords[0]);
+            modelPair.second.get()->normalCoords.data());
         gfxController_->enableVertexAttArray(2, 3, sizeof(float), 0);
         // Specific case where the current object does not get a texture
         auto materialName = modelPair.second.get()->materialName;
@@ -89,8 +90,11 @@ void GameObject::configureOpenGl() {
             fprintf(stderr, "materialMap is %s -> %s\n",
                 ent.first.c_str(), ent.second.get()->name.c_str());
         }
-        if (model_.get()->materialMap.end() == mmit || mmit->second->pathToTextureFile.empty()) {
-            fprintf(stderr, "GameObject::configureOpenGl: Either no material for %s or material has no texture defined! matname[%s]\n",
+        if (model_.get()->materialMap.end() == mmit ||
+            mmit->second->pathToTextureFile.empty()) {
+            fprintf(stderr,
+                "GameObject::configureOpenGl: Either no material for %s "
+                "or material has no texture defined! matname[%s]\n",
                 modelPair.first.c_str(), materialName.c_str());
             gfxController_->bindVao(0);
             continue;
@@ -121,7 +125,7 @@ void GameObject::configureOpenGl() {
         gfxController_->generateBuffer(&modelPair.second.get()->textureCoordsId);
         gfxController_->bindBuffer(modelPair.second.get()->textureCoordsId);
         gfxController_->sendBufferData(sizeof(float) * modelPair.second.get()->pointCount * 6,
-            &modelPair.second.get()->textureCoords[0]);
+            modelPair.second.get()->textureCoords.data());
         gfxController_->enableVertexAttArray(1, 2, sizeof(float), 0);
 
         SDL_FreeSurface(texture);
