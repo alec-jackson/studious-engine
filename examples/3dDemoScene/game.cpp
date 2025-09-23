@@ -136,7 +136,7 @@ int runtime(GameInstance *currentGame) {
     cout << "Creating Player\n";
 
     auto playerPoly = ModelImport::createPolygonFromFile(
-        "src/resources/models/shrek/shrek.obj");
+        "src/resources/models/Dracula.obj");
 
     auto companionPoly = ModelImport::createPolygonFromFile(
         "src/resources/models/human.obj");
