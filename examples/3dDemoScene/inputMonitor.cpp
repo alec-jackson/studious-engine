@@ -364,8 +364,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
             static int bulletCount;
             // Instantiate a bullet and shoot it
             currentGame->protectedGfxRequest([currentGame, character, angle] () {
-                auto imp = ModelImport("src/resources/models/bullet.obj")
-                    .createPolygonFromFile();
+                auto imp = ModelImport::createPolygonFromFile("src/resources/models/bullet.obj");
                 currentGame->createGameObject(imp, character->getPosition(), vec3(angle, 0, angle - 180.0f), 0.005f,
                     string("bullet") + std::to_string(bulletCount++));
             });
