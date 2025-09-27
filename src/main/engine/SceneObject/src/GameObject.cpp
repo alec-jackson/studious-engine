@@ -145,17 +145,6 @@ GameObject::~GameObject() {
 }
 
 /**
- * @brief Updates and returns the GameObject's collider
- *
- * @return ColliderObject* for the GameObject
- */
-ColliderObject *GameObject::getCollider(void) {
-    // Update collider before returning it
-    collider_.get()->updateCollider();
-    return collider_.get();
-}
-
-/**
  * @brief Creates a collider for this game object
  *
  * @param programId Program used to render the collider (collider shaders)

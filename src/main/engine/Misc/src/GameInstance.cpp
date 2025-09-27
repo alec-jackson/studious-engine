@@ -13,6 +13,7 @@
 #include <SDL_scancode.h>
 #include <algorithm>
 #include <condition_variable> //NOLINT
+#include <cstddef>
 #include <cstdio>
 #include <iostream>
 #include <mutex> //NOLINT
@@ -612,17 +613,20 @@ int GameInstance::removeSceneObject(string objectName) {
  currently colliding, 2 if the two objects are about to collide, or 0 if there
  is no collision. Otherwise, -1 is returned.
 */
-/// @todo Update documentation here and convert pointers to references
-int GameInstance::getCollision(GameObject *object1, GameObject *object2,
+int GameInstance::getCollision(SceneObject *object1, SceneObject *object2,
     vec3 moving) {
-    return object1->getCollider()->getCollision(object2->getCollider(), moving);
-}
-
-/**
- * 2D version of the same function defined above.
- */
-int GameInstance::getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving) {
-    return object1->getCollider()->getCollision(object2->getCollider(), moving);
+    printf("GameInstance::getCollision: Enter\n");
+    /* Check if both objects support colliders */
+    ColliderExt *obj1, *obj2;
+    obj1 = dynamic_cast<ColliderExt *>(object1);
+    obj2 = dynamic_cast<ColliderExt *>(object2);
+    if (nullptr == obj1 || nullptr == obj2) {
+        fprintf(stderr,
+            "GameInstance::getCollision: Failed to get collision - either %s or %s do not support colliders!\n",
+            object1->getObjectName().c_str(), object2->getObjectName().c_str());
+        return 0;
+    }
+    return obj1->getCollider()->getCollision(obj2->getCollider(), moving);
 }
 
 /*

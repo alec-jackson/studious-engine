@@ -100,11 +100,3 @@ void GameObject2D::createCollider() {
     collider_ = std::make_shared<ColliderObject>(vertTexData_, colliderProg.get(), &translateMatrix_, &scaleMatrix_,
         &vpMatrix_, ObjectType::GAME_OBJECT, colliderName, gfxController_);
 }
-
-/**
- * @brief Get the collider for the 2D Game Object
- */
-ColliderObject *GameObject2D::getCollider() {
-    collider_.get()->updateCollider();
-    return collider_.get();
-}

@@ -168,6 +168,7 @@ int runtime(GameInstance *currentGame) {
     companion3->setRenderPriority(RENDER_PRIOR_LOW - 1);
     companion4->setRenderPriority(RENDER_PRIOR_LOW - 1);
     playerRef->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    printf("RIGHT BEFORE CREATE COLLIDER\n");
     playerRef->createCollider();
 
     cout << "Creating wolf\n";
@@ -312,6 +313,7 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
+        printf("TESTING COLLISION IN UDPATE\n");
         collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
         string collMessage;
         if (collision == 1) {
