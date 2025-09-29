@@ -366,8 +366,9 @@ void rotateShape(void *gameInfoStruct, void *target) {
             currentGame->protectedGfxRequest([currentGame, character, angle] () {
                 auto imp = ModelImport("src/resources/models/bullet.obj", {}, {})
                     .createPolygonFromFile();
-                currentGame->createGameObject(imp, character->getPosition(), vec3(angle, 0, angle - 180.0f), 0.005f,
+                auto bullet = currentGame->createGameObject(imp, character->getPosition(), vec3(angle, 0, angle - 180.0f), 0.005f,
                     string("bullet") + std::to_string(bulletCount++));
+                bullet->createCollider();
             });
             auto bulletName = string("bullet") + std::to_string(bulletCount - 1);
             auto bulletObj = currentGame->getSceneObject(bulletName);

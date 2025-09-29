@@ -70,7 +70,31 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
          * If no objects are kinematic, then they phase through each other.
          */
         // What do we do when we see a collision?
-        this->targetCollider->getCollider()->getCollision(obj.second.get()->targetCollider->getCollider(), vec3(0));
+        if (this->targetCollider->getCollider()->getCollision(obj.second.get()->targetCollider->getCollider(), vec3(0)) == 0) continue;
+        // Determine what case this is... How many kinematic collisions are involved?
+        // 2 kinematic collisions
+        if (isKinematic && obj.second.get()->isKinematic) {
+            fullFlush();
+            obj.second->fullFlush();
+            // Get the velocity of both objects in collision
+            auto v1 = velocity;
+            auto v2 = obj.second.get()->velocity;
+            auto m1 = mass;
+            auto m2 = obj.second.get()->mass;
+
+            // Calculate the final velocity of both objects
+            auto v2f = ((2 * m1) / (m1 + m2) * v1) - ((m1 - m2) / (m1 + m2) * v2);
+            auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+
+            // Set the velocity of each respective object
+            velocity = v1f;
+
+            // Need critical section per physics object???
+            obj.second.get()->velocity = v2f;
+
+            // Kill acceleration when collided upon
+
+        }
     }
 }
 
@@ -108,9 +132,9 @@ PhysicsResult PhysicsController::doWork() {
                 break;
             case PhysicsWorkType::COLLISION: {
                 std::shared_lock<std::shared_mutex> objLock(physicsObjectQueueLock_);
-
+                physObj->updateCollisions(physicsObjects_);
+                break;
             }
-
             default:
                 printf("HORRIBLE BADNESS\n");
                 break;
@@ -329,6 +353,8 @@ void PhysicsController::update() {
     // Stop updating when shutdown received
     // Physics pipeline updated here...
     updatePosition();
+    waitPipelineComplete();
+    updateCollision();
     waitPipelineComplete();
 }
 

@@ -78,6 +78,7 @@ void ColliderObject::updateCollider() {
  * @return int -1 if error, 0 for no collision, 1 for colliding, 2 for about to collide
  */
 int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
+    // Center = critical section?
     int matching = 0;  // Number of axis that have collided
     if (object == nullptr) {
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";

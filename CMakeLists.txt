@@ -258,6 +258,7 @@ add_executable(gtest_PhysicsControllerTests
   src/main/engine/SceneObject/src/TestObject.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
+  src/main/engine/SceneObjectExt/src/ColliderExt.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
 )
 
