@@ -116,6 +116,7 @@ void ColliderObject::update() {
 }
 
 void ColliderObject::render() {
+    VISIBILITY_CHECK;
     for (auto &modelPair : poly_.get()->modelMap) {
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::LINE);

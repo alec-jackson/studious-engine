@@ -27,6 +27,9 @@
 #define RENDER_PRIOR_HIGH 40
 #define RENDER_PRIOR_HIGHEST 100
 
+/* MISC */
+#define VISIBILITY_CHECK if (!visible_ || (parent_ && !parent_->visible())) return
+
 /// @todo Add SceneObject grouping for shared model changes
 enum ObjectType {
     UNDEFINED,
@@ -63,6 +66,7 @@ class SceneObject {
     inline void setScale(float scale) { this->scale_ = scale ; }
     inline void setRenderPriority(uint renderPriority) { this->renderPriority_ =
         renderPriority <= RENDER_PRIOR_HIGHEST ? renderPriority : RENDER_PRIOR_HIGHEST; }
+    inline void setVisible(bool visible) { visible_ = visible; }
 
     // Getter methods
     inline const mat4 &vpMatrix() const { return vpMatrix_; }
@@ -77,6 +81,7 @@ class SceneObject {
     inline vec3 getResolution() const { return this->resolution_; }
     inline string getObjectName() const { return this->objectName; }
     inline ObjectType type() const { return type_; }
+    inline bool visible() const { return visible_; }
 
     // Misc
     /**

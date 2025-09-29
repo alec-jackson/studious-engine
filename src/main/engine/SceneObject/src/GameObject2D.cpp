@@ -75,6 +75,7 @@ GameObject2D::~GameObject2D() {
 }
 
 void GameObject2D::render() {
+    VISIBILITY_CHECK;
     printf("GameObject2D::render: Base GameObject2D render called, rendering nothing\n");
 }
 
