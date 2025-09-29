@@ -11,6 +11,7 @@
  *
  */
 #include "GameInstance.hpp"
+#include "ModelImport.hpp"
 #include "SceneObject.hpp"
 #include <string>
 #include <vector>
@@ -87,11 +88,8 @@ int main() {
 
 void decorateAltScene(GameInstance *currentGame) {
     currentGame->setActiveScene("alternate-3d-scene");
-    auto playerPoly = ModelImport(
-        "src/resources/models/Dracula.obj",
-        {},
-        {})
-        .createPolygonFromFile();
+    auto playerPoly = ModelImport::createPolygonFromFile(
+        "src/resources/models/Dracula.obj");
 
     currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.005f, "alt");
@@ -130,27 +128,18 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
 
-    auto mapPoly = ModelImport("src/resources/models/map3.obj",
-        texturePathStage,
-        texturePatternStage)
-        .createPolygonFromFile();
+    auto mapPoly = ModelImport::createPolygonFromFile("src/resources/models/map3.obj");
 
     currentGame->createGameObject(mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
 
     cout << "Creating Player\n";
 
-    auto playerPoly = ModelImport(
-        "src/resources/models/Dracula.obj",
-        texturePath,
-        texturePattern)
-        .createPolygonFromFile();
+    auto playerPoly = ModelImport::createPolygonFromFile(
+        "src/resources/models/Dracula.obj");
 
-    auto companionPoly = ModelImport(
-        "src/resources/models/human.obj",
-        texturePath,
-        texturePattern)
-        .createPolygonFromFile();
+    auto companionPoly = ModelImport::createPolygonFromFile(
+        "src/resources/models/human.obj");
 
     // Ready the gameObjectInfo for the player object
     playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
@@ -172,10 +161,7 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating wolf\n";
 
-    auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
-        texturePath,
-        texturePattern)
-        .createPolygonFromFile();
+    auto wolfPoly = ModelImport::createPolygonFromFile("src/resources/models/wolf.obj");
 
     auto wolfObject = currentGame->createGameObject(wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");

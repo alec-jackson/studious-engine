@@ -114,12 +114,12 @@ void GameScene::setDirectionalLight(vec3 directionalLight) {
     }
 }
 
-void loadGameScene(std::string path) {
+void GameScene::loadGameScene(std::string path) {
     // Use YAML parser here ...
     printf("Not implemented yet! %s\n", path.c_str());
 }
 
-void saveGameScene(std::string path) {
+void GameScene::saveGameScene(std::string path) {
     // Use YAML writer here...
     printf("Not implemented yet! %s\n", path.c_str());
 }
