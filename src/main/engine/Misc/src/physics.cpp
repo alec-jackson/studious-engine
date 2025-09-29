@@ -10,6 +10,7 @@
  */
 
 #include <physics.hpp>
+#include <shared_mutex>
 #include <string>
 #include <algorithm>
 #include <condition_variable> //NOLINT
@@ -57,6 +58,22 @@ void PhysicsObject::fullFlush() {
     runningTime = 0.0;
 }
 
+void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsObject>> &objects) {
+    if (nullptr == targetCollider) return;
+    // Iterate through all other objects - VERY EXPENSIVE!!!
+    for (const auto &obj : objects) {
+        if (nullptr == obj.second.get()->targetCollider) continue;
+        if (obj.first.compare(target->getObjectName()) == 0) continue;
+        /**
+         * If both objects are kinematic, have the objects bounce off of each other.
+         * If one object is kinematic, then the kinematic object will clip to touch the non-kinematic object.
+         * If no objects are kinematic, then they phase through each other.
+         */
+        // What do we do when we see a collision?
+        this->targetCollider->getCollider()->getCollision(obj.second.get()->targetCollider->getCollider(), vec3(0));
+    }
+}
+
 // Sleep the thread on the work queue until work becomes available
 PhysicsResult PhysicsController::doWork() {
     while (1) {
@@ -82,7 +99,6 @@ PhysicsResult PhysicsController::doWork() {
          *  D(t) =  _ a t  + v t + x
          *          2
          */
-        // Use OpenCL to speed this up maybe? - move this to PhysicsObject as a method
 #if (PHYS_TRACE == 1)
         printf("physDoWork: Retrieved gameObject for work [%s], work type [%d]\n", name.c_str(), physObj->workType);
 #endif
@@ -90,6 +106,11 @@ PhysicsResult PhysicsController::doWork() {
             case PhysicsWorkType::POSITION:
                 physObj->basePosUpdate();
                 break;
+            case PhysicsWorkType::COLLISION: {
+                std::shared_lock<std::shared_mutex> objLock(physicsObjectQueueLock_);
+
+            }
+
             default:
                 printf("HORRIBLE BADNESS\n");
                 break;
@@ -157,7 +178,7 @@ TLDR; should somewhat resemble reality
  */
 PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, PhysicsParams params) {
     // Retrieve the exclusive lock for the game object list
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
 
     // Create a new physics profile for the object
     auto physicsObject = std::make_shared<PhysicsObject>();
@@ -172,6 +193,7 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->elasticity = params.elasticity;
     poPtr->mass = params.mass;
     poPtr->runningTime = 0.0;
+    poPtr->targetCollider = dynamic_cast<ColliderExt *>(sceneObject);
 
     // Add the object to the physics object list
     assert(!sceneObject->getObjectName().empty());
@@ -181,7 +203,7 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
 
 PhysicsResult PhysicsController::removeSceneObject(string objectName) {
     auto res = PhysicsResult::OK;
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         printf("PhysicsController::removeSceneObject: Deleting object %s\n", objectName.c_str());
@@ -270,11 +292,25 @@ PhysicsController::~PhysicsController() {
  */
 PhysicsResult PhysicsController::updatePosition() {
     if (shutdown_) return PhysicsResult::SHUTDOWN;
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     workQueueLock_.lock();
     // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
     for (auto physObjEntry : physicsObjects_) {
         physObjEntry.second.get()->workType = PhysicsWorkType::POSITION;
+        workQueue_.push(physObjEntry.second);
+    }
+    workAvailableSignal_.notify_all();
+    workQueueLock_.unlock();
+    return PhysicsResult::OK;
+}
+
+PhysicsResult PhysicsController::updateCollision() {
+    if (shutdown_) return PhysicsResult::SHUTDOWN;
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
+    workQueueLock_.lock();
+    // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
+    for (auto physObjEntry : physicsObjects_) {
+        physObjEntry.second.get()->workType = PhysicsWorkType::COLLISION;
         workQueue_.push(physObjEntry.second);
     }
     workAvailableSignal_.notify_all();
@@ -297,7 +333,7 @@ void PhysicsController::update() {
 }
 
 PhysicsResult PhysicsController::shutdown() {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     printf("PhysicsController::shutdown: Sending shutdown signal\n");
     // Mark the shutdown variable as true
     shutdown_ = 1;
@@ -305,7 +341,7 @@ PhysicsResult PhysicsController::shutdown() {
 }
 
 PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
@@ -319,7 +355,7 @@ PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
 }
 
 PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
@@ -334,7 +370,7 @@ PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
 }
 
 PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceleration) {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
@@ -349,7 +385,7 @@ PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceler
 }
 
 PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
@@ -370,7 +406,7 @@ PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
 }
 
 PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force) {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
@@ -393,7 +429,7 @@ PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force
 }
 
 PhysicsResult PhysicsController::translate(string objectName, vec3 translation) {
-    std::unique_lock<std::mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {

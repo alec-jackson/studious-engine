@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <mutex> //NOLINT
+#include <shared_mutex> //NOLINT
 #include <thread> //NOLINT
 #include <queue>
 #include <map>
@@ -21,6 +22,7 @@
 #include <atomic>
 #include <memory>
 #include <SceneObject.hpp>
+#include <ColliderExt.hpp>
 
 #define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
 #define PHYS_MAX_THREADS 256
@@ -44,6 +46,7 @@ enum PhysicsWorkType {
 class PhysicsObject {
  public:
     SceneObject *        target;
+    ColliderExt *        targetCollider;
     vec3                 position;
     vec3                 velocity;
     vec3                 acceleration;
@@ -78,6 +81,8 @@ class PhysicsObject {
      * to zero.
      */
     void fullFlush();
+
+    void updateCollisions(const map<string, std::shared_ptr<PhysicsObject>> &objects);
 };
 
 struct PhysicsParams {
@@ -153,6 +158,7 @@ class PhysicsController {
     PhysicsResult applyInstantForce(string objectName, vec3 force);
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult updatePosition();
+    PhysicsResult updateCollision();
     inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
     PhysicsResult waitPipelineComplete();
     void update();
@@ -167,7 +173,7 @@ class PhysicsController {
     std::atomic<uint> threadNum_;
     int shutdown_ = 0;
     std::vector<std::thread> threads_;
-    std::mutex physicsObjectQueueLock_;
+    std::shared_mutex physicsObjectQueueLock_;
     std::mutex subscriberLock_;
     std::mutex workQueueLock_;
     std::atomic<uint> freeWorkers_;
