@@ -5,9 +5,9 @@
  *       game engine. These two basic game files will generate a basic scene when the
  *       engine is compiled and ran.
  * @version 0.1
- * @date 2023-07-28
+ * @date 2025
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2025
  *
  */
 #include "GameInstance.hpp"
@@ -63,6 +63,7 @@ GameObject *wolfRef, *playerRef;  // Used for collision testing
 extern std::unique_ptr<GfxController> gfxController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
+extern std::unique_ptr<InputController> inputController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -263,6 +264,7 @@ int runtime(GameInstance *currentGame) {
     currentGameInfo.isDone = &isDone;
     currentGameInfo.gameCamera = currentCamera;
     currentGameInfo.currentGame = currentGame;
+    currentGameInfo.gameInput = &**&inputController;
     /*
      End Scene Loading
      */
@@ -293,7 +295,7 @@ int mainLoop(gameInfo* gamein) {
     vector<double> times;
     while (!currentGame->isShutDown()) {
         begin = SDL_GetPerformanceCounter();
-        if (currentGame->pollInput(GameInput::QUIT)) currentGame->shutdown();
+        if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         if (error) {
             return error;
