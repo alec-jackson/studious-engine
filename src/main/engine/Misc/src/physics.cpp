@@ -9,6 +9,7 @@
  *
  */
 
+#include <mutex>
 #include <physics.hpp>
 #include <shared_mutex>
 #include <string>
@@ -62,6 +63,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
     if (nullptr == targetCollider) return;
     // Iterate through all other objects - VERY EXPENSIVE!!!
     for (const auto &obj : objects) {
+        // Weed out duplicate collisions... somehow...
         if (nullptr == obj.second.get()->targetCollider) continue;
         if (obj.first.compare(target->getObjectName()) == 0) continue;
         /**
@@ -74,28 +76,45 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
         // Determine what case this is... How many kinematic collisions are involved?
         // 2 kinematic collisions
         if (isKinematic && obj.second.get()->isKinematic) {
-            fullFlush();
-            obj.second->fullFlush();
+            // All of the speed will be in acceleration, so we need to account for that...
             // Get the velocity of both objects in collision
-            auto v1 = velocity;
-            auto v2 = obj.second.get()->velocity;
+            auto v1 = velocity + (acceleration * vec3(runningTime));
+            auto v2 = obj.second->velocity + (obj.second->acceleration * vec3(obj.second->runningTime));
             auto m1 = mass;
-            auto m2 = obj.second.get()->mass;
+            auto m2 = obj.second->mass;
 
             // Calculate the final velocity of both objects
             auto v2f = ((2 * m1) / (m1 + m2) * v1) - ((m1 - m2) / (m1 + m2) * v2);
             auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
-
-            // Set the velocity of each respective object
-            velocity = v1f;
-
-            // Need critical section per physics object???
-            obj.second.get()->velocity = v2f;
-
-            // Kill acceleration when collided upon
-
+            printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
+            printf("v2f: %f, %f, %f\n", v2f.x, v2f.y, v2f.z);
+            // Find the delta velocity for either object - lock each object individually
+            // Probably replace these with macros (TODO)
+            objLock.lock();
+            velocityDelta += (v1f - v1);
+            // How big of a critical section are we going to need? Can we avoid one?
+            position += targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), v1);
+            objLock.unlock();
+            obj.second->objLock.lock();
+            obj.second->velocityDelta += (v2f - v2);
+            obj.second->objLock.unlock();
+            hasVelocityDelta = true;
+            /*
+             * I'm realizing that kinematic collisions should also move objects to the edge clipped distance
+             */
         }
     }
+}
+
+void PhysicsObject::finalizeCollisions() {
+    if (!hasVelocityDelta) return;
+    // Flush the velocity delta to the objects
+    fullFlush();
+    // Need to think about how to process the velocity delta
+    velocity = velocityDelta;
+
+    hasVelocityDelta = false;
+    velocityDelta = vec3(0.0f);
 }
 
 // Sleep the thread on the work queue until work becomes available
@@ -133,6 +152,10 @@ PhysicsResult PhysicsController::doWork() {
             case PhysicsWorkType::COLLISION: {
                 std::shared_lock<std::shared_mutex> objLock(physicsObjectQueueLock_);
                 physObj->updateCollisions(physicsObjects_);
+                break;
+            }
+            case PhysicsWorkType::FINALIZE: {
+                physObj->finalizeCollisions(); // Can use an assert to check for collisions post-update
                 break;
             }
             default:
@@ -334,7 +357,21 @@ PhysicsResult PhysicsController::updateCollision() {
     workQueueLock_.lock();
     // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
     for (auto physObjEntry : physicsObjects_) {
-        physObjEntry.second.get()->workType = PhysicsWorkType::COLLISION;
+        physObjEntry.second->workType = PhysicsWorkType::COLLISION;
+        workQueue_.push(physObjEntry.second);
+    }
+    workAvailableSignal_.notify_all();
+    workQueueLock_.unlock();
+    return PhysicsResult::OK;
+}
+
+PhysicsResult PhysicsController::updateFinalize() {
+    if (shutdown_) return PhysicsResult::SHUTDOWN;
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
+    workQueueLock_.lock();
+    // Run the initial POSITION pipeline step here with all objects - maybe check for kinematic
+    for (auto physObjEntry : physicsObjects_) {
+        physObjEntry.second.get()->workType = PhysicsWorkType::FINALIZE;
         workQueue_.push(physObjEntry.second);
     }
     workAvailableSignal_.notify_all();
@@ -356,6 +393,10 @@ void PhysicsController::update() {
     waitPipelineComplete();
     updateCollision();
     waitPipelineComplete();
+    // Need to loop here for recursive collisions? Maybe cap the loop?
+    updateFinalize();
+    waitPipelineComplete();
+
 }
 
 PhysicsResult PhysicsController::shutdown() {

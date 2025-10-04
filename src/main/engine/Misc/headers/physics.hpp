@@ -49,6 +49,8 @@ class PhysicsObject {
     ColliderExt *        targetCollider;
     vec3                 position;
     vec3                 velocity;
+    vec3                 velocityDelta = vec3(0.0f);
+    bool                 hasVelocityDelta = false;
     vec3                 acceleration;
     vec3                 jerk;
     bool                 isKinematic;
@@ -58,6 +60,7 @@ class PhysicsObject {
     float                mass;
     double               runningTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
+    std::mutex           objLock;
     /**
      * @brief Updates the position of the target object using the position formula.
      */
@@ -83,6 +86,7 @@ class PhysicsObject {
     void fullFlush();
 
     void updateCollisions(const map<string, std::shared_ptr<PhysicsObject>> &objects);
+    void finalizeCollisions();
 };
 
 struct PhysicsParams {
@@ -159,6 +163,7 @@ class PhysicsController {
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult updatePosition();
     PhysicsResult updateCollision();
+    PhysicsResult updateFinalize();
     inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
     PhysicsResult waitPipelineComplete();
     void update();

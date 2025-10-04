@@ -36,6 +36,7 @@ class ColliderObject : public SceneObject {
     ~ColliderObject();
     inline static void setDrawCollider(bool enable) { drawCollider_ = enable; }
     inline static bool getDrawCollider() { return drawCollider_; }
+    vec3 getEdgePoint(ColliderObject *object, vec3 velocity);
 
  private:
     vec4 offset_;

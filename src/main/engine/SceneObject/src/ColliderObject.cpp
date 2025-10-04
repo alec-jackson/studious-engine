@@ -235,3 +235,28 @@ float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
     }
     return currentMin;
 }
+
+vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
+    assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
+    // Iterate through each axis
+    vec3 result(0);
+    for (int i = 0; i < 3; ++i) {
+        // Double check the offset is just the distance between center point and edge and not edge to edge
+        float delta = abs(object->center()[i] - center_[i]);
+        float range = offset_[i] + object->offset()[i];
+        // For this axis, how much is this object inside of the other?
+        float edgePoint = range - delta;
+        // Now the edge point contains how much we're inside of the other object for this axis
+        // Do not add edgePoint if the distance is lte 0
+        if (edgePoint <= 0) continue;
+        // Now determine direction based on the velocity - this is the direction the object WAS traveling...
+        result[i] = velocity[i] > 0.0f ? -edgePoint : edgePoint;
+    }
+    printf("This center point %f, %f, %f\n", center_.x, center_.y, center_.z);
+    printf("Other center point is %f, %f, %f\n", object->center().x, object->center().y, object->center().z);
+    printf("This offset %f, %f, %f\n", offset_.x, offset_.y, offset_.z);
+    printf("Other offset %f, %f, %f\n", object->offset().x, object->offset().y, object->offset().z);
+    printf("velocity is %f, %f, %f\n", velocity.x, velocity.y, velocity.z);
+    printf("Edge Point is %f, %f, %f\n", result.x, result.y, result.z);
+    return result;
+}
