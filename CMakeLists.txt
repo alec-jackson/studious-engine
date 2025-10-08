@@ -277,6 +277,7 @@ install (FILES
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp
   src/main/engine/Misc/headers/GameInstance.hpp
+  src/main/engine/Misc/headers/InputController.hpp
   src/main/engine/Misc/headers/GameScene.hpp
   src/main/engine/Misc/headers/Image.hpp
   src/main/engine/Misc/headers/physics.hpp
