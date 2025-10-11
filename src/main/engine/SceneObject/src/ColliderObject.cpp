@@ -89,11 +89,10 @@ int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
     for (int i = 0; i < 3; i++) {
         float delta = abs(object->center()[i] - this->center()[i]);
         float range = this->offset()[i] + object->offset()[i];
-        if (range >= delta) {
+        if (range > delta) {
             matching++;
         }
     }
-    // Return if the objects are currently colliding
     if (matching == 3) return 1;
     matching = 0;
     for (int i = 0; i < 3; i++) {
@@ -249,14 +248,46 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
         // Now the edge point contains how much we're inside of the other object for this axis
         // Do not add edgePoint if the distance is lte 0
         if (edgePoint <= 0) continue;
+        // If velocity is NOT in that direction, we don't care about edge point
+        if (velocity[i] == 0.0f || (velocity[i] > 0.0f + EPSILON && velocity[i] < 0.0f - EPSILON)) continue;
         // Now determine direction based on the velocity - this is the direction the object WAS traveling...
-        result[i] = velocity[i] > 0.0f ? -edgePoint : edgePoint;
+        result[i] = velocity[i] > 0.0f ? edgePoint : -edgePoint;
+        // So, what if we just move away by the object's respective buffer???
+        result[i] = velocity[i] > 0.0f ? offset_[i] : -offset_[i];
     }
+    // Maybe we just return the edge point where velocity is greatest?
+    float max = 0.0f;
+    int maxPos = 0;
+    for (int i = 0; i < velocity.length(); ++i) {
+        auto velMag = std::fabs(velocity[i]);
+        if (velMag > max) {
+            max = velMag;
+            maxPos = i;
+        }
+    }
+    // We know where the max is, zero out the rest in result
+    for (int i = 0; i < result.length(); ++i) {
+        if (i != maxPos)  // If this isn't the max, zero it out
+            result[i] = 0.0f;
+    }
+
+    static int collCount;
+    printf("--- Collision %d ---\n\n", collCount / 2 + 1);
+
+    // Let's print out relevant information neatly
+    printf("* Center (%f, %f, %f)\n", center_.x, center_.y, center_.z);
+    printf("* Edge Point is (%f, %f, %f)\n", result.x, result.y, result.z);
+    printf("* Final Velocity (%f, %f, %f)\n", velocity.x, velocity.y, velocity.z);
+    printf("* Other Center (%f, %f, %f)\n", object->center().x, object->center().y, object->center().z);
+
+    collCount++;
+    /*
     printf("This center point %f, %f, %f\n", center_.x, center_.y, center_.z);
     printf("Other center point is %f, %f, %f\n", object->center().x, object->center().y, object->center().z);
     printf("This offset %f, %f, %f\n", offset_.x, offset_.y, offset_.z);
     printf("Other offset %f, %f, %f\n", object->offset().x, object->offset().y, object->offset().z);
     printf("velocity is %f, %f, %f\n", velocity.x, velocity.y, velocity.z);
     printf("Edge Point is %f, %f, %f\n", result.x, result.y, result.z);
-    return result;
+    */
+    return result; // Return half - the idea is that the other object will get the other half of this value...
 }

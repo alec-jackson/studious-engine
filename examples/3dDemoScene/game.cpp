@@ -301,7 +301,6 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
-    int collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
@@ -314,14 +313,7 @@ int mainLoop(gameInfo* gamein) {
             return error;
         }
         printf("TESTING COLLISION IN UDPATE\n");
-        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
-        string collMessage;
-        if (collision == 1) {
-            collMessage = "Contact: True";
-        } else {
-            collMessage = "Contact: False";
-        }
-        collDebugText->setMessage(collMessage);
+
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         if (SHOW_FPS) {  // use sampleSize to find average FPS
@@ -338,6 +330,7 @@ int mainLoop(gameInfo* gamein) {
                 fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
+        //usleep(100000); // Sleep for 1 second - render at 1 FPS
     }
     return 0;
 }

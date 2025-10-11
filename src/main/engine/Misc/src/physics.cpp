@@ -9,6 +9,7 @@
  *
  */
 
+#include <chrono>
 #include <mutex>
 #include <physics.hpp>
 #include <shared_mutex>
@@ -63,7 +64,6 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
     if (nullptr == targetCollider) return;
     // Iterate through all other objects - VERY EXPENSIVE!!!
     for (const auto &obj : objects) {
-        // Weed out duplicate collisions... somehow...
         if (nullptr == obj.second.get()->targetCollider) continue;
         if (obj.first.compare(target->getObjectName()) == 0) continue;
         /**
@@ -73,32 +73,26 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
          */
         // What do we do when we see a collision?
         if (this->targetCollider->getCollider()->getCollision(obj.second.get()->targetCollider->getCollider(), vec3(0)) == 0) continue;
-        // Determine what case this is... How many kinematic collisions are involved?
-        // 2 kinematic collisions
         if (isKinematic && obj.second.get()->isKinematic) {
             // All of the speed will be in acceleration, so we need to account for that...
-            // Get the velocity of both objects in collision
             auto v1 = velocity + (acceleration * vec3(runningTime));
             auto v2 = obj.second->velocity + (obj.second->acceleration * vec3(obj.second->runningTime));
             auto m1 = mass;
             auto m2 = obj.second->mass;
 
-            // Calculate the final velocity of both objects
-            auto v2f = ((2 * m1) / (m1 + m2) * v1) - ((m1 - m2) / (m1 + m2) * v2);
+            // Calculate the final velocity of the main object
             auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+            printf("Collision %s vs %s\n", target->getObjectName().c_str(), obj.second->target->getObjectName().c_str());
+            printf("v1i: %f, %f, %f\n", velocity.x, velocity.y, velocity.z);
             printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
-            printf("v2f: %f, %f, %f\n", v2f.x, v2f.y, v2f.z);
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             objLock.lock();
             velocityDelta += (v1f - v1);
-            // How big of a critical section are we going to need? Can we avoid one?
-            position += targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), v1);
+            // How big of a critical section are we going to need? Can we avoid one? - Yes. Position not modified beforehand.
+            positionDelta = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), v1f);
             objLock.unlock();
-            obj.second->objLock.lock();
-            obj.second->velocityDelta += (v2f - v2);
-            obj.second->objLock.unlock();
-            hasVelocityDelta = true;
+            hasCollision = true;
             /*
              * I'm realizing that kinematic collisions should also move objects to the edge clipped distance
              */
@@ -107,14 +101,20 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
 }
 
 void PhysicsObject::finalizeCollisions() {
-    if (!hasVelocityDelta) return;
-    // Flush the velocity delta to the objects
+    if (!hasCollision) return;
+    auto prePos = position;
+    // Flush previous pos/vel/accel to object
+    auto truePos = target->getPosition();
+    target->setPosition(truePos + positionDelta);
     fullFlush();
-    // Need to think about how to process the velocity delta
-    velocity = velocityDelta;
 
-    hasVelocityDelta = false;
+    target->setPosition(truePos + positionDelta);
+    velocity = velocityDelta;
+    acceleration = vec3(0.0f);
     velocityDelta = vec3(0.0f);
+    positionDelta = vec3(0.0f);
+    hasCollision = false;
+    assert(prePos.y == position.y);
 }
 
 // Sleep the thread on the work queue until work becomes available
