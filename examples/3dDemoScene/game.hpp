@@ -26,4 +26,5 @@ typedef struct gameInfo {
     bool *isDone;
     CameraObject *gameCamera;
     GameInstance *currentGame;
+    InputController *gameInput;
 } gameInfo;

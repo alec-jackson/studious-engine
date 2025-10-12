@@ -83,6 +83,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
   src/main/engine/AnimationController/src/AnimationController.cpp
+  src/main/engine/Misc/src/InputController.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/Misc/src/Image.cpp
   src/main/misc/src/config.cpp
@@ -276,6 +277,7 @@ install (FILES
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp
   src/main/engine/Misc/headers/GameInstance.hpp
+  src/main/engine/Misc/headers/InputController.hpp
   src/main/engine/Misc/headers/GameScene.hpp
   src/main/engine/Misc/headers/Image.hpp
   src/main/engine/Misc/headers/physics.hpp
