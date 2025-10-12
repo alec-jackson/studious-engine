@@ -376,7 +376,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
             if (nullptr == bulletObj) {
                 fprintf(stderr, "rotateShape: Failed to create bullet object!");
             } else {
-                bulletObj->setRenderPriority(RENDER_PRIOR_LOW - 1);
+                bulletObj->setRenderPriority(RENDER_PRIOR_LOW - 2);
+                currentGame->getActiveScene()->refresh();
                 // Decay the bullet after 5 seconds
                 auto delcb = [bulletName, currentGame] () {
                     currentGame->removeSceneObject(bulletName);

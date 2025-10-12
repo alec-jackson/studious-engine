@@ -9,6 +9,7 @@
 #include <GameScene.hpp>
 #include <cassert>
 #include <SceneObject.hpp>
+#include <mutex>
 
 void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
@@ -43,6 +44,15 @@ void GameScene::removeSceneObject(std::string objectName) {
     }
 }
 
+void GameScene::refresh() {
+    std::unique_lock<std::mutex> scopeLock(sceneLock_);
+    // Rebuild the render map
+    renderPriorityMap_.clear();
+    for (auto obj : sceneObjects_) {
+        renderPriorityMap_[obj.second->getRenderPriority()].push_back(obj.second);
+    }
+}
+
 void GameScene::update(CameraObject *camera) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
     if (camera == nullptr) {
@@ -54,10 +64,12 @@ void GameScene::update(CameraObject *camera) {
     auto orthoMat = camera->getOrthographic();
     auto orthoMatBase = camera->getOrthographicBase();
     for (auto &obj : renderPriorityMap_) {
+        printf("GameScene::update: Rendering level %d\n", obj.first);
         // Send the current screen res to each object
         /// @todo Maybe use a global variable for resolution?
         auto objList = obj.second;
         for (auto objPtr : objList) {
+            printf("GameScene::update: Rendering object %s\n", objPtr->getObjectName().c_str());
             objPtr->setResolution(resolution);
             // Check if the object is ORTHO or PERSPECTIVE
             switch (objPtr->type()) {

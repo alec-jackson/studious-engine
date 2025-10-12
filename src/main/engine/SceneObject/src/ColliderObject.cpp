@@ -279,9 +279,11 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
 
     // Let's print out relevant information neatly
     printf("* Center (%f, %f, %f)\n", center_.x, center_.y, center_.z);
+    printf("* Other Center (%f, %f, %f)\n", object->center().x, object->center().y, object->center().z);
+    printf("* Center Distance (%f, %f, %f)\n", fabs(object->center().x - center_.x), fabs(object->center().y - center_.y), fabs(object->center().z - center_.z));
+    printf("* Projection (%f, %f, %f)\n", center_.x + result.x, center_.y + result.y, center_.z + result.z);
     printf("* Edge Point is (%f, %f, %f)\n", result.x, result.y, result.z);
     printf("* Final Velocity (%f, %f, %f)\n", velocity.x, velocity.y, velocity.z);
-    printf("* Other Center (%f, %f, %f)\n", object->center().x, object->center().y, object->center().z);
     printf("* Offset (%f, %f, %f)\n", offset_.x, offset_.y, offset_.z);
     printf("* Other Offset (%f, %f, %f)\n", object->offset().x, object->offset().y, object->offset().z);
 

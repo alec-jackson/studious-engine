@@ -88,7 +88,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             objLock.lock();
-            velocityDelta += (v1f - v1);
+            velocityDelta += v1f;
             // How big of a critical section are we going to need? Can we avoid one? - Yes. Position not modified beforehand.
             positionDelta = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), v1f);
             objLock.unlock();
@@ -104,11 +104,12 @@ void PhysicsObject::finalizeCollisions() {
     if (!hasCollision) return;
     //auto prePos = position;
     // Flush previous pos/vel/accel to object
+    // Somehow the velocity is freaking out. We want to only consider the NEW velocity from the bounce
     auto truePos = target->getPosition();
-    target->setPosition(truePos + positionDelta);
-    fullFlush();
 
     target->setPosition(truePos + positionDelta);
+    flushPosition();
+    runningTime = 0.0f;
     velocity = velocityDelta;
     acceleration = vec3(0.0f);
     velocityDelta = vec3(0.0f);
