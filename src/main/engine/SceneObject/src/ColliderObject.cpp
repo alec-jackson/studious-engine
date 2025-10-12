@@ -239,42 +239,41 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
     assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
     // Iterate through each axis
     vec3 result(0);
+    vec3 deltaBase = object->center() - center_;
+    vec3 delta = abs(deltaBase);
+    vec3 range = offset_ + object->offset();
+    vec3 edgePoint = range - delta;
+    edgePoint *= EDGE_POINT_PERCENT_SCALAR;
+    /* There is a problem with the current algorithm :
+     *
+     * Considering the direction of the velocity. When an object bounces off of another,
+     * both objects launch off in their own direction. The velocity itself will describe the angle...
+     *
+     * Rather than finding the edge point by just moving the object to the collider's boundary,
+     * let's consider the following algorithm:
+     *
+     * velocity = <v1, v2, v3>
+     *
+     * What is the highest velocity in the vector (abs val)? If it's V1, then normalize the other
+     * velocities by this value in a new vector (normalized velocity):
+     *
+     * // First filter out velocities of zero to avoid div by zero errors
+     *
+     * normalizedVelocity = <v1/abs(v1), v1/abs(v1), v1/abs(v1)>
+     *
+     * Then multiply this by the edge point. The zeroes will not excessively move
+     * the object, while the direction of the bounce, and the amount of the bounce is maintained.
+     *
+     *
+     */
+    float highestVelocity = 0.0f;
     for (int i = 0; i < 3; ++i) {
-        // Double check the offset is just the distance between center point and edge and not edge to edge
-        float deltaBase = object->center()[i] - center_[i];
-        float delta = abs(deltaBase);
-        float range = offset_[i] + object->offset()[i];
-        // For this axis, how much is this object inside of the other?
-        float edgePoint = range - delta;
-        // Now the edge point contains how much we're inside of the other object for this axis
-        // Do not add edgePoint if the distance is lte 0
-        if (edgePoint <= 0) continue;
-        // If velocity is NOT in that direction, we don't care about edge point
-        if (velocity[i] == 0.0f || (velocity[i] > 0.0f + EPSILON && velocity[i] < 0.0f - EPSILON)) continue;
-        // Now determine direction based on the velocity - this is the direction the object WAS traveling...
-        result[i] = velocity[i] > 0.0f ? edgePoint : -edgePoint;
-        // So, what if we just move away by the object's respective buffer???
-        // direction will be based on relative position INSTEAD of velocity
-        result[i] = deltaBase < 0.0f ? offset_[i] : -offset_[i];
-        // Is this object on the pos or neg side of the other object?
-
+        auto absVel = fabs(velocity[i]);
+        if (absVel > highestVelocity) highestVelocity = absVel;
     }
-    // Maybe we just return the edge point where velocity is greatest?
-    float max = 0.0f;
-    int maxPos = 0;
-    for (int i = 0; i < velocity.length(); ++i) {
-        auto velMag = std::fabs(velocity[i]);
-        if (velMag > max) {
-            max = velMag;
-            maxPos = i;
-        }
-    }
-    // We know where the max is, zero out the rest in result
-    for (int i = 0; i < result.length(); ++i) {
-        if (i != maxPos)  // If this isn't the max, zero it out
-            result[i] = 0.0f;
-    }
-
+    assert(highestVelocity != 0.0f);
+    vec3 normalizedVelocity = velocity / vec3(highestVelocity);
+    result = edgePoint * normalizedVelocity;
     static int collCount;
     printf("--- Collision %d ---\n\n", collCount / 2 + 1);
 
@@ -283,6 +282,8 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
     printf("* Edge Point is (%f, %f, %f)\n", result.x, result.y, result.z);
     printf("* Final Velocity (%f, %f, %f)\n", velocity.x, velocity.y, velocity.z);
     printf("* Other Center (%f, %f, %f)\n", object->center().x, object->center().y, object->center().z);
+    printf("* Offset (%f, %f, %f)\n", offset_.x, offset_.y, offset_.z);
+    printf("* Other Offset (%f, %f, %f)\n", object->offset().x, object->offset().y, object->offset().z);
 
     collCount++;
     /*

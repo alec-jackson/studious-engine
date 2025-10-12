@@ -372,7 +372,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
             });
             auto bulletName = string("bullet") + std::to_string(bulletCount - 1);
             auto bulletObj = currentGame->getSceneObject(bulletName);
-            auto expireTime = 5.0f;
+            auto expireTime = 900.0f;
             if (nullptr == bulletObj) {
                 fprintf(stderr, "rotateShape: Failed to create bullet object!");
             } else {
@@ -389,10 +389,10 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
                 auto anglez = std::sin(angles.y * (PI/180.0) + (PI/2.0));
                 auto charAngle = character->getRotation();
-                float magnitude = 0.3f;
+                float magnitude = 0.01f;
                 // angles.y is the rotation of the character on some axis??
                 printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
-                pc->applyForce(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
+                pc->setVelocity(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
             }
         } else if (!currentGame->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && delPressed) {
             delPressed = false;

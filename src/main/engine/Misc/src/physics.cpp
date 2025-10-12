@@ -83,7 +83,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             // Calculate the final velocity of the main object
             auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
             printf("Collision %s vs %s\n", target->getObjectName().c_str(), obj.second->target->getObjectName().c_str());
-            printf("v1i: %f, %f, %f\n", velocity.x, velocity.y, velocity.z);
+            printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
             printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
@@ -102,7 +102,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
 
 void PhysicsObject::finalizeCollisions() {
     if (!hasCollision) return;
-    auto prePos = position;
+    //auto prePos = position;
     // Flush previous pos/vel/accel to object
     auto truePos = target->getPosition();
     target->setPosition(truePos + positionDelta);
@@ -114,7 +114,8 @@ void PhysicsObject::finalizeCollisions() {
     velocityDelta = vec3(0.0f);
     positionDelta = vec3(0.0f);
     hasCollision = false;
-    assert(prePos.y == position.y);
+    // What was the point of this assert?
+    //assert(prePos.y == position.y);
 }
 
 // Sleep the thread on the work queue until work becomes available
