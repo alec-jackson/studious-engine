@@ -241,7 +241,8 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
     vec3 result(0);
     for (int i = 0; i < 3; ++i) {
         // Double check the offset is just the distance between center point and edge and not edge to edge
-        float delta = abs(object->center()[i] - center_[i]);
+        float deltaBase = object->center()[i] - center_[i];
+        float delta = abs(deltaBase);
         float range = offset_[i] + object->offset()[i];
         // For this axis, how much is this object inside of the other?
         float edgePoint = range - delta;
@@ -253,7 +254,10 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
         // Now determine direction based on the velocity - this is the direction the object WAS traveling...
         result[i] = velocity[i] > 0.0f ? edgePoint : -edgePoint;
         // So, what if we just move away by the object's respective buffer???
-        result[i] = velocity[i] > 0.0f ? offset_[i] : -offset_[i];
+        // direction will be based on relative position INSTEAD of velocity
+        result[i] = deltaBase < 0.0f ? offset_[i] : -offset_[i];
+        // Is this object on the pos or neg side of the other object?
+
     }
     // Maybe we just return the edge point where velocity is greatest?
     float max = 0.0f;
