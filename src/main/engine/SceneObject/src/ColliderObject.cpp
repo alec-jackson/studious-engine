@@ -264,14 +264,83 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
      *
      *
      */
-    float highestVelocity = 0.0f;
+    // float highestVelocity = 0.0f;
+    // for (int i = 0; i < 3; ++i) {
+    //     auto absVel = fabs(velocity[i]);
+    //     if (absVel > highestVelocity) highestVelocity = absVel;
+    // }
+    // assert(highestVelocity != 0.0f);
+    // vec3 normalizedVelocity = velocity / vec3(highestVelocity);
+    // result = edgePoint * normalizedVelocity;
+
+    /**
+     * The velocity direction solution has a huge problem: What if the resulting collision sees both objects going
+     * in the same direction? This will effectively give both objects the SAME edge point values, causing them to clip
+     * into each other ad infinitum.
+     *
+     * What are the potential solutions here?
+     *
+     * When calculating the resulting direction, we can just check "is this object on the left or right (pos or neg) side
+     * of the other?". So base the resulting edge point's direction for each axis based on whether or not we are on
+     * the right or left side. We still need some kind of scalar to dampen each axis edge point.
+     *
+     * POTENTIAL SOLUTION: Say you have two points:
+     *
+     * |
+     * |    x2 (4, 4)
+     * |
+     * |   x1 (3, 2)
+     * |
+     * _________________________
+     *
+     * Where x1 has an offset of [3, 3], and x2 has an offset of [5, 5]. How do we calculate the edge point? We would
+     * want something like the following:
+     *
+     * First calculate distance on that axis, then find direction. So... Distance + direction = delta :)
+     *
+     * x1_delta = x1 - x2 = (3, 2) - (4, 4) = (-1, -2)
+     *
+     * x2_delta = x2 - x1 = (4, 4) - (3, 2) = (1, 2)
+     *
+     * This alone isn't sufficient. If we applied this transformation to x1 and x2, we would get:
+     *
+     * x1 = (3, 2) + (-1, -2) = (2, 0)
+     * x2 = (4, 4) + (1,   2) = (5, 6)
+     *
+     * When we do a collision check afterwards, we see
+     *
+     * range = fabs(x1 - x2) = (2, 0) - (5, 6) = fabs((-3, -6)) = (3, 6)
+     *
+     * offset sum = offset_x1 + offset_x2 = (3, 3) + (5, 5) = (8, 8)
+     *
+     * range (3, 6) is less than offset sum (8, 8), therefore the objects are still colliding. These values
+     * need to be boosted using the offset values. These values just tell us the actual direction to bounce.
+     *
+     * for each object do:
+     *
+     * Find the axis with the highest distance:
+     * highestDistance = max(delta.x, y, z)
+     * Normalize similar to the velocity method:
+     *
+     * normalizedDistance = <delta.x/highestDistance, delta.y/highestDistance, delta.z/highestDistance>
+     *
+     * This will maintain the direction of the "bounce back" we get from the collision.
+     *
+     * Now we can apply this to the initial edge point vector - the distance we NEED to travel
+     * to get out of collision bounds!
+     */
+
+    vec3 x1_delta = center_ - object->center();
+
+    float highestDistance = 0.0f;
     for (int i = 0; i < 3; ++i) {
-        auto absVel = fabs(velocity[i]);
-        if (absVel > highestVelocity) highestVelocity = absVel;
+        auto absDist = fabs(x1_delta[i]);
+        if (absDist > highestDistance) highestDistance = absDist;
     }
-    assert(highestVelocity != 0.0f);
-    vec3 normalizedVelocity = velocity / vec3(highestVelocity);
-    result = edgePoint * normalizedVelocity;
+    assert(highestDistance != 0.0f); // Remove??
+    vec3 normalizedDistance = x1_delta / vec3(highestDistance);
+    result = edgePoint * normalizedDistance;
+
     static int collCount;
     printf("--- Collision %d ---\n\n", collCount / 2 + 1);
 
