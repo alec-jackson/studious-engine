@@ -1,7 +1,9 @@
 #include <ColliderExt.hpp>
 
 ColliderObject *ColliderExt::getCollider() {
-    assert(collider_.get() != nullptr);
-    collider_.get()->updateCollider();
-    return collider_.get();
+    auto res = collider_.get();
+    if (nullptr != res) {
+        res->updateCollider();
+    }
+    return res;
 }

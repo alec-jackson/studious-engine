@@ -19,9 +19,6 @@
 #include <GfxController.hpp>
 #include <common.hpp>
 
-#define EPSILON 0.00001f
-#define EDGE_POINT_PERCENT_SCALAR 1.05  // 5% padding
-
 class ColliderObject : public SceneObject {
  public:
     ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner);

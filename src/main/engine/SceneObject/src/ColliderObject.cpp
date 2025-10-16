@@ -135,12 +135,12 @@ void ColliderObject::createCollider() {
     // Set MVP ID for collider object
     mvpId_ = gfxController_->getShaderVariable(programId_, "MVP").get();
     // Go through objects and get absolute min/max points
-    for (auto it = target_->vertices.begin(); it != target_->vertices.end(); ++it) {
+    for (auto vertex : target_->vertices) {
         for (int i = 0; i < 3; i++) {
             // Calculate min
-            tempMin[i] = getColliderVertices((*it), i, [](float a, float b) { return a < b; });
+            tempMin[i] = getColliderVertices(vertex, i, [](float a, float b) { return a < b; });
             // Calculate max
-            tempMax[i] = getColliderVertices((*it), i, [](float a, float b) { return a > b; });
+            tempMax[i] = getColliderVertices(vertex, i, [](float a, float b) { return a > b; });
             if (tempMin[i] < min[i]) {
                 min[i] = tempMin[i];
             }
@@ -241,7 +241,7 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
     vec3 delta = abs(deltaBase);
     vec3 range = offset_ + object->offset();
     vec3 edgePoint = range - delta;
-    edgePoint *= EDGE_POINT_PERCENT_SCALAR;
+    //edgePoint *= EDGE_POINT_PERCENT_SCALAR;
     /* There is a problem with the current algorithm :
      *
      * Considering the direction of the velocity. When an object bounces off of another,
@@ -337,7 +337,6 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
         auto absDist = fabs(x1_delta[i]);
         if (absDist > highestDistance) highestDistance = absDist;
     }
-    assert(highestDistance != 0.0f); // Remove??
     vec3 normalizedDistance = x1_delta / vec3(highestDistance);
     result = edgePoint * normalizedDistance;
 

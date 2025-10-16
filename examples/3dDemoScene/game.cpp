@@ -312,7 +312,6 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
-        printf("TESTING COLLISION IN UDPATE\n");
 
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());

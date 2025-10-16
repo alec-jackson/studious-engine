@@ -64,12 +64,10 @@ void GameScene::update(CameraObject *camera) {
     auto orthoMat = camera->getOrthographic();
     auto orthoMatBase = camera->getOrthographicBase();
     for (auto &obj : renderPriorityMap_) {
-        printf("GameScene::update: Rendering level %d\n", obj.first);
         // Send the current screen res to each object
         /// @todo Maybe use a global variable for resolution?
         auto objList = obj.second;
         for (auto objPtr : objList) {
-            printf("GameScene::update: Rendering object %s\n", objPtr->objectName().c_str());
             objPtr->setResolution(resolution);
             // Check if the object is ORTHO or PERSPECTIVE
             switch (objPtr->type()) {

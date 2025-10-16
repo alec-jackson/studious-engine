@@ -65,6 +65,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
     // Iterate through all other objects - VERY EXPENSIVE!!!
     for (const auto &obj : objects) {
         if (nullptr == obj.second.get()->targetCollider) continue;
+        if (nullptr == obj.second->targetCollider->getCollider()) continue;
         if (obj.first.compare(target->objectName()) == 0) continue;
         /**
          * If both objects are kinematic, have the objects bounce off of each other.

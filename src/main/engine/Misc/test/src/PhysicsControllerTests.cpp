@@ -8,6 +8,8 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include "ModelImport.hpp"
+#include "physics.hpp"
 #include <PhysicsControllerTests.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -18,6 +20,7 @@
 extern double deltaTime;
 
 const char *testObjectName = "testObject";
+const char *otherObjectName = "otherObject";
 float testMassKg = 5.0f;
 
 // Helper function to check for vec3 float equality
@@ -519,25 +522,71 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyInstantForceT
     ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 }
 
-class GivenTwoObjectsAboutToCollide: public GivenPhysicsControllerPositionPipeline {
+class GivenTwoKinematicObjects: public GivenPhysicsControllerPositionPipeline {
  protected:
     void SetUp() override {
-        GivenPhysicsControllerPositionPipeline::SetUp();
-        otherObject_ = std::make_unique<TestObject>();
+        physicsController_ = std::make_unique<PhysicsController>(6);
+        // Create the polygons for the test objects
+        basicModel_ = std::make_shared<Polygon>();
+        basicModel_->vertices = {
+            { // Dummy vertex points here - just want offset to be 1 and center 0
+                -1.0f, -1.0f, -1.0f,  // vertex 1
+                1.0f, 1.0f, 1.0f,  // vertex 2
+            }
+        };
 
-        //otherObject_->createTestCollider(vec4 offset, vec4 center)
+        otherObject_ = std::make_unique<TestObject>(basicModel_, otherObjectName);
+        testObject_ = std::make_unique<TestObject>(basicModel_, testObjectName);
+        otherObject_->createCollider();
+        testObject_->createCollider();
 
-        /**
-         *
-         */
+        // Use the same generic params for each object
+        PhysicsParams params(true, // is kinematic
+            false, // obey gravity
+            0.0f, // elasticity
+            testMassKg);  // mass
+        physicsController_->addSceneObject(testObject_.get(), params);
+        physicsController_->addSceneObject(otherObject_.get(), params);
     }
     void TearDown() override {
         GivenPhysicsControllerPositionPipeline::TearDown();
     }
     std::unique_ptr<TestObject> otherObject_;
-    vec4 testOffset;
-    vec4 testCenter;
+    std::shared_ptr<Polygon> basicModel_;
+    inline static float basicModelOffset_ = 1.0f;
 };
+
+TEST_F(GivenTwoKinematicObjects, WhenObjectsCollide_ThenVelocitiesUpdatedAsExpected) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 firstObjectVelocity = vec3(1.0f, 0.0f, 0.0f);
+    vec3 firstObjectPosition = vec3(0.0f, 0.0f, 0.0f);
+    // This will place the second object so that its collider is 0.5 units away from the first object's collider
+    vec3 secondObjectPosition = firstObjectPosition + vec3(basicModelOffset_ * 2 + 0.5f);
+    physicsController_->setPosition(testObjectName, firstObjectPosition);
+    physicsController_->setPosition(otherObjectName, secondObjectPosition);
+
+    // Move the first object into the second object
+    physicsController_->setVelocity(testObjectName, firstObjectVelocity);
+
+    // Expected final velocities
+    float m1 = testMassKg;
+    float m2 = testMassKg;
+    vec3 v1 = firstObjectVelocity;
+    vec3 v2 = vec3(0.0f);
+    vec3 expectedV1f = (((m1 - m2) / (m1 + m2)) * v1) + (((2.0f * m2) / (m1 + m2)) * v2);
+    vec3 expectedV2f = (((2.0f * m1) / (m1 + m2)) * v1) - (((m1 - m2) / (m1 + m2)) * v2);
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    // The second object should be moving, and the first should have a different velocity
+    vec3 actualV1f = physicsController_->getPhysicsObject(testObjectName)->velocity;
+    vec3 actualV2f = physicsController_->getPhysicsObject(otherObjectName)->velocity;
+    ASSERT_VEC_EQ(expectedV1f, actualV1f);
+    ASSERT_VEC_EQ(expectedV2f, actualV2f);
+}
 
 /**
  * @brief Launches google test suite defined in file

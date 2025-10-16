@@ -201,6 +201,7 @@ add_executable(gtest_SceneObjectTests
   src/main/engine/SceneObject/test/SceneObjectTests.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/TestObject.cpp
+  src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
   src/main/utilities/src/Polygon.cpp
 )
