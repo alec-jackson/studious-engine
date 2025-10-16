@@ -71,7 +71,7 @@ GameObject::GameObject(GfxController *gfxController) :
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
 void GameObject::configureOpenGl() {
-    printf("GameObject::configureOpenGl: Configuring for %s with %d objects\n", objectName.c_str(),
+    printf("GameObject::configureOpenGl: Configuring for %s with %d objects\n", objectName_.c_str(),
         model_.get()->numberOfObjects);
     for (auto i = 0; i < model_.get()->numberOfObjects; ++i) {
         unsigned int vao;
@@ -141,7 +141,7 @@ void GameObject::configureOpenGl() {
  * @brief GameObject destructor
  */
 GameObject::~GameObject() {
-    printf("GameObject::~GameObject: destroying %s\n", objectName.c_str());
+    printf("GameObject::~GameObject: destroying %s\n", objectName_.c_str());
 }
 
 /**
@@ -150,8 +150,7 @@ GameObject::~GameObject() {
  * @param programId Program used to render the collider (collider shaders)
  */
 void GameObject::createCollider() {
-    printf("GameObject::createCollider: Creating collider for object %s\n", objectName.c_str());
-    auto colliderName = objectName + "-Collider";
+    printf("GameObject::createCollider: Creating collider for object %s\n", objectName_.c_str());
     auto colliderProg = gfxController_->getProgramId(COLLIDEROBJECT_PROG_NAME);
     if (!colliderProg.isOk()) {
         fprintf(stderr,
@@ -159,8 +158,7 @@ void GameObject::createCollider() {
             COLLIDEROBJECT_PROG_NAME);
         return;
     }
-    collider_ = std::make_shared<ColliderObject>(this->getModel(), colliderProg.get(), &translateMatrix_, &scaleMatrix_,
-        &vpMatrix_, ObjectType::SPRITE_OBJECT, colliderName, gfxController_);
+    collider_ = std::make_shared<ColliderObject>(this->getModel(), colliderProg.get(), this);
 }
 
 void GameObject::update() {

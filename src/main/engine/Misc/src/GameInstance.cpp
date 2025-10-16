@@ -456,7 +456,7 @@ bool GameInstance::waitForInput(GameInput input) {
 bool GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
     if (!activeScene_.get()) {
         fprintf(stderr, "GameInstance::addSceneObject: No active scene! Ignoring game object %s\n",
-            sceneObject.get()->getObjectName().c_str());
+            sceneObject.get()->objectName().c_str());
         printf("GameInstance::addSceneObject: Please bind an active scene and try again.\n");
         assert(false);
         return false;
@@ -623,7 +623,7 @@ int GameInstance::getCollision(SceneObject *object1, SceneObject *object2,
     if (nullptr == obj1 || nullptr == obj2) {
         fprintf(stderr,
             "GameInstance::getCollision: Failed to get collision - either %s or %s do not support colliders!\n",
-            object1->getObjectName().c_str(), object2->getObjectName().c_str());
+            object1->objectName().c_str(), object2->objectName().c_str());
         return 0;
     }
     return obj1->getCollider()->getCollision(obj2->getCollider(), moving);

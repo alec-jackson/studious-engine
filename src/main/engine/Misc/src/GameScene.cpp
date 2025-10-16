@@ -18,16 +18,16 @@ void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
             "GameScene::addSceneObject: Cannot add invalid scene object!\n");
         return;
     }
-    assert(!sceneObject->getObjectName().empty());
+    assert(!sceneObject->objectName().empty());
     // SANITY CHECK - ENFORCE OBJECTS CANNOT HAVE SAME NAME!!!!!!!!
-    auto soit = sceneObjects_.find(sceneObject->getObjectName());
+    auto soit = sceneObjects_.find(sceneObject->objectName());
     if (soit != sceneObjects_.end()) {
         fprintf(stderr,
             "GameScene::addSceneObject: ERROR! Cannot add two objects with the same name! [%s]\n",
-            sceneObject->getObjectName().c_str());
+            sceneObject->objectName().c_str());
         assert(0);
     }
-    sceneObjects_[sceneObject->getObjectName()] = sceneObject;
+    sceneObjects_[sceneObject->objectName()] = sceneObject;
     renderPriorityMap_[sceneObject->getRenderPriority()].push_back(sceneObject);
 }
 
@@ -69,7 +69,7 @@ void GameScene::update(CameraObject *camera) {
         /// @todo Maybe use a global variable for resolution?
         auto objList = obj.second;
         for (auto objPtr : objList) {
-            printf("GameScene::update: Rendering object %s\n", objPtr->getObjectName().c_str());
+            printf("GameScene::update: Rendering object %s\n", objPtr->objectName().c_str());
             objPtr->setResolution(resolution);
             // Check if the object is ORTHO or PERSPECTIVE
             switch (objPtr->type()) {
@@ -86,7 +86,7 @@ void GameScene::update(CameraObject *camera) {
                     objPtr->setVpMatrix(orthoMat);
                     break;
                 default:
-                    printf("CameraObject::update: Ignoring object [%s] type [%d]\n", objPtr->getObjectName().c_str(),
+                    printf("CameraObject::update: Ignoring object [%s] type [%d]\n", objPtr->objectName().c_str(),
                         objPtr->type());
                     break;
             }

@@ -8,12 +8,12 @@
  * @copyright Copyright (c) 2024
  *
  */
+#include <PhysicsControllerTests.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <TestObject.hpp>
-#include <PhysicsControllerTests.hpp>
 
 extern double deltaTime;
 
@@ -85,7 +85,7 @@ TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAdded_ThenObjectPresentInsi
     auto oit = objectMap.find(testObjectName);
     ASSERT_EQ(expectedObjects, objectMap.size());
     ASSERT_NE(objectMap.end(), oit);  // Verify testObjectName exists
-    ASSERT_EQ(testObjectName, oit->second.get()->target->getObjectName());
+    ASSERT_EQ(testObjectName, oit->second.get()->target->objectName());
     ASSERT_EQ(isKinematic, oit->second.get()->isKinematic);
     ASSERT_EQ(obeyGravity, oit->second.get()->obeyGravity);
     ASSERT_FLOAT_EQ(elasticity, oit->second.get()->elasticity);
@@ -139,7 +139,7 @@ TEST_F(GivenPhysicsControllerGeneral, WhenUnknownSceneObjectRemoved_ThenOtherObj
     auto objectList = physicsController_->getPhysicsObjects();
     auto oit = objectList.find(testObjectName);
     ASSERT_EQ(expectedObjects, objectList.size());
-    ASSERT_EQ(testObjectName, oit->second.get()->target->getObjectName());
+    ASSERT_EQ(testObjectName, oit->second.get()->target->objectName());
 }
 
 /**
@@ -162,7 +162,7 @@ TEST_F(GivenPhysicsControllerGeneral, WhenSceneObjectAdded_ThenGetPhysicsObjectR
 
     /* Validation */
     ASSERT_GT(physObj.use_count(), 0);  // use_count is used to determine if pointer is active
-    ASSERT_EQ(testObjectName, physObj.get()->target->getObjectName());
+    ASSERT_EQ(testObjectName, physObj.get()->target->objectName());
 }
 
 /**
@@ -184,7 +184,7 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
  protected:
     void SetUp() override {
         // Create a physics controller with 6 threads
-        physicsController_ = new PhysicsController(6);
+        physicsController_ = std::make_unique<PhysicsController>(6);
         // Create a sample test object and add it to the physics controller
         testObject_ = std::make_unique<TestObject>(testObjectName);
         testObject_.get()->setPosition(vec3(0));
@@ -192,9 +192,8 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
         physicsController_->addSceneObject(testObject_.get(), params);
     }
     void TearDown() override {
-        delete physicsController_;
     }
-    PhysicsController *physicsController_;
+    std::unique_ptr<PhysicsController> physicsController_;
     std::unique_ptr<TestObject> testObject_;
 };
 
@@ -519,6 +518,26 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyInstantForceT
     /* Validation */
     ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 }
+
+class GivenTwoObjectsAboutToCollide: public GivenPhysicsControllerPositionPipeline {
+ protected:
+    void SetUp() override {
+        GivenPhysicsControllerPositionPipeline::SetUp();
+        otherObject_ = std::make_unique<TestObject>();
+
+        //otherObject_->createTestCollider(vec4 offset, vec4 center)
+
+        /**
+         *
+         */
+    }
+    void TearDown() override {
+        GivenPhysicsControllerPositionPipeline::TearDown();
+    }
+    std::unique_ptr<TestObject> otherObject_;
+    vec4 testOffset;
+    vec4 testCenter;
+};
 
 /**
  * @brief Launches google test suite defined in file

@@ -101,7 +101,7 @@ void AnimationController::playTrack(string trackName) {
     }
     auto trackPtr = tsit->second.target;
     auto objectPtr = trackPtr->getObj();
-    auto objectName = objectPtr->getObjectName();
+    auto objectName = objectPtr->objectName();
     /* Check if the animation is still in the active list */
     auto ait = activeTracks_.find(objectName);
     if (ait != activeTracks_.end()) {
@@ -144,7 +144,7 @@ void AnimationController::pauseTrack(string trackName) {
             trackName.c_str());
         return;
     }
-    auto objectName = sit->second.target->getObj()->getObjectName();
+    auto objectName = sit->second.target->getObj()->objectName();
     auto it = activeTracks_.find(objectName);
     if (it != activeTracks_.end()) {
         it->second.get()->state = TrackState::PAUSED;
@@ -156,7 +156,7 @@ void AnimationController::pauseTrack(string trackName) {
 
 int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
-    auto targetName = target->getObjectName();
+    auto targetName = target->objectName();
     // Check if the target object exists in the keyframestore
     auto it = keyFrameStore_.find(targetName);
     auto kfQueueSize = 0;
@@ -170,8 +170,8 @@ int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFra
         kfQueueSize = it->second.kQueue.size();
     } else {
         // If the object has no keyframestore, add it
-        keyFrameStore_[target->getObjectName()].kQueue.push(keyFrame);
-        keyFrameStore_[target->getObjectName()].target = target;
+        keyFrameStore_[target->objectName()].kQueue.push(keyFrame);
+        keyFrameStore_[target->objectName()].target = target;
         kfQueueSize = 1;
     }
     return kfQueueSize;
@@ -242,7 +242,7 @@ void AnimationController::update() {
             auto result = updateKeyFrame(target, currentKf, timeChange);
             // Only remove the keyframe when all updates are done...
             if (result.updateComplete_) {
-                printf("AnimationController::update: Finished keyframe for %s\n", target->getObjectName().c_str());
+                printf("AnimationController::update: Finished keyframe for %s\n", target->objectName().c_str());
                 // Remove the keyframe from the queue
                 entry.second.kQueue.pop();
                 // Call the callback associated with the keyframe
@@ -336,7 +336,7 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
     // Update the stretch components for the target (if supported)
     if (target->type() != ObjectType::UI_OBJECT) {
         fprintf(stderr, "AnimationController::updateStretch: Stretch on unsupported target %s\n",
-            target->getObjectName().c_str());
+            target->objectName().c_str());
         // Unsupported update type, assert
         assert(false);
     }
@@ -361,7 +361,7 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
         // This is horrible, log the error and assert
         fprintf(stderr,
             "AnimationController::updateColor: Attempting to update non-text object %s!\n",
-            target->getObjectName().c_str());
+            target->objectName().c_str());
         assert(false);
     }
     auto cTarget = reinterpret_cast<TextObject *>(target);
@@ -385,7 +385,7 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
     if (!imEx) {
         fprintf(stderr,
             "AnimationController::updateTint: Image Extension NOT present in object %s!\n",
-            target->getObjectName().c_str());
+            target->objectName().c_str());
         assert(0);
         return TINT_MET;
     }
@@ -460,7 +460,7 @@ int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
         // This is horrible, log the error and assert
         fprintf(stderr,
             "AnimationController::updateText: Attempting to update non-text object %s!\n",
-            target->getObjectName().c_str());
+            target->objectName().c_str());
         assert(false);
     }
     auto cTarget = reinterpret_cast<TextObject *>(target);
@@ -523,7 +523,7 @@ void AnimationController::removeSceneObject(string objectName) {
     // Delete track stores
     vector<string> toDelete;
     for (auto entry : trackStore_) {
-        if (entry.second.target->getObj()->getObjectName().compare(objectName) == 0) {
+        if (entry.second.target->getObj()->objectName().compare(objectName) == 0) {
             toDelete.push_back(entry.first);
         }
     }

@@ -65,7 +65,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
     // Iterate through all other objects - VERY EXPENSIVE!!!
     for (const auto &obj : objects) {
         if (nullptr == obj.second.get()->targetCollider) continue;
-        if (obj.first.compare(target->getObjectName()) == 0) continue;
+        if (obj.first.compare(target->objectName()) == 0) continue;
         /**
          * If both objects are kinematic, have the objects bounce off of each other.
          * If one object is kinematic, then the kinematic object will clip to touch the non-kinematic object.
@@ -82,7 +82,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
 
             // Calculate the final velocity of the main object
             auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
-            printf("Collision %s vs %s\n", target->getObjectName().c_str(), obj.second->target->getObjectName().c_str());
+            printf("Collision %s vs %s\n", target->objectName().c_str(), obj.second->target->objectName().c_str());
             printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
             printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
             // Find the delta velocity for either object - lock each object individually
@@ -138,7 +138,7 @@ PhysicsResult PhysicsController::doWork() {
             printf("PhysicsController::doWork: Closing on DIE message\n");
             break;
         }
-        string name = physObj->target->getObjectName();
+        string name = physObj->target->objectName();
         // Position function defined here...
         /**         1    2
          *  D(t) =  _ a t  + v t + x
@@ -245,8 +245,8 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->targetCollider = dynamic_cast<ColliderExt *>(sceneObject);
 
     // Add the object to the physics object list
-    assert(!sceneObject->getObjectName().empty());
-    physicsObjects_[sceneObject->getObjectName()] = physicsObject;
+    assert(!sceneObject->objectName().empty());
+    physicsObjects_[sceneObject->objectName()] = physicsObject;
     return PhysicsResult::OK;
 }
 
@@ -465,7 +465,7 @@ PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
         } else {
             fprintf(stderr,
                 "PhysicsController::applyForce: Failed to apply force! Target object %s has no mass set!",
-                poit->second.get()->target->getObjectName().c_str());
+                poit->second.get()->target->objectName().c_str());
         }
         result = PhysicsResult::OK;
     } else {
@@ -488,7 +488,7 @@ PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force
         } else {
             fprintf(stderr,
                 "PhysicsController::applyForce: Failed to apply force! Target object %s has no mass set!",
-                poit->second.get()->target->getObjectName().c_str());
+                poit->second.get()->target->objectName().c_str());
         }
         result = PhysicsResult::OK;
     } else {

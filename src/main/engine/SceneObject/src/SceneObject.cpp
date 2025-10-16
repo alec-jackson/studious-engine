@@ -63,7 +63,7 @@ void SceneObject::removeChild(SceneObject *child) {
         children_.erase(cit);
     } else {
         printf("SceneObject::removeChild: %s is not a child of %s\n",
-            child->getObjectName().c_str(),
-            this->getObjectName().c_str());
+            child->objectName().c_str(),
+            this->objectName().c_str());
     }
 }

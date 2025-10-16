@@ -268,7 +268,7 @@ int runtime(GameInstance *currentGame) {
     auto currentCamera = currentGame->createCamera(playerRef,
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f, "mainCamera");
     playerRef->setRotation(vec3(0, 0, 0));
-    cout << "currentGameObject tag is " << playerRef->getObjectName()
+    cout << "currentGameObject tag is " << playerRef->objectName()
         << '\n';
 
     playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
