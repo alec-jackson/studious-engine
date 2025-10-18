@@ -23,18 +23,12 @@ const char *testObjectName = "testObject";
 const char *otherObjectName = "otherObject";
 float testMassKg = 5.0f;
 
-// Helper function to check for vec3 float equality
-template<typename T>
-void ASSERT_VEC_EQ(const T &expected, const T &actual) {
-    uint containerSize = sizeof(T) / sizeof(float);
-    for (uint i = 0; i < containerSize; ++i) {
-        ASSERT_FLOAT_EQ(expected[i], actual[i]);
-    }
-}
-
 // Making this a macro to preserve line number in assert
 #define ASSERT_VEC_EQ(expected, actual) \
 for (uint i = 0; i < (sizeof(actual) / sizeof(float)); ++i) ASSERT_FLOAT_EQ(expected[i], actual[i]);
+
+#define EXPECT_VEC_EQ(expected, actual) \
+for (uint i = 0; i < (sizeof(actual) / sizeof(float)); ++i) { printf("float eq in %d\n", i); EXPECT_FLOAT_EQ(expected[i], actual[i]); }
 
 // Test Fixtures
 class GivenPhysicsControllerGeneral: public ::testing::Test {
@@ -562,7 +556,7 @@ TEST_F(GivenTwoKinematicObjects, WhenObjectsCollide_ThenVelocitiesUpdatedAsExpec
     vec3 firstObjectVelocity = vec3(1.0f, 0.0f, 0.0f);
     vec3 firstObjectPosition = vec3(0.0f, 0.0f, 0.0f);
     // This will place the second object so that its collider is 0.5 units away from the first object's collider
-    vec3 secondObjectPosition = firstObjectPosition + vec3(basicModelOffset_ * 2 + 0.5f);
+    vec3 secondObjectPosition = firstObjectPosition + vec3(basicModelOffset_ * 2 + 0.5f, 0.0f, 0.0f);
     physicsController_->setPosition(testObjectName, firstObjectPosition);
     physicsController_->setPosition(otherObjectName, secondObjectPosition);
 
@@ -581,11 +575,45 @@ TEST_F(GivenTwoKinematicObjects, WhenObjectsCollide_ThenVelocitiesUpdatedAsExpec
     physicsController_->update();
 
     /* Validation */
-    // The second object should be moving, and the first should have a different velocity
+    // The second object should be moving, and the first should be stationary
+    auto po = physicsController_->getPhysicsObject(testObjectName);
     vec3 actualV1f = physicsController_->getPhysicsObject(testObjectName)->velocity;
     vec3 actualV2f = physicsController_->getPhysicsObject(otherObjectName)->velocity;
-    ASSERT_VEC_EQ(expectedV1f, actualV1f);
-    ASSERT_VEC_EQ(expectedV2f, actualV2f);
+    EXPECT_VEC_EQ(expectedV1f, actualV1f);
+    EXPECT_VEC_EQ(expectedV2f, actualV2f);
+}
+
+TEST_F(GivenTwoKinematicObjects, WhenObjectsCollide_ThenObjectsMovedToEdgePoint) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 firstObjectVelocity = vec3(1.0f, 0.0f, 0.0f);
+    vec3 firstObjectPosition = vec3(0.0f, 0.0f, 0.0f);
+    // This will place the second object so that its collider is 0.5 units away from the first object's collider
+    vec3 secondObjectPosition = firstObjectPosition + vec3(basicModelOffset_ * 2 + 0.5f, 0.0f, 0.0f);
+    physicsController_->setPosition(testObjectName, firstObjectPosition);
+    physicsController_->setPosition(otherObjectName, secondObjectPosition);
+
+    // Move the first object into the second object
+    physicsController_->setVelocity(testObjectName, firstObjectVelocity);
+
+    // Expected final positions
+    vec3 expectedFirstFinalPos = vec3(0.75f, 0.0f, 0.0f);
+    vec3 expectedSecondFinalPos = vec3(2.75f, 0.0f, 0.0f);
+
+    // The objects are 0.5 units inside of each other.
+    // The first object should be moved 0.25 units to the left, and
+    // the second object should be moved 0.25 units to the right. This should
+    // clip the objects right next to each other.
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    // The second object should be moving, and the first should have a different velocity
+    vec3 actualFFP = physicsController_->getPhysicsObject(testObjectName)->position;
+    vec3 actualSFP = physicsController_->getPhysicsObject(otherObjectName)->position;
+    EXPECT_VEC_EQ(expectedFirstFinalPos, actualFFP);
+    EXPECT_VEC_EQ(expectedSecondFinalPos, actualSFP);
 }
 
 /**

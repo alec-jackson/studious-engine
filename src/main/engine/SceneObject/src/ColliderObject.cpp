@@ -30,7 +30,7 @@
  */
 ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
     SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), target_ { target }, pTranslateMatrix_ { owner->translateMatrix() },
-    pScaleMatrix_ { owner->scaleMatrix() }, pVpMatrix_ { owner->vpMatrix() } {
+    pScaleMatrix_ { owner->scaleMatrix() }, pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
     programId_ = programId;
     createCollider();
 }
@@ -40,7 +40,7 @@ ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, 
  */
 ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, SceneObject *owner) :
     SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
-    pVpMatrix_ { owner->vpMatrix() } {
+    pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
     programId_ = programId;
     // Separate vertex data from vertTexData
     assert(vertTexData.size() % 4 == 0);
@@ -66,6 +66,7 @@ void ColliderObject::updateCollider() {
     for (int i = 0; i < 4; i++) {
         offset_[i] = center_[i] - minOffset[i];
     }
+    printf("ColliderObject::updateCollider: offset post update (%f, %f, %f, %f)\n", offset_.x, offset_.y, offset_.z, offset_.w);
 }
 
 /**
@@ -337,6 +338,7 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
         auto absDist = fabs(x1_delta[i]);
         if (absDist > highestDistance) highestDistance = absDist;
     }
+    assert(highestDistance != 0.0f);
     vec3 normalizedDistance = x1_delta / vec3(highestDistance);
     result = edgePoint * normalizedDistance;
 
@@ -348,7 +350,8 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
     printf("* Other Center (%f, %f, %f)\n", object->center().x, object->center().y, object->center().z);
     printf("* Center Distance (%f, %f, %f)\n", fabs(object->center().x - center_.x), fabs(object->center().y - center_.y), fabs(object->center().z - center_.z));
     printf("* Projection (%f, %f, %f)\n", center_.x + result.x, center_.y + result.y, center_.z + result.z);
-    printf("* Edge Point is (%f, %f, %f)\n", result.x, result.y, result.z);
+    printf("* Edge Point is (%f, %f, %f)\n", edgePoint.x, edgePoint.y, edgePoint.z);
+    printf("* Result (%f, %f, %f)\n", result.x, result.y, result.z);
     printf("* Final Velocity (%f, %f, %f)\n", velocity.x, velocity.y, velocity.z);
     printf("* Offset (%f, %f, %f)\n", offset_.x, offset_.y, offset_.z);
     printf("* Other Offset (%f, %f, %f)\n", object->offset().x, object->offset().y, object->offset().z);

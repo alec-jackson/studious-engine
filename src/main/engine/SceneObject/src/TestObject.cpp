@@ -27,12 +27,14 @@ TestObject::TestObject(string name) : SceneObject(ObjectType::UNDEFINED, name, n
 TestObject::TestObject(std::shared_ptr<Polygon> polygon, string name) : SceneObject(ObjectType::UNDEFINED, name, &dummyGfx),
     polygon_ { polygon }
 {
+    scale_ = 1.0f;
 }
 
 void TestObject::render() {
 }
 
 void TestObject::update() {
+    SceneObject::updateModelMatrices();
 }
 
 void TestObject::createCollider() {

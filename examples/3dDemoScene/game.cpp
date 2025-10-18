@@ -121,7 +121,7 @@ int runtime(GameInstance *currentGame) {
         currentGame->loadSound(sfx.first, sfx.second);
     }
     // Start the background music
-    currentGame->playSound("bg_music", 1, 60);
+    //currentGame->playSound("bg_music", 1, 60);
 
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
@@ -168,7 +168,6 @@ int runtime(GameInstance *currentGame) {
     companion3->setRenderPriority(RENDER_PRIOR_LOW - 1);
     companion4->setRenderPriority(RENDER_PRIOR_LOW - 1);
     playerRef->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    printf("RIGHT BEFORE CREATE COLLIDER\n");
     playerRef->createCollider();
 
     cout << "Creating wolf\n";
@@ -301,6 +300,7 @@ int runtime(GameInstance *currentGame) {
 */
 int mainLoop(gameInfo* gamein) {
     Uint64 begin, end;
+    int collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
@@ -312,7 +312,14 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
-
+        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
+        string collMessage;
+        if (collision == 1) {
+            collMessage = "Contact: True";
+        } else {
+            collMessage = "Contact: False";
+        }
+        collDebugText->setMessage(collMessage);
         end = SDL_GetPerformanceCounter();
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         if (SHOW_FPS) {  // use sampleSize to find average FPS
@@ -329,7 +336,6 @@ int mainLoop(gameInfo* gamein) {
                 fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
-        //usleep(100000); // Sleep for 1 second - render at 1 FPS
     }
     return 0;
 }

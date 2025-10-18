@@ -47,6 +47,7 @@ class ColliderObject : public SceneObject {
     const mat4 &pTranslateMatrix_;
     const mat4 &pScaleMatrix_;
     const mat4 &pVpMatrix_;
+    const vec3 &pPos_;
     int mvpId_;
     inline static std::atomic<bool> drawCollider_;
 };

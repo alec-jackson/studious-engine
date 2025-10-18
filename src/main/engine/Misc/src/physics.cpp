@@ -33,6 +33,7 @@ void PhysicsObject::basePosUpdate() {
 
     // Update the position of the target object
     target->setPosition(pos);
+    target->updateModelMatrices();
 #if (PHYS_TRACE == 1)
     printf("PhysicsObject::basePosUpdate: Updated position is %f, %f, %f\n", pos.x, pos.y, pos.z);
 #endif
@@ -83,25 +84,26 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
 
             // Calculate the final velocity of the main object
             auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+#if (PHYS_TRACE == 1)
             printf("Collision %s vs %s\n", target->objectName().c_str(), obj.second->target->objectName().c_str());
             printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
             printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
+#endif
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
+            // Do we even need to lock this object?
             objLock.lock();
             velocityDelta += v1f;
-            // How big of a critical section are we going to need? Can we avoid one? - Yes. Position not modified beforehand.
             positionDelta = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), v1f);
-            objLock.unlock();
             hasCollision = true;
-            /*
-             * I'm realizing that kinematic collisions should also move objects to the edge clipped distance
-             */
+            objLock.unlock();
         }
     }
 }
 
 void PhysicsObject::finalizeCollisions() {
+    printf("PhysicsObject::finalizeCollisions: for %s\n", target->objectName().c_str());
+    printf("PhysicsObject::finalizeCollisions: Has collision %d\n", hasCollision);
     if (!hasCollision) return;
     //auto prePos = position;
     // Flush previous pos/vel/accel to object
@@ -112,6 +114,8 @@ void PhysicsObject::finalizeCollisions() {
     flushPosition();
     runningTime = 0.0f;
     velocity = velocityDelta;
+    printf("PhysicsObject::finalizeCollisions: Updated velocity for %s (%f, %f, %f)\n", target->objectName().c_str(),
+        velocity.x, velocity.y, velocity.z);
     acceleration = vec3(0.0f);
     velocityDelta = vec3(0.0f);
     positionDelta = vec3(0.0f);
@@ -158,7 +162,7 @@ PhysicsResult PhysicsController::doWork() {
                 break;
             }
             case PhysicsWorkType::FINALIZE: {
-                physObj->finalizeCollisions(); // Can use an assert to check for collisions post-update
+                physObj->finalizeCollisions();  // Can use an assert to check for collisions post-update
                 break;
             }
             default:
