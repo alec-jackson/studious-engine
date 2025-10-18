@@ -66,7 +66,6 @@ void ColliderObject::updateCollider() {
     for (int i = 0; i < 4; i++) {
         offset_[i] = center_[i] - minOffset[i];
     }
-    printf("ColliderObject::updateCollider: offset post update (%f, %f, %f, %f)\n", offset_.x, offset_.y, offset_.z, offset_.w);
 }
 
 /**

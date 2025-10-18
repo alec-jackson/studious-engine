@@ -614,7 +614,6 @@ int GameInstance::removeSceneObject(string objectName) {
  is no collision. Otherwise, -1 is returned.
 */
 int GameInstance::getCollision(SceneObject *object1, SceneObject *object2) {
-    printf("GameInstance::getCollision: Enter\n");
     /* Check if both objects support colliders */
     ColliderExt *obj1, *obj2;
     obj1 = dynamic_cast<ColliderExt *>(object1);

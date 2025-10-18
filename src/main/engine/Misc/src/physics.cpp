@@ -102,8 +102,10 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
 }
 
 void PhysicsObject::finalizeCollisions() {
+#if (PHYS_TRACE == 1)
     printf("PhysicsObject::finalizeCollisions: for %s\n", target->objectName().c_str());
     printf("PhysicsObject::finalizeCollisions: Has collision %d\n", hasCollision);
+#endif
     if (!hasCollision) return;
     //auto prePos = position;
     // Flush previous pos/vel/accel to object
@@ -114,8 +116,10 @@ void PhysicsObject::finalizeCollisions() {
     flushPosition();
     runningTime = 0.0f;
     velocity = velocityDelta;
+#if (PHYS_TRACE == 1)
     printf("PhysicsObject::finalizeCollisions: Updated velocity for %s (%f, %f, %f)\n", target->objectName().c_str(),
         velocity.x, velocity.y, velocity.z);
+#endif
     acceleration = vec3(0.0f);
     velocityDelta = vec3(0.0f);
     positionDelta = vec3(0.0f);
