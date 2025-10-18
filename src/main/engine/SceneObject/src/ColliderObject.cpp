@@ -74,12 +74,12 @@ void ColliderObject::updateCollider() {
  * @param object other collider to check collision with
  * @return int -1 if error, 0 for no collision, 1 for colliding
  */
-int ColliderObject::getCollision(ColliderObject *object) {
+CollisionResult ColliderObject::getCollision(ColliderObject *object) {
     // Center = critical section?
     int matching = 0;  // Number of axis that have collided
     if (object == nullptr) {
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";
-        return -1;
+        return CollisionResult::ERROR;
     }
 
     // Check if the two objects are currently colliding
@@ -90,8 +90,8 @@ int ColliderObject::getCollision(ColliderObject *object) {
             matching++;
         }
     }
-    if (matching == 3) return 1;
-    return 0;
+    if (matching == 3) return CollisionResult::COLLIDING;
+    return CollisionResult::NOT_COLLIDING;
 }
 
 void ColliderObject::update() {

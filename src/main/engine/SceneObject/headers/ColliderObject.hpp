@@ -19,6 +19,12 @@
 #include <GfxController.hpp>
 #include <common.hpp>
 
+enum class CollisionResult {
+   ERROR = -1,
+   NOT_COLLIDING,
+   COLLIDING,
+};
+
 class ColliderObject : public SceneObject {
  public:
     ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner);
@@ -27,7 +33,7 @@ class ColliderObject : public SceneObject {
     void render() override;
     void update() override;
     void createCollider();
-    int getCollision(ColliderObject *object);
+    CollisionResult getCollision(ColliderObject *object);
     float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
     inline vec4 center() { return center_; }
     inline vec4 offset() { return offset_; }

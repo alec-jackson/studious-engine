@@ -617,7 +617,7 @@ TEST_F(GivenTwoKinematicObjects, WhenObjectsCollide_ThenObjectsMovedToEdgePoint)
 
     // Ensure that the objects are NO LONGER colliding after clipping to the edge point
     auto isColl = testObject_->getCollider()->getCollision(otherObject_->getCollider());
-    ASSERT_FALSE(isColl);
+    ASSERT_EQ(CollisionResult::NOT_COLLIDING, isColl);
 }
 
 

@@ -2,8 +2,15 @@
 
 ColliderObject *ColliderExt::getCollider() {
     auto res = collider_.get();
-    if (nullptr != res) {
-        res->updateCollider();
-    }
+    // So, we don't actually want to update the collider here. When run in parallel, there are writes
+    // happening to the center_ mid-read.
     return res;
+}
+
+CollisionResult ColliderExt::getCollision(ColliderExt *other) {
+    return collider_->getCollision(other->getCollider());
+}
+
+void ColliderExt::updateCollider() {
+    if (collider_.get() != nullptr) collider_->updateCollider();
 }

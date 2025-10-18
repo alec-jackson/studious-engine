@@ -34,6 +34,7 @@ void PhysicsObject::basePosUpdate() {
     // Update the position of the target object
     target->setPosition(pos);
     target->updateModelMatrices();
+    if (targetCollider) targetCollider->updateCollider();
 #if (PHYS_TRACE == 1)
     printf("PhysicsObject::basePosUpdate: Updated position is %f, %f, %f\n", pos.x, pos.y, pos.z);
 #endif
@@ -74,7 +75,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
          * If no objects are kinematic, then they phase through each other.
          */
         // What do we do when we see a collision?
-        if (this->targetCollider->getCollider()->getCollision(obj.second.get()->targetCollider->getCollider()) == 0) continue;
+        if (targetCollider->getCollision(obj.second.get()->targetCollider) != CollisionResult::COLLIDING) continue;
         if (isKinematic && obj.second.get()->isKinematic) {
             // All of the speed will be in acceleration, so we need to account for that...
             auto v1 = velocity + (acceleration * vec3(runningTime));
@@ -107,9 +108,6 @@ void PhysicsObject::finalizeCollisions() {
     printf("PhysicsObject::finalizeCollisions: Has collision %d\n", hasCollision);
 #endif
     if (!hasCollision) return;
-    //auto prePos = position;
-    // Flush previous pos/vel/accel to object
-    // Somehow the velocity is freaking out. We want to only consider the NEW velocity from the bounce
     auto truePos = target->getPosition();
 
     target->setPosition(truePos + positionDelta);
@@ -125,8 +123,7 @@ void PhysicsObject::finalizeCollisions() {
     positionDelta = vec3(0.0f);
     hasCollision = false;
     target->updateModelMatrices();
-    // What was the point of this assert?
-    //assert(prePos.y == position.y);
+    if (targetCollider) targetCollider->updateCollider();
 }
 
 // Sleep the thread on the work queue until work becomes available
