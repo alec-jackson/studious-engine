@@ -312,7 +312,7 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
-        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
+        collision = currentGame->getCollision(playerRef, wolfRef);
         string collMessage;
         if (collision == 1) {
             collMessage = "Contact: True";

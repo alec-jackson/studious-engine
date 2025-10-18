@@ -27,7 +27,7 @@ class ColliderObject : public SceneObject {
     void render() override;
     void update() override;
     void createCollider();
-    int getCollision(ColliderObject *object, vec3 moving);
+    int getCollision(ColliderObject *object);
     float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
     inline vec4 center() { return center_; }
     inline vec4 offset() { return offset_; }

@@ -74,7 +74,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
          * If no objects are kinematic, then they phase through each other.
          */
         // What do we do when we see a collision?
-        if (this->targetCollider->getCollider()->getCollision(obj.second.get()->targetCollider->getCollider(), vec3(0)) == 0) continue;
+        if (this->targetCollider->getCollider()->getCollision(obj.second.get()->targetCollider->getCollider()) == 0) continue;
         if (isKinematic && obj.second.get()->isKinematic) {
             // All of the speed will be in acceleration, so we need to account for that...
             auto v1 = velocity + (acceleration * vec3(runningTime));
@@ -120,6 +120,7 @@ void PhysicsObject::finalizeCollisions() {
     velocityDelta = vec3(0.0f);
     positionDelta = vec3(0.0f);
     hasCollision = false;
+    target->updateModelMatrices();
     // What was the point of this assert?
     //assert(prePos.y == position.y);
 }

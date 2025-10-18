@@ -219,7 +219,7 @@ class GameInstance {
     SceneObject *getSceneObject(string objectName);
     int removeSceneObject(string objectName);
     /* NOTE - getCollision functions are for convenience and will be deprecated with the physics controller */
-    int getCollision(SceneObject *object1, SceneObject *object2, vec3 moving);
+    int getCollision(SceneObject *object1, SceneObject *object2);
     void setLuminance(float luminanceValue);
     void setDirectionalLight(vec3 directionalLight);
     void basicCollision(GameInstance* gameInstance);

@@ -70,13 +70,12 @@ void ColliderObject::updateCollider() {
 }
 
 /**
- * @brief Checks if this collider is colliding or about to collide with another collider
+ * @brief Checks if this collider is colliding with another collider.
  *
  * @param object other collider to check collision with
- * @param moving the current object's translation
- * @return int -1 if error, 0 for no collision, 1 for colliding, 2 for about to collide
+ * @return int -1 if error, 0 for no collision, 1 for colliding
  */
-int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
+int ColliderObject::getCollision(ColliderObject *object) {
     // Center = critical section?
     int matching = 0;  // Number of axis that have collided
     if (object == nullptr) {
@@ -84,7 +83,7 @@ int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
         return -1;
     }
 
-    // First check if the two objects are currently colliding
+    // Check if the two objects are currently colliding
     for (int i = 0; i < 3; i++) {
         float delta = abs(object->center()[i] - this->center()[i]);
         float range = this->offset()[i] + object->offset()[i];
@@ -93,16 +92,6 @@ int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
         }
     }
     if (matching == 3) return 1;
-    matching = 0;
-    for (int i = 0; i < 3; i++) {
-        float delta = abs(object->center()[i] - this->center()[i] + moving[i]);
-        float range = this->offset()[i] + object->offset()[i];
-        if (range >= delta) {
-            matching++;
-        }
-    }
-    // Return if the objects are about to collide
-    if (matching == 3) return 2;
     return 0;
 }
 
@@ -241,7 +230,53 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 velocity) {
     vec3 deltaBase = object->center() - center_;
     vec3 delta = abs(deltaBase);
     vec3 range = offset_ + object->offset();
-    vec3 edgePoint = range - delta;
+    vec3 edgePoint = (range - delta) / 2.0f;
+    // If we're getting the edge point, it's a safe assumption that the objects are already colliding...
+    // We only want to know how far THIS OBJECT should move to get out of the other object. The lazy
+    // method would be to just divide the edge point magnitude by 2... But can we do something better?
+
+    /**
+     * If we go back to a scenario where two boxes of different sizes are colliding:
+     * |||||||||||||
+     * |           | 
+     * |  b1   |||||||||||
+     * |       |   |     |
+     * |||||||||||||     |
+     *         |         |
+     *         |   b2    |
+     *         |         |
+     *         |||||||||||
+     * 
+     * In this scenario let's say that b1 has an offset of [5, 3], and b2 has an offset of [4, 6]. Let's also
+     * pretend that the center of b1 is at (0,0), and the center of b2 is at (3, -3). The current edgePoint
+     * calculation would tell us:
+     * 
+     * delta: (3, 3)
+     * x = fabs(0 - 3) = 3
+     * y = fabs(0 - -3) = 3
+     * 
+     * range: (9, 9)
+     * x = 5 + 4 = 9
+     * y = 3 + 6 = 9
+     * 
+     * Edge Point:
+     * range - delta = (9, 9) - (3, 3) = (6, 6)
+     * 
+     * This tells us that at most, we need to step out by 6 units in either direction. Later on we apply a normalized distance
+     * vector to this that adjusts the amount of each direction we'll need to go in to "step out".
+     * 
+     * The biggest problem with this approach is that both objects step back, so when they both step back the distance
+     * required to leave the other object, they actually move way farther than what is necessary. This creates a jerky
+     * motion between object updates.
+     * 
+     * Actually, re-thinking this, I think dividing the edge point by 2 is a fair answer. The edge point of 6 already tells
+     * us the distance we need to travel to step out of the other object, so we just need to not do this twice...
+     * 
+     * Now that we're actually clipping to the real edge of the object, we should consider the potential for repeated collisions
+     * since the objects will be so close to one another. What does this look like in practice? From what I can tell this
+     * actually seems viable. If any problems occur here, uncomment out the line below and set a new edge point percent scalar
+     * value. I don't really see any problems, but just in case.
+     */
     //edgePoint *= EDGE_POINT_PERCENT_SCALAR;
     /* There is a problem with the current algorithm :
      *

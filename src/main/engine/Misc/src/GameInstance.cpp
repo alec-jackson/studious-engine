@@ -613,8 +613,7 @@ int GameInstance::removeSceneObject(string objectName) {
  currently colliding, 2 if the two objects are about to collide, or 0 if there
  is no collision. Otherwise, -1 is returned.
 */
-int GameInstance::getCollision(SceneObject *object1, SceneObject *object2,
-    vec3 moving) {
+int GameInstance::getCollision(SceneObject *object1, SceneObject *object2) {
     printf("GameInstance::getCollision: Enter\n");
     /* Check if both objects support colliders */
     ColliderExt *obj1, *obj2;
@@ -626,7 +625,7 @@ int GameInstance::getCollision(SceneObject *object1, SceneObject *object2,
             object1->objectName().c_str(), object2->objectName().c_str());
         return 0;
     }
-    return obj1->getCollider()->getCollision(obj2->getCollider(), moving);
+    return obj1->getCollider()->getCollision(obj2->getCollider());
 }
 
 /*
