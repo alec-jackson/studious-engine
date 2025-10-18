@@ -185,7 +185,12 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
         // Create a sample test object and add it to the physics controller
         testObject_ = std::make_unique<TestObject>(testObjectName);
         testObject_.get()->setPosition(vec3(0));
-        PhysicsParams params(false, false, 0.0f, testMassKg);
+        PhysicsParams params = {
+            .isKinematic = false,
+            .obeyGravity = false,
+            .elasticity = 0.0f,
+            .mass = testMassKg
+        };
         physicsController_->addSceneObject(testObject_.get(), params);
     }
     void TearDown() override {
@@ -535,10 +540,12 @@ class GivenTwoKinematicObjects: public GivenPhysicsControllerPositionPipeline {
         testObject_->createCollider();
 
         // Use the same generic params for each object
-        PhysicsParams params(true, // is kinematic
-            false, // obey gravity
-            0.0f, // elasticity
-            testMassKg);  // mass
+        PhysicsParams params = {
+            .isKinematic = true,
+            .obeyGravity = false,
+            .elasticity = 0.0f,
+            .mass = testMassKg
+        };
         physicsController_->addSceneObject(testObject_.get(), params);
         physicsController_->addSceneObject(otherObject_.get(), params);
     }

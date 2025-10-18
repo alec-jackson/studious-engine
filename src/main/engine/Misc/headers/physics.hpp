@@ -96,8 +96,6 @@ struct PhysicsParams {
     bool                obeyGravity;
     float               elasticity;
     float               mass;
-    inline PhysicsParams(bool isKinematic, bool obeyGravity, float elasticity, float mass) :
-        isKinematic { isKinematic }, obeyGravity { obeyGravity }, elasticity { elasticity }, mass { mass } {}
 };
 
 // External - published to subscribers

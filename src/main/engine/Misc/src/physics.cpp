@@ -76,7 +76,8 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
          */
         // What do we do when we see a collision?
         if (targetCollider->getCollision(obj.second.get()->targetCollider) != CollisionResult::COLLIDING) continue;
-        if (isKinematic && obj.second.get()->isKinematic) {
+        // Don't update non-kinematic objects
+        if (isKinematic) {
             // All of the speed will be in acceleration, so we need to account for that...
             auto v1 = velocity + (acceleration * vec3(runningTime));
             auto v2 = obj.second->velocity + (obj.second->acceleration * vec3(obj.second->runningTime));
@@ -84,7 +85,11 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             auto m2 = obj.second->mass;
 
             // Calculate the final velocity of the main object
-            auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+            // Only change velocity if the other object is kinematic
+            auto v1f = v1;
+            if (obj.second->isKinematic) {
+                v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+            }
 #if (PHYS_TRACE == 1)
             printf("Collision %s vs %s\n", target->objectName().c_str(), obj.second->target->objectName().c_str());
             printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
@@ -93,9 +98,22 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
+            auto edgePoint = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), v1f);
+            // This is messy, so change it later
+            if (!obj.second->isKinematic) {
+                // We'll use the position delta to determine where to kill velocity for non-kin collisions
+                // Any velocity NOT going in the direction of the edge point should be killed.
+                // float highestEp = 0.0f;
+                // for (int i = 0; i < 3; ++i) {
+                //     auto absDist = fabs(positionDelta[i]);
+                //     if (absDist > highestEp) highestEp = absDist;
+                // }
+                // vec3 normalizedEp = positionDelta / vec3(highestEp);
+                v1f = vec3(0.0f);
+            }
             objLock.lock();
             velocityDelta += v1f;
-            positionDelta = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), v1f);
+            positionDelta = edgePoint;
             hasCollision = true;
             objLock.unlock();
         }

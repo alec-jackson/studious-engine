@@ -170,6 +170,7 @@ int runtime(GameInstance *currentGame) {
     playerRef->setRenderPriority(RENDER_PRIOR_LOW - 1);
     playerRef->createCollider();
 
+
     cout << "Creating wolf\n";
 
     auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
@@ -196,6 +197,15 @@ int runtime(GameInstance *currentGame) {
     animationController.get()->addKeyFrame(wolfObject, kf1);
 
     wolfObject->createCollider();
+
+    PhysicsParams parms = {
+        .isKinematic = false,
+        .elasticity = 0.0f,
+        .mass = 10.0f,
+        .obeyGravity = false
+    };
+    // add the wolf object to physics controller as non-kinematic
+    physicsController->addSceneObject(wolfObject, parms);
     wolfRef = wolfObject;
 
     // Configure some in-game text objects

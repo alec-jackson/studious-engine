@@ -384,7 +384,13 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 };
                 auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
                 ac->addKeyFrame(bulletObj, bkf);
-                PhysicsParams params(true, false, 0.0f, 1.0f);
+
+                PhysicsParams params = {
+                    .isKinematic = true,
+                    .obeyGravity = false,
+                    .elasticity = 0.0f,
+                    .mass = 1.0f
+                };
                 pc->addSceneObject(bulletObj, params);
                 // Convert angles[1] to a direction????
                 auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
