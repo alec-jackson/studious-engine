@@ -9,6 +9,7 @@
  *
  */
 
+#include "ColliderObject.hpp"
 #include <chrono>
 #include <mutex>
 #include <physics.hpp>
@@ -75,7 +76,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
          * If no objects are kinematic, then they phase through each other.
          */
         // What do we do when we see a collision?
-        if (targetCollider->getCollision(obj.second.get()->targetCollider) != CollisionResult::COLLIDING) continue;
+        if (targetCollider->getCollision(obj.second.get()->targetCollider) != ALL_MATCH) continue;
         // Don't update non-kinematic objects
         if (isKinematic) {
             // All of the speed will be in acceleration, so we need to account for that...
@@ -98,7 +99,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
-            auto edgePoint = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), v1f);
+            auto edgePoint = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), obj.second->isKinematic);
             // This is messy, so change it later
             if (!obj.second->isKinematic) {
                 // We'll use the position delta to determine where to kill velocity for non-kin collisions

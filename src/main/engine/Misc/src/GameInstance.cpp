@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "ColliderObject.hpp"
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
@@ -624,7 +625,7 @@ int GameInstance::getCollision(SceneObject *object1, SceneObject *object2) {
             object1->objectName().c_str(), object2->objectName().c_str());
         return 0;
     }
-    return obj1->getCollision(obj2) == CollisionResult::COLLIDING;
+    return obj1->getCollision(obj2);
 }
 
 /*

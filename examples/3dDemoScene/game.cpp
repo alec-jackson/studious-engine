@@ -10,6 +10,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "ColliderObject.hpp"
 #include "GameInstance.hpp"
 #include "SceneObject.hpp"
 #include <string>
@@ -322,9 +323,12 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
+        playerRef->getCollider()->updateCollider();
+        wolfRef->getCollider()->updateCollider();
         collision = currentGame->getCollision(playerRef, wolfRef);
+        printf("MAIN: Collision %d\n", collision);
         string collMessage;
-        if (collision == 1) {
+        if (collision == ALL_MATCH) {
             collMessage = "Contact: True";
         } else {
             collMessage = "Contact: False";

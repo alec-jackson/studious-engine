@@ -4,7 +4,7 @@
 class ColliderExt {
  public:
     ColliderObject *getCollider();
-    CollisionResult getCollision(ColliderExt *other);
+    int getCollision(ColliderExt *other);
     void updateCollider();
     virtual void createCollider() = 0;
  protected:

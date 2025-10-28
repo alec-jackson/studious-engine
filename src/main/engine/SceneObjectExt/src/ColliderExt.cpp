@@ -7,7 +7,7 @@ ColliderObject *ColliderExt::getCollider() {
     return res;
 }
 
-CollisionResult ColliderExt::getCollision(ColliderExt *other) {
+int ColliderExt::getCollision(ColliderExt *other) {
     return collider_->getCollision(other->getCollider());
 }
 

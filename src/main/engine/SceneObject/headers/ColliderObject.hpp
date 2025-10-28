@@ -19,11 +19,12 @@
 #include <GfxController.hpp>
 #include <common.hpp>
 
-enum class CollisionResult {
-   ERROR = -1,
-   NOT_COLLIDING,
-   COLLIDING,
-};
+#define X_MATCH 1
+#define Y_MATCH 2
+#define Z_MATCH 4
+#define ALL_MATCH 7
+#define NO_MATCH 0
+
 
 class ColliderObject : public SceneObject {
  public:
@@ -33,14 +34,14 @@ class ColliderObject : public SceneObject {
     void render() override;
     void update() override;
     void createCollider();
-    CollisionResult getCollision(ColliderObject *object);
+    int getCollision(ColliderObject *object);
     float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
     inline vec4 center() { return center_; }
     inline vec4 offset() { return offset_; }
     ~ColliderObject();
     inline static void setDrawCollider(bool enable) { drawCollider_ = enable; }
     inline static bool getDrawCollider() { return drawCollider_; }
-    vec3 getEdgePoint(ColliderObject *object, vec3 velocity);
+    vec3 getEdgePoint(ColliderObject *object, bool bothKin);
 
  private:
     vec4 offset_;
