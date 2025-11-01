@@ -80,8 +80,10 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
         int collState = targetCollider->getCollision(obj.second.get()->targetCollider);
         if (collState != ALL_MATCH) continue;
         // Figure out the change in axis (which axis we are now colliding on)
-        int prevCollState = ColliderExt::getCollisionRaw(obj.second->prevPos,
-            obj.second->targetCollider, obj.second->prevPos, obj.second->targetCollider);
+        int prevCollState = ColliderExt::getCollisionRaw(prevPos,
+            targetCollider, obj.second->prevPos, obj.second->targetCollider);
+        int deltaAxis = collState ^ prevCollState;
+        printf("delta axis %d\n", deltaAxis);
         // Test the collision with the two object's previous positions to get the collstate delta.
 
         // If the objects match, then we need to know what the deltaAxis were...
@@ -119,7 +121,23 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
                 // }
                 // vec3 normalizedEp = positionDelta / vec3(highestEp);
                 v1f = vec3(0.0f);
+
             }
+            if (deltaAxis == NO_MATCH) {
+                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(obj.second->targetCollider->getCollider(), obj.second->isKinematic);
+            } else {
+                // Make edge point zero except for delta axis directions.
+                // This is a basic approach - revisit later
+                for (int i = 0; i < 3; ++i) {
+                    // If the nth bit is set, zero out edge point
+                    if (!(deltaAxis & (1<<i))) {
+                        edgePoint[i] = 0.0f;
+                    }
+                }
+            }
+            // EDGE CASE: What do you do when the previous state was COLLIDING?
+            // Fall back on position based edge point (OLD)
+
             objLock.lock();
             velocityDelta += v1f;
             positionDelta = edgePoint;

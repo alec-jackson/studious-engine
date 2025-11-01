@@ -36,7 +36,6 @@ class ColliderObject : public SceneObject {
     void createCollider();
     static vec4 createCenter(const mat4 &tm, const mat4 &sm, ColliderObject *col);
     int getCollision(ColliderObject *object);
-    static int getCollisionRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2);
     float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
     inline vec4 center() { return center_; }
     inline vec4 offset() { return offset_; }
@@ -44,6 +43,7 @@ class ColliderObject : public SceneObject {
     inline static void setDrawCollider(bool enable) { drawCollider_ = enable; }
     inline static bool getDrawCollider() { return drawCollider_; }
     vec3 getEdgePoint(ColliderObject *object, bool bothKin);
+    vec3 getEdgePointPosInf(ColliderObject *object, bool bothKin);
     inline const mat4 &pScaleMatrix() { return pScaleMatrix_; }
     inline const vec4 &minPoints() { return minPoints_; }
     inline const vec4 &originalCenter() { return originalCenter_; }

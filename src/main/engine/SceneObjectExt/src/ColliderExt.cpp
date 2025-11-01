@@ -13,10 +13,7 @@ int ColliderExt::getCollision(ColliderExt *other) {
 }
 
 int ColliderExt::getCollisionRaw(vec3 p1, ColliderExt *c1, vec3 p2, ColliderExt *c2) {
-    // Extract colliders from c1 and c2
-    auto co1 = dynamic_cast<ColliderObject *>(c1);
-    auto co2 = dynamic_cast<ColliderObject *>(c2);
-    return ColliderObject::getCollisionRaw(p1, co1, p2, co2);
+    return ColliderObject::getCollisionRaw(p1, c1->getCollider(), p2, c2->getCollider());
 }
 
 void ColliderExt::updateCollider() {

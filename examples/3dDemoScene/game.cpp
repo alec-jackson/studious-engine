@@ -201,9 +201,9 @@ int runtime(GameInstance *currentGame) {
 
     PhysicsParams parms = {
         .isKinematic = false,
+        .obeyGravity = false,
         .elasticity = 0.0f,
         .mass = 10.0f,
-        .obeyGravity = false
     };
     // add the wolf object to physics controller as non-kinematic
     physicsController->addSceneObject(wolfObject, parms);
@@ -316,6 +316,8 @@ int mainLoop(gameInfo* gamein) {
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
+    // auto woc = dynamic_cast<ColliderExt *>(wolfRef);
+    // auto poc = dynamic_cast<ColliderExt *>(playerRef);
     while (!currentGame->isShutDown()) {
         begin = SDL_GetPerformanceCounter();
         if (currentGame->pollInput(GameInput::QUIT)) currentGame->shutdown();
@@ -326,6 +328,8 @@ int mainLoop(gameInfo* gamein) {
         playerRef->getCollider()->updateCollider();
         wolfRef->getCollider()->updateCollider();
         collision = currentGame->getCollision(playerRef, wolfRef);
+
+        //assert (ColliderExt::getCollisionRaw(wolfRef->getPosition(), woc, playerRef->getPosition(), poc) != ALL_MATCH);
         printf("MAIN: Collision %d\n", collision);
         string collMessage;
         if (collision == ALL_MATCH) {

@@ -63,9 +63,7 @@ void ColliderObject::updateCollider() {
     center_ = pTranslateMatrix_ * pScaleMatrix_ * originalCenter_;
     vec4 minOffset = pTranslateMatrix_ * pScaleMatrix_ * minPoints_;
     // Use rescaled edge points to calculate offset on the fly!
-    for (int i = 0; i < 4; i++) {
-        offset_[i] = center_[i] - minOffset[i];
-    }
+    offset_ = center_ - minOffset;
 }
 
 /**
@@ -115,13 +113,13 @@ int ColliderObject::getCollisionRaw(vec3 p1, ColliderObject *c1, vec3 p2, Collid
 
     auto tm2 = glm::translate(mat4(1.0f), p2);
     auto sm2 = c2->pScaleMatrix();
-    auto center2 = createCenter(tm2, sm2, c1);
+    auto center2 = createCenter(tm2, sm2, c2);
     auto offset2 = createOffset(tm2, sm2, center2, c2);
 
     auto delta = center1 - center2;
     auto range = offset1 + offset2;
 
-    for (uint i = 0; i < sizeof(delta); ++i) {
+    for (uint i = 0; i < 3; ++i) {
         if (range[i] > abs(delta[i])) {
             matching |= (1<<i);
         }
@@ -266,166 +264,8 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, bool bothKin) {
     vec3 range = offset_ + object->offset();
     vec3 edgePoint = (range - delta);
     if (bothKin) edgePoint /= 2.0f;
-    // If we're getting the edge point, it's a safe assumption that the objects are already colliding...
-    // We only want to know how far THIS OBJECT should move to get out of the other object. The lazy
-    // method would be to just divide the edge point magnitude by 2... But can we do something better?
 
-    /**
-     * If we go back to a scenario where two boxes of different sizes are colliding:
-     * |||||||||||||
-     * |           |
-     * |  b1   |||||||||||
-     * |       |   |     |
-     * |||||||||||||     |
-     *         |         |
-     *         |   b2    |
-     *         |         |
-     *         |||||||||||
-     *
-     * In this scenario let's say that b1 has an offset of [5, 3], and b2 has an offset of [4, 6]. Let's also
-     * pretend that the center of b1 is at (0,0), and the center of b2 is at (3, -3). The current edgePoint
-     * calculation would tell us:
-     *
-     * delta: (3, 3)
-     * x = fabs(0 - 3) = 3
-     * y = fabs(0 - -3) = 3
-     *
-     * range: (9, 9)
-     * x = 5 + 4 = 9
-     * y = 3 + 6 = 9
-     *
-     * Edge Point:
-     * range - delta = (9, 9) - (3, 3) = (6, 6)
-     *
-     * This tells us that at most, we need to step out by 6 units in either direction. Later on we apply a normalized distance
-     * vector to this that adjusts the amount of each direction we'll need to go in to "step out".
-     *
-     * The biggest problem with this approach is that both objects step back, so when they both step back the distance
-     * required to leave the other object, they actually move way farther than what is necessary. This creates a jerky
-     * motion between object updates.
-     *
-     * Actually, re-thinking this, I think dividing the edge point by 2 is a fair answer. The edge point of 6 already tells
-     * us the distance we need to travel to step out of the other object, so we just need to not do this twice...
-     *
-     * Now that we're actually clipping to the real edge of the object, we should consider the potential for repeated collisions
-     * since the objects will be so close to one another. What does this look like in practice? From what I can tell this
-     * actually seems viable. If any problems occur here, uncomment out the line below and set a new edge point percent scalar
-     * value. I don't really see any problems, but just in case.
-     */
-    //edgePoint *= 1.05f; //EDGE_POINT_PERCENT_SCALAR;
-    /* There is a problem with the current algorithm :
-     *
-     * Considering the direction of the velocity. When an object bounces off of another,
-     * both objects launch off in their own direction. The velocity itself will describe the angle...
-     *
-     * Rather than finding the edge point by just moving the object to the collider's boundary,
-     * let's consider the following algorithm:
-     *
-     * velocity = <v1, v2, v3>
-     *
-     * What is the highest velocity in the vector (abs val)? If it's V1, then normalize the other
-     * velocities by this value in a new vector (normalized velocity):
-     *
-     * // First filter out velocities of zero to avoid div by zero errors
-     *
-     * normalizedVelocity = <v1/abs(v1), v1/abs(v1), v1/abs(v1)>
-     *
-     * Then multiply this by the edge point. The zeroes will not excessively move
-     * the object, while the direction of the bounce, and the amount of the bounce is maintained.
-     *
-     *
-     */
-    // float highestVelocity = 0.0f;
-    // for (int i = 0; i < 3; ++i) {
-    //     auto absVel = fabs(velocity[i]);
-    //     if (absVel > highestVelocity) highestVelocity = absVel;
-    // }
-    // assert(highestVelocity != 0.0f);
-    // vec3 normalizedVelocity = velocity / vec3(highestVelocity);
-    // result = edgePoint * normalizedVelocity;
-
-    /**
-     * The velocity direction solution has a huge problem: What if the resulting collision sees both objects going
-     * in the same direction? This will effectively give both objects the SAME edge point values, causing them to clip
-     * into each other ad infinitum.
-     *
-     * What are the potential solutions here?
-     *
-     * When calculating the resulting direction, we can just check "is this object on the left or right (pos or neg) side
-     * of the other?". So base the resulting edge point's direction for each axis based on whether or not we are on
-     * the right or left side. We still need some kind of scalar to dampen each axis edge point.
-     *
-     * POTENTIAL SOLUTION: Say you have two points:
-     *
-     * |
-     * |    x2 (4, 4)
-     * |
-     * |   x1 (3, 2)
-     * |
-     * _________________________
-     *
-     * Where x1 has an offset of [3, 3], and x2 has an offset of [5, 5]. How do we calculate the edge point? We would
-     * want something like the following:
-     *
-     * First calculate distance on that axis, then find direction. So... Distance + direction = delta :)
-     *
-     * x1_delta = x1 - x2 = (3, 2) - (4, 4) = (-1, -2)
-     *
-     * x2_delta = x2 - x1 = (4, 4) - (3, 2) = (1, 2)
-     *
-     * This alone isn't sufficient. If we applied this transformation to x1 and x2, we would get:
-     *
-     * x1 = (3, 2) + (-1, -2) = (2, 0)
-     * x2 = (4, 4) + (1,   2) = (5, 6)
-     *
-     * When we do a collision check afterwards, we see
-     *
-     * range = fabs(x1 - x2) = (2, 0) - (5, 6) = fabs((-3, -6)) = (3, 6)
-     *
-     * offset sum = offset_x1 + offset_x2 = (3, 3) + (5, 5) = (8, 8)
-     *
-     * range (3, 6) is less than offset sum (8, 8), therefore the objects are still colliding. These values
-     * need to be boosted using the offset values. These values just tell us the actual direction to bounce.
-     *
-     * for each object do:
-     *
-     * Find the axis with the highest distance:
-     * highestDistance = max(delta.x, y, z)
-     * Normalize similar to the velocity method:
-     *
-     * normalizedDistance = <delta.x/highestDistance, delta.y/highestDistance, delta.z/highestDistance>
-     *
-     * This will maintain the direction of the "bounce back" we get from the collision.
-     *
-     * Now we can apply this to the initial edge point vector - the distance we NEED to travel
-     * to get out of collision bounds!
-     *
-     * Okay, so what's going on is the actual delta for the Z axis is higher than the X axis, so that's defining the
-     * direction alone. Instead, why don't we determine direction by "What is actually colliding at this moment?".
-     *
-     * A collision is defined as the distance between two objects being within bounds of both of their offsets.
-     *
-     *
-     * This needs some thought... We need to define the expected behavior, and then implement around that. Time
-     * for some design work and then TDD.
-     *
-     * Maybe non-kinematic collisions will use velocity? Not sure yet, need to think about it a bit more.
-     */
-
-    vec3 x1_delta = center_ - object->center();
-
-    float highestDistance = 0.0f;
-    //int distindex = 0;
-    for (int i = 0; i < 3; ++i) {
-        auto absDist = fabs(x1_delta[i]);
-        if (absDist > highestDistance) {
-            //distindex = i;
-            highestDistance = absDist;
-        }
-    }
-    assert(highestDistance != 0.0f);
-    vec3 normalizedDistance = x1_delta / vec3(highestDistance);
-    result = edgePoint * normalizedDistance;
+    result = edgePoint;
 
     static int collCount;
     printf("--- Collision %d ---\n\n", collCount / 2 + 1);
@@ -441,13 +281,32 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, bool bothKin) {
     printf("* Other Offset (%f, %f, %f)\n", object->offset().x, object->offset().y, object->offset().z);
 
     collCount++;
-    /*
-    printf("This center point %f, %f, %f\n", center_.x, center_.y, center_.z);
-    printf("Other center point is %f, %f, %f\n", object->center().x, object->center().y, object->center().z);
-    printf("This offset %f, %f, %f\n", offset_.x, offset_.y, offset_.z);
-    printf("Other offset %f, %f, %f\n", object->offset().x, object->offset().y, object->offset().z);
-    printf("velocity is %f, %f, %f\n", velocity.x, velocity.y, velocity.z);
-    printf("Edge Point is %f, %f, %f\n", result.x, result.y, result.z);
-    */
+    return result; // Return half - the idea is that the other object will get the other half of this value...
+}
+
+vec3 ColliderObject::getEdgePointPosInf(ColliderObject *object, bool bothKin) {
+    assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
+    // Iterate through each axis
+    vec3 result(0);
+    vec3 deltaBase = object->center() - center_;
+    vec3 delta = abs(deltaBase);
+    vec3 range = offset_ + object->offset();
+    vec3 edgePoint = (range - delta);
+    if (bothKin) edgePoint /= 2.0f;
+
+    vec3 x1_delta = center_ - object->center();
+
+    float highestDistance = 0.0f;
+    //int distindex = 0;
+    for (int i = 0; i < 3; ++i) {
+        auto absDist = fabs(x1_delta[i]);
+        if (absDist > highestDistance) {
+            //distindex = i;
+            highestDistance = absDist;
+        }
+    }
+    assert(highestDistance != 0.0f);
+    vec3 normalizedDistance = x1_delta / vec3(highestDistance);
+    result = edgePoint * normalizedDistance;
     return result; // Return half - the idea is that the other object will get the other half of this value...
 }
