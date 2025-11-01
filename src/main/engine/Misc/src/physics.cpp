@@ -23,6 +23,7 @@
 extern double deltaTime;
 
 void PhysicsObject::basePosUpdate() {
+    prevPos = target->getPosition();
     float cappedTime = CAP_TIME(deltaTime);
     runningTime += cappedTime;
     // Acceleration
@@ -76,7 +77,14 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
          * If no objects are kinematic, then they phase through each other.
          */
         // What do we do when we see a collision?
-        if (targetCollider->getCollision(obj.second.get()->targetCollider) != ALL_MATCH) continue;
+        int collState = targetCollider->getCollision(obj.second.get()->targetCollider);
+        if (collState != ALL_MATCH) continue;
+        // Figure out the change in axis (which axis we are now colliding on)
+        int prevCollState = ColliderExt::getCollisionRaw(obj.second->prevPos,
+            obj.second->targetCollider, obj.second->prevPos, obj.second->targetCollider);
+        // Test the collision with the two object's previous positions to get the collstate delta.
+
+        // If the objects match, then we need to know what the deltaAxis were...
         // Don't update non-kinematic objects
         if (isKinematic) {
             // All of the speed will be in acceleration, so we need to account for that...
@@ -260,6 +268,7 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     auto poPtr = physicsObject.get();
     poPtr->target = sceneObject;
     poPtr->position = sceneObject->getPosition();
+    poPtr->prevPos = vec3(0);
     poPtr->velocity = vec3(0);
     poPtr->acceleration = vec3(0);
     poPtr->isKinematic = params.isKinematic;

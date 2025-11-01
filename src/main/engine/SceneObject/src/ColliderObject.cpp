@@ -81,12 +81,48 @@ int ColliderObject::getCollision(ColliderObject *object) {
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";
         return NO_MATCH;
     }
+    auto delta = object->center() - this->center();
+    auto range = object->offset() + this->offset();
+    for (uint i = 0; i < 3; ++i) {
+        if (range[i] > abs(delta[i])) {
+            matching |= (1<<i);
+        }
+    }
 
-    // Check if the two objects are currently colliding
-    for (int i = 0; i < 3; i++) {
-        float delta = abs(object->center()[i] - this->center()[i]);
-        float range = this->offset()[i] + object->offset()[i];
-        if (range > delta) {
+    return matching;
+}
+
+vec4 ColliderObject::createCenter(const mat4 &tm, const mat4 &sm, ColliderObject *col) {
+    return tm * sm * col->originalCenter();
+}
+
+vec4 ColliderObject::createOffset(const mat4 &tm, const mat4 &sm, const vec4 &center, ColliderObject *col) {
+    vec4 minOffset = tm * sm * col->minPoints();
+    return center - minOffset;
+}
+//float s1, vec3 oc1, vec3 mp1,
+int ColliderObject::getCollisionRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2) {
+    // Center = critical section?
+    int matching = 0;  // Number of axis that have collided
+    if (c1 == nullptr || c2 == nullptr) {
+        cerr << "Error: Cannot get collision for NULL GameObjects!\n";
+        return NO_MATCH;
+    }
+    auto tm1 = glm::translate(mat4(1.0f), p1);
+    auto sm1 = c1->pScaleMatrix();
+    auto center1 = createCenter(tm1, sm1, c1);
+    auto offset1 = createOffset(tm1, sm1, center1, c1);
+
+    auto tm2 = glm::translate(mat4(1.0f), p2);
+    auto sm2 = c2->pScaleMatrix();
+    auto center2 = createCenter(tm2, sm2, c1);
+    auto offset2 = createOffset(tm2, sm2, center2, c2);
+
+    auto delta = center1 - center2;
+    auto range = offset1 + offset2;
+
+    for (uint i = 0; i < sizeof(delta); ++i) {
+        if (range[i] > abs(delta[i])) {
             matching |= (1<<i);
         }
     }
