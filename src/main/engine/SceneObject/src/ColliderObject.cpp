@@ -255,7 +255,7 @@ float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
     return currentMin;
 }
 
-vec3 ColliderObject::getEdgePoint(ColliderObject *object, bool bothKin) {
+vec3 ColliderObject::getEdgePoint(ColliderObject *object) {
     assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
     // Iterate through each axis
     vec3 result(0);
@@ -263,7 +263,6 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, bool bothKin) {
     vec3 delta = abs(deltaBase);
     vec3 range = offset_ + object->offset();
     vec3 edgePoint = (range - delta);
-    if (bothKin) edgePoint /= 2.0f;
 
     result = edgePoint;
 
@@ -284,7 +283,7 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, bool bothKin) {
     return result; // Return half - the idea is that the other object will get the other half of this value...
 }
 
-vec3 ColliderObject::getEdgePointPosInf(ColliderObject *object, bool bothKin) {
+vec3 ColliderObject::getEdgePointPosInf(ColliderObject *object) {
     assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
     // Iterate through each axis
     vec3 result(0);
@@ -292,7 +291,6 @@ vec3 ColliderObject::getEdgePointPosInf(ColliderObject *object, bool bothKin) {
     vec3 delta = abs(deltaBase);
     vec3 range = offset_ + object->offset();
     vec3 edgePoint = (range - delta);
-    if (bothKin) edgePoint /= 2.0f;
 
     vec3 x1_delta = center_ - object->center();
 

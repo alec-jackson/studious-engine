@@ -109,35 +109,36 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
-            auto edgePoint = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), obj.second->isKinematic);
+            auto edgePoint = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider());
             // This is messy, so change it later
-            if (!obj.second->isKinematic) {
-                // We'll use the position delta to determine where to kill velocity for non-kin collisions
-                // Any velocity NOT going in the direction of the edge point should be killed.
-                // float highestEp = 0.0f;
-                // for (int i = 0; i < 3; ++i) {
-                //     auto absDist = fabs(positionDelta[i]);
-                //     if (absDist > highestEp) highestEp = absDist;
-                // }
-                // vec3 normalizedEp = positionDelta / vec3(highestEp);
-                v1f = vec3(0.0f);
-
-            }
             if (deltaAxis == NO_MATCH) {
-                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(obj.second->targetCollider->getCollider(), obj.second->isKinematic);
+                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(obj.second->targetCollider->getCollider());
             } else {
                 // Make edge point zero except for delta axis directions.
                 // This is a basic approach - revisit later
                 for (int i = 0; i < 3; ++i) {
-                    // If the nth bit is set, zero out edge point
+                    // If the nth bit is not set, zero out edge point
                     if (!(deltaAxis & (1<<i))) {
                         edgePoint[i] = 0.0f;
                     }
                 }
             }
-            // EDGE CASE: What do you do when the previous state was COLLIDING?
-            // Fall back on position based edge point (OLD)
-
+            if (!obj.second->isKinematic) {
+                // Kill v1f based on delta axis
+                if (deltaAxis == NO_MATCH) {
+                    v1f = vec3(0.0f);
+                } else {
+                    // TODO: Make this operation a common function
+                    for (int i = 0; i < 3; ++i) {
+                        // If the nth bit is set, zero out velocity
+                        if (deltaAxis & (1<<i)) {
+                            v1f[i] = 0.0f;
+                        }
+                    }
+                }
+            } else {
+                edgePoint /= 2.0f;
+            }
             objLock.lock();
             velocityDelta += v1f;
             positionDelta = edgePoint;
