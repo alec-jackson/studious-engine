@@ -14,6 +14,8 @@
 #include <iostream>
 #include <memory>
 
+#define EPSILON 1e-6
+
 /** @todo Update - this is the old struct info
  * @brief Stores info about a GameObject's internal collider object.
  * @param offset(vec4) The distance between the center of the collider and its edges
@@ -82,7 +84,8 @@ int ColliderObject::getCollision(ColliderObject *object) {
     auto delta = object->center() - this->center();
     auto range = object->offset() + this->offset();
     for (uint i = 0; i < 3; ++i) {
-        if (range[i] > abs(delta[i])) {
+        float res = range[i] - abs(delta[i]);
+        if (range[i] > abs(delta[i]) && abs(res) > EPSILON) {
             matching |= (1<<i);
         }
     }
@@ -120,7 +123,8 @@ int ColliderObject::getCollisionRaw(vec3 p1, ColliderObject *c1, vec3 p2, Collid
     auto range = offset1 + offset2;
 
     for (uint i = 0; i < 3; ++i) {
-        if (range[i] > abs(delta[i])) {
+        float res = range[i] - abs(delta[i]);
+        if (range[i] > abs(delta[i]) && abs(res) > EPSILON) {
             matching |= (1<<i);
         }
     }

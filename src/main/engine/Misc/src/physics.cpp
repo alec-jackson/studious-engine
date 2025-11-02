@@ -66,6 +66,7 @@ void PhysicsObject::fullFlush() {
 
 void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsObject>> &objects) {
     if (nullptr == targetCollider) return;
+    if (!isKinematic) return;
     // Iterate through all other objects - VERY EXPENSIVE!!!
     for (const auto &obj : objects) {
         if (nullptr == obj.second.get()->targetCollider) continue;
@@ -81,7 +82,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
         if (collState != ALL_MATCH) continue;
         // Figure out the change in axis (which axis we are now colliding on)
         int prevCollState = ColliderExt::getCollisionRaw(prevPos,
-            targetCollider, obj.second->prevPos, obj.second->targetCollider);
+            targetCollider, obj.second->target->getPosition(), obj.second->targetCollider);
         int deltaAxis = collState ^ prevCollState;
         printf("delta axis %d\n", deltaAxis);
         printf("prevPos (%f, %f, %f)\n", prevPos.x, prevPos.y, prevPos.z);
@@ -106,6 +107,8 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             printf("Collision %s vs %s\n", target->objectName().c_str(), obj.second->target->objectName().c_str());
             printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
             printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
+            printf("pos: %f, %f, %f\n", target->getPosition().x, target->getPosition().y, target->getPosition().z);
+            printf("prevPos: %f, %f, %f\n", prevPos.x, prevPos.y, prevPos.z);
 #endif
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
@@ -116,6 +119,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             edgePoint *= epSign;
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
+                //assert(0);
                 edgePoint = targetCollider->getCollider()->getEdgePointPosInf(obj.second->targetCollider->getCollider());
             } else {
                 // Make edge point zero except for delta axis directions.
@@ -128,6 +132,13 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
                 }
             }
             if (!obj.second->isKinematic) {
+                printf("edgePoint %f, %f, %f\n", edgePoint.x, edgePoint.y, edgePoint.z);
+                auto projection = edgePoint + target->getPosition();
+                printf("projection %f, %f, %f\n", projection.x, projection.y, projection.z);
+                // If the collision is still occurring, assert...
+                int cs = ColliderExt::getCollisionRaw(edgePoint + target->getPosition(),
+                    targetCollider, obj.second->target->getPosition(), obj.second->targetCollider);
+                assert(cs != ALL_MATCH);
                 // We could modify velocity here, but I honestly don't care about collision spam rn
             } else {
                 edgePoint /= 2.0f;

@@ -808,6 +808,78 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndFa
     ASSERT_NE(ALL_MATCH, isColl);
 }
 
+TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesNoPassthroughNegSign_ThenObjectClipsToExpectedLocation) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 playerVel = vec3(0.0, 1.5f, 0.0f);
+    vec3 playerPos = vec3(0.0f, -2.0f, 0.0f);
+    vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
+    // Because of flushing, set velocity first
+    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setPosition(testObjectName, playerPos);
+    physicsController_->setPosition(mapObjectName, mapPos);
+
+
+    // Expected final positions
+    vec3 expectedPlayerFinalPos = vec3(0.0f, -1.0f, 0.0f);
+    vec3 expectedMapFinalPos = vec3(0.0f, 0.0f, 0.0f);
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    // The second object should be moving, and the first should have a different velocity
+    vec3 actualPlayerFinalPos = testObject_->getPosition();
+    vec3 actualMapFinalPos = mapObject_->getPosition();
+    EXPECT_VEC_EQ(expectedPlayerFinalPos, actualPlayerFinalPos);
+    EXPECT_VEC_EQ(expectedMapFinalPos, actualMapFinalPos);
+
+    // Ensure that the objects are NO LONGER colliding after clipping to the edge point
+    auto isColl = testObject_->getCollider()->getCollision(mapObject_->getCollider());
+    ASSERT_NE(ALL_MATCH, isColl);
+}
+
+TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndRises_ThenObjectRaisesWhenExpected) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 playerVel = vec3(0.0f, 2.5f, 1.0f);
+    vec3 playerPos = vec3(9.5f, -2.0f, 9.5f);
+    vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
+    // Because of flushing, set velocity first
+    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setPosition(testObjectName, playerPos);
+    physicsController_->setPosition(mapObjectName, mapPos);
+
+    // Expected player final position
+    vec3 epfp_update1 = vec3(9.5f, -1.0f, 10.5f);
+    // The object "rolls" off the corner of the surface after the second update
+    vec3 epfp_update2 = vec3(9.5f, 1.5f, 11.5f);
+    vec3 expectedMapFinalPos = vec3(0.0f, 0.0f, 0.0f);
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    // The second object should be moving, and the first should have a different velocity
+    vec3 afp = testObject_->getPosition();
+    vec3 amfp = mapObject_->getPosition();
+    EXPECT_VEC_EQ(epfp_update1, afp);
+    EXPECT_VEC_EQ(expectedMapFinalPos, amfp);
+
+    /* Action 2 */
+    physicsController_->update();
+
+    /* Validation 2 */
+    afp = testObject_->getPosition();
+    amfp = mapObject_->getPosition();
+    EXPECT_VEC_EQ(epfp_update2, afp);
+    EXPECT_VEC_EQ(expectedMapFinalPos, amfp);
+
+    // Ensure that the objects are NO LONGER colliding after clipping to the edge point
+    auto isColl = testObject_->getCollider()->getCollision(mapObject_->getCollider());
+    ASSERT_NE(ALL_MATCH, isColl);
+}
+
 /**
  * @brief Launches google test suite defined in file
  *
