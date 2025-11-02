@@ -22,7 +22,7 @@ extern double deltaTime;
 
 const char *testObjectName = "testObject";
 const char *otherObjectName = "otherObject";
-#define MAP_OBJECT_NAME "mapObject"
+const char *mapObjectName = "mapObject";
 float testMassKg = 5.0f;
 
 // Making this a macro to preserve line number in assert
@@ -195,15 +195,12 @@ class GivenPhysicsControllerPositionPipeline: public ::testing::Test {
         };
         physicsController_->addSceneObject(testObject_.get(), params);
     }
-    void TearDown() override {
-    }
     std::unique_ptr<PhysicsController> physicsController_;
     std::unique_ptr<TestObject> testObject_;
 };
 
 /**
- * @brief Ensures that setting the position in the physics controller updates the target object's position
- * on the next update.
+ * @brief Ensures that setting the position in the physics controller updates the target object's position.
  */
 TEST_F(GivenPhysicsControllerPositionPipeline, WhenPositionUpdateCalled_ThenPositionUpdated) {
     /* Preparation */
@@ -212,7 +209,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenPositionUpdateCalled_ThenPosi
     vec3 expectedPosition = vec3(5.0f, 4.0f, 3.0f);
     testObject_->setPosition(startingPosition);
     physicsController_->setPosition(testObjectName, expectedPosition);
-    ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
+    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 
     /* Action */
     physicsController_->update();
@@ -629,94 +626,115 @@ TEST_F(GivenTwoKinematicObjects, WhenObjectsCollide_ThenObjectsMovedToEdgePoint)
     ASSERT_NE(ALL_MATCH, isColl);
 }
 
-// class GivenKinematicAndNonKinematicObject: public GivenPhysicsControllerPositionPipeline {
-//  protected:
-//     void SetUp() override {
-//         physicsController_ = std::make_unique<PhysicsController>(6);
-//         // Create the polygons for the test objects
-//         basicModel_ = std::make_shared<Polygon>();
-//         basicModel_->vertices = {
-//             { // Dummy vertex points here - just want offset to be 1 and center 0
-//                 -1.0f, -1.0f, -1.0f,  // vertex 1
-//                 1.0f, 1.0f, 1.0f,  // vertex 2
-//             }
-//         };
-//         mapModel_ = std::make_shared<Polygon>();
-//         // This represents a flat X-Z plane that would be used as a map.
-//         mapModel_->vertices = {
-//             {
-//                 -1.0f, 0.0f, -1.0f,
-//                 1.0f, 0.0f, 1.0f
-//             }
-//         };
+class GivenKinematicAndNonKinematicObject: public GivenPhysicsControllerPositionPipeline {
+ protected:
+    void SetUp() override {
+        physicsController_ = std::make_unique<PhysicsController>(6);
+        // Create the polygons for the test objects
+        basicModel_ = std::make_shared<Polygon>();
+        basicModel_->vertices = {
+            { // Dummy vertex points here - just want offset to be 1 and center 0
+                -1.0f, -1.0f, -1.0f,  // vertex 1
+                1.0f, 1.0f, 1.0f,  // vertex 2
+            }
+        };
+        mapModel_ = std::make_shared<Polygon>();
+        // This represents a flat X-Z plane that would be used as a map.
+        mapModel_->vertices = {
+            {
+                -1.0f, 0.0f, -1.0f,
+                1.0f, 0.0f, 1.0f
+            }
+        };
 
-//         mapObject_ = std::make_unique<TestObject>(mapObject_, MAP_OBJECT_NAME);
-//         mapObject_->setScale(10.0f);  // Make the map decently large
-//         testObject_ = std::make_unique<TestObject>(basicModel_, testObjectName);
-//         otherObject_->createCollider();
-//         testObject_->createCollider();
+        mapObject_ = std::make_unique<TestObject>(mapModel_, mapObjectName);
+        mapObject_->setScale(10.0f);  // Make the map decently large
+        testObject_ = std::make_unique<TestObject>(basicModel_, testObjectName);
+        testObject_->createCollider();
+        mapObject_->createCollider();
 
-//         // Use the same generic params for each object
-//         PhysicsParams kinPar = {
-//             .isKinematic = true,
-//             .obeyGravity = false,
-//             .elasticity = 0.0f,
-//             .mass = testMassKg
-//         };
-//         PhysicsParams nonKinPar = {
-//             .isKinematic = false,
-//             .obeyGravity = false,
-//             .elasticity = 0.0f,
-//             .mass = testMassKg
-//         };
-//         physicsController_->addSceneObject(testObject_.get(), kinPar);
-//         physicsController_->addSceneObject(mapObject_.get(), nonKinPar);
-//     }
-//     void TearDown() override {
-//         GivenPhysicsControllerPositionPipeline::TearDown();
-//     }
-//     std::unique_ptr<TestObject> mapObject_;
-//     std::shared_ptr<Polygon> basicModel_;
-//     std::shared_ptr<Polygon> mapModel_;
-//     inline static float basicModelOffset_ = 1.0f;
-// };
+        // Use the same generic params for each object
+        PhysicsParams kinPar = {
+            .isKinematic = true,
+            .obeyGravity = false,
+            .elasticity = 0.0f,
+            .mass = testMassKg
+        };
+        PhysicsParams nonKinPar = {
+            .isKinematic = false,
+            .obeyGravity = false,
+            .elasticity = 0.0f,
+            .mass = testMassKg
+        };
+        physicsController_->addSceneObject(testObject_.get(), kinPar);
+        physicsController_->addSceneObject(mapObject_.get(), nonKinPar);
+    }
+    std::unique_ptr<TestObject> mapObject_;
+    std::shared_ptr<Polygon> basicModel_;
+    std::shared_ptr<Polygon> mapModel_;
+    inline static float basicModelOffset_ = 1.0f;
+};
 
-// TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollides_ThenObjectClipsToExpectedLocation) {
-//     /* Preparation */
-//     deltaTime = 1.0f;
-//     vec3 firstObjectVelocity = vec3(0.0, 2.5f, 0.0f);
-//     vec3 playerPosition = vec3(0.0f, 2.0f, 0.0f);
-//     // This will place the second object so that its collider is 0.5 units away from the first object's collider
-//     vec3 secondObjectPosition = vec3(0.0f, 0.0f, 0.0f);
-//     physicsController_->setPosition(testObjectName, firstObjectPosition);
-//     physicsController_->setPosition(otherObjectName, secondObjectPosition);
+TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollides_ThenObjectClipsToExpectedLocation) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 playerVel = vec3(0.0, -2.5f, 0.0f);
+    vec3 playerPos = vec3(0.0f, 2.0f, 0.0f);
+    vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
+    // Because of flushing, set velocity first
+    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setPosition(testObjectName, playerPos);
+    physicsController_->setPosition(mapObjectName, mapPos);
 
-//     // Move the first object into the second object
-//     physicsController_->setVelocity(testObjectName, firstObjectVelocity);
 
-//     // Expected final positions
-//     vec3 expectedFirstFinalPos = vec3(0.75f, 0.0f, 0.0f);
-//     vec3 expectedSecondFinalPos = vec3(2.75f, 0.0f, 0.0f);
+    // Expected final positions
+    vec3 expectedPlayerFinalPos = vec3(0.0f, 1.0f, 0.0f);
+    vec3 expectedMapFinalPos = vec3(0.0f, 0.0f, 0.0f);
 
-//     // The objects are 0.5 units inside of each other.
-//     // The first object should be moved 0.25 units to the left, and
-//     // the second object should be moved 0.25 units to the right. This should
-//     // clip the objects right next to each other.
+    /* Action */
+    physicsController_->update();
 
-//     /* Action */
-//     physicsController_->update();
+    /* Validation */
+    // The second object should be moving, and the first should have a different velocity
+    vec3 actualPlayerFinalPos = testObject_->getPosition();
+    vec3 actualMapFinalPos = mapObject_->getPosition();
+    EXPECT_VEC_EQ(expectedPlayerFinalPos, actualPlayerFinalPos);
+    EXPECT_VEC_EQ(expectedMapFinalPos, actualMapFinalPos);
 
-//     /* Validation */
-//     // The second object should be moving, and the first should have a different velocity
-//     vec3 actualFFP = physicsController_->getPhysicsObject(testObjectName)->position;
-//     vec3 actualSFP = physicsController_->getPhysicsObject(otherObjectName)->position;
-//     EXPECT_VEC_EQ(expectedFirstFinalPos, actualFFP);
-//     EXPECT_VEC_EQ(expectedSecondFinalPos, actualSFP);
+    // Ensure that the objects are NO LONGER colliding after clipping to the edge point
+    auto isColl = testObject_->getCollider()->getCollision(mapObject_->getCollider());
+    ASSERT_NE(ALL_MATCH, isColl);
+}
 
-//     // Ensure that the objects are NO LONGER colliding after clipping to the edge point
-//     auto isColl = testObject_->getCollider()->getCollision(otherObject_->getCollider());
-//     ASSERT_NE(ALL_MATCH, isColl);
-// }
+TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCorner_ThenObjectClipsToExpectedLocation) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 playerVel = vec3(0.0, -2.5f, 0.0f);
+    vec3 playerPos = vec3(9.5f, 2.0f, 9.5f);
+    vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
+    // Because of flushing, set velocity first
+    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setPosition(testObjectName, playerPos);
+    physicsController_->setPosition(mapObjectName, mapPos);
+
+    // Expected final positions
+    vec3 expectedPlayerFinalPos = vec3(9.5f, 1.0f, 9.5f);
+    vec3 expectedMapFinalPos = vec3(0.0f, 0.0f, 0.0f);
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    // The second object should be moving, and the first should have a different velocity
+    vec3 actualPlayerFinalPos = testObject_->getPosition();
+    vec3 actualMapFinalPos = mapObject_->getPosition();
+    EXPECT_VEC_EQ(expectedPlayerFinalPos, actualPlayerFinalPos);
+    EXPECT_VEC_EQ(expectedMapFinalPos, actualMapFinalPos);
+
+    // Ensure that the objects are NO LONGER colliding after clipping to the edge point
+    auto isColl = testObject_->getCollider()->getCollision(mapObject_->getCollider());
+    ASSERT_NE(ALL_MATCH, isColl);
+}
 
 /**
  * @brief Launches google test suite defined in file

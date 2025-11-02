@@ -255,15 +255,30 @@ float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
     return currentMin;
 }
 
-vec3 ColliderObject::getEdgePoint(ColliderObject *object) {
+vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 epSign) {
     assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
     // Iterate through each axis
     vec3 result(0);
-    vec3 deltaBase = object->center() - center_;
+    vec3 deltaBase = center_ - object->center();
     vec3 delta = abs(deltaBase);
     vec3 range = offset_ + object->offset();
     vec3 edgePoint = (range - delta);
-
+    for (int i = 0; i < 3; ++i) {
+        // Do this more efficiently
+        if ((epSign[i] > 0.0f && deltaBase[i] < 0.0f) ||
+            (epSign[i] < 0.0f && deltaBase[i] > 0.0f)) {
+            /**
+             * This is a special case where a single update results in our current object moving PASSED
+             * the center of the other object we're testing collision on. This creates a contradition
+             * between delta and epSign's sign. For proper behavior, we will add the range (both offsets)
+             * to the edge point for this axis. Realistically, this shouldn't really manifest itself as a
+             * glitch in production, but it ensures that we pop out of the other object properly. Otherwise
+             * we may see excessive collisions before the object is properly corrected. This should also
+             * reduce jerkiness of object's colliding in this case.
+             */
+            edgePoint[i] += range[i];
+        }
+    }
     result = edgePoint;
 
     static int collCount;

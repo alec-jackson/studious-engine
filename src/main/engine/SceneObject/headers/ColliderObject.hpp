@@ -42,7 +42,7 @@ class ColliderObject : public SceneObject {
     ~ColliderObject();
     inline static void setDrawCollider(bool enable) { drawCollider_ = enable; }
     inline static bool getDrawCollider() { return drawCollider_; }
-    vec3 getEdgePoint(ColliderObject *object);
+    vec3 getEdgePoint(ColliderObject *object, vec3 epSign);
     vec3 getEdgePointPosInf(ColliderObject *object);
     inline const mat4 &pScaleMatrix() { return pScaleMatrix_; }
     inline const vec4 &minPoints() { return minPoints_; }

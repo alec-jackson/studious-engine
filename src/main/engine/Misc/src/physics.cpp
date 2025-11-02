@@ -84,8 +84,9 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             targetCollider, obj.second->prevPos, obj.second->targetCollider);
         int deltaAxis = collState ^ prevCollState;
         printf("delta axis %d\n", deltaAxis);
+        printf("prevPos (%f, %f, %f)\n", prevPos.x, prevPos.y, prevPos.z);
+        printf("pos (%f, %f, %f)\n", target->getPosition().x, target->getPosition().y, target->getPosition().z);
         // Test the collision with the two object's previous positions to get the collstate delta.
-
         // If the objects match, then we need to know what the deltaAxis were...
         // Don't update non-kinematic objects
         if (isKinematic) {
@@ -109,7 +110,10 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
-            auto edgePoint = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider());
+            vec3 epSign = sign(prevPos - obj.second->position);
+            auto edgePoint = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), epSign);
+            // Sign edge point values based on previous position
+            edgePoint *= epSign;
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
                 edgePoint = targetCollider->getCollider()->getEdgePointPosInf(obj.second->targetCollider->getCollider());
@@ -124,18 +128,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
                 }
             }
             if (!obj.second->isKinematic) {
-                // Kill v1f based on delta axis
-                if (deltaAxis == NO_MATCH) {
-                    v1f = vec3(0.0f);
-                } else {
-                    // TODO: Make this operation a common function
-                    for (int i = 0; i < 3; ++i) {
-                        // If the nth bit is set, zero out velocity
-                        if (deltaAxis & (1<<i)) {
-                            v1f[i] = 0.0f;
-                        }
-                    }
-                }
+                // We could modify velocity here, but I honestly don't care about collision spam rn
             } else {
                 edgePoint /= 2.0f;
             }
@@ -468,8 +461,9 @@ PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
-        poit->second.get()->fullFlush();
-        poit->second.get()->position = position;
+        assert(poit->second->target != nullptr);
+        poit->second->target->setPosition(position);
+        poit->second->fullFlush();
         result = PhysicsResult::OK;
     } else {
         printf("PhysicsController::setPosition: %s not found", objectName.c_str());
