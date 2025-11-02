@@ -145,7 +145,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             }
             objLock.lock();
             velocityDelta += v1f;
-            positionDelta = edgePoint;
+            positionDelta += edgePoint;
             hasCollision = true;
             objLock.unlock();
         }
