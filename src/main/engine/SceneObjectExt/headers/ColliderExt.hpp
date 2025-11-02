@@ -1,4 +1,12 @@
+/**
+ * @file ColliderExt.hpp
+ * @author Christian Galvez
+ * @date 11-02-2025
+ * @brief Declaration for Collider Extension for Scene Objects.
+ * @copyright Studious Engine 2025
+ */
 #pragma once
+#include <memory>
 #include <ColliderObject.hpp>
 
 class ColliderExt {

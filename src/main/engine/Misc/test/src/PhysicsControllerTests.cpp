@@ -8,14 +8,15 @@
  * @copyright Copyright (c) 2024
  *
  */
-#include "ColliderObject.hpp"
-#include "ModelImport.hpp"
-#include "physics.hpp"
 #include <PhysicsControllerTests.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <cstdio>
+#include <ColliderObject.hpp>
+#include <ModelImport.hpp>
+#include <physics.hpp>
 #include <TestObject.hpp>
 
 extern double deltaTime;
@@ -30,7 +31,8 @@ float testMassKg = 5.0f;
 for (uint i = 0; i < (sizeof(actual) / sizeof(float)); ++i) ASSERT_FLOAT_EQ(expected[i], actual[i]);
 
 #define EXPECT_VEC_EQ(expected, actual) \
-for (uint i = 0; i < (sizeof(actual) / sizeof(float)); ++i) { printf("float eq in %d\n", i); EXPECT_FLOAT_EQ(expected[i], actual[i]); }
+for (uint i = 0; i < (sizeof(actual) / sizeof(float)); ++i) { \
+    printf("float eq in %d\n", i); EXPECT_FLOAT_EQ(expected[i], actual[i]); }
 
 // Test Fixtures
 class GivenPhysicsControllerGeneral: public ::testing::Test {
@@ -527,7 +529,7 @@ class GivenTwoKinematicObjects: public GivenPhysicsControllerPositionPipeline {
         // Create the polygons for the test objects
         basicModel_ = std::make_shared<Polygon>();
         basicModel_->vertices = {
-            { // Dummy vertex points here - just want offset to be 1 and center 0
+            {  // Dummy vertex points here - just want offset to be 1 and center 0
                 -1.0f, -1.0f, -1.0f,  // vertex 1
                 1.0f, 1.0f, 1.0f,  // vertex 2
             }
@@ -633,7 +635,7 @@ class GivenKinematicAndNonKinematicObject: public GivenPhysicsControllerPosition
         // Create the polygons for the test objects
         basicModel_ = std::make_shared<Polygon>();
         basicModel_->vertices = {
-            { // Dummy vertex points here - just want offset to be 1 and center 0
+            {  // Dummy vertex points here - just want offset to be 1 and center 0
                 -1.0f, -1.0f, -1.0f,  // vertex 1
                 1.0f, 1.0f, 1.0f,  // vertex 2
             }
@@ -808,7 +810,7 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndFa
     ASSERT_NE(ALL_MATCH, isColl);
 }
 
-TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesNoPassthroughNegSign_ThenObjectClipsToExpectedLocation) {
+TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesNoPTNegSign_ThenObjectClipsToExpectedLocation) {
     /* Preparation */
     deltaTime = 1.0f;
     vec3 playerVel = vec3(0.0, 1.5f, 0.0f);

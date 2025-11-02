@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "ColliderObject.hpp"
+#include <GameInstance.hpp>
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
@@ -22,7 +22,7 @@
 #include <vector>
 #include <memory>
 #include <queue>
-#include <GameInstance.hpp>
+#include <ColliderObject.hpp>
 #include <SceneObject.hpp>
 #include <OpenGlGfxController.hpp>
 

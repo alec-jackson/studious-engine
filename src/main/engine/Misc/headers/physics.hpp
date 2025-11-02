@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include <glm/fwd.hpp>
 #include <vector>
 #include <string>
 #include <mutex> //NOLINT
@@ -24,6 +23,7 @@
 #include <memory>
 #include <SceneObject.hpp>
 #include <ColliderExt.hpp>
+#include <glm/fwd.hpp>
 
 #define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
 #define PHYS_MAX_THREADS 256

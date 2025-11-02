@@ -8,17 +8,16 @@
  * @copyright Copyright (c) 2023
  *
  */
-
-#include "ColliderObject.hpp"
+#include <physics.hpp>
 #include <chrono>
 #include <mutex>
-#include <physics.hpp>
 #include <shared_mutex>
 #include <string>
 #include <algorithm>
 #include <condition_variable> //NOLINT
 #include <memory>
 #include <cstdio>
+#include <ColliderObject.hpp>
 
 extern double deltaTime;
 
@@ -114,19 +113,20 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
             vec3 epSign = sign(prevPos - obj.second->position);
-            auto edgePoint = targetCollider->getCollider()->getEdgePoint(obj.second->targetCollider->getCollider(), epSign);
+            auto edgePoint = targetCollider->getCollider()->getEdgePoint(
+                obj.second->targetCollider->getCollider(), epSign);
             // Sign edge point values based on previous position
             edgePoint *= epSign;
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
-                //assert(0);
-                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(obj.second->targetCollider->getCollider());
+                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
+                    obj.second->targetCollider->getCollider());
             } else {
                 // Make edge point zero except for delta axis directions.
                 // This is a basic approach - revisit later
                 for (int i = 0; i < 3; ++i) {
                     // If the nth bit is not set, zero out edge point
-                    if (!(deltaAxis & (1<<i))) {
+                    if (!(deltaAxis & (1 << i))) {
                         edgePoint[i] = 0.0f;
                     }
                 }
@@ -456,7 +456,6 @@ void PhysicsController::update() {
     // Need to loop here for recursive collisions? Maybe cap the loop?
     updateFinalize();
     waitPipelineComplete();
-
 }
 
 PhysicsResult PhysicsController::shutdown() {

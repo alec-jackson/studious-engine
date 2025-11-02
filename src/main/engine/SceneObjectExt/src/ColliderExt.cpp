@@ -1,5 +1,12 @@
-#include "ColliderObject.hpp"
+/**
+ * @file ColliderExt.cpp
+ * @author Christian Galvez
+ * @date 11-02-2025
+ * @brief Implementation for the Collider Extension for SceneObjects.
+ * @copyright Studious Engine 2025
+ */
 #include <ColliderExt.hpp>
+#include <ColliderObject.hpp>
 
 ColliderObject *ColliderExt::getCollider() {
     auto res = collider_.get();

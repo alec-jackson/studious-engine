@@ -8,8 +8,12 @@
  */
 #include <GameScene.hpp>
 #include <cassert>
-#include <SceneObject.hpp>
 #include <mutex>
+#include <memory>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <SceneObject.hpp>
 
 void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);

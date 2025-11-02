@@ -8,13 +8,10 @@
  * @copyright Copyright (c) 2025
  *
  */
-
-// Include External Libaries
-#include "DummyGfxController.hpp"
-#include <string>
-
-// Include Internal Headers
 #include <TestObject.hpp>
+#include <string>
+#include <memory>
+#include <DummyGfxController.hpp>
 
 DummyGfxController dummyGfx;
 
@@ -24,8 +21,8 @@ TestObject::TestObject() : SceneObject(ObjectType::UNDEFINED, TEST_OBJECT_NAME, 
 TestObject::TestObject(string name) : SceneObject(ObjectType::UNDEFINED, name, nullptr) {
 }
 
-TestObject::TestObject(std::shared_ptr<Polygon> polygon, string name) : SceneObject(ObjectType::UNDEFINED, name, &dummyGfx),
-    polygon_ { polygon }
+TestObject::TestObject(std::shared_ptr<Polygon> polygon, string name) :
+    SceneObject(ObjectType::UNDEFINED, name, &dummyGfx), polygon_ { polygon }
 {
     scale_ = 1.0f;
 }

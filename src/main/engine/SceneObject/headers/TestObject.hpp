@@ -9,11 +9,12 @@
  *
  */
 #pragma once
-#include "ColliderExt.hpp"
 #include <set>
 #include <string>
+#include <memory>
 #include <SceneObject.hpp>
 #include <ColliderObject.hpp>
+#include <ColliderExt.hpp>
 
 using std::set;
 

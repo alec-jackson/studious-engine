@@ -10,6 +10,7 @@
  */
 #include <ColliderObject.hpp>
 #include <vector>
+#include <cstdio>
 #include <string>
 #include <iostream>
 #include <memory>
@@ -31,8 +32,9 @@
  *    GameObject it is attached to.
  */
 ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
-    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), target_ { target }, pTranslateMatrix_ { owner->translateMatrix() },
-    pScaleMatrix_ { owner->scaleMatrix() }, pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
+    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), target_ { target },
+    pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
+    pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
     programId_ = programId;
     createCollider();
 }
@@ -41,7 +43,8 @@ ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, 
  * @brief Constructor for 2D collider objects.
  */
 ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, SceneObject *owner) :
-    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
+    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()),
+    pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
     pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
     programId_ = programId;
     // Separate vertex data from vertTexData
@@ -86,7 +89,7 @@ int ColliderObject::getCollision(ColliderObject *object) {
     for (uint i = 0; i < 3; ++i) {
         float res = range[i] - abs(delta[i]);
         if (range[i] > abs(delta[i]) && abs(res) > EPSILON) {
-            matching |= (1<<i);
+            matching |= (1 << i);
         }
     }
 
@@ -101,7 +104,7 @@ vec4 ColliderObject::createOffset(const mat4 &tm, const mat4 &sm, const vec4 &ce
     vec4 minOffset = tm * sm * col->minPoints();
     return center - minOffset;
 }
-//float s1, vec3 oc1, vec3 mp1,
+
 int ColliderObject::getCollisionRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2) {
     // Center = critical section?
     int matching = 0;  // Number of axis that have collided
@@ -125,7 +128,7 @@ int ColliderObject::getCollisionRaw(vec3 p1, ColliderObject *c1, vec3 p2, Collid
     for (uint i = 0; i < 3; ++i) {
         float res = range[i] - abs(delta[i]);
         if (range[i] > abs(delta[i]) && abs(res) > EPSILON) {
-            matching |= (1<<i);
+            matching |= (1 << i);
         }
     }
     return matching;
@@ -284,27 +287,11 @@ vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 epSign) {
         }
     }
     result = edgePoint;
-
-    static int collCount;
-    printf("--- Collision %d ---\n\n", collCount / 2 + 1);
-
-    // Let's print out relevant information neatly
-    printf("* Center (%f, %f, %f)\n", center_.x, center_.y, center_.z);
-    printf("* Other Center (%f, %f, %f)\n", object->center().x, object->center().y, object->center().z);
-    printf("* Center Distance (%f, %f, %f)\n", fabs(object->center().x - center_.x), fabs(object->center().y - center_.y), fabs(object->center().z - center_.z));
-    printf("* Projection (%f, %f, %f)\n", center_.x + result.x, center_.y + result.y, center_.z + result.z);
-    printf("* Edge Point is (%f, %f, %f)\n", edgePoint.x, edgePoint.y, edgePoint.z);
-    printf("* Result (%f, %f, %f)\n", result.x, result.y, result.z);
-    printf("* Offset (%f, %f, %f)\n", offset_.x, offset_.y, offset_.z);
-    printf("* Other Offset (%f, %f, %f)\n", object->offset().x, object->offset().y, object->offset().z);
-
-    collCount++;
-    return result; // Return half - the idea is that the other object will get the other half of this value...
+    return result;
 }
 
 vec3 ColliderObject::getEdgePointPosInf(ColliderObject *object) {
     assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
-    // Iterate through each axis
     vec3 result(0);
     vec3 deltaBase = object->center() - center_;
     vec3 delta = abs(deltaBase);
@@ -314,16 +301,14 @@ vec3 ColliderObject::getEdgePointPosInf(ColliderObject *object) {
     vec3 x1_delta = center_ - object->center();
 
     float highestDistance = 0.0f;
-    //int distindex = 0;
     for (int i = 0; i < 3; ++i) {
         auto absDist = fabs(x1_delta[i]);
         if (absDist > highestDistance) {
-            //distindex = i;
             highestDistance = absDist;
         }
     }
     assert(highestDistance != 0.0f);
     vec3 normalizedDistance = x1_delta / vec3(highestDistance);
     result = edgePoint * normalizedDistance;
-    return result; // Return half - the idea is that the other object will get the other half of this value...
+    return result;  // Return half - the idea is that the other object will get the other half of this value...
 }

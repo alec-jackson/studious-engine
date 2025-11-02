@@ -10,8 +10,6 @@
  */
 
 #pragma once
-#include "ColliderExt.hpp"
-#include "SceneObject.hpp"
 #include <SDL_gamecontroller.h>
 #include <SDL_scancode.h>
 #include <string>
@@ -23,6 +21,8 @@
 #include <queue>
 #include <condition_variable> //NOLINT
 #include <common.hpp>
+#include <ColliderExt.hpp>
+#include <SceneObject.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
 #include <CameraObject.hpp>
