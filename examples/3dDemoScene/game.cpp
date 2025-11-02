@@ -122,7 +122,7 @@ int runtime(GameInstance *currentGame) {
         currentGame->loadSound(sfx.first, sfx.second);
     }
     // Start the background music
-    //currentGame->playSound("bg_music", 1, 60);
+    currentGame->playSound("bg_music", 1, 60);
 
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
@@ -316,8 +316,6 @@ int mainLoop(gameInfo* gamein) {
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
-    // auto woc = dynamic_cast<ColliderExt *>(wolfRef);
-    // auto poc = dynamic_cast<ColliderExt *>(playerRef);
     while (!currentGame->isShutDown()) {
         begin = SDL_GetPerformanceCounter();
         if (currentGame->pollInput(GameInput::QUIT)) currentGame->shutdown();
@@ -325,12 +323,8 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
-        playerRef->getCollider()->updateCollider();
-        wolfRef->getCollider()->updateCollider();
         collision = currentGame->getCollision(playerRef, wolfRef);
 
-        //assert (ColliderExt::getCollisionRaw(wolfRef->getPosition(), woc, playerRef->getPosition(), poc) != ALL_MATCH);
-        printf("MAIN: Collision %d\n", collision);
         string collMessage;
         if (collision == ALL_MATCH) {
             collMessage = "Contact: True";

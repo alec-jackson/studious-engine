@@ -32,7 +32,7 @@ void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
         assert(0);
     }
     sceneObjects_[sceneObject->objectName()] = sceneObject;
-    renderPriorityMap_[sceneObject->getRenderPriority()].push_back(sceneObject);
+    resetRenderPriorityMap();
 }
 
 void GameScene::removeSceneObject(std::string objectName) {
@@ -56,6 +56,8 @@ void GameScene::refresh() {
         renderPriorityMap_[obj.second->getRenderPriority()].push_back(obj.second);
     }
 }
+
+
 
 void GameScene::update(CameraObject *camera) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);

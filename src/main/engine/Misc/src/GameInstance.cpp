@@ -625,6 +625,8 @@ int GameInstance::getCollision(SceneObject *object1, SceneObject *object2) {
             object1->objectName().c_str(), object2->objectName().c_str());
         return 0;
     }
+    obj1->updateCollider();
+    obj2->updateCollider();
     return obj1->getCollision(obj2);
 }
 
