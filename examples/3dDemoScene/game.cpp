@@ -10,9 +10,9 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "ColliderObject.hpp"
-#include "GameInstance.hpp"
-#include "SceneObject.hpp"
+#include <ColliderObject.hpp>
+#include <GameInstance.hpp>
+#include <SceneObject.hpp>
 #include <string>
 #include <vector>
 #include <iostream>

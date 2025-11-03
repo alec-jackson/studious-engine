@@ -57,8 +57,6 @@ void GameScene::refresh() {
     }
 }
 
-
-
 void GameScene::update(CameraObject *camera) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
     if (camera == nullptr) {

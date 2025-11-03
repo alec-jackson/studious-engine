@@ -67,7 +67,7 @@ class PhysicsObject {
     /**
      * @brief Updates the position of the target object using the position formula.
      */
-    void basePosUpdate();
+    void updatePosition();
     /**
      * @brief Resets the reference position to the object's real position to allow the runningTime
      * counter to be reset without moving the object backwards.
@@ -88,8 +88,8 @@ class PhysicsObject {
      */
     void fullFlush();
 
-    void updateCollisions(const map<string, std::shared_ptr<PhysicsObject>> &objects);
-    void finalizeCollisions();
+    void updateCollision(const map<string, std::shared_ptr<PhysicsObject>> &objects);
+    void updateFinalize();
 };
 
 struct PhysicsParams {
@@ -162,9 +162,9 @@ class PhysicsController {
     PhysicsResult applyForce(string objectName, vec3 force);
     PhysicsResult applyInstantForce(string objectName, vec3 force);
     PhysicsResult translate(string objectName, vec3 direction);
-    PhysicsResult updatePosition();
-    PhysicsResult updateCollision();
-    PhysicsResult updateFinalize();
+    PhysicsResult schedulePosition();
+    PhysicsResult scheduleCollision();
+    PhysicsResult scheduleFinalize();
     inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
     PhysicsResult waitPipelineComplete();
     void update();

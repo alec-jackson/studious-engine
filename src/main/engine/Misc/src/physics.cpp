@@ -21,7 +21,7 @@
 
 extern double deltaTime;
 
-void PhysicsObject::basePosUpdate() {
+void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
     float cappedTime = CAP_TIME(deltaTime);
     runningTime += cappedTime;
@@ -63,7 +63,7 @@ void PhysicsObject::fullFlush() {
     runningTime = 0.0;
 }
 
-void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsObject>> &objects) {
+void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObject>> &objects) {
     if (nullptr == targetCollider) return;
     if (!isKinematic) return;
     // Iterate through all other objects - VERY EXPENSIVE!!!
@@ -132,13 +132,6 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
                 }
             }
             if (!obj.second->isKinematic) {
-                printf("edgePoint %f, %f, %f\n", edgePoint.x, edgePoint.y, edgePoint.z);
-                auto projection = edgePoint + target->getPosition();
-                printf("projection %f, %f, %f\n", projection.x, projection.y, projection.z);
-                // If the collision is still occurring, assert...
-                int cs = ColliderExt::getCollisionRaw(edgePoint + target->getPosition(),
-                    targetCollider, obj.second->target->getPosition(), obj.second->targetCollider);
-                assert(cs != ALL_MATCH);
                 // We could modify velocity here, but I honestly don't care about collision spam rn
             } else {
                 edgePoint /= 2.0f;
@@ -152,7 +145,7 @@ void PhysicsObject::updateCollisions(const map<string, std::shared_ptr<PhysicsOb
     }
 }
 
-void PhysicsObject::finalizeCollisions() {
+void PhysicsObject::updateFinalize() {
 #if (PHYS_TRACE == 1)
     printf("PhysicsObject::finalizeCollisions: for %s\n", target->objectName().c_str());
     printf("PhysicsObject::finalizeCollisions: Has collision %d\n", hasCollision);
@@ -206,15 +199,15 @@ PhysicsResult PhysicsController::doWork() {
 #endif
         switch (physObj->workType) {
             case PhysicsWorkType::POSITION:
-                physObj->basePosUpdate();
+                physObj->updatePosition();
                 break;
             case PhysicsWorkType::COLLISION: {
                 std::shared_lock<std::shared_mutex> objLock(physicsObjectQueueLock_);
-                physObj->updateCollisions(physicsObjects_);
+                physObj->updateCollision(physicsObjects_);
                 break;
             }
             case PhysicsWorkType::FINALIZE: {
-                physObj->finalizeCollisions();  // Can use an assert to check for collisions post-update
+                physObj->updateFinalize();  // Can use an assert to check for collisions post-update
                 break;
             }
             default:
@@ -397,7 +390,7 @@ PhysicsController::~PhysicsController() {
  *
  * @return PhysicsResult
  */
-PhysicsResult PhysicsController::updatePosition() {
+PhysicsResult PhysicsController::schedulePosition() {
     if (shutdown_) return PhysicsResult::SHUTDOWN;
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     workQueueLock_.lock();
@@ -411,7 +404,7 @@ PhysicsResult PhysicsController::updatePosition() {
     return PhysicsResult::OK;
 }
 
-PhysicsResult PhysicsController::updateCollision() {
+PhysicsResult PhysicsController::scheduleCollision() {
     if (shutdown_) return PhysicsResult::SHUTDOWN;
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     workQueueLock_.lock();
@@ -425,7 +418,7 @@ PhysicsResult PhysicsController::updateCollision() {
     return PhysicsResult::OK;
 }
 
-PhysicsResult PhysicsController::updateFinalize() {
+PhysicsResult PhysicsController::scheduleFinalize() {
     if (shutdown_) return PhysicsResult::SHUTDOWN;
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     workQueueLock_.lock();
@@ -449,12 +442,12 @@ PhysicsResult PhysicsController::waitPipelineComplete() {
 void PhysicsController::update() {
     // Stop updating when shutdown received
     // Physics pipeline updated here...
-    updatePosition();
+    schedulePosition();
     waitPipelineComplete();
-    updateCollision();
+    scheduleCollision();
     waitPipelineComplete();
     // Need to loop here for recursive collisions? Maybe cap the loop?
-    updateFinalize();
+    scheduleFinalize();
     waitPipelineComplete();
 }
 

@@ -141,7 +141,6 @@ void GameObject::configureOpenGl() {
  * @brief GameObject destructor
  */
 GameObject::~GameObject() {
-    printf("GameObject::~GameObject: destroying %s\n", objectName_.c_str());
 }
 
 /**
