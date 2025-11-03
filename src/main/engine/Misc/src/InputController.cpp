@@ -15,7 +15,7 @@
 #include <SDL_scancode.h>
 
 #include <map>
-#include <mutex>
+#include <mutex>  //NOLINT
 #include <iostream>
 #include <InputController.hpp>
 
