@@ -10,9 +10,12 @@
  */
 #include <ColliderObject.hpp>
 #include <vector>
+#include <cstdio>
 #include <string>
 #include <iostream>
 #include <memory>
+
+#define EPSILON 1e-6
 
 /** @todo Update - this is the old struct info
  * @brief Stores info about a GameObject's internal collider object.
@@ -28,10 +31,10 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, unsigned int programId, mat4 *translateMatrix,
-    mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
-    SceneObject(type, objectName, gfxController), target_ { target }, pTranslateMatrix_ { translateMatrix },
-    pScaleMatrix_ { scaleMatrix }, pVpMatrix_ { vpMatrix } {
+ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
+    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), target_ { target },
+    pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
+    pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
     programId_ = programId;
     createCollider();
 }
@@ -39,10 +42,10 @@ ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, unsigned int pro
 /**
  * @brief Constructor for 2D collider objects.
  */
-ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, mat4 *translateMatrix,
-    mat4 *scaleMatrix, mat4 *vpMatrix, ObjectType type, string objectName, GfxController *gfxController) :
-    SceneObject(type, objectName, gfxController), pTranslateMatrix_ { translateMatrix }, pScaleMatrix_ { scaleMatrix },
-    pVpMatrix_ { vpMatrix } {
+ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, SceneObject *owner) :
+    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()),
+    pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
+    pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
     programId_ = programId;
     // Separate vertex data from vertTexData
     assert(vertTexData.size() % 4 == 0);
@@ -63,49 +66,73 @@ ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int pr
 
 void ColliderObject::updateCollider() {
     // Update center position with model matrix
-    center_ = (*pTranslateMatrix_) * (*pScaleMatrix_) * originalCenter_;
-    vec4 minOffset = (*pTranslateMatrix_) * (*pScaleMatrix_) * minPoints_;
+    center_ = pTranslateMatrix_ * pScaleMatrix_ * originalCenter_;
+    vec4 minOffset = pTranslateMatrix_ * pScaleMatrix_ * minPoints_;
     // Use rescaled edge points to calculate offset on the fly!
-    for (int i = 0; i < 4; i++) {
-        offset_[i] = center_[i] - minOffset[i];
-    }
+    offset_ = center_ - minOffset;
 }
 
 /**
- * @brief Checks if this collider is colliding or about to collide with another collider
+ * @brief Checks if this collider is colliding with another collider.
  *
  * @param object other collider to check collision with
- * @param moving the current object's translation
- * @return int -1 if error, 0 for no collision, 1 for colliding, 2 for about to collide
+ * @return int -1 if error, 0 for no collision, 1 for colliding
  */
-int ColliderObject::getCollision(ColliderObject *object, vec3 moving) {
+int ColliderObject::getCollision(ColliderObject *object) {
+    // Center = critical section?
     int matching = 0;  // Number of axis that have collided
     if (object == nullptr) {
         cerr << "Error: Cannot get collision for NULL GameObjects!\n";
-        return -1;
+        return NO_MATCH;
+    }
+    auto delta = object->center() - this->center();
+    auto range = object->offset() + this->offset();
+    for (uint i = 0; i < 3; ++i) {
+        float res = range[i] - abs(delta[i]);
+        if (range[i] > abs(delta[i]) && abs(res) > EPSILON) {
+            matching |= (1 << i);
+        }
     }
 
-    // First check if the two objects are currently colliding
-    for (int i = 0; i < 3; i++) {
-        float delta = abs(object->center()[i] - this->center()[i]);
-        float range = this->offset()[i] + object->offset()[i];
-        if (range >= delta) {
-            matching++;
+    return matching;
+}
+
+vec4 ColliderObject::createCenter(const mat4 &tm, const mat4 &sm, ColliderObject *col) {
+    return tm * sm * col->originalCenter();
+}
+
+vec4 ColliderObject::createOffset(const mat4 &tm, const mat4 &sm, const vec4 &center, ColliderObject *col) {
+    vec4 minOffset = tm * sm * col->minPoints();
+    return center - minOffset;
+}
+
+int ColliderObject::getCollisionRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2) {
+    // Center = critical section?
+    int matching = 0;  // Number of axis that have collided
+    if (c1 == nullptr || c2 == nullptr) {
+        cerr << "Error: Cannot get collision for NULL GameObjects!\n";
+        return NO_MATCH;
+    }
+    auto tm1 = glm::translate(mat4(1.0f), p1);
+    auto sm1 = c1->pScaleMatrix();
+    auto center1 = createCenter(tm1, sm1, c1);
+    auto offset1 = createOffset(tm1, sm1, center1, c1);
+
+    auto tm2 = glm::translate(mat4(1.0f), p2);
+    auto sm2 = c2->pScaleMatrix();
+    auto center2 = createCenter(tm2, sm2, c2);
+    auto offset2 = createOffset(tm2, sm2, center2, c2);
+
+    auto delta = center1 - center2;
+    auto range = offset1 + offset2;
+
+    for (uint i = 0; i < 3; ++i) {
+        float res = range[i] - abs(delta[i]);
+        if (range[i] > abs(delta[i]) && abs(res) > EPSILON) {
+            matching |= (1 << i);
         }
     }
-    // Return if the objects are currently colliding
-    if (matching == 3) return 1;
-    matching = 0;
-    for (int i = 0; i < 3; i++) {
-        float delta = abs(object->center()[i] - this->center()[i] + moving[i]);
-        float range = this->offset()[i] + object->offset()[i];
-        if (range >= delta) {
-            matching++;
-        }
-    }
-    // Return if the objects are about to collide
-    if (matching == 3) return 2;
-    return 0;
+    return matching;
 }
 
 void ColliderObject::update() {
@@ -120,7 +147,7 @@ void ColliderObject::render() {
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::LINE);
         gfxController_->setCapability(GfxCapability::CULL_FACE, false);
-        mat4 MVP = (*pVpMatrix_) * (*pTranslateMatrix_) * (*pScaleMatrix_);
+        mat4 MVP = pVpMatrix_ * pTranslateMatrix_ * pScaleMatrix_;
         gfxController_->sendFloatMatrix(mvpId_, 1, glm::value_ptr(MVP));
         // HINT: Render loops should really just be (bind Vao, draw triangles)
         gfxController_->bindVao(vao_);
@@ -132,7 +159,7 @@ void ColliderObject::createCollider() {
     // Initialize VAO
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
-    cout << "Building collider for " << objectName << endl;
+    cout << "Building collider for " << objectName_ << endl;
     float min[3] = {999, 999, 999}, tempMin[3] = {999, 999, 999};
     float max[3] = {-999, -999, -999}, tempMax[3] = {-999, -999, -999};
     // Set MVP ID for collider object
@@ -236,4 +263,55 @@ float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
         }
     }
     return currentMin;
+}
+
+vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 epSign) {
+    assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
+    // Iterate through each axis
+    vec3 result(0);
+    vec3 deltaBase = center_ - object->center();
+    vec3 delta = abs(deltaBase);
+    vec3 range = offset_ + object->offset();
+    vec3 edgePoint = (range - delta);
+    for (int i = 0; i < 3; ++i) {
+        // Do this more efficiently
+        if ((epSign[i] > 0.0f && deltaBase[i] < 0.0f) ||
+            (epSign[i] < 0.0f && deltaBase[i] > 0.0f)) {
+            /**
+             * This is a special case where a single update results in our current object moving PASSED
+             * the center of the other object we're testing collision on. This creates a contradition
+             * between delta and epSign's sign. For proper behavior, we will add the range (both offsets)
+             * to the edge point for this axis. Realistically, this shouldn't really manifest itself as a
+             * glitch in production, but it ensures that we pop out of the other object properly. Otherwise
+             * we may see excessive collisions before the object is properly corrected. This should also
+             * reduce jerkiness of object's colliding in this case.
+             */
+            edgePoint[i] += range[i];
+        }
+    }
+    result = edgePoint;
+    return result;
+}
+
+vec3 ColliderObject::getEdgePointPosInf(ColliderObject *object) {
+    assert(object != nullptr);  // Eventually handle this gracefully, I just need it to explode for now
+    vec3 result(0);
+    vec3 deltaBase = object->center() - center_;
+    vec3 delta = abs(deltaBase);
+    vec3 range = offset_ + object->offset();
+    vec3 edgePoint = (range - delta);
+
+    vec3 x1_delta = center_ - object->center();
+
+    float highestDistance = 0.0f;
+    for (int i = 0; i < 3; ++i) {
+        auto absDist = fabs(x1_delta[i]);
+        if (absDist > highestDistance) {
+            highestDistance = absDist;
+        }
+    }
+    assert(highestDistance != 0.0f);
+    vec3 normalizedDistance = x1_delta / vec3(highestDistance);
+    result = edgePoint * normalizedDistance;
+    return result;  // Return half - the idea is that the other object will get the other half of this value...
 }

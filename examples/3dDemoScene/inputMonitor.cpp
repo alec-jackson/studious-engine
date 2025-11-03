@@ -366,32 +366,40 @@ void rotateShape(void *gameInfoStruct, void *target) {
             // Instantiate a bullet and shoot it
             currentGame->protectedGfxRequest([currentGame, character, angle] () {
                 auto imp = ModelImport::createPolygonFromFile("src/resources/models/bullet.obj");
-                currentGame->createGameObject(imp, character->getPosition(), vec3(angle, 0, angle - 180.0f), 0.005f,
+                auto bullet = currentGame->createGameObject(imp, character->getPosition(), vec3(angle, 0, angle - 180.0f), 0.005f,
                     string("bullet") + std::to_string(bulletCount++));
+                bullet->createCollider();
             });
             auto bulletName = string("bullet") + std::to_string(bulletCount - 1);
             auto bulletObj = currentGame->getSceneObject(bulletName);
-            auto expireTime = 5.0f;
+            auto expireTime = 900.0f;
             if (nullptr == bulletObj) {
                 fprintf(stderr, "rotateShape: Failed to create bullet object!");
             } else {
-                bulletObj->setRenderPriority(RENDER_PRIOR_LOW - 1);
+                bulletObj->setRenderPriority(RENDER_PRIOR_LOW - 2);
+                currentGame->getActiveScene()->refresh();
                 // Decay the bullet after 5 seconds
                 auto delcb = [bulletName, currentGame] () {
                     currentGame->removeSceneObject(bulletName);
                 };
                 auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
                 ac->addKeyFrame(bulletObj, bkf);
-                PhysicsParams params(true, false, 0.0f, 1.0f);
+
+                PhysicsParams params = {
+                    .isKinematic = true,
+                    .obeyGravity = false,
+                    .elasticity = 0.0f,
+                    .mass = 1.0f
+                };
                 pc->addSceneObject(bulletObj, params);
                 // Convert angles[1] to a direction????
                 auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
                 auto anglez = std::sin(angles.y * (PI/180.0) + (PI/2.0));
                 auto charAngle = character->getRotation();
-                float magnitude = 0.3f;
+                float magnitude = 0.01f;
                 // angles.y is the rotation of the character on some axis??
                 printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
-                pc->applyForce(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
+                pc->setVelocity(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
             }
         } else if (!gameInput->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && delPressed) {
             delPressed = false;

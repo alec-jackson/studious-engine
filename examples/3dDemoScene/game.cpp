@@ -10,9 +10,10 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "GameInstance.hpp"
-#include "ModelImport.hpp"
-#include "SceneObject.hpp"
+#include <ColliderObject.hpp>
+#include <GameInstance.hpp>
+#include <ModelImport.hpp>
+#include <SceneObject.hpp>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -160,6 +161,7 @@ int runtime(GameInstance *currentGame) {
     playerRef->setRenderPriority(RENDER_PRIOR_LOW - 1);
     playerRef->createCollider();
 
+
     cout << "Creating wolf\n";
 
     auto wolfPoly = ModelImport::createPolygonFromFile("src/resources/models/wolf.obj");
@@ -183,6 +185,15 @@ int runtime(GameInstance *currentGame) {
     animationController.get()->addKeyFrame(wolfObject, kf1);
 
     wolfObject->createCollider();
+
+    PhysicsParams parms = {
+        .isKinematic = false,
+        .obeyGravity = false,
+        .elasticity = 0.0f,
+        .mass = 10.0f,
+    };
+    // add the wolf object to physics controller as non-kinematic
+    physicsController->addSceneObject(wolfObject, parms);
     wolfRef = wolfObject;
 
     // Configure some in-game text objects
@@ -254,7 +265,7 @@ int runtime(GameInstance *currentGame) {
     auto currentCamera = currentGame->createCamera(playerRef,
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f, "mainCamera");
     playerRef->setRotation(vec3(0, 0, 0));
-    cout << "currentGameObject tag is " << playerRef->getObjectName()
+    cout << "currentGameObject tag is " << playerRef->objectName()
         << '\n';
 
     playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
@@ -300,9 +311,10 @@ int mainLoop(gameInfo* gamein) {
         if (error) {
             return error;
         }
-        collision = currentGame->getCollision(playerRef, wolfRef, vec3(0, 0, 0));
+        collision = currentGame->getCollision(playerRef, wolfRef);
+
         string collMessage;
-        if (collision == 1) {
+        if (collision == ALL_MATCH) {
             collMessage = "Contact: True";
         } else {
             collMessage = "Contact: False";

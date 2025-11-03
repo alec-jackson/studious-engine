@@ -8,11 +8,13 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <GameInstance.hpp>
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
 #include <algorithm>
 #include <condition_variable> //NOLINT
+#include <cstddef>
 #include <cstdio>
 #include <iostream>
 #include <mutex> //NOLINT
@@ -20,7 +22,7 @@
 #include <vector>
 #include <memory>
 #include <queue>
-#include <GameInstance.hpp>
+#include <ColliderObject.hpp>
 #include <SceneObject.hpp>
 #include <OpenGlGfxController.hpp>
 #include <InputController.hpp>
@@ -352,7 +354,7 @@ bool GameInstance::waitForInput(GameInput input) {
 bool GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
     if (!activeScene_.get()) {
         fprintf(stderr, "GameInstance::addSceneObject: No active scene! Ignoring game object %s\n",
-            sceneObject.get()->getObjectName().c_str());
+            sceneObject.get()->objectName().c_str());
         printf("GameInstance::addSceneObject: Please bind an active scene and try again.\n");
         assert(false);
         return false;
@@ -509,17 +511,20 @@ int GameInstance::removeSceneObject(string objectName) {
  currently colliding, 2 if the two objects are about to collide, or 0 if there
  is no collision. Otherwise, -1 is returned.
 */
-/// @todo Update documentation here and convert pointers to references
-int GameInstance::getCollision(GameObject *object1, GameObject *object2,
-    vec3 moving) {
-    return object1->getCollider()->getCollision(object2->getCollider(), moving);
-}
-
-/**
- * 2D version of the same function defined above.
- */
-int GameInstance::getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving) {
-    return object1->getCollider()->getCollision(object2->getCollider(), moving);
+int GameInstance::getCollision(SceneObject *object1, SceneObject *object2) {
+    /* Check if both objects support colliders */
+    ColliderExt *obj1, *obj2;
+    obj1 = dynamic_cast<ColliderExt *>(object1);
+    obj2 = dynamic_cast<ColliderExt *>(object2);
+    if (nullptr == obj1 || nullptr == obj2) {
+        fprintf(stderr,
+            "GameInstance::getCollision: Failed to get collision - either %s or %s do not support colliders!\n",
+            object1->objectName().c_str(), object2->objectName().c_str());
+        return 0;
+    }
+    obj1->updateCollider();
+    obj2->updateCollider();
+    return obj1->getCollision(obj2);
 }
 
 /*

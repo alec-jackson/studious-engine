@@ -21,6 +21,8 @@
 #include <queue>
 #include <condition_variable> //NOLINT
 #include <common.hpp>
+#include <ColliderExt.hpp>
+#include <SceneObject.hpp>
 #include <ModelImport.hpp>
 #include <GameObject.hpp>
 #include <CameraObject.hpp>
@@ -141,8 +143,7 @@ class GameInstance {
     SceneObject *getSceneObject(string objectName);
     int removeSceneObject(string objectName);
     /* NOTE - getCollision functions are for convenience and will be deprecated with the physics controller */
-    int getCollision(GameObject *object1, GameObject *object2, vec3 moving);
-    int getCollision2D(GameObject2D *object1, GameObject2D *object2, vec3 moving);
+    int getCollision(SceneObject *object1, SceneObject *object2);
     void setLuminance(float luminanceValue);
     void setDirectionalLight(vec3 directionalLight);
     void basicCollision(GameInstance* gameInstance);

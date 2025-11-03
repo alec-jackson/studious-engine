@@ -14,20 +14,16 @@
 #include <vector>
 #include <memory>
 #include <SceneObject.hpp>
-#include <ColliderObject.hpp>
+#include <ColliderExt.hpp>
 #include <TrackExt.hpp>
 #include <ImageExt.hpp>
 
-class GameObject2D : public SceneObject, public TrackExt, public ImageExt {
+class GameObject2D : public SceneObject, public TrackExt, public ImageExt, public ColliderExt {
  public:
     // Constructors
-    /// @todo Remove ObjectType - we render by camera now, so this isn't really needed...
     explicit GameObject2D(string texturePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController);
     ~GameObject2D();
-
-    // Getter methods
-    ColliderObject *getCollider();
 
     // Render method
     void render() override;
@@ -35,12 +31,11 @@ class GameObject2D : public SceneObject, public TrackExt, public ImageExt {
     void initializeTextureData();
     virtual void initializeShaderVars() = 0;
     void initializeVertexData();
-    void createCollider();
+    void createCollider() override;
     void setDimensions(int width, int height);
 
  protected:
     string texturePath_;
-    std::shared_ptr<ColliderObject> collider_;
     vector<float> vertTexData_;
 
     unsigned int textureId_;

@@ -8,6 +8,11 @@
  */
 #include <GameScene.hpp>
 #include <cassert>
+#include <mutex>
+#include <memory>
+#include <cstdio>
+#include <cstring>
+#include <string>
 #include <SceneObject.hpp>
 
 void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
@@ -17,17 +22,17 @@ void GameScene::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
             "GameScene::addSceneObject: Cannot add invalid scene object!\n");
         return;
     }
-    assert(!sceneObject->getObjectName().empty());
+    assert(!sceneObject->objectName().empty());
     // SANITY CHECK - ENFORCE OBJECTS CANNOT HAVE SAME NAME!!!!!!!!
-    auto soit = sceneObjects_.find(sceneObject->getObjectName());
+    auto soit = sceneObjects_.find(sceneObject->objectName());
     if (soit != sceneObjects_.end()) {
         fprintf(stderr,
             "GameScene::addSceneObject: ERROR! Cannot add two objects with the same name! [%s]\n",
-            sceneObject->getObjectName().c_str());
+            sceneObject->objectName().c_str());
         assert(0);
     }
-    sceneObjects_[sceneObject->getObjectName()] = sceneObject;
-    renderPriorityMap_[sceneObject->getRenderPriority()].push_back(sceneObject);
+    sceneObjects_[sceneObject->objectName()] = sceneObject;
+    resetRenderPriorityMap();
 }
 
 void GameScene::removeSceneObject(std::string objectName) {
@@ -40,6 +45,15 @@ void GameScene::removeSceneObject(std::string objectName) {
         fprintf(stderr,
             "GameScene::removeSceneObject: %s not found\n",
             objectName.c_str());
+    }
+}
+
+void GameScene::refresh() {
+    std::unique_lock<std::mutex> scopeLock(sceneLock_);
+    // Rebuild the render map
+    renderPriorityMap_.clear();
+    for (auto obj : sceneObjects_) {
+        renderPriorityMap_[obj.second->getRenderPriority()].push_back(obj.second);
     }
 }
 
@@ -74,7 +88,7 @@ void GameScene::update(CameraObject *camera) {
                     objPtr->setVpMatrix(orthoMat);
                     break;
                 default:
-                    printf("CameraObject::update: Ignoring object [%s] type [%d]\n", objPtr->getObjectName().c_str(),
+                    printf("CameraObject::update: Ignoring object [%s] type [%d]\n", objPtr->objectName().c_str(),
                         objPtr->type());
                     break;
             }

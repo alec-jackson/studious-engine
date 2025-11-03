@@ -49,10 +49,10 @@ class SceneObject {
     // Constructors
     inline explicit SceneObject(vec3 position, vec3 rotation, float scale, unsigned int programId,
         ObjectType type, string objectName, GfxController *gfxController):
-            position(position), rotation(rotation), objectName(objectName), scale_(scale), programId_(programId),
+            position(position), rotation(rotation), objectName_(objectName), scale_(scale), programId_(programId),
             type_ { type }, gfxController_ { gfxController } {}
     inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController):
-        position { 0 }, rotation { 0 }, objectName { objectName }, scale_ { 0.0f }, type_ { type },
+        position { 0 }, rotation { 0 }, objectName_ { objectName }, scale_ { 0.0f }, type_ { type },
         gfxController_ { gfxController } {}
     virtual ~SceneObject();
     // Setter methods
@@ -69,13 +69,14 @@ class SceneObject {
     inline const mat4 &rotateMatrix() const { return rotateMatrix_; }
     inline const mat4 &translateMatrix() const { return translateMatrix_; }
     inline const mat4 &scaleMatrix() const { return scaleMatrix_; }
-    inline vec3 getPosition() const { return this->position; }
+    inline const vec3 &getPosition() const { return position; }
     inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
     inline vec3 getRotation() const { return this->rotation; }
-    inline float getScale() const { return this->scale_; }
+    inline const float &getScale() const { return scale_; }
     inline uint getRenderPriority() const { return this->renderPriority_; }
     inline vec3 getResolution() const { return this->resolution_; }
-    inline string getObjectName() const { return this->objectName; }
+    inline string objectName() const { return this->objectName_; }
+    inline GfxController *gfxController() const { return this->gfxController_; }
     inline ObjectType type() const { return type_; }
 
     // Misc
@@ -115,7 +116,7 @@ class SceneObject {
     vec3 rotation;
     vec3 resolution_;
 
-    const string objectName;
+    const string objectName_;
     float scale_;
     unsigned int programId_;
     unsigned int vao_;

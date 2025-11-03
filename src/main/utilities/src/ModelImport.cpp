@@ -23,7 +23,7 @@ namespace ModelImport {
 Result processObjectFile(string modelPath, std::shared_ptr<Polygon> polygon);
 Result processMaterialFile(string modelPath, std::shared_ptr<Polygon> polygon);
 std::shared_ptr<Model> buildModel(string matName, const vector<float> &vF, const vector<float> &tF,
-    const vector<float> &nF, const vector<int> &commands);
+const vector<float> &nF, const vector<int> &commands);
 
 std::shared_ptr<Polygon> createPolygonFromFile(string modelPath) {
     auto polygon = std::make_shared<Polygon>();
@@ -176,7 +176,7 @@ Result processObjectFile(string modelPath, std::shared_ptr<Polygon> polygon) {
 }
 
 std::shared_ptr<Model> buildModel(string matName, const vector<float> &vF, const vector<float> &tF,
-    const vector<float> &nF, const vector<int> &commands) {
+const vector<float> &nF, const vector<int> &commands) {
     uint triCount = commands.size() / 9;
     vector<float> vertexVbo;
     vector<float> textureVbo;

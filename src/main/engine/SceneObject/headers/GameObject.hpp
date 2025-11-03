@@ -15,10 +15,10 @@
 #include <memory>
 #include <ModelImport.hpp>
 #include <SceneObject.hpp>
-#include <ColliderObject.hpp>
+#include <ColliderExt.hpp>
 #include <winsup.hpp>
 
-class GameObject: public SceneObject {
+class GameObject: public SceneObject, public ColliderExt {
  public:
     // Constructurs
     explicit GameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
@@ -38,10 +38,9 @@ class GameObject: public SceneObject {
 
     // Special Getters
     inline std::shared_ptr<Polygon> getModel() { return model_; }
-    ColliderObject *getCollider();
 
     // Other methods
-    void createCollider();
+    void createCollider() override;
     void configureOpenGl();
 
     void render() override;
@@ -58,6 +57,4 @@ class GameObject: public SceneObject {
 
     vector<int> hasTexture;
     vec3 directionalLight;
-
-    std::shared_ptr<ColliderObject> collider_;
 };

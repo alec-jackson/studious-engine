@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <mutex> //NOLINT
+#include <shared_mutex> //NOLINT
 #include <thread> //NOLINT
 #include <queue>
 #include <map>
@@ -21,6 +22,8 @@
 #include <atomic>
 #include <memory>
 #include <SceneObject.hpp>
+#include <ColliderExt.hpp>
+#include <glm/fwd.hpp>
 
 #define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
 #define PHYS_MAX_THREADS 256
@@ -44,8 +47,13 @@ enum PhysicsWorkType {
 class PhysicsObject {
  public:
     SceneObject *        target;
+    ColliderExt *        targetCollider;
     vec3                 position;
+    vec3                 prevPos;
+    vec3                 positionDelta = vec3(0.0f);
     vec3                 velocity;
+    vec3                 velocityDelta = vec3(0.0f);
+    bool                 hasCollision = false;
     vec3                 acceleration;
     vec3                 jerk;
     bool                 isKinematic;
@@ -55,10 +63,11 @@ class PhysicsObject {
     float                mass;
     double               runningTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
+    std::mutex           objLock;
     /**
      * @brief Updates the position of the target object using the position formula.
      */
-    void basePosUpdate();
+    void updatePosition();
     /**
      * @brief Resets the reference position to the object's real position to allow the runningTime
      * counter to be reset without moving the object backwards.
@@ -78,6 +87,9 @@ class PhysicsObject {
      * to zero.
      */
     void fullFlush();
+
+    void updateCollision(const map<string, std::shared_ptr<PhysicsObject>> &objects);
+    void updateFinalize();
 };
 
 struct PhysicsParams {
@@ -85,8 +97,6 @@ struct PhysicsParams {
     bool                obeyGravity;
     float               elasticity;
     float               mass;
-    inline PhysicsParams(bool isKinematic, bool obeyGravity, float elasticity, float mass) :
-        isKinematic { isKinematic }, obeyGravity { obeyGravity }, elasticity { elasticity }, mass { mass } {}
 };
 
 // External - published to subscribers
@@ -152,7 +162,9 @@ class PhysicsController {
     PhysicsResult applyForce(string objectName, vec3 force);
     PhysicsResult applyInstantForce(string objectName, vec3 force);
     PhysicsResult translate(string objectName, vec3 direction);
-    PhysicsResult updatePosition();
+    PhysicsResult schedulePosition();
+    PhysicsResult scheduleCollision();
+    PhysicsResult scheduleFinalize();
     inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
     PhysicsResult waitPipelineComplete();
     void update();
@@ -167,7 +179,7 @@ class PhysicsController {
     std::atomic<uint> threadNum_;
     int shutdown_ = 0;
     std::vector<std::thread> threads_;
-    std::mutex physicsObjectQueueLock_;
+    std::shared_mutex physicsObjectQueueLock_;
     std::mutex subscriberLock_;
     std::mutex workQueueLock_;
     std::atomic<uint> freeWorkers_;

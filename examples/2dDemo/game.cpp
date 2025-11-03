@@ -178,7 +178,7 @@ int mainLoop(GameInstance *currentGame) {
         }
         newPos = playerPtr->getPosition(offset);
         playerPtr->setPosition(newPos);
-        if (currentGame->getCollision2D(playerPtr, obstaclePtr, vec3(0))) printf("CONTACT TRUE\n");
+        if (currentGame->getCollision(playerPtr, obstaclePtr)) printf("CONTACT TRUE\n");
         // Update player position
         deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         if (SHOW_FPS) {  // use sampleSize to find average FPS

@@ -27,9 +27,9 @@ using std::ifstream;
  * @brief Class used for importing .obj files for use in studious engine.
 */
 namespace ModelImport {
-    enum class Result {
-        OK,
-        FAILURE
-    };
-    std::shared_ptr<Polygon> createPolygonFromFile(string modelPath);
+enum class Result {
+    OK,
+    FAILURE
+};
+std::shared_ptr<Polygon> createPolygonFromFile(string modelPath);
 };
