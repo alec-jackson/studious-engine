@@ -131,6 +131,7 @@ UiObject::~UiObject() {
 }
 
 void UiObject::render() {
+    VISIBILITY_CHECK;
     // Update model matrices
     updateModelMatrices();
     // Do not use the normal scale for UI - scale is used for initialization only

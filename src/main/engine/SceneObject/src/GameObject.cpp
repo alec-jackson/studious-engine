@@ -167,6 +167,7 @@ void GameObject::update() {
  * models connected to it, which can have their own textures, etc.
  */
 void GameObject::render() {
+    VISIBILITY_CHECK;
     if (model_.get() == nullptr) return;
     // Send GameObject to render method
     // Draw each shape individually

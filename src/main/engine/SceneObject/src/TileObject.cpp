@@ -176,6 +176,7 @@ void TileObject::update() {
 }
 
 void TileObject::render() {
+    VISIBILITY_CHECK;
     // No additional model updates will be performed. This is a one-and-done thing.
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);

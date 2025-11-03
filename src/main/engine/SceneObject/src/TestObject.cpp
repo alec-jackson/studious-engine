@@ -28,6 +28,7 @@ TestObject::TestObject(std::shared_ptr<Polygon> polygon, string name) :
 }
 
 void TestObject::render() {
+    VISIBILITY_CHECK;
 }
 
 void TestObject::update() {

@@ -134,6 +134,7 @@ TextObject::~TextObject() {
 }
 
 void TextObject::render() {
+    VISIBILITY_CHECK;
     // Update model matrices
     updateModelMatrices();
     modelMat_ = translateMatrix_;
