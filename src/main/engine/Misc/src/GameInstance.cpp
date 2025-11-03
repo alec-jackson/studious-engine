@@ -484,6 +484,7 @@ int GameInstance::update() {
     physicsController_->update();
     end = SDL_GetPerformanceCounter();
     deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
+    std::this_thread::yield();
     return error;
 }
 
