@@ -17,7 +17,7 @@
 #include <map>
 #include <mutex>
 #include <iostream>
-#include "InputController.hpp"
+#include <InputController.hpp>
 
 // GameInput maps for input devices
 std::map<SDL_Scancode, GameInput> keyboardInputMap = {
@@ -50,13 +50,13 @@ std::map<Uint8, GameInput> hatInputMap = {
     { SDL_HAT_RIGHT, GameInput::EAST }
 };
 
-InputController::InputController(){
+InputController::InputController() {
     std::cout << "Creating Controllers!\n";
     controllersConnected = 0;
     keystate = SDL_GetKeyboardState(NULL);
 }
 
-InputController::~InputController(){
+InputController::~InputController() {
     for (int i = 0; i < controllersConnected; i++) {
         SDL_GameControllerClose(gameControllers[i]);
     }

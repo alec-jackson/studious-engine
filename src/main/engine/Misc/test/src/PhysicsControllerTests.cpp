@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <cstdio>
+#include <vector>
 #include <ColliderObject.hpp>
 #include <ModelImport.hpp>
 #include <physics.hpp>

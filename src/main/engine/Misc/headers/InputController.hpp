@@ -39,53 +39,53 @@ typedef struct controllerReadout {
 } controllerReadout;
 
 class InputController {
-	private:
-	const Uint8 *keystate;
-	int controllersConnected;
-	SDL_GameController *gameControllers[2];
-	controllerReadout controllerInfo[2];
+ private:
+    const Uint8 *keystate;
+    int controllersConnected;
+    SDL_GameController *gameControllers[2];
+    controllerReadout controllerInfo[2];
 
-	std::mutex controllerLock_;
+    std::mutex controllerLock_;
 
-	public:
-	InputController();
-	~InputController();
-	/**
-	 * @brief Can be used to check raw SDL scancode values. This has the same behavior as the previous
-	 * getKeystate function did.
-	 * @return Uint8 array that can be indexed using SDL_Scancode enumerated values.
-	 */
-	const Uint8 *getKeystateRaw();
-	/**
-	 * @brief Shorthand way to check if a keyboard button has been pressed.
-	 * @param scancode - The SDL_Scancode enum value to check for input state.
-	 * @return true if the button described in scancode is pressed down, false otherwise.
-	 */
-	bool getKeyboardInput(SDL_Scancode scancode) const;
-	/**
-	 * @brief Check if a SDL_GameControllerButton has been pressed.
-	 * @param button - The button to poll the input state of. Described by SDL_GameControllerButton.
-	 * @return true if the button is pressed down, false otherwise.
-	 */
-	bool getControllerInput(SDL_GameControllerButton button) const;
-	/**
-	 * @brief Polls for a specific input across keyboard and controller input devices.
-	 * @param input - The input to check for.
-	 * @return true if the GameInput is being pressed by a keyboard or controller. False otherwise.
-	 */
-	bool pollInput(GameInput input);
+ public:
+    InputController();
+    ~InputController();
+    /**
+     * @brief Can be used to check raw SDL scancode values. This has the same behavior as the previous
+     * getKeystate function did.
+     * @return Uint8 array that can be indexed using SDL_Scancode enumerated values.
+     */
+    const Uint8 *getKeystateRaw();
+    /**
+     * @brief Shorthand way to check if a keyboard button has been pressed.
+     * @param scancode - The SDL_Scancode enum value to check for input state.
+     * @return true if the button described in scancode is pressed down, false otherwise.
+     */
+    bool getKeyboardInput(SDL_Scancode scancode) const;
+    /**
+     * @brief Check if a SDL_GameControllerButton has been pressed.
+     * @param button - The button to poll the input state of. Described by SDL_GameControllerButton.
+     * @return true if the button is pressed down, false otherwise.
+     */
+    bool getControllerInput(SDL_GameControllerButton button) const;
+    /**
+     * @brief Polls for a specific input across keyboard and controller input devices.
+     * @param input - The input to check for.
+     * @return true if the GameInput is being pressed by a keyboard or controller. False otherwise.
+     */
+    bool pollInput(GameInput input);
 
-	/*
-	 (controllerReadout *) getControllers takes an (int) controllerIndex and returns
-	 the associated controllerReadout struct.
-	*/
-	controllerReadout *getControllers(int controllerIndex);
+    /*
+     (controllerReadout *) getControllers takes an (int) controllerIndex and returns
+     the associated controllerReadout struct.
+    */
+    controllerReadout *getControllers(int controllerIndex);
 
-	/*
-	 (int) getControllersConnected returns the number of controllers connected and
-	 detected by the current SDL instance.
-	*/
-	int getControllersConnected();
+    /*
+     (int) getControllersConnected returns the number of controllers connected and
+     detected by the current SDL instance.
+    */
+    int getControllersConnected();
 
     /**
      * @brief Converts a raw SDL scancode value to a GameInput value. @see keyboardInputMap in the GameInstance.cpp
@@ -110,5 +110,5 @@ class InputController {
      */
     void resetController();
 
-	void initController();
+    void initController();
 };
