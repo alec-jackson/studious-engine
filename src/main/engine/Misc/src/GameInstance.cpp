@@ -474,12 +474,16 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
 
 int GameInstance::update() {
     // Update any controllers here that should be paced with the frame rate
+    Uint64 begin, end;
+    begin = SDL_GetPerformanceCounter();
     int error = 0;
     error = updateObjects();
     error |= updateWindow();
     updateInput();
     animationController_->update();
     physicsController_->update();
+    end = SDL_GetPerformanceCounter();
+    deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
     return error;
 }
 
