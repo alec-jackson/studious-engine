@@ -9,8 +9,8 @@
  *
  */
 #include <physics.hpp>
-#include <chrono>
-#include <mutex>
+#include <chrono>  //NOLINT
+#include <mutex>  //NOLINT
 #include <shared_mutex>
 #include <string>
 #include <algorithm>
@@ -83,9 +83,6 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
         int prevCollState = ColliderExt::getCollisionRaw(prevPos,
             targetCollider, obj.second->target->getPosition(), obj.second->targetCollider);
         int deltaAxis = collState ^ prevCollState;
-        printf("delta axis %d\n", deltaAxis);
-        printf("prevPos (%f, %f, %f)\n", prevPos.x, prevPos.y, prevPos.z);
-        printf("pos (%f, %f, %f)\n", target->getPosition().x, target->getPosition().y, target->getPosition().z);
         // Test the collision with the two object's previous positions to get the collstate delta.
         // If the objects match, then we need to know what the deltaAxis were...
         // Don't update non-kinematic objects
