@@ -528,12 +528,13 @@ class GivenTwoKinematicObjects: public GivenPhysicsControllerPositionPipeline {
         physicsController_ = std::make_unique<PhysicsController>(6);
         // Create the polygons for the test objects
         basicModel_ = std::make_shared<Polygon>();
-        basicModel_->vertices = {
+        vector<float> bmVertices = {
             {  // Dummy vertex points here - just want offset to be 1 and center 0
                 -1.0f, -1.0f, -1.0f,  // vertex 1
                 1.0f, 1.0f, 1.0f,  // vertex 2
             }
         };
+        basicModel_->modelMap["to"] = std::make_shared<Model>(bmVertices.size() / 3, bmVertices);
 
         otherObject_ = std::make_unique<TestObject>(basicModel_, otherObjectName);
         testObject_ = std::make_unique<TestObject>(basicModel_, testObjectName);
@@ -634,20 +635,20 @@ class GivenKinematicAndNonKinematicObject: public GivenPhysicsControllerPosition
         physicsController_ = std::make_unique<PhysicsController>(6);
         // Create the polygons for the test objects
         basicModel_ = std::make_shared<Polygon>();
-        basicModel_->vertices = {
-            {  // Dummy vertex points here - just want offset to be 1 and center 0
-                -1.0f, -1.0f, -1.0f,  // vertex 1
-                1.0f, 1.0f, 1.0f,  // vertex 2
-            }
+
+        vector<float> bmVertices = {
+            // Dummy vertex points here - just want offset to be 1 and center 0
+            -1.0f, -1.0f, -1.0f,  // vertex 1
+            1.0f, 1.0f, 1.0f  // vertex 2
         };
-        mapModel_ = std::make_shared<Polygon>();
         // This represents a flat X-Z plane that would be used as a map.
-        mapModel_->vertices = {
-            {
-                -1.0f, 0.0f, -1.0f,
-                1.0f, 0.0f, 1.0f
-            }
+        vector<float> mapVertices = {
+            -1.0f, 0.0f, -1.0f,
+            1.0f, 0.0f, 1.0f
         };
+        basicModel_->modelMap["to"] = std::make_shared<Model>(bmVertices.size() / 3, bmVertices);
+        mapModel_ = std::make_shared<Polygon>();
+        mapModel_->modelMap["mo"] = std::make_shared<Model>(mapVertices.size() / 3, mapVertices);
 
         mapObject_ = std::make_unique<TestObject>(mapModel_, mapObjectName);
         mapObject_->setScale(10.0f);  // Make the map decently large

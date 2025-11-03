@@ -56,6 +56,5 @@ class GameObject: public SceneObject, public ColliderExt {
     float rollOff;
 
     vector<int> hasTexture;
-    vector<unsigned int> vaos_;  // Temporary?
     vec3 directionalLight;
 };

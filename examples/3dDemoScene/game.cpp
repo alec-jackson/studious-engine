@@ -5,13 +5,14 @@
  *       game engine. These two basic game files will generate a basic scene when the
  *       engine is compiled and ran.
  * @version 0.1
- * @date 2023-07-28
+ * @date 2025
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2025
  *
  */
 #include <ColliderObject.hpp>
 #include <GameInstance.hpp>
+#include <ModelImport.hpp>
 #include <SceneObject.hpp>
 #include <string>
 #include <vector>
@@ -63,6 +64,7 @@ GameObject *wolfRef, *playerRef;  // Used for collision testing
 extern std::unique_ptr<GfxController> gfxController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
+extern std::unique_ptr<InputController> inputController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(gameInfo *gamein);
@@ -88,11 +90,8 @@ int main() {
 
 void decorateAltScene(GameInstance *currentGame) {
     currentGame->setActiveScene("alternate-3d-scene");
-    auto playerPoly = ModelImport(
-        "src/resources/models/Dracula.obj",
-        {},
-        {})
-        .createPolygonFromFile();
+    auto playerPoly = ModelImport::createPolygonFromFile(
+        "src/resources/models/Dracula.obj");
 
     currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.005f, "alt");
@@ -131,27 +130,18 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
 
-    auto mapPoly = ModelImport("src/resources/models/map3.obj",
-        texturePathStage,
-        texturePatternStage)
-        .createPolygonFromFile();
+    auto mapPoly = ModelImport::createPolygonFromFile("src/resources/models/map3.obj");
 
     currentGame->createGameObject(mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
 
     cout << "Creating Player\n";
 
-    auto playerPoly = ModelImport(
-        "src/resources/models/Dracula.obj",
-        texturePath,
-        texturePattern)
-        .createPolygonFromFile();
+    auto playerPoly = ModelImport::createPolygonFromFile(
+        "src/resources/models/Dracula.obj");
 
-    auto companionPoly = ModelImport(
-        "src/resources/models/human.obj",
-        texturePath,
-        texturePattern)
-        .createPolygonFromFile();
+    auto companionPoly = ModelImport::createPolygonFromFile(
+        "src/resources/models/human.obj");
 
     // Ready the gameObjectInfo for the player object
     playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
@@ -174,10 +164,7 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating wolf\n";
 
-    auto wolfPoly = ModelImport("src/resources/models/wolf.obj",
-        texturePath,
-        texturePattern)
-        .createPolygonFromFile();
+    auto wolfPoly = ModelImport::createPolygonFromFile("src/resources/models/wolf.obj");
 
     auto wolfObject = currentGame->createGameObject(wolfPoly,
         vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
@@ -288,6 +275,7 @@ int runtime(GameInstance *currentGame) {
     currentGameInfo.isDone = &isDone;
     currentGameInfo.gameCamera = currentCamera;
     currentGameInfo.currentGame = currentGame;
+    currentGameInfo.gameInput = &**&inputController;
     /*
      End Scene Loading
      */
@@ -318,7 +306,7 @@ int mainLoop(gameInfo* gamein) {
     vector<double> times;
     while (!currentGame->isShutDown()) {
         begin = SDL_GetPerformanceCounter();
-        if (currentGame->pollInput(GameInput::QUIT)) currentGame->shutdown();
+        if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         if (error) {
             return error;

@@ -25,41 +25,12 @@
 #include <ColliderObject.hpp>
 #include <SceneObject.hpp>
 #include <OpenGlGfxController.hpp>
+#include <InputController.hpp>
 
 std::unique_ptr<GfxController> gfxController;
 std::unique_ptr<AnimationController> animationController;
 std::unique_ptr<PhysicsController> physicsController;
-
-// GameInput maps for input devices
-map<SDL_Scancode, GameInput> keyboardInputMap = {
-    { SDL_SCANCODE_W, GameInput::NORTH      },
-    { SDL_SCANCODE_S, GameInput::SOUTH      },
-    { SDL_SCANCODE_D, GameInput::EAST       },
-    { SDL_SCANCODE_A, GameInput::WEST       },
-    { SDL_SCANCODE_RETURN, GameInput::A     },
-    { SDL_SCANCODE_BACKSPACE, GameInput::B  },
-    { SDL_SCANCODE_BACKSPACE, GameInput::X  },
-    { SDL_SCANCODE_ESCAPE, GameInput::QUIT  }
-};
-
-// GameInput maps for input devices
-map<SDL_GameControllerButton, GameInput> controllerInputMap = {
-    { SDL_CONTROLLER_BUTTON_DPAD_UP, GameInput::NORTH },
-    { SDL_CONTROLLER_BUTTON_DPAD_DOWN, GameInput::SOUTH },
-    { SDL_CONTROLLER_BUTTON_DPAD_RIGHT, GameInput::EAST },
-    { SDL_CONTROLLER_BUTTON_DPAD_LEFT, GameInput::WEST },
-    { SDL_CONTROLLER_BUTTON_A, GameInput::A },
-    { SDL_CONTROLLER_BUTTON_B, GameInput::B },
-    { SDL_CONTROLLER_BUTTON_X, GameInput::X },
-    { SDL_CONTROLLER_BUTTON_BACK, GameInput::QUIT }
-};
-
-map<Uint8, GameInput> hatInputMap = {
-    { SDL_HAT_UP, GameInput::NORTH },
-    { SDL_HAT_DOWN, GameInput::SOUTH },
-    { SDL_HAT_LEFT, GameInput::WEST },
-    { SDL_HAT_RIGHT, GameInput::EAST }
-};
+std::unique_ptr <InputController> inputController;
 
 /*
  (void) startGameInstance uses the passed struct (gameInstanceArgs) args to
@@ -75,7 +46,6 @@ map<Uint8, GameInput> hatInputMap = {
  */
 GameInstance::GameInstance(const StudiousConfig &config): shutdown_(0) {
     luminance = 1.0f;  // Set default values
-    controllersConnected = 0;
     processConfig(config);
     init();
 }
@@ -83,9 +53,8 @@ GameInstance::GameInstance(const StudiousConfig &config): shutdown_(0) {
 void GameInstance::init() {
     initWindow();
     initAudio();
-    initController();
+    inputController->initController();
     initApplication();
-    keystate = SDL_GetKeyboardState(NULL);
 }
 
 /*
@@ -106,65 +75,6 @@ int GameInstance::getHeight() {
 
 vec3 GameInstance::getResolution() {
     return vec3(static_cast<float>(width_), static_cast<float>(height_), 0.0f);
-}
-
-bool GameInstance::getControllerInput(SDL_GameControllerButton button) const {
-    if (!controllersConnected) return false;
-    // Checks if a button was pressed against all connected controllers
-    if (gameControllers[0] == nullptr) {
-        return false;
-    }
-    return SDL_GameControllerGetButton(gameControllers[0], button);
-}
-
-bool GameInstance::getKeyboardInput(SDL_Scancode scancode) const {
-    return keystate[scancode];
-}
-
-bool GameInstance::pollInput(GameInput input) {
-    std::unique_lock<std::mutex> scopeLock(controllerLock_);
-    auto pressed = false;
-    // Check for the target input from either a controller or keyboard (will improve later)
-    SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
-    SDL_GameControllerButton button = SDL_CONTROLLER_BUTTON_INVALID;
-    // Reverse the maps and find the corresponding raw input
-    for (auto kbEntry : keyboardInputMap) {
-        // Check if the value is equal and use that keycode
-        if (kbEntry.second == input) {
-            scancode = kbEntry.first;
-            break;
-        }
-    }
-    for (auto cEntry : controllerInputMap) {
-        // Check if the value is equal and use that keycode
-        if (cEntry.second == input) {
-            button = cEntry.first;
-            break;
-        }
-    }
-    // Now finally POLL for events on all devices.
-    pressed |= getControllerInput(button);
-    pressed |= getKeyboardInput(scancode);
-    return pressed;
-}
-
-/*
- (controllerReadout *) getControllers takes an (int) controllerIndex and returns
- the associated controllerReadout struct.
-*/
-controllerReadout* GameInstance::getControllers(int controllerIndex) {
-    controllerInfo[controllerIndex].leftAxis =
-        SDL_GameControllerGetAxis(gameControllers[controllerIndex],
-        SDL_CONTROLLER_AXIS_LEFTY);
-    return &controllerInfo[controllerIndex];
-}
-
-/*
- (int) getControllersConnected returns the number of controllers connected and
- detected by the current SDL instance.
-*/
-int GameInstance::getControllersConnected() {
-    return controllersConnected;
 }
 
 /**
@@ -261,9 +171,6 @@ GameInstance::~GameInstance() {
     printf("GameInstance::~GameInstance\n");
     /* We should empty the protected gfx requests queue */
     runGfxRequests();
-    for (int i = 0; i < controllersConnected; i++) {
-        SDL_GameControllerClose(gameControllers[i]);
-    }
     for (auto &s : loadedSounds_) {
         Mix_FreeChunk(s.second);
     }
@@ -382,7 +289,7 @@ void GameInstance::updateInput() {
             std::unique_lock<std::mutex> scopeLock(inputLock_);
             // printf("Keyboard pressed %d\n", event.key.keysym.scancode);
             // Let's just use the queue as a mailbox for now
-            auto input = scancodeToInput(event.key.keysym.scancode);
+            auto input = inputController->scancodeToInput(event.key.keysym.scancode);
             if (inputQueue_.empty() && input != GameInput::NONE) {
                 inputQueue_.push(input);
             }
@@ -393,7 +300,7 @@ void GameInstance::updateInput() {
             std::unique_lock<std::mutex> scopeLock(inputLock_);
             // printf("Button pressed %d\n", event.jbutton.button);
             // Let's just use the queue as a mailbox for now
-            auto input = buttonToInput(static_cast<SDL_GameControllerButton>(event.jbutton.button));
+            auto input = inputController->buttonToInput(static_cast<SDL_GameControllerButton>(event.jbutton.button));
             if (inputQueue_.empty() && input != GameInput::NONE) {
                 inputQueue_.push(input);
             }
@@ -404,7 +311,7 @@ void GameInstance::updateInput() {
             std::unique_lock<std::mutex> scopeLock(inputLock_);
             // printf("Hat pressed %d\n", event.jhat.value);
             // Let's just use the queue as a mailbox for now
-            auto input = hatToInput(static_cast<Uint8>(event.jhat.value));
+            auto input = inputController->hatToInput(static_cast<Uint8>(event.jhat.value));
             if (inputQueue_.empty() && input != GameInput::NONE) {
                 inputQueue_.push(input);
             }
@@ -414,20 +321,10 @@ void GameInstance::updateInput() {
             shutdown();
         } else if (event.type == SDL_JOYDEVICEADDED || event.type == SDL_JOYDEVICEREMOVED) {
             // Connect to new controllers on the fly...
-            resetController();
-            initController();
+            inputController->resetController();
+            inputController->initController();
         }
     }
-}
-
-GameInput GameInstance::hatToInput(Uint8 hatValue) {
-    auto input = GameInput::NONE;
-    // Check the input map for a game input
-    auto cimit = hatInputMap.find(hatValue);
-    if (cimit != hatInputMap.end()) {
-        input = cimit->second;
-    }
-    return input;
 }
 
 GameInput GameInstance::getInput() {
@@ -724,45 +621,6 @@ int GameInstance::loadSound(string sfxName, string sfxPath) {
     return 0;
 }
 
-/*
- (void) initController attemps to initialize any connected joysticks with the
- current SDL instance.
-
- (void) initController does not return any values.
-*/
-void GameInstance::initController() {
-    std::unique_lock<std::mutex> scopeLock(controllerLock_);
-    int joyFlag = SDL_NumJoysticks();
-    cout << "Number of joysticks connected: " << joyFlag << "\n";
-    if (joyFlag < 1) {
-        cout << "Warning: No Joysticks Detected\n";
-    } else {
-        for (int i = 0; i < joyFlag; i++) {
-            if (SDL_IsGameController(i)) {
-                gameControllers[controllersConnected] = SDL_GameControllerOpen(i);
-                if (gameControllers[controllersConnected] == NULL) {
-                    cerr << "Error: Unable to open game controller - "
-                        << SDL_GetError() << "\n";
-                } else {
-                    controllersConnected++;
-                    return;
-                }
-            }
-        }
-        cout << "No available Xinput joysticks detected!\n";
-    }
-    return;
-}
-
-void GameInstance::resetController() {
-    std::unique_lock<std::mutex> scopeLock(controllerLock_);
-    for (int i = 0; i < controllersConnected; ++i) {
-        SDL_GameControllerClose(gameControllers[i]);
-        gameControllers[i] = nullptr;
-    }
-    controllersConnected = 0;
-}
-
 void GameInstance::initApplication() {
     gfxController_->init();
     configureVsync(vsync_);
@@ -782,30 +640,6 @@ bool GameInstance::waitForProgress(std::function<bool(void)> pred) {
     std::unique_lock<std::mutex> scopeLock(progressLock_);
     progressCv_.wait(scopeLock, [pred, this]() { return pred() || isShutDown(); });
     return !isShutDown();
-}
-
-GameInput GameInstance::scancodeToInput(SDL_Scancode scancode) {
-    auto input = GameInput::NONE;
-    // Check the input map for a game input
-    auto cimit = keyboardInputMap.find(scancode);
-    if (cimit != keyboardInputMap.end()) {
-        input = cimit->second;
-    }
-    return input;
-}
-
-GameInput GameInstance::buttonToInput(SDL_GameControllerButton button) {
-    auto input = GameInput::NONE;
-    // Check the input map for a game input
-    auto cimit = controllerInputMap.find(button);
-    if (cimit != controllerInputMap.end()) {
-        input = cimit->second;
-    }
-    return input;
-}
-
-const Uint8 *GameInstance::getKeystateRaw() {
-    return keystate;
 }
 
 void GameInstance::processConfig(const StudiousConfig &config) {
@@ -837,6 +671,7 @@ void GameInstance::processConfig(const StudiousConfig &config) {
 
     animationController = std::make_unique<AnimationController>();
     physicsController = std::make_unique<PhysicsController>(physThreads);
+    inputController = std::make_unique<InputController>();
 
     // Populate internal pointers to keep things easy
     gfxController_ = gfxController.get();

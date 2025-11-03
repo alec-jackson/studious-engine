@@ -65,7 +65,6 @@ endif()
 
 add_library(${PROJECT_NAME} SHARED
   src/main/utilities/src/ModelImport.cpp
-  src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/GameInstance.cpp
   src/main/engine/Misc/src/GameScene.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
@@ -85,6 +84,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/GfxController/src/OpenGlGfxController.cpp
   src/main/engine/AnimationController/src/AnimationController.cpp
+  src/main/engine/Misc/src/InputController.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/Misc/src/Image.cpp
   src/main/misc/src/config.cpp
@@ -121,7 +121,6 @@ if (GTest_FOUND AND RUNTEST)
 add_executable(gtest_ModelImportTests
   src/main/utilities/test/src/ModelImportTests.cpp
   src/main/utilities/src/ModelImport.cpp
-  src/main/utilities/src/Polygon.cpp
 )
 
 target_include_directories(gtest_ModelImportTests
@@ -143,32 +142,6 @@ target_link_libraries(gtest_ModelImportTests
 
 gtest_discover_tests(gtest_ModelImportTests)
 
-# ======================================== PolygonTests ========================================
-add_executable(gtest_PolygonTests
-  src/main/utilities/test/src/PolygonTests.cpp
-  src/main/engine/GfxController/src/DummyGfxController.cpp
-  src/main/utilities/src/Polygon.cpp
-)
-
-target_include_directories(gtest_PolygonTests
-  PRIVATE src/main/utilities/test/headers
-  PUBLIC ${SDL2_INCLUDE_DIRS}
-  PUBLIC ${OPENGL_INCLUDE_DIR}
-  PUBLIC ${FREETYPE_INCLUDE_DIRS}
-)
-
-target_link_libraries(gtest_PolygonTests
-  PUBLIC SDL2::Main
-  PUBLIC SDL2::Mixer
-  PUBLIC SDL2::Image
-  PUBLIC ${OPENGL_LIBRARIES}
-  PUBLIC Threads::Threads
-  PUBLIC ${FREETYPE_LIBRARIES}
-  PUBLIC GTest::gtest_main
-)
-
-gtest_discover_tests(gtest_PolygonTests)
-
 # ======================================== SpriteObjectTests ========================================
 add_executable(gtest_SpriteObjectTests
   src/main/engine/SceneObject/test/src/SpriteObjectTests.cpp
@@ -176,7 +149,6 @@ add_executable(gtest_SpriteObjectTests
   src/main/engine/SceneObject/src/SpriteObject.cpp
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
-  src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/Image.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
   src/main/engine/SceneObjectExt/src/ImageExt.cpp
@@ -203,7 +175,6 @@ add_executable(gtest_SceneObjectTests
   src/main/engine/SceneObject/src/TestObject.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
-  src/main/utilities/src/Polygon.cpp
 )
 
 target_include_directories(gtest_SceneObjectTests
@@ -230,7 +201,6 @@ add_executable(gtest_AnimationControllerTests
   src/main/engine/SceneObject/src/TextObject.cpp
   src/main/engine/SceneObject/src/UiObject.cpp
   src/main/engine/GfxController/src/DummyGfxController.cpp
-  src/main/utilities/src/Polygon.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
   src/main/engine/SceneObjectExt/src/ImageExt.cpp
@@ -257,7 +227,6 @@ add_executable(gtest_PhysicsControllerTests
   src/main/engine/Misc/test/src/PhysicsControllerTests.cpp
   src/main/engine/Misc/src/physics.cpp
   src/main/engine/Misc/src/DeltaTime.cpp
-  src/main/utilities/src/Polygon.cpp
   src/main/engine/SceneObject/src/TestObject.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
@@ -296,6 +265,8 @@ install(TARGETS ${PROJECT_NAME}
 install (FILES
   src/main/utilities/headers/ModelImport.hpp
   src/main/utilities/headers/Polygon.hpp
+  src/main/utilities/headers/Model.hpp
+  src/main/utilities/headers/Material.hpp
   src/main/common/headers/common.hpp
   src/main/common/headers/winsup.hpp
   src/main/engine/SceneObject/headers/CameraObject.hpp
@@ -313,6 +284,7 @@ install (FILES
   src/main/engine/GfxController/headers/GfxController.hpp
   src/main/engine/GfxController/headers/OpenGlGfxController.hpp
   src/main/engine/Misc/headers/GameInstance.hpp
+  src/main/engine/Misc/headers/InputController.hpp
   src/main/engine/Misc/headers/GameScene.hpp
   src/main/engine/Misc/headers/Image.hpp
   src/main/engine/Misc/headers/physics.hpp

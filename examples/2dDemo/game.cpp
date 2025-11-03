@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>
+#include <InputController.hpp>
 
 // Lists of embedded/core shaders
 #ifndef GFX_EMBEDDED
@@ -43,6 +44,7 @@ vector<ProgramData> programs = {
 extern std::unique_ptr<GfxController> gfxController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
+extern std::unique_ptr <InputController> inputController;
 
 int runtime(GameInstance *currentGame);
 int mainLoop(GameInstance *currentGame);
@@ -155,21 +157,21 @@ int mainLoop(GameInstance *currentGame) {
         offset = vec3(0);
         /// @todo Move these calls to a separate thread...
         begin = SDL_GetPerformanceCounter();
-        if (currentGame->pollInput(GameInput::QUIT)) currentGame->shutdown();
+        if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         if (error) {
             return error;
         }
         end = SDL_GetPerformanceCounter();
-        if (currentGame->pollInput(GameInput::NORTH)) offset += vec3(0, speed, 0);
-        if (currentGame->pollInput(GameInput::SOUTH)) offset -= vec3(0, speed, 0);
-        if (currentGame->pollInput(GameInput::EAST)) offset += vec3(speed, 0, 0);
-        if (currentGame->pollInput(GameInput::WEST)) offset -= vec3(speed, 0, 0);
-        if (currentGame->pollInput(GameInput::X) && !eDown) {
+        if (inputController->pollInput(GameInput::NORTH)) offset += vec3(0, speed, 0);
+        if (inputController->pollInput(GameInput::SOUTH)) offset -= vec3(0, speed, 0);
+        if (inputController->pollInput(GameInput::EAST)) offset += vec3(speed, 0, 0);
+        if (inputController->pollInput(GameInput::WEST)) offset -= vec3(speed, 0, 0);
+        if (inputController->pollInput(GameInput::X) && !eDown) {
             printf("E pressed!\n");
             eDown = true;
             animationController.get()->pauseTrack("obstacle");
-        } else if (!currentGame->pollInput(GameInput::X) && eDown) {
+        } else if (!inputController->pollInput(GameInput::X) && eDown) {
             printf("E released!\n");
             eDown = false;
             animationController.get()->playTrack("one to four");

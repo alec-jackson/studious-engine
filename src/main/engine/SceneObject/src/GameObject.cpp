@@ -35,14 +35,6 @@ GameObject::GameObject(std::shared_ptr<Polygon> characterModel, vec3 position, v
     luminance = 1.0f;
     rollOff = 0.9f;  // Rolloff describes the intensity of the light dropoff
     directionalLight = vec3(0, 0, 0);
-    // Populate the hasTexture vector with texture info
-    for (int i = 0; i < model_.get()->numberOfObjects; i++) {
-        if (model_.get()->textureCoordsId[i] == UINT_MAX) {
-            hasTexture.push_back(0);  // No texture found for obj i
-        } else {
-            hasTexture.push_back(1);  // Texture found for obj i
-        }
-    }
     scaleMatrix_ = glm::scale(vec3(scale_, scale_, scale_));
     translateMatrix_ = glm::translate(mat4(1.0f), position);
     rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0]),
@@ -71,46 +63,54 @@ GameObject::GameObject(GfxController *gfxController) :
  * @param objectId index of the object to configure OpenGL for relative to other objects in the parsed .obj file.
  */
 void GameObject::configureOpenGl() {
-    printf("GameObject::configureOpenGl: Configuring for %s with %d objects\n", objectName_.c_str(),
-        model_.get()->numberOfObjects);
-    for (auto i = 0; i < model_.get()->numberOfObjects; ++i) {
-        unsigned int vao;
-        gfxController_->initVao(&vao);
-        gfxController_->bindVao(vao);
+    printf("GameObject::configureOpenGl: Configuring for %s with %zu objects\n", objectName_.c_str(),
+        model_.get()->modelMap.size());
+    for (auto &modelPair : model_->modelMap) {
+        gfxController_->initVao(&modelPair.second.get()->vao);
+        gfxController_->bindVao(modelPair.second.get()->vao);
         // Generate vertex buffer
-        gfxController_->generateBuffer(&model_.get()->shapeBufferId[i]);
-        gfxController_->bindBuffer(model_.get()->shapeBufferId[i]);
-        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 9, &model_.get()->vertices[i][0]);
+        gfxController_->generateBuffer(&modelPair.second.get()->shapeBufferId);
+        gfxController_->bindBuffer(modelPair.second.get()->shapeBufferId);
+        gfxController_->sendBufferData(sizeof(float) * modelPair.second.get()->pointCount * 9,
+            modelPair.second.get()->vertices.data());
         gfxController_->enableVertexAttArray(0, 3, sizeof(float), 0);
         // Generate normal buffer
-        gfxController_->generateBuffer(&model_.get()->normalBufferId[i]);
-        gfxController_->bindBuffer(model_.get()->normalBufferId[i]);
-        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 9,
-            &model_.get()->normalCoords[i][0]);
+        gfxController_->generateBuffer(&modelPair.second.get()->normalBufferId);
+        gfxController_->bindBuffer(modelPair.second.get()->normalBufferId);
+        gfxController_->sendBufferData(sizeof(float) * modelPair.second.get()->pointCount * 9,
+            modelPair.second.get()->normalCoords.data());
         gfxController_->enableVertexAttArray(2, 3, sizeof(float), 0);
         // Specific case where the current object does not get a texture
-        int size = static_cast<int>(model_.get()->texturePath_.size()) < 0 ? 0 : model_.get()->texturePath_.size();
-        if (model_.get()->texturePath_.empty() || model_.get()->texturePattern_[i] >= size ||
-            model_.get()->texturePattern_[i] == -1) {
+        auto materialName = modelPair.second.get()->materialName;
+        auto mmit = model_.get()->materialMap.find(materialName);
+        if (model_.get()->materialMap.end() == mmit) {
+            fprintf(stderr, "Material not found, cannot join.\n");
+        }
+        for (auto ent : model_.get()->materialMap) {
+            fprintf(stderr, "materialMap is %s -> %s\n",
+                ent.first.c_str(), ent.second.get()->name.c_str());
+        }
+        if (model_.get()->materialMap.end() == mmit ||
+            mmit->second->pathToTextureFile.empty()) {
+            fprintf(stderr,
+                "GameObject::configureOpenGl: Either no material for %s "
+                "or material has no texture defined! matname[%s]\n",
+                modelPair.first.c_str(), materialName.c_str());
             gfxController_->bindVao(0);
-            // ADD VAO TO LIST
-            vaos_.push_back(vao);
             continue;
         }
-        SDL_Surface *texture = IMG_Load(model_.get()->texturePath_[model_.get()->texturePattern_[i]].c_str());
-        cout << "Loading texture: " << model_.get()->texturePath_[model_.get()->texturePattern_[i]] << "\n";
+        SDL_Surface *texture = IMG_Load(mmit->second->pathToTextureFile.c_str());
+        cout << "Loading texture: " << mmit->second->pathToTextureFile << "\n";
         if (texture == NULL) {
             cerr << "Failed to create SDL_Surface texture!\n";
             gfxController_->bindVao(0);
-            // ADD VAO TO LIST
-            vaos_.push_back(vao);
             continue;
         }
 
         auto textureFormat = texture->format->Amask ? TexFormat::RGBA : TexFormat::RGB;
         // Send texture image to OpenGL
-        gfxController_->generateTexture(&model_.get()->textureId[i]);
-        gfxController_->bindTexture(model_.get()->textureId[i], GfxTextureType::NORMAL);
+        gfxController_->generateTexture(&modelPair.second.get()->textureId);
+        gfxController_->bindTexture(modelPair.second.get()->textureId, GfxTextureType::NORMAL);
         gfxController_->sendTextureData(texture->w, texture->h, textureFormat, texture->pixels);
         gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
         gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
@@ -122,19 +122,17 @@ void GameObject::configureOpenGl() {
         gfxController_->generateMipMap();
 
         // Send texture coords to OpenGL
-        gfxController_->generateBuffer(&model_.get()->textureCoordsId[i]);
-        gfxController_->bindBuffer(model_.get()->textureCoordsId[i]);
-        gfxController_->sendBufferData(sizeof(float) * model_.get()->pointCount[i] * 6,
-            &model_.get()->textureCoords[i][0]);
+        gfxController_->generateBuffer(&modelPair.second.get()->textureCoordsId);
+        gfxController_->bindBuffer(modelPair.second.get()->textureCoordsId);
+        gfxController_->sendBufferData(sizeof(float) * modelPair.second.get()->pointCount * 6,
+            modelPair.second.get()->textureCoords.data());
         gfxController_->enableVertexAttArray(1, 2, sizeof(float), 0);
 
         SDL_FreeSurface(texture);
         gfxController_->bindVao(0);
         gfxController_->bindTexture(0, GfxTextureType::NORMAL);
-        // ADD VAO TO LIST
-        vaos_.push_back(vao);
     }
-    model_.get()->textureUniformId = gfxController_->getShaderVariable(programId_, "mytexture").get();
+    model_->textureUniformId = gfxController_->getShaderVariable(programId_, "mytexture").get();
 }
 
 /**
@@ -172,7 +170,8 @@ void GameObject::render() {
     if (model_.get() == nullptr) return;
     // Send GameObject to render method
     // Draw each shape individually
-    for (int i = 0; i < model_.get()->numberOfObjects; i++) {
+    for (auto &modelPair : model_.get()->modelMap) {
+        int hasTexture = modelPair.second.get()->textureCoordsId != UINT_MAX ? 1 : 0;
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::FILL);
         // Update our model transformation matrices
@@ -184,15 +183,15 @@ void GameObject::render() {
         gfxController_->sendFloatVector(directionalLightId, 1, VectorType::GFX_3D, glm::value_ptr(directionalLight));
         gfxController_->sendFloatMatrix(vpId, 1, glm::value_ptr(vpMatrix_));
         gfxController_->sendFloatMatrix(modelId, 1, glm::value_ptr(modelMatrix));
-        gfxController_->sendInteger(hasTextureId, hasTexture[i]);
-        gfxController_->bindVao(vaos_[i]);
-        if (hasTexture[i]) {
+        gfxController_->sendInteger(hasTextureId, hasTexture);
+        gfxController_->bindVao(modelPair.second.get()->vao);
+        if (hasTexture) {
             // textureUniformId points to the sampler2D in GLSL, point it to texture unit 0
             gfxController_->sendInteger(model_.get()->textureUniformId, 0);
             // Bind texture to sampler for polygon rendering below
-            gfxController_->bindTexture(model_.get()->textureId[i], GfxTextureType::NORMAL);
+            gfxController_->bindTexture(modelPair.second.get()->textureId, GfxTextureType::NORMAL);
         }
-        gfxController_->drawTriangles(model_.get()->pointCount[i] * 3);
+        gfxController_->drawTriangles(modelPair.second.get()->pointCount * 3);
         gfxController_->bindVao(0);
     }
     if (collider_.use_count() > 0) collider_.get()->update();
