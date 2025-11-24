@@ -10,14 +10,10 @@
  *
  */
 
-#include <SDL_gamecontroller.h>
-#include <SDL_keyboard.h>
-#include <SDL_scancode.h>
-
+#include <InputController.hpp>
 #include <map>
 #include <mutex>
 #include <iostream>
-#include <InputController.hpp>
 
 // GameInput maps for input devices
 std::map<SDL_Scancode, GameInput> keyboardInputMap = {

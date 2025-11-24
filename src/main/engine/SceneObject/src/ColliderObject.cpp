@@ -34,7 +34,7 @@
 ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
     SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), target_ { target },
     pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
-    pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
+    pVpMatrix_ { owner->vpMatrix() } {
     programId_ = programId;
     createCollider();
 }
@@ -45,7 +45,7 @@ ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, 
 ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, SceneObject *owner) :
     SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()),
     pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
-    pVpMatrix_ { owner->vpMatrix() }, pPos_ { owner->getPosition() } {
+    pVpMatrix_ { owner->vpMatrix() } {
     programId_ = programId;
     // Separate vertex data from vertTexData
     assert(vertTexData.size() % 4 == 0);

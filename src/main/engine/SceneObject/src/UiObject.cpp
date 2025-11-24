@@ -80,7 +80,14 @@ std::shared_ptr<float[]> UiObject::generateVertices(float x, float y, float iFx,
     return vertexData;
 }
 
+void UiObject::setScale(float scale) {
+    SceneObject::setScale(scale);
+    // Re-initialize vertex data
+    initializeVertexData();
+}
+
 void UiObject::initializeVertexData() {
+    float effScale = getScale();
     // Perform anchor points here
     auto x = 0.0f, y = 0.0f;
     switch (anchor_) {
@@ -89,8 +96,8 @@ void UiObject::initializeVertexData() {
             y = 0.0f;
             break;
         case CENTER:
-            x = -1 * ((textureWidth_ * scale_) / 2.0f);
-            y = -1 * ((textureHeight_ * scale_) / 2.0f);
+            x = -1 * ((textureWidth_ * effScale) / 2.0f);
+            y = -1 * ((textureHeight_ * effScale) / 2.0f);
             break;
         case TOP_LEFT:
             y = -1.0f * textureHeight_ / 3.0f;
@@ -101,8 +108,8 @@ void UiObject::initializeVertexData() {
             assert(false);
             break;
     }
-    auto incrementFactorX = (textureWidth_ * scale_ / 3.0f);
-    auto incrementFactorY = (textureHeight_ * scale_ / 3.0f);
+    auto incrementFactorX = (textureWidth_ * effScale / 3.0f);
+    auto incrementFactorY = (textureHeight_ * effScale / 3.0f);
     // Use textures to create each character as an independent object
     gfxController_->initVao(&vao_);
     gfxController_->bindVao(vao_);
@@ -160,6 +167,10 @@ void UiObject::render() {
 
 void UiObject::update() {
     render();
+}
+
+void UiObject::finalize() {
+    initializeVertexData();
 }
 
 void UiObject::setWStretch(float wScale) {

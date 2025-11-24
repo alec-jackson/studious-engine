@@ -63,7 +63,7 @@ class SceneObject {
     inline void setPosition(vec3 position) { this->position = position; }
     inline void setRotation(vec3 rotation) { this->rotation = rotation; }
     inline void setResolution(vec3 resolution) { this->resolution_ = resolution; }
-    inline void setScale(float scale) { this->scale_ = scale ; }
+    inline virtual void setScale(float scale) { this->scale_ = scale ; }
     inline void setRenderPriority(uint renderPriority) { this->renderPriority_ =
         renderPriority <= RENDER_PRIOR_HIGHEST ? renderPriority : RENDER_PRIOR_HIGHEST; }
     inline void setVisible(bool visible) { visible_ = visible; }
@@ -73,10 +73,10 @@ class SceneObject {
     inline const mat4 &rotateMatrix() const { return rotateMatrix_; }
     inline const mat4 &translateMatrix() const { return translateMatrix_; }
     inline const mat4 &scaleMatrix() const { return scaleMatrix_; }
-    inline const vec3 &getPosition() const { return position; }
+    inline vec3 getPosition() const { return parent_ ? parent_->getPosition() + position : position; }
     inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
-    inline vec3 getRotation() const { return this->rotation; }
-    inline const float &getScale() const { return scale_; }
+    inline vec3 getRotation() const { return parent_ ? parent_->getRotation() + rotation : rotation; }
+    inline float getScale() const { return parent_ ? parent_->getScale() * scale_ : scale_; }
     inline uint getRenderPriority() const { return this->renderPriority_; }
     inline vec3 getResolution() const { return this->resolution_; }
     inline string objectName() const { return this->objectName_; }
@@ -95,7 +95,7 @@ class SceneObject {
      * of child objects if parent is not null.
      * @param parent - Pointer to the parent SceneObject to assign to this object.
      */
-    void setParent(SceneObject *parent);
+    virtual void setParent(SceneObject *parent);
     /**
      * @brief Assigns a child object to this SceneObject. Only used for tracking.
      * @param child - Pointer to the child SceneObject to track from this SceneObject.
@@ -106,6 +106,9 @@ class SceneObject {
      * @param child - Pointer to the child object to remove.
      */
     void removeChild(SceneObject *child);
+
+    // no-op by default
+    virtual inline void finalize() {};
 
     // Interface methods
     virtual void render() = 0;
