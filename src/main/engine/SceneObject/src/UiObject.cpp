@@ -128,6 +128,14 @@ void UiObject::initializeVertexData() {
     gfxController_->bindVao(0);
 }
 
+void UiObject::reinitializeVertexData() {
+    // Delete previous data and initialize
+    gfxController_->deleteBuffer(&vertexIndexVbo_);
+    gfxController_->deleteBuffer(&vbo_);
+    gfxController_->deleteVao(&vao_);
+    initializeVertexData();
+}
+
 UiObject::~UiObject() {
 }
 
@@ -164,7 +172,7 @@ void UiObject::update() {
 }
 
 void UiObject::finalize() {
-    initializeVertexData();
+    reinitializeVertexData();
 }
 
 void UiObject::setWStretch(float wScale) {
