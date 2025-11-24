@@ -95,7 +95,7 @@ class SceneObject {
      * of child objects if parent is not null.
      * @param parent - Pointer to the parent SceneObject to assign to this object.
      */
-    virtual void setParent(SceneObject *parent);
+    void setParent(SceneObject *parent);
     /**
      * @brief Assigns a child object to this SceneObject. Only used for tracking.
      * @param child - Pointer to the child SceneObject to track from this SceneObject.
