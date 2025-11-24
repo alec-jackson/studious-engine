@@ -7,6 +7,7 @@
  * @copyright Copyright (c) 2023
  */
 #pragma once
+#include <algorithm>
 #include <string>
 #include <set>
 #include <common.hpp>
@@ -21,11 +22,11 @@
 #define TILEOBJECT_PROG_NAME "tileObject"
 
 /* Default Render Priority Levels */
-#define RENDER_PRIOR_LOWEST 0
-#define RENDER_PRIOR_LOW 10
-#define RENDER_PRIOR_MEDIUM 20
-#define RENDER_PRIOR_HIGH 40
-#define RENDER_PRIOR_HIGHEST 100
+#define RENDER_PRIOR_LOWEST 0u
+#define RENDER_PRIOR_LOW 10u
+#define RENDER_PRIOR_MEDIUM 20u
+#define RENDER_PRIOR_HIGH 40u
+#define RENDER_PRIOR_HIGHEST 100u
 
 /* MISC */
 #define VISIBILITY_CHECK if (!visible_ || (parent_ && !parent_->visible())) return
@@ -65,7 +66,7 @@ class SceneObject {
     inline void setResolution(vec3 resolution) { this->resolution_ = resolution; }
     inline void setScale(float scale) { this->scale_ = scale ; }
     inline void setRenderPriority(uint renderPriority) { this->renderPriority_ =
-        renderPriority <= RENDER_PRIOR_HIGHEST ? renderPriority : RENDER_PRIOR_HIGHEST; }
+        std::min(renderPriority, RENDER_PRIOR_HIGHEST); }
     inline void setVisible(bool visible) { visible_ = visible; }
 
     // Getter methods
@@ -106,6 +107,8 @@ class SceneObject {
      * @param child - Pointer to the child object to remove.
      */
     void removeChild(SceneObject *child);
+
+    void modifyRenderPriority(int change);
 
     // no-op by default
     virtual inline void finalize() {}

@@ -68,3 +68,8 @@ void SceneObject::removeChild(SceneObject *child) {
             this->objectName().c_str());
     }
 }
+
+void SceneObject::modifyRenderPriority(int change) {
+    renderPriority_ += change;
+    renderPriority_ = std::min(renderPriority_, RENDER_PRIOR_HIGHEST);
+}
