@@ -63,7 +63,7 @@ class SceneObject {
     inline void setPosition(vec3 position) { this->position = position; }
     inline void setRotation(vec3 rotation) { this->rotation = rotation; }
     inline void setResolution(vec3 resolution) { this->resolution_ = resolution; }
-    inline virtual void setScale(float scale) { this->scale_ = scale ; }
+    inline void setScale(float scale) { this->scale_ = scale ; }
     inline void setRenderPriority(uint renderPriority) { this->renderPriority_ =
         renderPriority <= RENDER_PRIOR_HIGHEST ? renderPriority : RENDER_PRIOR_HIGHEST; }
     inline void setVisible(bool visible) { visible_ = visible; }
@@ -108,7 +108,7 @@ class SceneObject {
     void removeChild(SceneObject *child);
 
     // no-op by default
-    virtual inline void finalize() {};
+    virtual inline void finalize() {}
 
     // Interface methods
     virtual void render() = 0;

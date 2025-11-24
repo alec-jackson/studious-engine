@@ -80,12 +80,6 @@ std::shared_ptr<float[]> UiObject::generateVertices(float x, float y, float iFx,
     return vertexData;
 }
 
-void UiObject::setScale(float scale) {
-    SceneObject::setScale(scale);
-    // Re-initialize vertex data
-    initializeVertexData();
-}
-
 void UiObject::initializeVertexData() {
     float effScale = getScale();
     // Perform anchor points here

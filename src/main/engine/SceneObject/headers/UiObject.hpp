@@ -31,7 +31,6 @@ class UiObject : public GameObject2D {
     // Render method
     void render() override;
     void update() override;
-    void setScale(float scale) override;
     void finalize() override;
     void initializeShaderVars() override;
     void initializeVertexData();
