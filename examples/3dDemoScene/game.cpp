@@ -242,7 +242,7 @@ int runtime(GameInstance *currentGame) {
         ObjectAnchor::CENTER,
         "test-sprite");
 
-    currentGame->createUi(
+    auto bubble = currentGame->createUi(
         "src/resources/images/Message Bubble UI.png",   // image path
         vec3(80.0f, 160.0f, 0.0f),                     // Position
         0.5f,                                           // Scale
@@ -250,6 +250,7 @@ int runtime(GameInstance *currentGame) {
         0.0f,                                           // Height
         ObjectAnchor::CENTER,                           // Anchor
         "uiBubble");                                    // UI Bubble
+    bubble->setTint(vec4(0.3f, 0.0f, 0.0f, 0.0f));
     currentGame->createText(
         "Textbox Example",
         vec3(40.0f, 155.0f, 0.0f),
