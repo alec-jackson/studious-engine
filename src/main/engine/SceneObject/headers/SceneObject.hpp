@@ -109,6 +109,9 @@ class SceneObject {
     void removeChild(SceneObject *child);
 
     void modifyRenderPriority(int change);
+    void modifyPosition(vec3 pos);
+    void modifyRotation(vec3 rot);
+    void modifyScale(float scale);
 
     // no-op by default
     virtual inline void finalize() {}

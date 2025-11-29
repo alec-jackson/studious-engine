@@ -73,3 +73,15 @@ void SceneObject::modifyRenderPriority(int change) {
     renderPriority_ += change;
     renderPriority_ = std::min(renderPriority_, RENDER_PRIOR_HIGHEST);
 }
+
+void SceneObject::modifyPosition(vec3 pos) {
+    position += pos;
+}
+
+void SceneObject::modifyRotation(vec3 rot) {
+    rotation += rot;
+}
+
+void SceneObject::modifyScale(float scale) {
+    scale_ += scale;
+}
