@@ -8,7 +8,7 @@
  */
 #include <GameScene.hpp>
 #include <cassert>
-#include <mutex>
+#include <mutex> //NOLINT
 #include <memory>
 #include <cstdio>
 #include <cstring>
