@@ -107,6 +107,8 @@ class SceneObject {
      * @param child - Pointer to the child object to remove.
      */
     void removeChild(SceneObject *child);
+    inline std::set<SceneObject *> getChildren() { return children_; }
+    inline SceneObject *getParent() { return parent_; }
 
     void modifyRenderPriority(int change);
     void modifyPosition(vec3 pos);
