@@ -411,6 +411,8 @@ GfxResult<uint> OpenGlGfxController::sendFloatVector(uint variableId, size_t cou
  */
 GfxResult<uint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
     #ifdef GFX_EMBEDDED
+    printf("OpenGlGfxController::polygonRenderMode: Cannot set rendermode %dz on OpenGL ES!\n",
+        static_cast<int>(mode));
     return GFX_OK(uint);
     #else
     auto result = GFX_OK(uint);

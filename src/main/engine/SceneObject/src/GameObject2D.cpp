@@ -27,6 +27,7 @@ void GameObject2D::initializeShaderVars() {
     gfxController_->setProgram(programId_);
     projectionId_ = gfxController_->getShaderVariable(programId_, "projection").get();
     modelMatId_ = gfxController_->getShaderVariable(programId_, "model").get();
+    tintId_ = gfxController_->getShaderVariable(programId_, "tint").get();
 }
 
 void GameObject2D::initializeTextureData() {
