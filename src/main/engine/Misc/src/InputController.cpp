@@ -18,9 +18,6 @@
 #include <mutex>  //NOLINT
 #include <iostream>
 #include <InputController.hpp>
-#include <map>
-#include <mutex> //NOLINT
-#include <iostream>
 
 // GameInput maps for input devices
 std::map<SDL_Scancode, GameInput> keyboardInputMap = {

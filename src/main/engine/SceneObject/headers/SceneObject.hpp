@@ -110,7 +110,7 @@ class SceneObject {
     inline std::set<SceneObject *> getChildren() { return children_; }
     inline SceneObject *getParent() { return parent_; }
 
-    void modifyRenderPriority(int change);
+    void shiftRenderPriorityBy(int change);
     void modifyPosition(vec3 pos);
     void modifyRotation(vec3 rot);
     void modifyScale(float scale);
