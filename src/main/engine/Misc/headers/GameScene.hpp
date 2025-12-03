@@ -32,6 +32,7 @@ class GameScene {
     void setDirectionalLight(vec3 directionalLight);
     inline vec3 getDirectionalLight() { return directionalLight_; }
     inline string getSceneName() const { return sceneName_; }
+    inline const std::map<std::string, std::shared_ptr<SceneObject>> getSceneObjects() const { return sceneObjects_; }
     void refresh();
 
  private:

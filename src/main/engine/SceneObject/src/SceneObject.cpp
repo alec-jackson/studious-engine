@@ -9,19 +9,16 @@
 #include <algorithm>
 
 void SceneObject::updateModelMatrices() {
-    vec3 pPos = vec3(0), pRot = vec3(0), pScale = vec3(0);
-    if (parent_) {
-        pPos = parent_->getPosition();
-        pRot = parent_->getRotation();
-        pScale = vec3(parent_->getScale());
-    }
+    vec3 pos = getPosition();
+    vec3 rot = getRotation();
+    float scale = getScale();
     // Update translation
-    translateMatrix_ = glm::translate(mat4(1.0f), position + pPos);
-    rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rotation[0] + pRot[0]),
-            vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[1] + pRot[1]),
-            vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rotation[2] + pRot[2]),
+    translateMatrix_ = glm::translate(mat4(1.0f), pos);
+    rotateMatrix_ = glm::rotate(mat4(1.0f), glm::radians(rot[0]),
+            vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(rot[1]),
+            vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(rot[2]),
             vec3(0, 0, 1));
-    scaleMatrix_ = glm::scale(mat4(1.0f), vec3(scale_) + pScale);
+    scaleMatrix_ = glm::scale(mat4(1.0f), vec3(scale));
 }
 
 void SceneObject::addChild(SceneObject *child) {
@@ -33,6 +30,8 @@ void SceneObject::addChild(SceneObject *child) {
     children_.insert(child);
     // Update the child's parent
     child->parent_ = this;
+    // finalize the parent
+    finalize();
 }
 
 void SceneObject::setParent(SceneObject *parent) {
@@ -42,6 +41,8 @@ void SceneObject::setParent(SceneObject *parent) {
         // Add this object as the parent's child
         parent_->addChild(this);
     }
+    // finalize the child
+    finalize();
 }
 
 SceneObject::~SceneObject() {
@@ -66,4 +67,9 @@ void SceneObject::removeChild(SceneObject *child) {
             child->objectName().c_str(),
             this->objectName().c_str());
     }
+}
+
+void SceneObject::shiftRenderPriorityBy(int change) {
+    renderPriority_ += change;
+    renderPriority_ = std::min(renderPriority_, RENDER_PRIOR_HIGHEST);
 }

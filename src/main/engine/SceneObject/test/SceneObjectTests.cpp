@@ -110,7 +110,7 @@ TEST_F(GivenASceneObject, WhenUpdateModelMatricesWithParent_ThenUpdatedWithParen
             vec3(1, 0, 0))  *glm::rotate(mat4(1.0f), glm::radians(exampleRotation.y + parentRotation.y),
             vec3(0, 1, 0))  *glm::rotate(mat4(1.0f), glm::radians(exampleRotation.z + parentRotation.z),
             vec3(0, 0, 1));
-    mat4 expectedSm = glm::scale(vec3(exampleScale + parentScale));
+    mat4 expectedSm = glm::scale(vec3(exampleScale * parentScale));
 
     TestObject parentObject;
     object_.setPosition(examplePosition);

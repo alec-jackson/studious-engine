@@ -7,6 +7,7 @@
  * @copyright Copyright (c) 2023
  */
 #pragma once
+#include <algorithm>
 #include <string>
 #include <set>
 #include <common.hpp>
@@ -21,11 +22,11 @@
 #define TILEOBJECT_PROG_NAME "tileObject"
 
 /* Default Render Priority Levels */
-#define RENDER_PRIOR_LOWEST 0
-#define RENDER_PRIOR_LOW 10
-#define RENDER_PRIOR_MEDIUM 20
-#define RENDER_PRIOR_HIGH 40
-#define RENDER_PRIOR_HIGHEST 100
+#define RENDER_PRIOR_LOWEST 0u
+#define RENDER_PRIOR_LOW 10u
+#define RENDER_PRIOR_MEDIUM 20u
+#define RENDER_PRIOR_HIGH 40u
+#define RENDER_PRIOR_HIGHEST 100u
 
 /* MISC */
 #define VISIBILITY_CHECK if (!visible_ || (parent_ && !parent_->visible())) return
@@ -65,7 +66,7 @@ class SceneObject {
     inline void setResolution(vec3 resolution) { this->resolution_ = resolution; }
     inline void setScale(float scale) { this->scale_ = scale ; }
     inline void setRenderPriority(uint renderPriority) { this->renderPriority_ =
-        renderPriority <= RENDER_PRIOR_HIGHEST ? renderPriority : RENDER_PRIOR_HIGHEST; }
+        std::min(renderPriority, RENDER_PRIOR_HIGHEST); }
     inline void setVisible(bool visible) { visible_ = visible; }
 
     // Getter methods
@@ -73,10 +74,10 @@ class SceneObject {
     inline const mat4 &rotateMatrix() const { return rotateMatrix_; }
     inline const mat4 &translateMatrix() const { return translateMatrix_; }
     inline const mat4 &scaleMatrix() const { return scaleMatrix_; }
-    inline const vec3 &getPosition() const { return position; }
+    inline vec3 getPosition() const { return parent_ ? parent_->getPosition() + position : position; }
     inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
-    inline vec3 getRotation() const { return this->rotation; }
-    inline const float &getScale() const { return scale_; }
+    inline vec3 getRotation() const { return parent_ ? parent_->getRotation() + rotation : rotation; }
+    inline float getScale() const { return parent_ ? parent_->getScale() * scale_ : scale_; }
     inline uint getRenderPriority() const { return this->renderPriority_; }
     inline vec3 getResolution() const { return this->resolution_; }
     inline string objectName() const { return this->objectName_; }
@@ -106,6 +107,11 @@ class SceneObject {
      * @param child - Pointer to the child object to remove.
      */
     void removeChild(SceneObject *child);
+
+    void shiftRenderPriorityBy(int change);
+
+    // no-op by default
+    virtual inline void finalize() {}
 
     // Interface methods
     virtual void render() = 0;

@@ -141,6 +141,9 @@ class GameInstance {
     void changeWindowMode(int mode);
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);
+
+    template<typename T>
+    inline T *getSceneObject(string objectName) { return dynamic_cast<T*>(getSceneObject(objectName)); }
     int removeSceneObject(string objectName);
     /* NOTE - getCollision functions are for convenience and will be deprecated with the physics controller */
     int getCollision(SceneObject *object1, SceneObject *object2);

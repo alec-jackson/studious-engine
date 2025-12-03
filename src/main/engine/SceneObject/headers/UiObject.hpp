@@ -31,8 +31,10 @@ class UiObject : public GameObject2D {
     // Render method
     void render() override;
     void update() override;
+    void finalize() override;
     void initializeShaderVars() override;
     void initializeVertexData();
+    void reinitializeVertexData();
     std::shared_ptr<float[]> generateVertices(float x, float y, float iFx, float iFy);
     void generateVertexBase(std::shared_ptr<float[]> vertexData, int triIdx, float x, float y, float x2, float y2);
 
