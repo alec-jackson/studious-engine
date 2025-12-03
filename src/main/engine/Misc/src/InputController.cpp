@@ -10,6 +10,13 @@
  *
  */
 
+#include <SDL_gamecontroller.h>
+#include <SDL_keyboard.h>
+#include <SDL_scancode.h>
+
+#include <map>
+#include <mutex>  //NOLINT
+#include <iostream>
 #include <InputController.hpp>
 #include <map>
 #include <mutex> //NOLINT

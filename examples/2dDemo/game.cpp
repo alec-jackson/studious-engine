@@ -143,7 +143,6 @@ int runtime(GameInstance *currentGame) {
  mainLoop closes prematurely, an error code is returned.
 */
 int mainLoop(GameInstance *currentGame) {
-    Uint64 begin, end;
     double currentTime = 0.0, sampleTime = 1.0;
     int error = 0;
     vector<double> times;
@@ -155,14 +154,11 @@ int mainLoop(GameInstance *currentGame) {
     bool eDown = false;
     while (!currentGame->isShutDown()) {
         offset = vec3(0);
-        /// @todo Move these calls to a separate thread...
-        begin = SDL_GetPerformanceCounter();
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         if (error) {
             return error;
         }
-        end = SDL_GetPerformanceCounter();
         if (inputController->pollInput(GameInput::NORTH)) offset += vec3(0, speed, 0);
         if (inputController->pollInput(GameInput::SOUTH)) offset -= vec3(0, speed, 0);
         if (inputController->pollInput(GameInput::EAST)) offset += vec3(speed, 0, 0);
@@ -180,7 +176,6 @@ int mainLoop(GameInstance *currentGame) {
         playerPtr->setPosition(newPos);
         if (currentGame->getCollision(playerPtr, obstaclePtr)) printf("CONTACT TRUE\n");
         // Update player position
-        deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;

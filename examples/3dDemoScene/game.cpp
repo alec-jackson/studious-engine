@@ -299,14 +299,12 @@ int runtime(GameInstance *currentGame) {
  mainLoop closes prematurely, an error code is returned.
 */
 int mainLoop(gameInfo* gamein) {
-    Uint64 begin, end;
     int collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
     while (!currentGame->isShutDown()) {
-        begin = SDL_GetPerformanceCounter();
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         if (error) {
@@ -321,8 +319,6 @@ int mainLoop(gameInfo* gamein) {
             collMessage = "Contact: False";
         }
         collDebugText->setMessage(collMessage);
-        end = SDL_GetPerformanceCounter();
-        deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;
