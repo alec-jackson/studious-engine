@@ -108,7 +108,7 @@ class SceneObject {
      */
     void removeChild(SceneObject *child);
 
-    void modifyRenderPriority(int change);
+    void shiftRenderPriorityBy(int change);
 
     // no-op by default
     virtual inline void finalize() {}
