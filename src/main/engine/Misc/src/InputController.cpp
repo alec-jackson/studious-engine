@@ -12,7 +12,7 @@
 
 #include <InputController.hpp>
 #include <map>
-#include <mutex>
+#include <mutex>  //NOLINT
 #include <iostream>
 
 // GameInput maps for input devices
