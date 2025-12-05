@@ -150,6 +150,7 @@ void UiObject::render() {
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloat(wScaleId_, wScale_);
     gfxController_->sendFloat(hScaleId_, hScale_);
+    gfxController_->sendFloatVector(tintId_, 1, VectorType::GFX_4D, glm::value_ptr(tint_));
     gfxController_->sendFloatMatrix(modelMatId_, 1, glm::value_ptr(model));
     gfxController_->sendFloatMatrix(projectionId_, 1, glm::value_ptr(vpMatrix_));
     // Find a more clever solution

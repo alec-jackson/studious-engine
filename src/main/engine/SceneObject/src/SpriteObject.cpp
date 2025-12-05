@@ -25,7 +25,6 @@ SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsign
 
 void SpriteObject::initializeShaderVars() {
     GameObject2D::initializeShaderVars();
-    tintId_ = gfxController_->getShaderVariable(programId_, "tint").get();
 }
 
 void SpriteObject::initializeVertexData() {
