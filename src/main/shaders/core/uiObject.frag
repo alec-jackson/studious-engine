@@ -31,21 +31,21 @@ void main() {
         case 0:
         case 1:
         case 2:
-        color = vec4(magnitude * 1.0f, 0.0f, 0.0f, 1.0f);
-        break;
+            color = vec4(magnitude * 1.0f, 0.0f, 0.0f, 1.0f);
+            break;
         case 3:
         case 4:
         case 5:
-        color = vec4(0.0f, magnitude * 1.0f, 0.0f, 1.0f);
-        break;
+            color = vec4(0.0f, magnitude * 1.0f, 0.0f, 1.0f);
+            break;
         case 6:
         case 7:
         case 8:
-        color = vec4(0.0f, 0.0f, magnitude * 1.0f, 1.0f);
-        break;
+            color = vec4(0.0f, 0.0f, magnitude * 1.0f, 1.0f);
+            break;
         default:
-        color = texColor;
-        break;
+            color = texColor;
+            break;
     }
 #endif // 0
 }
