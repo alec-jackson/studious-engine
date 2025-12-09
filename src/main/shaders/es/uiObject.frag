@@ -6,6 +6,7 @@ in vec4 tipColor;
 out vec4 color;
 
 uniform sampler2D sprite;
+uniform vec4 tint;
 
 void main() {
     //int isolatedTriangles[5] = int[](1, 3, 4, 5, 7);
@@ -13,8 +14,8 @@ void main() {
     if (texColor.a < 0.1) {
         discard;
     }
-    color = texColor;
-    /*
+    color = texColor + tint;
+#if 0
     int blank = 0;
     for (int i = 0; i < 5; ++i) {
         if (int(TriDex) == isolatedTriangles[i]) blank = 1;
@@ -24,8 +25,8 @@ void main() {
     } else {
         color = texColor;
     }
-    */
-    /* Visual debugging :)
+
+    // Visual debugging :)
     float magnitude = cornerDex / 3.0f;
     switch (int(TriDex)) {
         case 0:
@@ -46,6 +47,6 @@ void main() {
         default:
             color = texColor;
             break;
-    }*/
-    
+    }
+#endif // 0
 }

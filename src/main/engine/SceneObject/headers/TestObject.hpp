@@ -29,8 +29,6 @@ class TestObject : public SceneObject, public ColliderExt {
     void render() override;
     void update() override;
     void createCollider() override;
-    inline SceneObject *getParent() { return parent_; }
-    inline const set<SceneObject *> &getChildren() { return children_; }
     inline const mat4 &getTranslationMatrix() { return translateMatrix_; }
     inline const mat4 &getRotationMatrix() { return rotateMatrix_; }
     inline const mat4 &getScaleMatrix() { return scaleMatrix_; }

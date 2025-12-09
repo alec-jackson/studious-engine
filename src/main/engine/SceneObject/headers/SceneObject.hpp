@@ -84,6 +84,8 @@ class SceneObject {
     inline GfxController *gfxController() const { return this->gfxController_; }
     inline ObjectType type() const { return type_; }
     inline bool visible() const { return visible_; }
+    inline std::set<SceneObject *> &getChildren() { return children_; }
+    inline SceneObject *getParent() { return parent_; }
 
     // Misc
     /**
@@ -109,6 +111,9 @@ class SceneObject {
     void removeChild(SceneObject *child);
 
     void shiftRenderPriorityBy(int change);
+    inline void modifyPosition(vec3 pos) { position += pos; }
+    inline void modifyRotation(vec3 rot) { rotation += rot; }
+    inline void modifyScale(float scale) { scale_ += scale; }
 
     // no-op by default
     virtual inline void finalize() {}
