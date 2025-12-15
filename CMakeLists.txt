@@ -74,6 +74,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObject/src/TextObject.cpp
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/CameraObject.cpp
+  src/main/engine/SceneObject/src/TPSCameraObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
   src/main/engine/SceneObject/src/TileObject.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp
@@ -270,6 +271,7 @@ install (FILES
   src/main/common/headers/common.hpp
   src/main/common/headers/winsup.hpp
   src/main/engine/SceneObject/headers/CameraObject.hpp
+  src/main/engine/SceneObject/headers/TPSCameraObject.hpp
   src/main/engine/SceneObject/headers/ColliderObject.hpp
   src/main/engine/SceneObject/headers/GameObject.hpp
   src/main/engine/SceneObject/headers/GameObject2D.hpp

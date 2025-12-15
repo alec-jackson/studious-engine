@@ -9,7 +9,8 @@
  *
  */
 #include "inputMonitor.hpp"
-#include "CameraObject.hpp"
+#include "physics.hpp"
+#include <TPSCameraObject.hpp>
 #include <SDL_scancode.h>
 #include <iostream>
 #include <vector>
@@ -20,7 +21,11 @@
 #include <ModelImport.hpp>
 #include <AnimationController.hpp>
 // Analog joystick dead zone
-const int JOYSTICK_DEAD_ZONE = 4000;
+extern const int JOYSTICK_DEAD_ZONE;
+
+extern std::unique_ptr<InputController> inputController;
+extern std::unique_ptr<AnimationController> animationController;
+extern std::unique_ptr<PhysicsController> physicsController;
 #define PI 3.14159265
 /// @todo - Use event based input handling; DO NOT REFACTOR THIS FILE
 vector<float> cameraDistance(vec3 offset);
@@ -39,15 +44,10 @@ void rotateShape(void *gameInfoStruct, void *target) {
     /// @todo Refactor and remove reinterpret_casts if re-using this code
     gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
-    InputController* gameInput = currentGameInfo->gameInput;
-    AnimationController *ac = animationController.get();
-    PhysicsController *pc = physicsController.get();
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
-    float rotateSpeed = 1.0f, offsetSpeed = 0.1f, currentLuminance = 1.0f;
-    vec3 cameraOffset = vec3(7.140022f, 1.349999f, 2.309998f), angles = vec3(0),
-        pos = vec3(0);
+    float rotateSpeed = 1.0f, currentLuminance = 1.0f;
+    vec3 angles = vec3(0), pos = vec3(0);
     float fallspeed = 0;
-    bool trackMouse = false;
     bool uPressed = false;
     bool sixPressed = false;
     bool lPressed = false;
@@ -69,8 +69,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
     }
     Sint16 controllerLeftStateY = 0;
     Sint16 controllerLeftStateX = 0;
-    Sint16 controllerRightStateY = 0;
-    Sint16 controllerRightStateX = 0;
     while (!(*currentGameInfo->isDone)) {
         // Calculate the X-Z angle between the camera and target
         // Assume that the target is the origin
@@ -86,156 +84,28 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 SDL_CONTROLLER_AXIS_LEFTY);
             controllerLeftStateX = SDL_GameControllerGetAxis(gameController1,
                 SDL_CONTROLLER_AXIS_LEFTX);
-            controllerRightStateY = SDL_GameControllerGetAxis(gameController1,
-                SDL_CONTROLLER_AXIS_RIGHTY);
-            controllerRightStateX = SDL_GameControllerGetAxis(gameController1,
-                SDL_CONTROLLER_AXIS_RIGHTX);
         }
         // SDL_WarpMouseInWindow(currentGame->getWindow(), currentGame->getWidth() / 2, currentGame->getHeight() / 2);
         usleep(9000);
-        // Begin Camera Controls
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_5]) {
-            cameraOffset[0] = 5.140022f;  // Set values back to inital values
-            cameraOffset[1] = 1.349999f;
-            cameraOffset[2] = 2.309998f;
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_2] ||
-            (mouseY < 0 && trackMouse) || controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
-            float modifier = 1.0f;
-            if (mouseY < 0) {
-                modifier = (mouseY / 5.0f) * -1;
-            } else if (controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
-                modifier = (static_cast<float>(controllerRightStateY * -1)) / INT16_MAX;
-            }
-            vector<float> distHold = cameraDistance(cameraOffset);
-            cameraOffset[1] -= offsetSpeed * modifier;
-            vector<float> distFinish = cameraDistance(cameraOffset);
-            distHold[0] = sqrt(distHold[0]);
-            distHold[1] = sqrt(distHold[1]);
-            distFinish[0] = sqrt(distFinish[0]);
-            distFinish[1] = sqrt(distFinish[1]);
-            distFinish[0] /= distHold[0];
-            distFinish[1] /= distHold[1];
-            cameraOffset[1] /= ((distFinish[0] + distFinish[1]) / 2.0f);
-            cameraOffset[2] /= distFinish[0];
-            cameraOffset[0] /= distFinish[1];
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_8] ||
-            (mouseY > 0 && trackMouse) || controllerRightStateY > JOYSTICK_DEAD_ZONE) {
-            // cameraOffset[1] += offsetSpeed;
-            float modifier = 1.0f;
-            if (mouseY > 0) {
-                modifier = mouseY / 5.0f;
-            } else if (controllerRightStateY > JOYSTICK_DEAD_ZONE) {
-                modifier = static_cast<float>(controllerRightStateY) / INT16_MAX;
-            }
-            vector<float> distHold = cameraDistance(cameraOffset);
-            cameraOffset[1] += offsetSpeed * modifier;
-            vector<float> distFinish = cameraDistance(cameraOffset);
-            distHold[0] = sqrt(distHold[0]);
-            distHold[1] = sqrt(distHold[1]);
-            distFinish[0] = sqrt(distFinish[0]);
-            distFinish[1] = sqrt(distFinish[1]);
-            distFinish[0] /= distHold[0];
-            distFinish[1] /= distHold[1];
-            cameraOffset[1] /= ((distFinish[0] + distFinish[1]) / 2.0f);
-            cameraOffset[2] /= distFinish[0];
-            cameraOffset[0] /= distFinish[1];
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_4]) {
-            cameraOffset[0] -= offsetSpeed;
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_6]) {
-            cameraOffset[0] += offsetSpeed;
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_7] ||
-            (mouseX < 0 && trackMouse) || controllerRightStateX < -JOYSTICK_DEAD_ZONE) {
-            // Rotate the camera about the y axis
-            float distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-            float multiplier = 1.0f;
-            if (mouseX < 0) {
-                multiplier = (mouseX * -1.0f) / 5.0f;
-            } else if (controllerRightStateX < -JOYSTICK_DEAD_ZONE) {
-                multiplier = (static_cast<float>(controllerRightStateX * -1)) / INT16_MAX;
-            }
-            if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
-                cameraOffset[0] += offsetSpeed * multiplier;
-                cameraOffset[2] -= offsetSpeed * multiplier;
-            } else if (cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]) {
-                cameraOffset[0] -= offsetSpeed * multiplier;
-                cameraOffset[2] -= offsetSpeed * multiplier;
-            } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]) {
-                cameraOffset[0] += offsetSpeed * multiplier;
-                cameraOffset[2] += offsetSpeed * multiplier;
-            } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]) {
-                cameraOffset[0] -= offsetSpeed * multiplier;
-                cameraOffset[2] += offsetSpeed * multiplier;
-            }
-            float distFinish = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-            distHold = sqrt(distHold);
-            distFinish = sqrt(distFinish);
-            distFinish /= distHold;
-            cameraOffset[0] /= distFinish;
-            cameraOffset[2] /= distFinish;
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_9] ||
-            (mouseX > 0 && trackMouse) || controllerRightStateX > JOYSTICK_DEAD_ZONE) {
-            float distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-            float multiplier = 1.0f;
-            if (mouseX > 0) {
-                multiplier = mouseX / 5.0f;
-            } else if (controllerRightStateX > JOYSTICK_DEAD_ZONE) {
-                multiplier = static_cast<float>(controllerRightStateX) / INT16_MAX;
-            }
-            if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
-                cameraOffset[0] -= offsetSpeed * multiplier;
-                cameraOffset[2] += offsetSpeed * multiplier;
-            } else if (cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]) {
-                cameraOffset[0] += offsetSpeed * multiplier;
-                cameraOffset[2] += offsetSpeed * multiplier;
-            } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]) {
-                cameraOffset[0] -= offsetSpeed * multiplier;
-                cameraOffset[2] -= offsetSpeed * multiplier;
-            } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]) {
-                cameraOffset[0] += offsetSpeed * multiplier;
-                cameraOffset[2] -= offsetSpeed * multiplier;
-            }
-            float distFinish = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-            distHold = sqrt(distHold);
-            distFinish = sqrt(distFinish);
-            distFinish /= distHold;
-            cameraOffset[0] /= distFinish;
-            cameraOffset[2] /= distFinish;
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_MINUS]) {
-            cameraOffset[0] *= 1.01f;  // Zoom out
-            cameraOffset[1] *= 1.01f;
-            cameraOffset[2] *= 1.01f;
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_KP_PLUS]) {
-            cameraOffset[0] *= 0.99f;  // Zoom in
-            cameraOffset[1] *= 0.99f;
-            cameraOffset[2] *= 0.99f;
-        }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_F]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_F]) {
             angles[0] -= rotateSpeed;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_R]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_R]) {
             angles[0] += rotateSpeed;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_G]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_G]) {
             angles[1] -= rotateSpeed;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_T]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_T]) {
             angles[1] += rotateSpeed;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_H]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_H]) {
             angles[2] -= rotateSpeed;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_Y]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_Y]) {
             angles[2] += rotateSpeed;
         }
-        if (gameInput->pollInput(GameInput::SOUTH) || controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
+        if (inputController->pollInput(GameInput::SOUTH) || controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
             angles[1] = -1.0f * angle - 90.0f;
             float xSpeed = sin((angles[1]) * (PI / 180)) * speed;
             float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
@@ -246,7 +116,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
         }
-        if (gameInput->pollInput(GameInput::NORTH) || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
+        if (inputController->pollInput(GameInput::NORTH) || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
             angles[1] = -1.0f * angle + 90.0f;
             float xSpeed = sin(angles[1] * (PI / 180)) * speed;
             float ySpeed = cos(angles[1] * (PI / 180)) * speed;
@@ -256,18 +126,18 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
         }
-        if (gameInput->pollInput(GameInput::A) && pos[1] == 0) {
+        if (inputController->pollInput(GameInput::A) && pos[1] == 0) {
             fallspeed = -0.003f;
             // pos[1] += 0.05f;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_E]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_E]) {
             fallspeed = 0;
             pos[1] += speed;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_Q]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_Q]) {
             pos[1] -= speed;
         }
-        if (gameInput->pollInput(GameInput::WEST) || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
+        if (inputController->pollInput(GameInput::WEST) || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
             angles[1] = -1.0f * angle + 180.0f;
             float xSpeed = sin((angles[1]) * (PI / 180)) * speed;
             float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
@@ -278,7 +148,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
         }
-        if (gameInput->pollInput(GameInput::EAST) || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
+        if (inputController->pollInput(GameInput::EAST) || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
             angles[1] = -1.0f * angle;
             float xSpeed = sin((angles[1]) * (PI / 180)) * speed;
             float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
@@ -289,25 +159,25 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[0] += (xSpeed / 300.0f) * multiplier;
             pos[2] += (ySpeed / 300.0f) * multiplier;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_C]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_C]) {
             currentLuminance += 0.01f;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_V]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_V]) {
             currentLuminance -= 0.01f;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_P]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_P]) {
             currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN_DESKTOP);
-        } else if (gameInput->getKeystateRaw()[SDL_SCANCODE_O]) {
+        } else if (inputController->getKeystateRaw()[SDL_SCANCODE_O]) {
             currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN);
-        } else if (gameInput->getKeystateRaw()[SDL_SCANCODE_I]) {
+        } else if (inputController->getKeystateRaw()[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_9]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_9]) {
             // Rotate on X+ axis
             auto currentRotation = currentGameInfo->gameCamera->getRotation();
             currentRotation[0] += 1.0f;
             currentGameInfo->gameCamera->setRotation(currentRotation);
-        } else if (gameInput->getKeystateRaw()[SDL_SCANCODE_0]) {
+        } else if (inputController->getKeystateRaw()[SDL_SCANCODE_0]) {
             // Rotate on X- axis
             auto currentRotation = currentGameInfo->gameCamera->getRotation();
             currentRotation[0] -= 1.0f;
@@ -315,31 +185,29 @@ void rotateShape(void *gameInfoStruct, void *target) {
         }
 
         // Move the directional light
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_7]) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_7]) {
             // Shift light origin diagonal pos
             auto dirLight = currentGame->getDirectionalLight();
             dirLight += vec3(1.0f);
             currentGame->setDirectionalLight(dirLight);
-        } else if (gameInput->getKeystateRaw()[SDL_SCANCODE_8]) {
+        } else if (inputController->getKeystateRaw()[SDL_SCANCODE_8]) {
             // Shift light origin diagonal neg
             auto dirLight = currentGame->getDirectionalLight();
             dirLight -= vec3(1.0f);
             currentGame->setDirectionalLight(dirLight);
         }
 
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_U] && !uPressed) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_U] && !uPressed) {
             uPressed = true;
             if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
                 SDL_SetRelativeMouseMode(SDL_TRUE);
-                trackMouse = true;
             } else {
                 SDL_SetRelativeMouseMode(SDL_FALSE);
-                trackMouse = false;
             }
-        } else if (!gameInput->getKeystateRaw()[SDL_SCANCODE_U] && uPressed) {
+        } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_U] && uPressed) {
             uPressed = false;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_6] && !sixPressed) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_6] && !sixPressed) {
             sixPressed = true;
             if (currentGame->getActiveScene().get()->getSceneName().compare("3d-demo-scene") == 0) {
                 currentGame->setActiveScene("alternate-3d-scene");
@@ -350,17 +218,17 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 auto altPlayer = currentGame->getSceneObject("player");
                 currentGameInfo->gameCamera->setTarget(altPlayer);
             }
-        } else if (!gameInput->getKeystateRaw()[SDL_SCANCODE_6] && sixPressed) {
+        } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_6] && sixPressed) {
             sixPressed = false;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_L] && !lPressed) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_L] && !lPressed) {
             lPressed = true;
             auto enableStatus = ColliderObject::getDrawCollider();
             ColliderObject::setDrawCollider(!enableStatus);
-        } else if (!gameInput->getKeystateRaw()[SDL_SCANCODE_L] && lPressed) {
+        } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_L] && lPressed) {
             lPressed = false;
         }
-        if (gameInput->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && !delPressed) {
+        if (inputController->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && !delPressed) {
             delPressed = true;
             static int bulletCount;
             // Instantiate a bullet and shoot it
@@ -383,7 +251,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
                     currentGame->removeSceneObject(bulletName);
                 };
                 auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
-                ac->addKeyFrame(bulletObj, bkf);
+                animationController->addKeyFrame(bulletObj, bkf);
 
                 PhysicsParams params = {
                     .isKinematic = true,
@@ -391,7 +259,7 @@ void rotateShape(void *gameInfoStruct, void *target) {
                     .elasticity = 0.0f,
                     .mass = 1.0f
                 };
-                pc->addSceneObject(bulletObj, params);
+                physicsController->addSceneObject(bulletObj, params);
                 // Convert angles[1] to a direction????
                 auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
                 auto anglez = std::sin(angles.y * (PI/180.0) + (PI/2.0));
@@ -399,9 +267,9 @@ void rotateShape(void *gameInfoStruct, void *target) {
                 float magnitude = 0.01f;
                 // angles.y is the rotation of the character on some axis??
                 printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
-                pc->setVelocity(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
+                physicsController->setVelocity(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
             }
-        } else if (!gameInput->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && delPressed) {
+        } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && delPressed) {
             delPressed = false;
         }
         // Set character rotation based on joysticks
@@ -418,7 +286,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
         //    << ", Z: " << cameraOffset[2] << "\n";
         // cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
         currentGameInfo->currentGame->lockScene();
-        currentGameInfo->gameCamera->setOffset(cameraOffset);
         currentGame->setLuminance(currentLuminance);
         character->setRotation(angles);
         character->setPosition(pos);

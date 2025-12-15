@@ -263,7 +263,7 @@ int runtime(GameInstance *currentGame) {
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
 
-    auto currentCamera = currentGame->createCamera(playerRef,
+    auto currentCamera = currentGame->createTPSCamera(playerRef,
         vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f, "mainCamera");
     playerRef->setRotation(vec3(0, 0, 0));
     cout << "currentGameObject tag is " << playerRef->objectName()

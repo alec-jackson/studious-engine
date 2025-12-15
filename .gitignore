@@ -26,6 +26,7 @@ latex/
 
 # Guilty As Charged #
 .vscode/
+.zed/
 
 # Windows #
 .vs/

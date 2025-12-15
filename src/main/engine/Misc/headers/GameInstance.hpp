@@ -35,6 +35,7 @@
 #include <AnimationController.hpp>
 #include <GameScene.hpp>
 #include <InputController.hpp>
+#include <TPSCameraObject.hpp>
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
@@ -115,6 +116,8 @@ class GameInstance {
     GameObject *createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+              float nearClipping, float farClipping, string cameraName);
+    TPSCameraObject *createTPSCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping, string cameraName);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing,
         int charPoint, string objectName);

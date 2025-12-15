@@ -40,7 +40,7 @@ class CameraObject : public SceneObject {
     void render() override;
     void update() override;
 
- private:
+ protected:
     void resetRenderPriorityMap_();
     SceneObject *target_;
     vec3 offset_;
