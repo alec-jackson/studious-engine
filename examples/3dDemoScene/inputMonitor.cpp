@@ -69,6 +69,8 @@ void rotateShape(void *gameInfoStruct, void *target) {
     }
     Sint16 controllerLeftStateY = 0;
     Sint16 controllerLeftStateX = 0;
+    auto tpsCamera = currentGame->getCamera<TPSCameraObject>("mainCamera");
+    tpsCamera->setHeadless(true);
     while (!(*currentGameInfo->isDone)) {
         // Calculate the X-Z angle between the camera and target
         // Assume that the target is the origin
@@ -285,11 +287,12 @@ void rotateShape(void *gameInfoStruct, void *target) {
         // cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
         //    << ", Z: " << cameraOffset[2] << "\n";
         // cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
-        currentGameInfo->currentGame->lockScene();
-        currentGame->setLuminance(currentLuminance);
-        character->setRotation(angles);
-        character->setPosition(pos);
-        currentGameInfo->currentGame->unlockScene();
+        currentGame->protectedGfxRequest([&] () {
+            currentGame->setLuminance(currentLuminance);
+            character->setRotation(angles);
+            character->setPosition(pos);
+            tpsCamera->updateInput();
+        });
     }
     SDL_GameControllerClose(gameController1);
     return;

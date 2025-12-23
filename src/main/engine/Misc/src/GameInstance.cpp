@@ -487,6 +487,17 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
     return result;
 }
 
+CameraObject *GameInstance::getCamera(string cameraName) {
+    CameraObject *result = nullptr;
+    auto cit = std::find_if(cameras_.begin(), cameras_.end(), [cameraName] (std::shared_ptr<CameraObject> camera) {
+        return camera->objectName() == cameraName;
+    });
+    if (cit != cameras_.end()) {
+        result = cit->get();
+    }
+    return result;
+}
+
 int GameInstance::update() {
     // Update any controllers here that should be paced with the frame rate
     Uint64 begin, end;

@@ -121,7 +121,7 @@ int runtime(GameInstance *currentGame) {
         currentGame->loadSound(sfx.first, sfx.second);
     }
     // Start the background music
-    currentGame->playSound("bg_music", 1, 60);
+    //currentGame->playSound("bg_music", 1, 60);
 
     /// @todo Make loading textures for objects a little more user friendly
     // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array

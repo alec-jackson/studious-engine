@@ -18,32 +18,8 @@ TPSCameraObject::TPSCameraObject(SceneObject *target, vec3 offset, float cameraA
 }
 
 void TPSCameraObject::update() {
-    inputMonitor();
+    if (!headless_) updateInput();
     CameraObject::update();
-}
-
-/*
- (vector<float>) cameraDistance takes a 3D vector containing the offset of the
- camera from the object and calculates the distance between the two with
- respect to the y-z plane, and x-y plane. Returns a 2D vector where the first
- element is the y-z distance, and the second element is the x-y distance.
-*/
-vector<float> cameraDistance(vec3 offset) {
-    vector<float> distance(2);
-    distance[0] = offset[1] * offset[1] + offset[2] * offset[2];
-    distance[1] = offset[1] * offset[1] + offset[0] * offset[0];
-    return distance;
-}
-
-float convertNegToDeg(float degree) {
-    return degree >= 0.0f ? degree : degree + 360.0f;
-}
-
-// Calculates the angle between two points in degrees
-float angleOfPoint(vec3 p1, vec3 p2) {
-    auto diffPoint = p2 - p1;
-    float angle = atan2(diffPoint[2], diffPoint[0]) * (180.0f / PI);
-    return convertNegToDeg(angle);
 }
 
 void TPSCameraObject::init() {
@@ -69,7 +45,20 @@ void TPSCameraObject::init() {
     }
 }
 
-void TPSCameraObject::inputMonitor() {
+void TPSCameraObject::updateInput() {
+    /*
+    (vector<float>) cameraDistance takes a 3D vector containing the offset of the
+    camera from the object and calculates the distance between the two with
+    respect to the y-z plane, and x-y plane. Returns a 2D vector where the first
+    element is the y-z distance, and the second element is the x-y distance.
+    */
+    auto cameraDistance = [](vec3 offset) {
+        vector<float> distance(2);
+        distance[0] = offset[1] * offset[1] + offset[2] * offset[2];
+        distance[1] = offset[1] * offset[1] + offset[0] * offset[0];
+        return distance;
+    };
+
     assert(nullptr != getTarget());  // Must have a target
     // Do nothing in relative mouse mode
     if (!SDL_GetRelativeMouseMode()) return;
