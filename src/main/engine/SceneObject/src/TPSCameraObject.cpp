@@ -1,3 +1,4 @@
+#include "glm/geometric.hpp"
 #include <TPSCameraObject.hpp>
 #include <InputController.hpp>
 #include <AnimationController.hpp>
@@ -173,4 +174,12 @@ void TPSCameraObject::updateInput() {
         cameraOffset[2] /= distFinish;
     }
     setOffset(cameraOffset);
+}
+
+// Returns a normalized ray from the camera to the target
+vec3 TPSCameraObject::getDirRay() {
+    auto pos = target_->getPosition();
+    auto offset = target_->getPosition(offset_);
+    vec3 ray = pos - offset;
+    return glm::normalize(ray);
 }

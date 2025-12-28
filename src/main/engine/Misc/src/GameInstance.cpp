@@ -205,7 +205,7 @@ void GameInstance::shutdown() {
 bool GameInstance::protectedGfxRequest(std::function<void(void)> req) {
     // Do nothing when we shut down
     if (isShutDown()) return false;
-    printf("GameInstance::protectedGfxRequest: Enter\n");
+    //printf("GameInstance::protectedGfxRequest: Enter\n");
     // Obtain the scene lock to add the request
     std::unique_lock<std::mutex> scopeLock(requestLock_);
     std::condition_variable cv;
@@ -220,9 +220,9 @@ bool GameInstance::protectedGfxRequest(std::function<void(void)> req) {
     // Add the request to the request queue
     protectedGfxReqs_.push(reqCb);
     // Wait for the reqLock to become available
-    printf("GameInstance::protectedGfxRequest: Added request, waiting for completion...\n");
+    //printf("GameInstance::protectedGfxRequest: Added request, waiting for completion...\n");
     cv.wait(scopeLock, [&done, this]() { return done == 1 || isShutDown(); });
-    printf("GameInstance::protectedGfxRequest: Exit\n");
+    //printf("GameInstance::protectedGfxRequest: Exit\n");
     return done == 1;  // Wakeup thread making call
 }
 

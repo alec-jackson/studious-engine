@@ -148,16 +148,22 @@ int runtime(GameInstance *currentGame) {
     playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.5f, "player");
     playerRef->setVisible(true);
-    auto companion = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion");
-    auto companion2 = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion2");
-    auto companion3 = currentGame->createGameObject(companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion3");
-    auto companion4 = currentGame->createGameObject(companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion4");
+    auto companion = currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, 2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion");
+    auto companion2 = currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, -2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion2");
+    auto companion3 = currentGame->createGameObject(companionPoly, vec3(2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion3");
+    auto companion4 = currentGame->createGameObject(companionPoly, vec3(-2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion4");
     playerRef->addChild(companion);
     playerRef->addChild(companion2);
     playerRef->addChild(companion3);
     playerRef->addChild(companion4);
     playerRef->createCollider();
 
+    physicsController->addSceneObject(playerRef, {
+        .elasticity = 0.0f,
+        .isKinematic = true,
+        .mass = 5.0f,
+        .obeyGravity = true
+    });
 
     cout << "Creating wolf\n";
 
@@ -266,7 +272,7 @@ int runtime(GameInstance *currentGame) {
     cout << "currentGameObject tag is " << playerRef->objectName()
         << '\n';
 
-    playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
+    playerRef->setPosition(vec3(0.0f, 0.5f, 0.0f));
     playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
     playerRef->setScale(0.5f);
 

@@ -9,6 +9,7 @@
  *
  */
 #include "inputMonitor.hpp"
+#include "glm/trigonometric.hpp"
 #include "physics.hpp"
 #include <TPSCameraObject.hpp>
 #include <SDL_scancode.h>
@@ -23,11 +24,13 @@
 // Analog joystick dead zone
 extern const int JOYSTICK_DEAD_ZONE;
 
+#define UPDATE_TRAVEL_VEL travelVel += (inputRay * speed * multiplier)
+#define UPDATE_CHAR_ANGLE(shift) charAngle[1] = glm::degrees(glm::atan(ray.x, ray.z)) + shift
+
 extern std::unique_ptr<InputController> inputController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
 #define PI 3.14159265
-/// @todo - Use event based input handling; DO NOT REFACTOR THIS FILE
 vector<float> cameraDistance(vec3 offset);
 
 /*
@@ -41,16 +44,15 @@ vector<float> cameraDistance(vec3 offset);
 */
 void rotateShape(void *gameInfoStruct, void *target) {
     int mouseX, mouseY, numJoySticks = SDL_NumJoysticks();
-    /// @todo Refactor and remove reinterpret_casts if re-using this code
     gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
     GameInstance *currentGame = currentGameInfo->currentGame;
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
     float rotateSpeed = 1.0f, currentLuminance = 1.0f;
-    vec3 angles = vec3(0), pos = vec3(0);
+    cout << rotateSpeed;
     bool uPressed = false;
     bool sixPressed = false;
     bool lPressed = false;
-    bool delPressed = false;
+    // bool delPressed = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
     if (numJoySticks < 1) {
@@ -74,11 +76,14 @@ void rotateShape(void *gameInfoStruct, void *target) {
         // Calculate the X-Z angle between the camera and target
         // Assume that the target is the origin
         auto charPos = character->getPosition();
-        auto cameraPos = currentGameInfo->gameCamera->getOffset();
+        auto charAngle = character->getRotation();
+        vec3 travelVel = vec3(0);
+        auto ray = tpsCamera->getDirRay();
+        // Remove the Y axis from the ray
+        ray.y = 0.0f;
         float multiplier = 1.0f;
-        float speed = 5.0f;
-        // y over x
-        float angle = angleOfPoint(cameraPos, charPos);
+        cout << multiplier<<endl;
+        float speed = 4.0f;
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         if (hasActiveController) {
             controllerLeftStateY = SDL_GameControllerGetAxis(gameController1,
@@ -88,75 +93,52 @@ void rotateShape(void *gameInfoStruct, void *target) {
         }
         // SDL_WarpMouseInWindow(currentGame->getWindow(), currentGame->getWidth() / 2, currentGame->getHeight() / 2);
         usleep(9000);
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_F]) {
-            angles[0] -= rotateSpeed;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_R]) {
-            angles[0] += rotateSpeed;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_G]) {
-            angles[1] -= rotateSpeed;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_T]) {
-            angles[1] += rotateSpeed;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_H]) {
-            angles[2] -= rotateSpeed;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_Y]) {
-            angles[2] += rotateSpeed;
-        }
         if (inputController->pollInput(GameInput::SOUTH) || controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
-            angles[1] = -1.0f * angle - 90.0f;
-            float xSpeed = sin((angles[1]) * (PI / 180)) * speed;
-            float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
-
+            // Reverse the ray
+            auto inputRay = -1.0f * ray;
             if (controllerLeftStateY < -JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateY)) / INT16_MAX;
             }
-            pos[0] += (xSpeed / 300.0f) * multiplier;
-            pos[2] += (ySpeed / 300.0f) * multiplier;
+            // Rotate 180 degrees to face back
+            UPDATE_CHAR_ANGLE(180.0f);
+            UPDATE_TRAVEL_VEL;
         }
         if (inputController->pollInput(GameInput::NORTH) || controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
-            angles[1] = -1.0f * angle + 90.0f;
-            float xSpeed = sin(angles[1] * (PI / 180)) * speed;
-            float ySpeed = cos(angles[1] * (PI / 180)) * speed;
+            auto inputRay = ray;
             if (controllerLeftStateY > JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateY * -1)) / INT16_MAX;
             }
-            pos[0] += (xSpeed / 300.0f) * multiplier;
-            pos[2] += (ySpeed / 300.0f) * multiplier;
+            UPDATE_CHAR_ANGLE(0.0f);
+            // For north, just follow the ray
+            UPDATE_TRAVEL_VEL;
         }
-        if (inputController->pollInput(GameInput::A) && pos[1] == 0) {
+        if (inputController->pollInput(GameInput::A) && charPos[1] == 0) {
             // pos[1] += 0.05f;
         }
         if (inputController->getKeystateRaw()[SDL_SCANCODE_E]) {
-            pos[1] += speed;
+            charPos[1] += speed;
         }
         if (inputController->getKeystateRaw()[SDL_SCANCODE_Q]) {
-            pos[1] -= speed;
+            charPos[1] -= speed;
         }
         if (inputController->pollInput(GameInput::WEST) || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
-            angles[1] = -1.0f * angle + 180.0f;
-            float xSpeed = sin((angles[1]) * (PI / 180)) * speed;
-            float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
+            // Fix angle shift here...
+            // Swap XZ points for input ray
+            vec3 inputRay(ray.z, 0, -ray.x);
 
             if (controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateX * -1)) / INT16_MAX;
             }
-            pos[0] += (xSpeed / 300.0f) * multiplier;
-            pos[2] += (ySpeed / 300.0f) * multiplier;
+            UPDATE_CHAR_ANGLE(90.0f);
+            UPDATE_TRAVEL_VEL;
         }
         if (inputController->pollInput(GameInput::EAST) || controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
-            angles[1] = -1.0f * angle;
-            float xSpeed = sin((angles[1]) * (PI / 180)) * speed;
-            float ySpeed = cos((angles[1]) * (PI / 180)) * speed;
-
+            vec3 inputRay(-ray.z, 0, ray.x);
             if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
                 multiplier = static_cast<float>(controllerLeftStateX) / INT16_MAX;
             }
-            pos[0] += (xSpeed / 300.0f) * multiplier;
-            pos[2] += (ySpeed / 300.0f) * multiplier;
+            UPDATE_CHAR_ANGLE(270.0f);
+            UPDATE_TRAVEL_VEL;
         }
         if (inputController->getKeystateRaw()[SDL_SCANCODE_C]) {
             currentLuminance += 0.01f;
@@ -227,93 +209,70 @@ void rotateShape(void *gameInfoStruct, void *target) {
         } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_L] && lPressed) {
             lPressed = false;
         }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && !delPressed) {
-            delPressed = true;
-            static int bulletCount;
-            // Instantiate a bullet and shoot it
-            currentGame->protectedGfxRequest([currentGame, character, angle] () {
-                auto imp = ModelImport::createPolygonFromFile("src/resources/models/bullet.obj");
-                auto bullet = currentGame->createGameObject(imp, character->getPosition(), vec3(angle, 0, angle - 180.0f), 0.005f,
-                    string("bullet") + std::to_string(bulletCount++));
-                bullet->createCollider();
-            });
-            auto bulletName = string("bullet") + std::to_string(bulletCount - 1);
-            auto bulletObj = currentGame->getSceneObject(bulletName);
-            auto expireTime = 900.0f;
-            if (nullptr == bulletObj) {
-                fprintf(stderr, "rotateShape: Failed to create bullet object!");
-            } else {
-                bulletObj->setRenderPriority(RENDER_PRIOR_LOW - 2);
-                currentGame->getActiveScene()->refresh();
-                // Decay the bullet after 5 seconds
-                auto delcb = [bulletName, currentGame] () {
-                    currentGame->removeSceneObject(bulletName);
-                };
-                auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
-                animationController->addKeyFrame(bulletObj, bkf);
+        // if (inputController->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && !delPressed) {
+        //     delPressed = true;
+        //     static int bulletCount;
+        //     // Instantiate a bullet and shoot it
+        //     currentGame->protectedGfxRequest([currentGame, character, angle] () {
+        //         auto imp = ModelImport::createPolygonFromFile("src/resources/models/bullet.obj");
+        //         auto bullet = currentGame->createGameObject(imp, character->getPosition(), vec3(angle, 0, angle - 180.0f), 0.005f,
+        //             string("bullet") + std::to_string(bulletCount++));
+        //         bullet->createCollider();
+        //     });
+        //     auto bulletName = string("bullet") + std::to_string(bulletCount - 1);
+        //     auto bulletObj = currentGame->getSceneObject(bulletName);
+        //     auto expireTime = 900.0f;
+        //     if (nullptr == bulletObj) {
+        //         fprintf(stderr, "rotateShape: Failed to create bullet object!");
+        //     } else {
+        //         bulletObj->setRenderPriority(RENDER_PRIOR_LOW - 2);
+        //         currentGame->getActiveScene()->refresh();
+        //         // Decay the bullet after 5 seconds
+        //         auto delcb = [bulletName, currentGame] () {
+        //             currentGame->removeSceneObject(bulletName);
+        //         };
+        //         auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
+        //         animationController->addKeyFrame(bulletObj, bkf);
 
-                PhysicsParams params = {
-                    .isKinematic = true,
-                    .obeyGravity = false,
-                    .elasticity = 0.0f,
-                    .mass = 1.0f
-                };
-                physicsController->addSceneObject(bulletObj, params);
-                // Convert angles[1] to a direction????
-                auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
-                auto anglez = std::sin(angles.y * (PI/180.0) + (PI/2.0));
-                auto charAngle = character->getRotation();
-                float magnitude = 0.01f;
-                // angles.y is the rotation of the character on some axis??
-                printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
-                physicsController->setVelocity(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
-            }
-        } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && delPressed) {
-            delPressed = false;
-        }
+        //         PhysicsParams params = {
+        //             .isKinematic = true,
+        //             .obeyGravity = false,
+        //             .elasticity = 0.0f,
+        //             .mass = 1.0f
+        //         };
+        //         physicsController->addSceneObject(bulletObj, params);
+        //         // Convert angles[1] to a direction????
+        //         //auto anglex = std::cos(angles.y * (PI/180.0) - (PI/2.0));
+        //         //auto anglez = std::sin(angles.y * (PI/180.0) + (PI/2.0));
+        //         auto charAngle = character->getRotation();
+        //         //float magnitude = 0.01f;
+        //         // angles.y is the rotation of the character on some axis??
+        //         printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
+        //         //physicsController->setVelocity(bulletName, vec3(anglex * magnitude, 0.0f, anglez * magnitude));
+        //     }
+        // } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && delPressed) {
+        //     delPressed = false;
+        // }
         // Set character rotation based on joysticks
         // Left rotation
         if (abs(controllerLeftStateX) > JOYSTICK_DEAD_ZONE || abs(controllerLeftStateY) > JOYSTICK_DEAD_ZONE) {
-            angles[1] = angleOfPoint(
-                vec3(0.0f, 0.0f, 0.0f),
-                vec3(static_cast<float>(controllerLeftStateY),
-                    0.0f,
-                    static_cast<float>(controllerLeftStateX))) - 90.0f - angle;
+            // angles[1] = angleOfPoint(
+            //     vec3(0.0f, 0.0f, 0.0f),
+            //     vec3(static_cast<float>(controllerLeftStateY),
+            //         0.0f,
+            //         static_cast<float>(controllerLeftStateX))) - 90.0f - angle;
         }
         // cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
         //    << ", Z: " << cameraOffset[2] << "\n";
+
         // cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
+        physicsController->setVelocity("player", travelVel);
         currentGame->protectedGfxRequest([&] () {
             currentGame->setLuminance(currentLuminance);
-            character->setRotation(angles);
-            character->setPosition(pos);
+            character->setRotation(charAngle);
             tpsCamera->updateInput();
         });
     }
     SDL_GameControllerClose(gameController1);
     return;
 } //NOLINT - refactor required
-
-/*
- (vector<float>) cameraDistance takes a 3D vector containing the offset of the
- camera from the object and calculates the distance between the two with
- respect to the y-z plane, and x-y plane. Returns a 2D vector where the first
- element is the y-z distance, and the second element is the x-y distance.
-*/
-vector<float> cameraDistance(vec3 offset) {
-    vector<float> distance(2);
-    distance[0] = offset[1] * offset[1] + offset[2] * offset[2];
-    distance[1] = offset[1] * offset[1] + offset[0] * offset[0];
-    return distance;
-}
-
-float convertNegToDeg(float degree) {
-    return degree >= 0.0f ? degree : degree + 360.0f;
-}
-
-// Calculates the angle between two points in degrees
-float angleOfPoint(vec3 p1, vec3 p2) {
-    auto diffPoint = p2 - p1;
-    float angle = atan2(diffPoint[2], diffPoint[0]) * (180.0f / PI);
-    return convertNegToDeg(angle);
-}

@@ -15,6 +15,7 @@ class TPSCameraObject : public CameraObject {
     void init();
     inline void setHeadless(bool headless) { headless_ = headless; }
     inline bool headless() { return headless_; }
+    vec3 getDirRay();
  protected:
     // Input related variables will be removed when InputController gains more functionality
     bool hasActiveController = false;
