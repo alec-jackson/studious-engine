@@ -135,8 +135,6 @@ TextObject::~TextObject() {
 
 void TextObject::render() {
     VISIBILITY_CHECK;
-    // Update model matrices
-    updateModelMatrices();
     modelMat_ = translateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
@@ -160,6 +158,7 @@ void TextObject::render() {
 }
 
 void TextObject::update() {
+    updateModelMatrices();
     render();
 }
 

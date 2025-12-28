@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "FPSCameraObject.hpp"
 #include "TPSCameraObject.hpp"
 #include <GameInstance.hpp>
 #include <SDL_gamecontroller.h>
@@ -403,6 +404,20 @@ TPSCameraObject *GameInstance::createTPSCamera(SceneObject *target, vec3 offset,
               float nearClipping, float farClipping, string cameraName) {
     printf("GameInstance::createTPSCamera: Creating TPSCameraObject %s\n", cameraName.c_str());
     auto gameCamera = std::make_shared<TPSCameraObject>(target, offset, cameraAngle,
+        aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
+    if (!activeCamera_.get()) {
+        printf("GameInstance::createCamera: No active cameras detected. Setting camera %s as new active camera.\n",
+                cameraName.c_str());
+        activeCamera_ = gameCamera;
+    }
+    cameras_.push_back(gameCamera);
+    return gameCamera.get();
+}
+
+FPSCameraObject *GameInstance::createFPSCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+              float nearClipping, float farClipping, string cameraName) {
+    printf("GameInstance::createTPSCamera: Creating TPSCameraObject %s\n", cameraName.c_str());
+    auto gameCamera = std::make_shared<FPSCameraObject>(target, offset, cameraAngle,
         aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
     if (!activeCamera_.get()) {
         printf("GameInstance::createCamera: No active cameras detected. Setting camera %s as new active camera.\n",

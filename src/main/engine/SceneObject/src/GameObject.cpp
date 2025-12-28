@@ -159,6 +159,8 @@ void GameObject::createCollider() {
 }
 
 void GameObject::update() {
+    // Update our model transformation matrices
+    updateModelMatrices();
     render();
 }
 
@@ -175,8 +177,6 @@ void GameObject::render() {
         int hasTexture = modelPair.second.get()->textureCoordsId != UINT_MAX ? 1 : 0;
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::FILL);
-        // Update our model transformation matrices
-        updateModelMatrices();
         auto modelMatrix = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
         // Send our shared variables over to our program (shader)
         gfxController_->sendFloat(luminanceId, luminance);

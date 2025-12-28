@@ -21,6 +21,7 @@
 #include "game.hpp"
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>
+#include <FPSCameraObject.hpp>
 
 // Global Variables, should eventually be moved to a config file
 map<string, string> soundList = {
@@ -94,7 +95,7 @@ void decorateAltScene(GameInstance *currentGame) {
         "src/resources/models/Dracula.obj");
 
     currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, "alt");
+        vec3(0.0f, 0.0f, 0.0f), 0.5f, "alt");
     currentGame->createSprite("src/resources/images/JTIconNoBackground.png", vec3(0), 0.5,
         ObjectAnchor::BOTTOM_LEFT, "altim");
 }
@@ -130,10 +131,10 @@ int runtime(GameInstance *currentGame) {
 
     cout << "Creating Map.\n";
 
-    auto mapPoly = ModelImport::createPolygonFromFile("src/resources/models/map3.obj");
+    auto mapPoly = ModelImport::createPolygonFromFile("src/resources/models/Forest Scene Tri.obj");
 
     currentGame->createGameObject(mapPoly,
-        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
+        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 1.0f, "map");
 
     cout << "Creating Player\n";
 
@@ -145,20 +146,16 @@ int runtime(GameInstance *currentGame) {
 
     // Ready the gameObjectInfo for the player object
     playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
-    auto companion = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion");
-    auto companion2 = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion2");
-    auto companion3 = currentGame->createGameObject(companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion3");
-    auto companion4 = currentGame->createGameObject(companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion4");
+        vec3(0.0f, 0.0f, 0.0f), 0.5f, "player");
+    playerRef->setVisible(true);
+    auto companion = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion");
+    auto companion2 = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion2");
+    auto companion3 = currentGame->createGameObject(companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion3");
+    auto companion4 = currentGame->createGameObject(companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion4");
     playerRef->addChild(companion);
     playerRef->addChild(companion2);
     playerRef->addChild(companion3);
     playerRef->addChild(companion4);
-    companion->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    companion2->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    companion3->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    companion4->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    playerRef->setRenderPriority(RENDER_PRIOR_LOW - 1);
     playerRef->createCollider();
 
 
@@ -264,14 +261,14 @@ int runtime(GameInstance *currentGame) {
     fps_counter->setMessage("FPS: 0");
 
     auto currentCamera = currentGame->createTPSCamera(playerRef,
-        vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f, "mainCamera");
+        vec3(5.140022f, 2.349999f, 2.309998f), 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "mainCamera");
     playerRef->setRotation(vec3(0, 0, 0));
     cout << "currentGameObject tag is " << playerRef->objectName()
         << '\n';
 
     playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
     playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
-    playerRef->setScale(0.0062f);
+    playerRef->setScale(0.5f);
 
     currentGameInfo.isDone = &isDone;
     currentGameInfo.gameCamera = currentCamera;

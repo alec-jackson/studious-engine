@@ -47,7 +47,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
     float rotateSpeed = 1.0f, currentLuminance = 1.0f;
     vec3 angles = vec3(0), pos = vec3(0);
-    float fallspeed = 0;
     bool uPressed = false;
     bool sixPressed = false;
     bool lPressed = false;
@@ -71,13 +70,13 @@ void rotateShape(void *gameInfoStruct, void *target) {
     Sint16 controllerLeftStateX = 0;
     auto tpsCamera = currentGame->getCamera<TPSCameraObject>("mainCamera");
     tpsCamera->setHeadless(true);
-    while (!(*currentGameInfo->isDone)) {
+    while (!currentGame->isShutDown()) {
         // Calculate the X-Z angle between the camera and target
         // Assume that the target is the origin
         auto charPos = character->getPosition();
         auto cameraPos = currentGameInfo->gameCamera->getOffset();
         float multiplier = 1.0f;
-        float speed = 0.3f;
+        float speed = 5.0f;
         // y over x
         float angle = angleOfPoint(cameraPos, charPos);
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
@@ -129,11 +128,9 @@ void rotateShape(void *gameInfoStruct, void *target) {
             pos[2] += (ySpeed / 300.0f) * multiplier;
         }
         if (inputController->pollInput(GameInput::A) && pos[1] == 0) {
-            fallspeed = -0.003f;
             // pos[1] += 0.05f;
         }
         if (inputController->getKeystateRaw()[SDL_SCANCODE_E]) {
-            fallspeed = 0;
             pos[1] += speed;
         }
         if (inputController->getKeystateRaw()[SDL_SCANCODE_Q]) {
@@ -283,7 +280,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
                     0.0f,
                     static_cast<float>(controllerLeftStateX))) - 90.0f - angle;
         }
-        fallspeed = basicPhysics(&pos[1], fallspeed);
         // cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
         //    << ", Z: " << cameraOffset[2] << "\n";
         // cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";

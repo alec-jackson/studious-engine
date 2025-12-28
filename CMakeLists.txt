@@ -75,6 +75,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/SceneObject/src/GameObject2D.cpp
   src/main/engine/SceneObject/src/CameraObject.cpp
   src/main/engine/SceneObject/src/TPSCameraObject.cpp
+  src/main/engine/SceneObject/src/FPSCameraObject.cpp
   src/main/engine/SceneObject/src/ColliderObject.cpp
   src/main/engine/SceneObject/src/TileObject.cpp
   src/main/engine/SceneObjectExt/src/TrackExt.cpp

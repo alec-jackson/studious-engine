@@ -78,7 +78,6 @@ SpriteObject::~SpriteObject() {
 
 void SpriteObject::render() {
     VISIBILITY_CHECK;
-    updateModelMatrices();
     mat4 model = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
@@ -104,6 +103,7 @@ void SpriteObject::render() {
 }
 
 void SpriteObject::update() {
+    updateModelMatrices();
     render();
 }
 

@@ -1,6 +1,10 @@
 #pragma once
-#include <CameraObject.hpp>
+#include <TPSCameraObject.hpp>
+#include <SDL_gamecontroller.h>
 
-class FPSCameraObject : public CameraObject {
-
-}
+class FPSCameraObject : public TPSCameraObject {
+ public:
+    FPSCameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+        float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController);
+    void update() override;
+};
