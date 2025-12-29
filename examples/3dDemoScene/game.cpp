@@ -47,49 +47,41 @@ vector<ProgramData> programs = {
 };
 #endif
 
-vector<string> texturePathStage = {
-    "src/resources/images/skintexture.jpg"
-};
-vector<string> texturePath = {
-    "src/resources/images/rock_texture.jpg",
-    "src/resources/images/rock_texture.jpg",
-    "src/resources/images/shoetexture.jpg",
-    "src/resources/images/shirttexture.jpg"
-};
-
 TextObject *fps_counter;
 TextObject *collDebugText;
 TextObject *pressUText;
 GameObject *wolfRef, *playerRef;  // Used for collision testing
+GameInstance *currentGame;
 
 extern std::unique_ptr<GfxController> gfxController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
 extern std::unique_ptr<InputController> inputController;
 
-int runtime(GameInstance *currentGame);
-int mainLoop(gameInfo *gamein);
-void decorateAltScene(GameInstance *currentGame);
+int runtime();
+int mainLoop();
+void decorateAltScene();
 
 int main() {
     int errorNum;
     auto config = StudiousConfig("src/resources/config.txt");
 
-    GameInstance currentGame(config);
-    currentGame.createGameScene("3d-demo-scene");
-    currentGame.createGameScene("alternate-3d-scene");
+    GameInstance game(config);
+    currentGame = &game;
+    currentGame->createGameScene("3d-demo-scene");
+    currentGame->createGameScene("alternate-3d-scene");
 
     // Load shader programs
     for (auto program : programs) {
         gfxController.get()->loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
     }
-    decorateAltScene(&currentGame);
-    currentGame.setActiveScene("3d-demo-scene");
-    errorNum = runtime(&currentGame);
+    decorateAltScene();
+    currentGame->setActiveScene("3d-demo-scene");
+    errorNum = runtime();
     return errorNum;
 }
 
-void decorateAltScene(GameInstance *currentGame) {
+void decorateAltScene() {
     currentGame->setActiveScene("alternate-3d-scene");
     auto playerPoly = ModelImport::createPolygonFromFile(
         "src/resources/models/Dracula.obj");
@@ -110,11 +102,9 @@ void decorateAltScene(GameInstance *currentGame) {
 
  (int) runtime returns 0 on success.
 */
-int runtime(GameInstance *currentGame) {
+int runtime() {
     cout << "Building game scene!\n";
     SDL_SetRelativeMouseMode(SDL_FALSE);
-    struct gameInfo currentGameInfo;
-    bool isDone = false;
     cout << "Creating camera.\n";
 
     // Initialize sfx
@@ -123,11 +113,6 @@ int runtime(GameInstance *currentGame) {
     }
     // Start the background music
     //currentGame->playSound("bg_music", 1, 60);
-
-    /// @todo Make loading textures for objects a little more user friendly
-    // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
-    vector<int> texturePattern = {0, 1, 2, 3};
-    vector<int> texturePatternStage = {0, 0, 0, 0};
 
     cout << "Creating Map.\n";
 
@@ -266,8 +251,14 @@ int runtime(GameInstance *currentGame) {
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
 
-    auto currentCamera = currentGame->createTPSCamera(playerRef,
-        vec3(5.140022f, 2.349999f, 2.309998f), 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "mainCamera");
+    vec3 fpsCameraOffset(0.0f, 1.0f, 0.0f);
+
+    currentGame->createFPSCamera(playerRef,
+        vec3(5.140022f, 2.349999f, 2.309998f), fpsCameraOffset, 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "fpsCamera");
+    currentGame->createTPSCamera(playerRef,
+        vec3(5.140022f, 2.349999f, 2.309998f), 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "tpsCamera");
+
+
     playerRef->setRotation(vec3(0, 0, 0));
     cout << "currentGameObject tag is " << playerRef->objectName()
         << '\n';
@@ -276,19 +267,14 @@ int runtime(GameInstance *currentGame) {
     playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
     playerRef->setScale(0.5f);
 
-    currentGameInfo.isDone = &isDone;
-    currentGameInfo.gameCamera = currentCamera;
-    currentGameInfo.currentGame = currentGame;
-    currentGameInfo.gameInput = &**&inputController;
     /*
      End Scene Loading
      */
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
-    thread rotThread(rotateShape, &currentGameInfo, playerRef);
-    mainLoop(&currentGameInfo);
-    isDone = true;
+    thread rotThread(rotateShape, playerRef);
+    mainLoop();
     rotThread.join();
     return 0;
 }
@@ -301,10 +287,9 @@ int runtime(GameInstance *currentGame) {
  (int) mainLoop returns 0 when closed successfully. When an error occurs and the
  mainLoop closes prematurely, an error code is returned.
 */
-int mainLoop(gameInfo* gamein) {
+int mainLoop() {
     int collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
-    GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
     while (!currentGame->isShutDown()) {

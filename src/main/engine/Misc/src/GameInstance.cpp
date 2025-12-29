@@ -414,10 +414,10 @@ TPSCameraObject *GameInstance::createTPSCamera(SceneObject *target, vec3 offset,
     return gameCamera.get();
 }
 
-FPSCameraObject *GameInstance::createFPSCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
-              float nearClipping, float farClipping, string cameraName) {
+FPSCameraObject *GameInstance::createFPSCamera(SceneObject *target, vec3 offset, vec3 camPos, float cameraAngle,
+    float aspectRatio, float nearClipping, float farClipping, string cameraName) {
     printf("GameInstance::createTPSCamera: Creating TPSCameraObject %s\n", cameraName.c_str());
-    auto gameCamera = std::make_shared<FPSCameraObject>(target, offset, cameraAngle,
+    auto gameCamera = std::make_shared<FPSCameraObject>(target, offset, camPos, cameraAngle,
         aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
     if (!activeCamera_.get()) {
         printf("GameInstance::createCamera: No active cameras detected. Setting camera %s as new active camera.\n",
@@ -786,5 +786,21 @@ void GameInstance::setActiveScene(string sceneName) {
             sceneName.c_str());
     } else {
         activeScene_ = gameScene;
+    }
+}
+
+std::shared_ptr<CameraObject> GameInstance::getActiveCamera() {
+    return activeCamera_;
+}
+
+void GameInstance::setActiveCamera(string cameraName) {
+    // Check if a camera exists
+    auto cit = std::find_if(cameras_.begin(), cameras_.end(), [cameraName] (SHD(CameraObject) camera) {
+        return camera->objectName() == cameraName;
+    });
+    if (cit != cameras_.end()) {
+        activeCamera_ = *cit;
+    } else {
+        fprintf(stderr, "GameInstance::setActiveCamera: Unable to find camera %s\n", cameraName.c_str());
     }
 }

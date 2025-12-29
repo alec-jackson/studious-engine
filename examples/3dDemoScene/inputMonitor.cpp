@@ -23,6 +23,7 @@
 #include <AnimationController.hpp>
 // Analog joystick dead zone
 extern const int JOYSTICK_DEAD_ZONE;
+extern GameInstance *currentGame;
 
 #define UPDATE_TRAVEL_VEL travelVel += (inputRay * speed * multiplier)
 #define UPDATE_CHAR_ANGLE(shift) charAngle[1] = glm::degrees(glm::atan(ray.x, ray.z)) + shift
@@ -42,16 +43,40 @@ vector<float> cameraDistance(vec3 offset);
 
  (void) rotateShape does not return a value.
 */
-void rotateShape(void *gameInfoStruct, void *target) {
-    int mouseX, mouseY, numJoySticks = SDL_NumJoysticks();
-    gameInfo *currentGameInfo = reinterpret_cast<gameInfo *>(gameInfoStruct);
-    GameInstance *currentGame = currentGameInfo->currentGame;
+void rotateShape(void *target) {
+    int numJoySticks = SDL_NumJoysticks();
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
     float rotateSpeed = 1.0f, currentLuminance = 1.0f;
+    /** Input map code example from BOTHWORLDS */
+    vector<int> monitoredInput = {
+        SDL_SCANCODE_6,
+        SDL_SCANCODE_L,
+        SDL_SCANCODE_U,
+        SDL_SCANCODE_P,
+        SDL_SCANCODE_O,
+        SDL_SCANCODE_I,
+        SDL_SCANCODE_T
+    };
+
+    map<int, bool> debounceMap;
+    map<int, bool> inputMap;
+    auto initDebounceMap = [&debounceMap, &monitoredInput] () {
+        for (auto i : monitoredInput) {
+            debounceMap[i] = true;
+        }
+    };
+    auto populateInputMap = [&debounceMap, &monitoredInput] (map<int, bool> &inputMap) {
+        for (auto input : monitoredInput) {
+            auto state = inputController->getKeystateRaw()[input];
+            // Set input map to true if debounce = false
+            inputMap[input] = !debounceMap[input] && state;
+            // Set debounce state
+            debounceMap[input] = state;
+        }
+    };
+    initDebounceMap();
+
     cout << rotateSpeed;
-    bool uPressed = false;
-    bool sixPressed = false;
-    bool lPressed = false;
     // bool delPressed = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
@@ -70,21 +95,24 @@ void rotateShape(void *gameInfoStruct, void *target) {
     }
     Sint16 controllerLeftStateY = 0;
     Sint16 controllerLeftStateX = 0;
-    auto tpsCamera = currentGame->getCamera<TPSCameraObject>("mainCamera");
+    auto tpsCamera = currentGame->getCamera<TPSCameraObject>("tpsCamera");
+    auto fpsCamera = currentGame->getCamera<FPSCameraObject>("fpsCamera");
+    // Don't update via SceneObject::update - instead update manually to avoid jitters (overkill for polish)
     tpsCamera->setHeadless(true);
+    fpsCamera->setHeadless(true);
     while (!currentGame->isShutDown()) {
+        populateInputMap(inputMap);
+        auto activeCamera = currentGame->getActiveCamera<TPSCameraObject>();
         // Calculate the X-Z angle between the camera and target
         // Assume that the target is the origin
-        auto charPos = character->getPosition();
         auto charAngle = character->getRotation();
         vec3 travelVel = vec3(0);
-        auto ray = tpsCamera->getDirRay();
+        auto ray = activeCamera->getDirRay();
         // Remove the Y axis from the ray
         ray.y = 0.0f;
         float multiplier = 1.0f;
         cout << multiplier<<endl;
         float speed = 4.0f;
-        SDL_GetRelativeMouseState(&mouseX, &mouseY);
         if (hasActiveController) {
             controllerLeftStateY = SDL_GameControllerGetAxis(gameController1,
                 SDL_CONTROLLER_AXIS_LEFTY);
@@ -112,15 +140,6 @@ void rotateShape(void *gameInfoStruct, void *target) {
             // For north, just follow the ray
             UPDATE_TRAVEL_VEL;
         }
-        if (inputController->pollInput(GameInput::A) && charPos[1] == 0) {
-            // pos[1] += 0.05f;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_E]) {
-            charPos[1] += speed;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_Q]) {
-            charPos[1] -= speed;
-        }
         if (inputController->pollInput(GameInput::WEST) || controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
             // Fix angle shift here...
             // Swap XZ points for input ray
@@ -140,29 +159,12 @@ void rotateShape(void *gameInfoStruct, void *target) {
             UPDATE_CHAR_ANGLE(270.0f);
             UPDATE_TRAVEL_VEL;
         }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_C]) {
-            currentLuminance += 0.01f;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_V]) {
-            currentLuminance -= 0.01f;
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_P]) {
+        if (inputMap[SDL_SCANCODE_P]) {
             currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN_DESKTOP);
-        } else if (inputController->getKeystateRaw()[SDL_SCANCODE_O]) {
+        } else if (inputMap[SDL_SCANCODE_O]) {
             currentGame->changeWindowMode(SDL_WINDOW_FULLSCREEN);
-        } else if (inputController->getKeystateRaw()[SDL_SCANCODE_I]) {
+        } else if (inputMap[SDL_SCANCODE_I]) {
             currentGame->changeWindowMode(0);
-        }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_9]) {
-            // Rotate on X+ axis
-            auto currentRotation = currentGameInfo->gameCamera->getRotation();
-            currentRotation[0] += 1.0f;
-            currentGameInfo->gameCamera->setRotation(currentRotation);
-        } else if (inputController->getKeystateRaw()[SDL_SCANCODE_0]) {
-            // Rotate on X- axis
-            auto currentRotation = currentGameInfo->gameCamera->getRotation();
-            currentRotation[0] -= 1.0f;
-            currentGameInfo->gameCamera->setRotation(currentRotation);
         }
 
         // Move the directional light
@@ -178,36 +180,35 @@ void rotateShape(void *gameInfoStruct, void *target) {
             currentGame->setDirectionalLight(dirLight);
         }
 
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_U] && !uPressed) {
-            uPressed = true;
+        if (inputMap[SDL_SCANCODE_U]) {
             if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
                 SDL_SetRelativeMouseMode(SDL_TRUE);
             } else {
                 SDL_SetRelativeMouseMode(SDL_FALSE);
             }
-        } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_U] && uPressed) {
-            uPressed = false;
         }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_6] && !sixPressed) {
-            sixPressed = true;
+        if (inputMap[SDL_SCANCODE_6]) {
             if (currentGame->getActiveScene().get()->getSceneName().compare("3d-demo-scene") == 0) {
                 currentGame->setActiveScene("alternate-3d-scene");
                 auto altPlayer = currentGame->getSceneObject("alt");
-                currentGameInfo->gameCamera->setTarget(altPlayer);
+                activeCamera->setTarget(altPlayer);
             } else {
                 currentGame->setActiveScene("3d-demo-scene");
                 auto altPlayer = currentGame->getSceneObject("player");
-                currentGameInfo->gameCamera->setTarget(altPlayer);
+                activeCamera->setTarget(altPlayer);
             }
-        } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_6] && sixPressed) {
-            sixPressed = false;
         }
-        if (inputController->getKeystateRaw()[SDL_SCANCODE_L] && !lPressed) {
-            lPressed = true;
+        if (inputMap[SDL_SCANCODE_L]) {
             auto enableStatus = ColliderObject::getDrawCollider();
             ColliderObject::setDrawCollider(!enableStatus);
-        } else if (!inputController->getKeystateRaw()[SDL_SCANCODE_L] && lPressed) {
-            lPressed = false;
+        }
+        if (inputMap[SDL_SCANCODE_T]) {
+            // Switch the active camera
+            if (activeCamera->objectName() == "fpsCamera") {
+                currentGame->setActiveCamera("tpsCamera");
+            } else {
+                currentGame->setActiveCamera("fpsCamera");
+            }
         }
         // if (inputController->getKeystateRaw()[SDL_SCANCODE_BACKSPACE] && !delPressed) {
         //     delPressed = true;
@@ -262,15 +263,11 @@ void rotateShape(void *gameInfoStruct, void *target) {
             //         0.0f,
             //         static_cast<float>(controllerLeftStateX))) - 90.0f - angle;
         }
-        // cout << "CO - X: " << cameraOffset[0] << ", Y: " << cameraOffset[1]
-        //    << ", Z: " << cameraOffset[2] << "\n";
-
-        // cout << "dx: " << mouseX << ", dy: " << mouseY << "\n";
         physicsController->setVelocity("player", travelVel);
         currentGame->protectedGfxRequest([&] () {
             currentGame->setLuminance(currentLuminance);
             character->setRotation(charAngle);
-            tpsCamera->updateInput();
+            activeCamera->updateInput();
         });
     }
     SDL_GameControllerClose(gameController1);

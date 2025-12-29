@@ -15,9 +15,9 @@ extern std::unique_ptr<PhysicsController> physicsController;
  * Note for myself: This is baially going to be the exact same, EXCEPT the lookAt matrix is going to be
  * the player position + OFFSET! This basically swaps the camera and target's position in a way.
  */
-FPSCameraObject::FPSCameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+FPSCameraObject::FPSCameraObject(SceneObject *target, vec3 offset, vec3 camPos, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
-    TPSCameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping, type, objectName, gfxController) {
+    TPSCameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping, type, objectName, gfxController), camPos_ { camPos } {
         // Do some extra stuff in addition to normal camera work
         // Spin up a thread for input monitoring?
     init();
@@ -40,7 +40,7 @@ void FPSCameraObject::update() {
     assert(target_ != nullptr);
     if (target_ != nullptr) {
         /* If there is a target, aim the camera at it */
-        eye = target_->getPosition() + vec3(0, 0.4, 0.0);
+        eye = target_->getPosition(camPos_);
         //eye = vec3(0);
         // For FPS, the eye is actually going to just be the target's position:
 
