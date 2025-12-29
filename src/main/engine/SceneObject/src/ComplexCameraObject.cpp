@@ -87,7 +87,7 @@ void ComplexCameraObject::updateInput() {
         ignoreFirstUpdate_ = false;
         return;
     }
-
+    cameraOffset = offset_;
     // y over x
     SDL_GetRelativeMouseState(&mouseX, &mouseY);
     if (hasActiveController) {

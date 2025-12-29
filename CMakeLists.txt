@@ -271,6 +271,7 @@ install (FILES
   src/main/utilities/headers/Model.hpp
   src/main/utilities/headers/Material.hpp
   src/main/common/headers/common.hpp
+  src/main/common/headers/studious_utility.hpp
   src/main/common/headers/winsup.hpp
   src/main/engine/SceneObject/headers/CameraObject.hpp
   src/main/engine/SceneObject/headers/TPSCameraObject.hpp

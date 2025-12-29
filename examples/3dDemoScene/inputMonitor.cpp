@@ -227,10 +227,13 @@ void rotateShape(void *target) {
         if (inputGIMap[GameInput::Y]) {
             // Switch the active camera
             if (activeCamera->objectName() == "fpsCamera") {
+                // Sync offset between cameras
+                tpsCamera->setOffset(fpsCamera->getOffset() * -1.0f);
                 currentGame->setActiveCamera("tpsCamera");
                 fpsMode = false;
                 character->setVisible(true);
             } else {
+                fpsCamera->setOffset(tpsCamera->getOffset() * -1.0f);
                 currentGame->setActiveCamera("fpsCamera");
                 fpsMode = true;
                 // Hide drac in FPS mode
@@ -281,24 +284,11 @@ void rotateShape(void *target) {
             }
         }
         // Set character rotation based on joysticks
-        // Left rotation
         if (abs(controllerLeftStateX) > JOYSTICK_DEAD_ZONE || abs(controllerLeftStateY) > JOYSTICK_DEAD_ZONE) {
-            // vec3 inputRay(ray.x, 0, ray.z);
-            // vec3 ci(controllerLeftStateX, 0.0f, controllerLeftStateY * -1.0f);
-            // // Angle between controller input and camera
-            // auto dp = glm::dot(ci, ray);
-            // auto prod = dp / (glm::length(ci) * glm::length(ray));
-            // auto angle = glm::degrees(acos(prod));
-            // //angle *= prod > 1.0f ? -1.0f : 1.0f;
-            // charAngle[1] = angle;
-            // printf("rotateShape: Input X: %d | Input Y: %d | ANGLE: %f\n", controllerLeftStateX, controllerLeftStateY, angle);
-            // printf("rotateShape: PROD: %f\n", prod);
             auto prod = (float)controllerLeftStateY / (float)controllerLeftStateX;
             auto angle = glm::degrees(atan(prod));
             angle += controllerLeftStateX > 0.0f ? 90.0f : 270.0f;
             UPDATE_CHAR_ANGLE((fpsMode ? -angle + 180.0f : -angle));
-            // Log the angle
-            printf("rotateShape: ANGLE: %f\n", angle);
         }
         physicsController->setVelocity("player", travelVel);
         currentGame->protectedGfxRequest([&] () {
