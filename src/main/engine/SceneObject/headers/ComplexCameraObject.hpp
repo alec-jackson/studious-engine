@@ -1,4 +1,12 @@
+/**
+ * @file ComplexCameraObject.hpp
+ * @author Christian Galvez
+ * @copyright Studious Engine 2025
+ * @brief Intermediary class for FPS/TPS camera shared code.
+ * @date 2025-12-28
+ */
 #pragma once
+#include <string>
 #include <CameraObject.hpp>
 #include <SDL_gamecontroller.h>
 
@@ -26,4 +34,5 @@ class ComplexCameraObject : public CameraObject {
     vec3 pos;
     bool invertX;
     bool invertY;
+    bool ignoreFirstUpdate_ = true;
 };

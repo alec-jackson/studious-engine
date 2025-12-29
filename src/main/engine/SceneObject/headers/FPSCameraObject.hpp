@@ -1,4 +1,12 @@
+/**
+ * @file FPSCameraObject.hpp
+ * @author Christian Galvez
+ * @copyright Studious Engine 2025
+ * @brief Class declaration for the first person camera object.
+ * @date 2025-12-28
+ */
 #pragma once
+#include <string>
 #include <TPSCameraObject.hpp>
 #include <SDL_gamecontroller.h>
 

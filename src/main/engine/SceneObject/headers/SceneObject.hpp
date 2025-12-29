@@ -8,7 +8,6 @@
  */
 #pragma once
 #include <algorithm>
-#include <immintrin.h>
 #include <string>
 #include <set>
 #include <common.hpp>

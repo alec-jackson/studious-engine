@@ -1,11 +1,18 @@
-#include "ComplexCameraObject.hpp"
-#include "glm/geometric.hpp"
+/**
+ * @file ComplexCameraObject.cpp
+ * @author Christian Galvez
+ * @copyright Studious Engine 2025
+ * @date 2025-12-28
+ * @brief Implementation of the FPS/TPS intermediary class code. This class handles input from the InputController
+ * and updates the camera's EYE and CENTER values on each update.
+ */
+#include <ComplexCameraObject.hpp>
+#include <memory>
+#include <glm/geometric.hpp>
 #include <TPSCameraObject.hpp>
 #include <InputController.hpp>
 #include <AnimationController.hpp>
 #include <physics.hpp>
-#include <memory>
-#include <thread>
 
 extern std::unique_ptr<InputController> inputController;
 extern std::unique_ptr<AnimationController> animationController;
@@ -63,12 +70,22 @@ void ComplexCameraObject::updateInput() {
 
     assert(nullptr != getTarget());  // Must have a target
     // Do nothing in relative mouse mode
-    if (!SDL_GetRelativeMouseMode()) return;
+    if (!SDL_GetRelativeMouseMode()) {
+        ignoreFirstUpdate_ = true;
+        return;
+    }
     // Calculate the X-Z angle between the camera and target
     // Assume that the target is the origin
     int mouseX, mouseY;
     Sint16 controllerRightStateY = 0;
     Sint16 controllerRightStateX = 0;
+    // Allow the mouse to capture - prevents jitters when attaching to camera
+    if (ignoreFirstUpdate_) {
+        SDL_GetRelativeMouseState(&mouseX, &mouseY);
+        ignoreFirstUpdate_ = false;
+        return;
+    }
+
     // y over x
     SDL_GetRelativeMouseState(&mouseX, &mouseY);
     if (hasActiveController) {

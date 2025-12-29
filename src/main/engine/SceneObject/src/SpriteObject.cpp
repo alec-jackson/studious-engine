@@ -8,11 +8,11 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <SpriteObject.hpp>
 #include <cstdio>
 #include <vector>
 #include <memory>
 #include <string>
-#include <SpriteObject.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): GameObject2D(

@@ -121,8 +121,8 @@ class GameInstance {
               float nearClipping, float farClipping, string cameraName);
     TPSCameraObject *createTPSCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping, string cameraName);
-    FPSCameraObject *createFPSCamera(SceneObject *target, vec3 offset, vec3 camPos, float cameraAngle, float aspectRatio,
-              float nearClipping, float farClipping, string cameraName);
+    FPSCameraObject *createFPSCamera(SceneObject *target, vec3 offset, vec3 camPos, float cameraAngle,
+        float aspectRatio, float nearClipping, float farClipping, string cameraName);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing,
         int charPoint, string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale,
