@@ -12,7 +12,7 @@
 
 const int JOYSTICK_DEAD_ZONE = 4000;
 #define PI 3.14159265
-#define TRACKING_SPEED 0.1f
+#define TRACKING_SPEED 20.0f
 
 class ComplexCameraObject : public CameraObject {
  public:

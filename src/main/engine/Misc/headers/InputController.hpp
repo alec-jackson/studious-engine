@@ -30,7 +30,8 @@ enum class GameInput {
     X,
     Y,
     R,
-    L
+    L,
+    START
 };
 
 /*

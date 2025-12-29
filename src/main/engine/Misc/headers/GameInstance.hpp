@@ -141,6 +141,7 @@ class GameInstance {
      * @return True when the request is fulfilled, otherwise return false.
      */
     bool protectedGfxRequest(std::function<void(void)> req);
+    void protectedGfxRequestAsync(std::function<void(void)> req);
     int playSound(string sfxName, bool loop, int volume);
     int loadSound(string sfxName, string sfxPath);
     int changeVolume(string sfxName, int volume);

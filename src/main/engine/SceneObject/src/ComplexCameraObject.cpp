@@ -17,8 +17,10 @@
 extern std::unique_ptr<InputController> inputController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
+extern double deltaTime;
 
 #define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
+#define TRACK_TRANSFORM TRACKING_SPEED * modifier * deltaTime
 
 ComplexCameraObject::ComplexCameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
@@ -103,7 +105,7 @@ void ComplexCameraObject::updateInput() {
         }
         INVERT_MODIFIER(invertY);
         vector<float> distHold = cameraDistance(cameraOffset);
-        cameraOffset[1] -= TRACKING_SPEED * modifier;
+        cameraOffset[1] -= TRACK_TRANSFORM;
         vector<float> distFinish = cameraDistance(cameraOffset);
         distHold[0] = sqrt(distHold[0]);
         distHold[1] = sqrt(distHold[1]);
@@ -124,7 +126,7 @@ void ComplexCameraObject::updateInput() {
         }
         INVERT_MODIFIER(invertY);
         vector<float> distHold = cameraDistance(cameraOffset);
-        cameraOffset[1] += TRACKING_SPEED * modifier;
+        cameraOffset[1] += TRACK_TRANSFORM;
         vector<float> distFinish = cameraDistance(cameraOffset);
         distHold[0] = sqrt(distHold[0]);
         distHold[1] = sqrt(distHold[1]);
@@ -147,17 +149,17 @@ void ComplexCameraObject::updateInput() {
         }
         INVERT_MODIFIER(invertX);
         if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] += TRACKING_SPEED * modifier;
-            cameraOffset[2] -= TRACKING_SPEED * modifier;
+            cameraOffset[0] += TRACK_TRANSFORM;
+            cameraOffset[2] -= TRACK_TRANSFORM;
         } else if (cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] -= TRACKING_SPEED * modifier;
-            cameraOffset[2] -= TRACKING_SPEED * modifier;
+            cameraOffset[0] -= TRACK_TRANSFORM;
+            cameraOffset[2] -= TRACK_TRANSFORM;
         } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] += TRACKING_SPEED * modifier;
-            cameraOffset[2] += TRACKING_SPEED * modifier;
+            cameraOffset[0] += TRACK_TRANSFORM;
+            cameraOffset[2] += TRACK_TRANSFORM;
         } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] -= TRACKING_SPEED * modifier;
-            cameraOffset[2] += TRACKING_SPEED * modifier;
+            cameraOffset[0] -= TRACK_TRANSFORM;
+            cameraOffset[2] += TRACK_TRANSFORM;
         }
         float distFinish = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
         distHold = sqrt(distHold);
@@ -176,17 +178,17 @@ void ComplexCameraObject::updateInput() {
         }
         INVERT_MODIFIER(invertX);
         if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] -= TRACKING_SPEED * modifier;
-            cameraOffset[2] += TRACKING_SPEED * modifier;
+            cameraOffset[0] -= TRACK_TRANSFORM;
+            cameraOffset[2] += TRACK_TRANSFORM;
         } else if (cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] += TRACKING_SPEED * modifier;
-            cameraOffset[2] += TRACKING_SPEED * modifier;
+            cameraOffset[0] += TRACK_TRANSFORM;
+            cameraOffset[2] += TRACK_TRANSFORM;
         } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] -= TRACKING_SPEED * modifier;
-            cameraOffset[2] -= TRACKING_SPEED * modifier;
+            cameraOffset[0] -= TRACK_TRANSFORM;
+            cameraOffset[2] -= TRACK_TRANSFORM;
         } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] += TRACKING_SPEED * modifier;
-            cameraOffset[2] -= TRACKING_SPEED * modifier;
+            cameraOffset[0] += TRACK_TRANSFORM;
+            cameraOffset[2] -= TRACK_TRANSFORM;
         }
         float distFinish = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
         distHold = sqrt(distHold);

@@ -205,8 +205,8 @@ int runtime() {
         "contact-text");                        // ObjectName
 
     pressUText = currentGame->createText(
-        "Press 'U' to attach/detach mouse",
-        vec3(800.0f, 670.0f, 0.0f),
+        "Tab/Start to Focus (detached)",
+        vec3(850.0f, 670.0f, 0.0f),
         0.7f,
         "src/resources/fonts/AovelSans.ttf",
         0.0f,

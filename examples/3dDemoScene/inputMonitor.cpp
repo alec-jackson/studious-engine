@@ -10,6 +10,7 @@
  */
 #include "inputMonitor.hpp"
 #include "ComplexCameraObject.hpp"
+#include "InputController.hpp"
 #include "glm/trigonometric.hpp"
 #include "physics.hpp"
 #include <TPSCameraObject.hpp>
@@ -35,8 +36,8 @@ extern std::unique_ptr<InputController> inputController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
 #define PI 3.14159265
-vector<float> cameraDistance(vec3 offset);
-float xzAngle(vec3 p1, vec3 p2);
+
+void updateAttachStatus();
 
 /*
  (void) rotateShape takes a (void *) gameInfoStruct that should be of type
@@ -56,22 +57,30 @@ void rotateShape(void *target) {
     vector<int> monitoredInput = {
         SDL_SCANCODE_6,
         SDL_SCANCODE_L,
-        SDL_SCANCODE_U,
         SDL_SCANCODE_P,
         SDL_SCANCODE_O,
-        SDL_SCANCODE_I,
-        SDL_SCANCODE_T,
-        SDL_SCANCODE_BACKSPACE
+        SDL_SCANCODE_I
+    };
+
+    vector<GameInput> monitoredGInput = {
+        GameInput::START, // Attach camera
+        GameInput::B,  // fire bullet
+        GameInput::Y  // switch FPS -> TPS
     };
 
     map<int, bool> debounceMap;
     map<int, bool> inputMap;
-    auto initDebounceMap = [&debounceMap, &monitoredInput] () {
+    map<GameInput, bool> debounceGIMap;
+    map<GameInput, bool> inputGIMap;
+    auto initDebounceMaps = [&debounceMap, &debounceGIMap, &monitoredInput, &monitoredGInput] () {
         for (auto i : monitoredInput) {
             debounceMap[i] = true;
         }
+        for (auto i : monitoredGInput) {
+            debounceGIMap[i] = true;
+        }
     };
-    auto populateInputMap = [&debounceMap, &monitoredInput] (map<int, bool> &inputMap) {
+    auto populateInputMaps = [&debounceMap, &debounceGIMap, &monitoredInput, &monitoredGInput] (map<int, bool> &inputMap, map<GameInput, bool> &inputGIMap) {
         for (auto input : monitoredInput) {
             auto state = inputController->getKeystateRaw()[input];
             // Set input map to true if debounce = false
@@ -79,8 +88,13 @@ void rotateShape(void *target) {
             // Set debounce state
             debounceMap[input] = state;
         }
+        for (auto input : monitoredGInput) {
+            auto state = inputController->pollInput(input);
+            inputGIMap[input] = !debounceGIMap[input] && state;
+            debounceGIMap[input] = state;
+        }
     };
-    initDebounceMap();
+    initDebounceMaps();
 
     // bool delPressed = false;
     SDL_GameController *gameController1 = NULL;
@@ -107,7 +121,8 @@ void rotateShape(void *target) {
     fpsCamera->setHeadless(true);
     currentGame->setActiveCamera("tpsCamera");
     while (!currentGame->isShutDown()) {
-        populateInputMap(inputMap);
+        updateAttachStatus();
+        populateInputMaps(inputMap, inputGIMap);
         auto activeCamera = currentGame->getActiveCamera<ComplexCameraObject>();
         // Calculate the X-Z angle between the camera and target
         // Assume that the target is the origin
@@ -187,7 +202,7 @@ void rotateShape(void *target) {
             currentGame->setDirectionalLight(dirLight);
         }
 
-        if (inputMap[SDL_SCANCODE_U]) {
+        if (inputGIMap[GameInput::START]) {
             if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
                 SDL_SetRelativeMouseMode(SDL_TRUE);
             } else {
@@ -209,7 +224,7 @@ void rotateShape(void *target) {
             auto enableStatus = ColliderObject::getDrawCollider();
             ColliderObject::setDrawCollider(!enableStatus);
         }
-        if (inputMap[SDL_SCANCODE_T]) {
+        if (inputGIMap[GameInput::Y]) {
             // Switch the active camera
             if (activeCamera->objectName() == "fpsCamera") {
                 currentGame->setActiveCamera("tpsCamera");
@@ -222,7 +237,7 @@ void rotateShape(void *target) {
                 character->setVisible(false);
             }
         }
-        if (inputMap[SDL_SCANCODE_BACKSPACE]) {
+        if (inputGIMap[GameInput::B]) {
             static int bulletCount;
             // Instantiate a bullet and shoot it
             currentGame->protectedGfxRequest([character] () {
@@ -295,3 +310,18 @@ void rotateShape(void *target) {
     SDL_GameControllerClose(gameController1);
     return;
 } //NOLINT - refactor required
+
+void updateAttachStatus() {
+    auto attached = SDL_GetRelativeMouseMode() == SDL_TRUE ? true : false;
+    currentGame->protectedGfxRequestAsync([attached] () {
+        auto pressUText = currentGame->getSceneObject<TextObject>("pressUText");
+        assert(pressUText != nullptr);
+        if (attached) {
+            pressUText->setMessage("Tab/Start to Focus (attached)");
+            pressUText->setColor(vec4(0.0f, 1.0f, 0.0f, 1.0f));
+        } else {
+            pressUText->setMessage("Tab/Start to Focus (detached)");
+            pressUText->setColor(vec4(1.0f));
+        }
+    });
+}
