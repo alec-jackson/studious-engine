@@ -144,10 +144,10 @@ int runtime() {
     playerRef->createCollider();
 
     physicsController->addSceneObject(playerRef, {
-        .elasticity = 0.0f,
         .isKinematic = true,
-        .mass = 5.0f,
-        .obeyGravity = true
+        .obeyGravity = true,
+        .elasticity = 0.0f,
+        .mass = 5.0f
     });
 
     cout << "Creating wolf\n";

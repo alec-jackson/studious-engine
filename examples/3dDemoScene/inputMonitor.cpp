@@ -221,7 +221,7 @@ void rotateShape(void *target) {
             currentGame->protectedGfxRequest([character] () {
                 auto imp = ModelImport::createPolygonFromFile("src/resources/models/bullet.obj");
                 // use the same angle as the direction vector
-                auto bullet = currentGame->createGameObject(imp, character->getPosition(), vec3(0.0f), 0.005f,
+                auto bullet = currentGame->createGameObject(imp, character->getPosition(), vec3(0.0f), 1.0f,
                     string("bullet") + std::to_string(bulletCount++));
                 bullet->createCollider();
             });

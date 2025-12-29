@@ -20,6 +20,9 @@ FPSCameraObject::FPSCameraObject(SceneObject *target, vec3 offset, vec3 camPos, 
     TPSCameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping, type, objectName, gfxController), camPos_ { camPos } {
         // Do some extra stuff in addition to normal camera work
         // Spin up a thread for input monitoring?
+    // Invert X/Y since camera pos inverted
+    invertX = true;
+    invertY = true;
     init();
 }
 

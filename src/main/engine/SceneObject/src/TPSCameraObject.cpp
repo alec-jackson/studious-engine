@@ -10,6 +10,8 @@ extern std::unique_ptr<InputController> inputController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
 
+#define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
+
 TPSCameraObject::TPSCameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
     CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping, type, objectName, gfxController) {
@@ -83,6 +85,7 @@ void TPSCameraObject::updateInput() {
         } else if (controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
             modifier = (static_cast<float>(controllerRightStateY * -1)) / INT16_MAX;
         }
+        INVERT_MODIFIER(invertY);
         vector<float> distHold = cameraDistance(cameraOffset);
         cameraOffset[1] -= TRACKING_SPEED * modifier;
         vector<float> distFinish = cameraDistance(cameraOffset);
@@ -103,6 +106,7 @@ void TPSCameraObject::updateInput() {
         } else if (controllerRightStateY > JOYSTICK_DEAD_ZONE) {
             modifier = static_cast<float>(controllerRightStateY) / INT16_MAX;
         }
+        INVERT_MODIFIER(invertY);
         vector<float> distHold = cameraDistance(cameraOffset);
         cameraOffset[1] += TRACKING_SPEED * modifier;
         vector<float> distFinish = cameraDistance(cameraOffset);
@@ -119,24 +123,25 @@ void TPSCameraObject::updateInput() {
     if ((mouseX < 0) || controllerRightStateX < -JOYSTICK_DEAD_ZONE) {
         // Rotate the camera about the y axis
         float distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-        float multiplier = 1.0f;
+        float modifier = 1.0f;
         if (mouseX < 0) {
-            multiplier = (mouseX * -1.0f) / 5.0f;
+            modifier = (mouseX * -1.0f) / 5.0f;
         } else if (controllerRightStateX < -JOYSTICK_DEAD_ZONE) {
-            multiplier = (static_cast<float>(controllerRightStateX * -1)) / INT16_MAX;
+            modifier = (static_cast<float>(controllerRightStateX * -1)) / INT16_MAX;
         }
+        INVERT_MODIFIER(invertX);
         if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] += TRACKING_SPEED * multiplier;
-            cameraOffset[2] -= TRACKING_SPEED * multiplier;
+            cameraOffset[0] += TRACKING_SPEED * modifier;
+            cameraOffset[2] -= TRACKING_SPEED * modifier;
         } else if (cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] -= TRACKING_SPEED * multiplier;
-            cameraOffset[2] -= TRACKING_SPEED * multiplier;
+            cameraOffset[0] -= TRACKING_SPEED * modifier;
+            cameraOffset[2] -= TRACKING_SPEED * modifier;
         } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] += TRACKING_SPEED * multiplier;
-            cameraOffset[2] += TRACKING_SPEED * multiplier;
+            cameraOffset[0] += TRACKING_SPEED * modifier;
+            cameraOffset[2] += TRACKING_SPEED * modifier;
         } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] -= TRACKING_SPEED * multiplier;
-            cameraOffset[2] += TRACKING_SPEED * multiplier;
+            cameraOffset[0] -= TRACKING_SPEED * modifier;
+            cameraOffset[2] += TRACKING_SPEED * modifier;
         }
         float distFinish = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
         distHold = sqrt(distHold);
@@ -147,24 +152,25 @@ void TPSCameraObject::updateInput() {
     }
     if ((mouseX > 0) || controllerRightStateX > JOYSTICK_DEAD_ZONE) {
         float distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-        float multiplier = 1.0f;
+        float modifier = 1.0f;
         if (mouseX > 0) {
-            multiplier = mouseX / 5.0f;
+            modifier = mouseX / 5.0f;
         } else if (controllerRightStateX > JOYSTICK_DEAD_ZONE) {
-            multiplier = static_cast<float>(controllerRightStateX) / INT16_MAX;
+            modifier = static_cast<float>(controllerRightStateX) / INT16_MAX;
         }
+        INVERT_MODIFIER(invertX);
         if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] -= TRACKING_SPEED * multiplier;
-            cameraOffset[2] += TRACKING_SPEED * multiplier;
+            cameraOffset[0] -= TRACKING_SPEED * modifier;
+            cameraOffset[2] += TRACKING_SPEED * modifier;
         } else if (cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] += TRACKING_SPEED * multiplier;
-            cameraOffset[2] += TRACKING_SPEED * multiplier;
+            cameraOffset[0] += TRACKING_SPEED * modifier;
+            cameraOffset[2] += TRACKING_SPEED * modifier;
         } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] -= TRACKING_SPEED * multiplier;
-            cameraOffset[2] -= TRACKING_SPEED * multiplier;
+            cameraOffset[0] -= TRACKING_SPEED * modifier;
+            cameraOffset[2] -= TRACKING_SPEED * modifier;
         } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] += TRACKING_SPEED * multiplier;
-            cameraOffset[2] -= TRACKING_SPEED * multiplier;
+            cameraOffset[0] += TRACKING_SPEED * modifier;
+            cameraOffset[2] -= TRACKING_SPEED * modifier;
         }
         float distFinish = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
         distHold = sqrt(distHold);

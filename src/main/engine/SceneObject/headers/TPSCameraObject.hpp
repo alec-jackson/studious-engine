@@ -24,4 +24,6 @@ class TPSCameraObject : public CameraObject {
     vec3 cameraOffset;
     vec3 angles;
     vec3 pos;
+    bool invertX = false;
+    bool invertY = false;
 };
