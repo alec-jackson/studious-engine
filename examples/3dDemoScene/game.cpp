@@ -191,15 +191,6 @@ int runtime() {
         48,
         "studious-text");                       // ObjectName
 
-    auto contactText = currentGame->createText(
-        "Contact",                              // Message
-        vec3(25.0f, 300.0f, 0.0f),              // Position
-        0.7f,                                   // Scale
-        "src/resources/fonts/AovelSans.ttf",    // Font Path
-        0.0f,                                   // Char spacing
-        48,
-        "contact-text");                        // ObjectName
-
     currentGame->createText(
         "Tab/Start to Focus (detached)",
         vec3(850.0f, 670.0f, 0.0f),
@@ -208,8 +199,6 @@ int runtime() {
         0.0f,
         48,
         "pressUText");
-
-    contactText->setMessage("Contact: False");
 
     auto fpsText = currentGame->createText("FPS",
         vec3(25.0f, 670.0f, 0.0f),
@@ -283,13 +272,9 @@ int runtime() {
  mainLoop closes prematurely, an error code is returned.
 */
 int mainLoop() {
-    int collision = 0;
     double currentTime = 0.0, sampleTime = 1.0;
     int error = 0;
     vector<double> times;
-    auto player = currentGame->getSceneObject("player");
-    auto wolf = currentGame->getSceneObject("NPC");
-    auto collText = currentGame->getSceneObject<TextObject>("contact-text");
     auto fpsText = currentGame->getSceneObject<TextObject>("fps-text");
     while (!currentGame->isShutDown()) {
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
@@ -297,15 +282,7 @@ int mainLoop() {
         if (error) {
             return error;
         }
-        collision = currentGame->getCollision(player, wolf);
 
-        string collMessage;
-        if (collision == ALL_MATCH) {
-            collMessage = "Contact: True";
-        } else {
-            collMessage = "Contact: False";
-        }
-        collText->setMessage(collMessage);
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;
