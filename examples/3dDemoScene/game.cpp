@@ -112,7 +112,7 @@ int runtime() {
         currentGame->loadSound(sfx.first, sfx.second);
     }
     // Start the background music
-    //currentGame->playSound("bg_music", 1, 60);
+    currentGame->playSound("bg_music", 1, 60);
 
     cout << "Creating Map.\n";
 
@@ -133,14 +133,15 @@ int runtime() {
     playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.5f, "player");
     playerRef->setVisible(true);
-    auto companion = currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, 2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion");
-    auto companion2 = currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, -2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion2");
-    auto companion3 = currentGame->createGameObject(companionPoly, vec3(2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion3");
-    auto companion4 = currentGame->createGameObject(companionPoly, vec3(-2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion4");
-    playerRef->addChild(companion);
-    playerRef->addChild(companion2);
-    playerRef->addChild(companion3);
-    playerRef->addChild(companion4);
+    vector<SceneObject *> companions;
+    companions.push_back(currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, 2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion"));
+    companions.push_back(currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, -2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion2"));
+    companions.push_back(currentGame->createGameObject(companionPoly, vec3(2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion3"));
+    companions.push_back(currentGame->createGameObject(companionPoly, vec3(-2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion4"));
+    for (auto companion : companions) {
+        companion->setPermanentlyVisible(true);
+        playerRef->addChild(companion);
+    }
     playerRef->createCollider();
 
     physicsController->addSceneObject(playerRef, {
@@ -251,7 +252,7 @@ int runtime() {
     fps_counter = fpsText;
     fps_counter->setMessage("FPS: 0");
 
-    vec3 fpsCameraOffset(0.0f, 1.0f, 0.0f);
+    vec3 fpsCameraOffset(0.0f, 2.0f, 0.0f);
 
     currentGame->createFPSCamera(playerRef,
         vec3(5.140022f, 2.349999f, 2.309998f), fpsCameraOffset, 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "fpsCamera");

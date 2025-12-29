@@ -9,10 +9,12 @@
  *
  */
 #include "inputMonitor.hpp"
+#include "ComplexCameraObject.hpp"
 #include "glm/trigonometric.hpp"
 #include "physics.hpp"
 #include <TPSCameraObject.hpp>
 #include <SDL_scancode.h>
+#include <glm/ext/quaternion_geometric.hpp>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -27,12 +29,14 @@ extern GameInstance *currentGame;
 
 #define UPDATE_TRAVEL_VEL travelVel += (inputRay * speed * multiplier)
 #define UPDATE_CHAR_ANGLE(shift) charAngle[1] = glm::degrees(glm::atan(ray.x, ray.z)) + shift
+#define INVERT_MULT_FPS multiplier *= fpsMode ? -1.0f : 1.0f
 
 extern std::unique_ptr<InputController> inputController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
 #define PI 3.14159265
 vector<float> cameraDistance(vec3 offset);
+float xzAngle(vec3 p1, vec3 p2);
 
 /*
  (void) rotateShape takes a (void *) gameInfoStruct that should be of type
@@ -46,7 +50,7 @@ vector<float> cameraDistance(vec3 offset);
 void rotateShape(void *target) {
     int numJoySticks = SDL_NumJoysticks();
     GameObject *character = reinterpret_cast<GameObject *>(target);  // GameObject to rotate
-    float rotateSpeed = 1.0f, currentLuminance = 1.0f;
+    float currentLuminance = 1.0f;
     auto fpsMode = false;
     /** Input map code example from BOTHWORLDS */
     vector<int> monitoredInput = {
@@ -78,7 +82,6 @@ void rotateShape(void *target) {
     };
     initDebounceMap();
 
-    cout << rotateSpeed;
     // bool delPressed = false;
     SDL_GameController *gameController1 = NULL;
     bool hasActiveController = false;
@@ -105,7 +108,7 @@ void rotateShape(void *target) {
     currentGame->setActiveCamera("tpsCamera");
     while (!currentGame->isShutDown()) {
         populateInputMap(inputMap);
-        auto activeCamera = currentGame->getActiveCamera<TPSCameraObject>();
+        auto activeCamera = currentGame->getActiveCamera<ComplexCameraObject>();
         // Calculate the X-Z angle between the camera and target
         // Assume that the target is the origin
         auto charAngle = character->getRotation();
@@ -114,7 +117,6 @@ void rotateShape(void *target) {
         // Remove the Y axis from the ray
         ray.y = 0.0f;
         float multiplier = 1.0f;
-        cout << multiplier<<endl;
         float speed = 4.0f;
         if (hasActiveController) {
             controllerLeftStateY = SDL_GameControllerGetAxis(gameController1,
@@ -150,6 +152,7 @@ void rotateShape(void *target) {
 
             if (controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateX * -1)) / INT16_MAX;
+                INVERT_MULT_FPS;
             }
             UPDATE_CHAR_ANGLE(90.0f);
             UPDATE_TRAVEL_VEL;
@@ -158,6 +161,7 @@ void rotateShape(void *target) {
             vec3 inputRay(-ray.z, 0, ray.x);
             if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
                 multiplier = static_cast<float>(controllerLeftStateX) / INT16_MAX;
+                INVERT_MULT_FPS;
             }
             UPDATE_CHAR_ANGLE(270.0f);
             UPDATE_TRAVEL_VEL;
@@ -210,9 +214,12 @@ void rotateShape(void *target) {
             if (activeCamera->objectName() == "fpsCamera") {
                 currentGame->setActiveCamera("tpsCamera");
                 fpsMode = false;
+                character->setVisible(true);
             } else {
                 currentGame->setActiveCamera("fpsCamera");
                 fpsMode = true;
+                // Hide drac in FPS mode
+                character->setVisible(false);
             }
         }
         if (inputMap[SDL_SCANCODE_BACKSPACE]) {
@@ -261,11 +268,22 @@ void rotateShape(void *target) {
         // Set character rotation based on joysticks
         // Left rotation
         if (abs(controllerLeftStateX) > JOYSTICK_DEAD_ZONE || abs(controllerLeftStateY) > JOYSTICK_DEAD_ZONE) {
-            // angles[1] = angleOfPoint(
-            //     vec3(0.0f, 0.0f, 0.0f),
-            //     vec3(static_cast<float>(controllerLeftStateY),
-            //         0.0f,
-            //         static_cast<float>(controllerLeftStateX))) - 90.0f - angle;
+            // vec3 inputRay(ray.x, 0, ray.z);
+            // vec3 ci(controllerLeftStateX, 0.0f, controllerLeftStateY * -1.0f);
+            // // Angle between controller input and camera
+            // auto dp = glm::dot(ci, ray);
+            // auto prod = dp / (glm::length(ci) * glm::length(ray));
+            // auto angle = glm::degrees(acos(prod));
+            // //angle *= prod > 1.0f ? -1.0f : 1.0f;
+            // charAngle[1] = angle;
+            // printf("rotateShape: Input X: %d | Input Y: %d | ANGLE: %f\n", controllerLeftStateX, controllerLeftStateY, angle);
+            // printf("rotateShape: PROD: %f\n", prod);
+            auto prod = (float)controllerLeftStateY / (float)controllerLeftStateX;
+            auto angle = glm::degrees(atan(prod));
+            angle += controllerLeftStateX > 0.0f ? 90.0f : 270.0f;
+            UPDATE_CHAR_ANGLE((fpsMode ? -angle + 180.0f : -angle));
+            // Log the angle
+            printf("rotateShape: ANGLE: %f\n", angle);
         }
         physicsController->setVelocity("player", travelVel);
         currentGame->protectedGfxRequest([&] () {

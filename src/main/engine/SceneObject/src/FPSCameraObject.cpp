@@ -28,7 +28,6 @@ FPSCameraObject::FPSCameraObject(SceneObject *target, vec3 offset, vec3 camPos, 
 
 void FPSCameraObject::update() {
     if (!headless_) updateInput();
-    cout << "This is a test!" << endl;
     vec3 eye = vec3(0);
     vec3 center = vec3(0.0f, 0.01f, 0.0f);
     orthographicMatrix_ = ortho(0.0f, 1280.0f, 0.0f, 720.0f, -1.0f, 1.0f);
