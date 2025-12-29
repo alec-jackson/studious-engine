@@ -8,11 +8,11 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <SpriteObject.hpp>
 #include <cstdio>
 #include <vector>
 #include <memory>
 #include <string>
-#include <SpriteObject.hpp>
 
 SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsigned int programId,
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): GameObject2D(
@@ -78,7 +78,6 @@ SpriteObject::~SpriteObject() {
 
 void SpriteObject::render() {
     VISIBILITY_CHECK;
-    updateModelMatrices();
     mat4 model = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
@@ -104,6 +103,7 @@ void SpriteObject::render() {
 }
 
 void SpriteObject::update() {
+    updateModelMatrices();
     render();
 }
 

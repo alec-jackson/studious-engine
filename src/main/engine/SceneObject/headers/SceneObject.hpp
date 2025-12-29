@@ -29,7 +29,7 @@
 #define RENDER_PRIOR_HIGHEST 100u
 
 /* MISC */
-#define VISIBILITY_CHECK if (!visible_ || (parent_ && !parent_->visible())) return
+#define VISIBILITY_CHECK if ((!visible_ || (parent_ && !parent_->visible())) && !visPerm_) return
 
 /// @todo Add SceneObject grouping for shared model changes
 enum ObjectType {
@@ -68,6 +68,7 @@ class SceneObject {
     inline void setRenderPriority(uint renderPriority) { this->renderPriority_ =
         std::min(renderPriority, RENDER_PRIOR_HIGHEST); }
     inline void setVisible(bool visible) { visible_ = visible; }
+    inline void setPermanentlyVisible(bool visPerm) { visPerm_ = visPerm; }
 
     // Getter methods
     inline const mat4 &vpMatrix() const { return vpMatrix_; }
@@ -146,4 +147,5 @@ class SceneObject {
 
     mutex objectLock_;
     bool visible_ = true;
+    bool visPerm_ = false;
 };

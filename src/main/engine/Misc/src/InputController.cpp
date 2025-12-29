@@ -11,6 +11,7 @@
  */
 
 #include <InputController.hpp>
+#include <SDL_gamecontroller.h>
 #include <map>
 #include <mutex>  //NOLINT
 #include <iostream>
@@ -23,8 +24,9 @@ std::map<SDL_Scancode, GameInput> keyboardInputMap = {
     { SDL_SCANCODE_A, GameInput::WEST       },
     { SDL_SCANCODE_RETURN, GameInput::A     },
     { SDL_SCANCODE_BACKSPACE, GameInput::B  },
-    { SDL_SCANCODE_BACKSPACE, GameInput::X  },
-    { SDL_SCANCODE_ESCAPE, GameInput::QUIT  }
+    { SDL_SCANCODE_E, GameInput::Y          },
+    { SDL_SCANCODE_ESCAPE, GameInput::QUIT  },
+    { SDL_SCANCODE_TAB, GameInput::START    }
 };
 
 // GameInput maps for input devices
@@ -36,7 +38,9 @@ std::map<SDL_GameControllerButton, GameInput> controllerInputMap = {
     { SDL_CONTROLLER_BUTTON_A, GameInput::A },
     { SDL_CONTROLLER_BUTTON_B, GameInput::B },
     { SDL_CONTROLLER_BUTTON_X, GameInput::X },
-    { SDL_CONTROLLER_BUTTON_BACK, GameInput::QUIT }
+    { SDL_CONTROLLER_BUTTON_Y, GameInput::Y },
+    { SDL_CONTROLLER_BUTTON_BACK, GameInput::QUIT },
+    { SDL_CONTROLLER_BUTTON_START, GameInput::START }
 };
 
 std::map<Uint8, GameInput> hatInputMap = {

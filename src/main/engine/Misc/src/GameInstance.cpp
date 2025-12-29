@@ -26,6 +26,8 @@
 #include <SceneObject.hpp>
 #include <OpenGlGfxController.hpp>
 #include <InputController.hpp>
+#include <FPSCameraObject.hpp>
+#include <TPSCameraObject.hpp>
 
 std::unique_ptr<GfxController> gfxController;
 std::unique_ptr<AnimationController> animationController;
@@ -203,7 +205,6 @@ void GameInstance::shutdown() {
 bool GameInstance::protectedGfxRequest(std::function<void(void)> req) {
     // Do nothing when we shut down
     if (isShutDown()) return false;
-    printf("GameInstance::protectedGfxRequest: Enter\n");
     // Obtain the scene lock to add the request
     std::unique_lock<std::mutex> scopeLock(requestLock_);
     std::condition_variable cv;
@@ -218,10 +219,17 @@ bool GameInstance::protectedGfxRequest(std::function<void(void)> req) {
     // Add the request to the request queue
     protectedGfxReqs_.push(reqCb);
     // Wait for the reqLock to become available
-    printf("GameInstance::protectedGfxRequest: Added request, waiting for completion...\n");
     cv.wait(scopeLock, [&done, this]() { return done == 1 || isShutDown(); });
-    printf("GameInstance::protectedGfxRequest: Exit\n");
     return done == 1;  // Wakeup thread making call
+}
+
+void GameInstance::protectedGfxRequestAsync(std::function<void(void)> req) {
+    // Do nothing when we shut down
+    if (isShutDown()) return;
+    // Obtain the scene lock to add the request
+    std::unique_lock<std::mutex> scopeLock(requestLock_);
+    // Add the request to the request queue
+    protectedGfxReqs_.push(req);
 }
 
 /* The scene lock should be captured when entering this function */
@@ -398,6 +406,34 @@ CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float
     return gameCamera.get();
 }
 
+TPSCameraObject *GameInstance::createTPSCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+              float nearClipping, float farClipping, string cameraName) {
+    printf("GameInstance::createTPSCamera: Creating TPSCameraObject %s\n", cameraName.c_str());
+    auto gameCamera = std::make_shared<TPSCameraObject>(target, offset, cameraAngle,
+        aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
+    if (!activeCamera_.get()) {
+        printf("GameInstance::createTPSCamera: No active cameras detected. Setting camera %s as new active camera.\n",
+                cameraName.c_str());
+        activeCamera_ = gameCamera;
+    }
+    cameras_.push_back(gameCamera);
+    return gameCamera.get();
+}
+
+FPSCameraObject *GameInstance::createFPSCamera(SceneObject *target, vec3 offset, vec3 camPos, float cameraAngle,
+    float aspectRatio, float nearClipping, float farClipping, string cameraName) {
+    printf("GameInstance::createFPSCamera: Creating FPSCameraObject %s\n", cameraName.c_str());
+    auto gameCamera = std::make_shared<FPSCameraObject>(target, offset, camPos, cameraAngle,
+        aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
+    if (!activeCamera_.get()) {
+        printf("GameInstance::createFPSCamera: No active cameras detected. Setting camera %s as new active camera.\n",
+                cameraName.c_str());
+        activeCamera_ = gameCamera;
+    }
+    cameras_.push_back(gameCamera);
+    return gameCamera.get();
+}
+
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
     float charSpacing, int charPoint, string objectName) {
     printf("GameInstance::createText: Creating TextObject %s\n", objectName.c_str());
@@ -469,6 +505,17 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
         return result;
     }
     result = activeScene_.get()->getSceneObject(objectName).get();
+    return result;
+}
+
+CameraObject *GameInstance::getCamera(string cameraName) {
+    CameraObject *result = nullptr;
+    auto cit = std::find_if(cameras_.begin(), cameras_.end(), [cameraName] (SHD(CameraObject) camera) {
+        return camera->objectName() == cameraName;
+    });
+    if (cit != cameras_.end()) {
+        result = cit->get();
+    }
     return result;
 }
 
@@ -745,5 +792,21 @@ void GameInstance::setActiveScene(string sceneName) {
             sceneName.c_str());
     } else {
         activeScene_ = gameScene;
+    }
+}
+
+SHD(CameraObject) GameInstance::getActiveCamera() {
+    return activeCamera_;
+}
+
+void GameInstance::setActiveCamera(string cameraName) {
+    // Check if a camera exists
+    auto cit = std::find_if(cameras_.begin(), cameras_.end(), [cameraName] (SHD(CameraObject) camera) {
+        return camera->objectName() == cameraName;
+    });
+    if (cit != cameras_.end()) {
+        activeCamera_ = *cit;
+    } else {
+        fprintf(stderr, "GameInstance::setActiveCamera: Unable to find camera %s\n", cameraName.c_str());
     }
 }

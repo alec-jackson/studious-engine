@@ -35,6 +35,9 @@
 #include <AnimationController.hpp>
 #include <GameScene.hpp>
 #include <InputController.hpp>
+#include <TPSCameraObject.hpp>
+#include <FPSCameraObject.hpp>
+#include <studious_utility.hpp>
 
 // Number of samples to use for anti-aliasing
 #define AASAMPLES 8
@@ -116,6 +119,10 @@ class GameInstance {
         string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping, string cameraName);
+    TPSCameraObject *createTPSCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
+              float nearClipping, float farClipping, string cameraName);
+    FPSCameraObject *createFPSCamera(SceneObject *target, vec3 offset, vec3 camPos, float cameraAngle,
+        float aspectRatio, float nearClipping, float farClipping, string cameraName);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing,
         int charPoint, string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale,
@@ -134,6 +141,7 @@ class GameInstance {
      * @return True when the request is fulfilled, otherwise return false.
      */
     bool protectedGfxRequest(std::function<void(void)> req);
+    void protectedGfxRequestAsync(std::function<void(void)> req);
     int playSound(string sfxName, bool loop, int volume);
     int loadSound(string sfxName, string sfxPath);
     int changeVolume(string sfxName, int volume);
@@ -141,9 +149,12 @@ class GameInstance {
     void changeWindowMode(int mode);
     int destroySceneObject(SceneObject *object);
     SceneObject *getSceneObject(string objectName);
+    CameraObject *getCamera(string cameraName);
 
     template<typename T>
     inline T *getSceneObject(string objectName) { return dynamic_cast<T*>(getSceneObject(objectName)); }
+    template<typename T>
+    inline T *getCamera(string cameraName) { return dynamic_cast<T*>(getCamera(cameraName)); }
     int removeSceneObject(string objectName);
     /* NOTE - getCollision functions are for convenience and will be deprecated with the physics controller */
     int getCollision(SceneObject *object1, SceneObject *object2);
@@ -200,4 +211,8 @@ class GameInstance {
     inline std::shared_ptr<GameScene> getActiveScene() { return activeScene_; }
     void setActiveScene(string sceneName);
     std::shared_ptr<GameScene> getGameScene(string sceneName);
+    void setActiveCamera(string cameraName);
+    std::shared_ptr<CameraObject> getActiveCamera();
+    template<typename T>
+    inline SHD(T) getActiveCamera() { return std::dynamic_pointer_cast<T>(getActiveCamera()); }
 };

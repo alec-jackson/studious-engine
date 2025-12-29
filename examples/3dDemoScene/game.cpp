@@ -19,8 +19,10 @@
 #include <iostream>
 #include <map>
 #include "game.hpp"
+#include <TextObject.hpp>
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>
+#include <FPSCameraObject.hpp>
 
 // Global Variables, should eventually be moved to a config file
 map<string, string> soundList = {
@@ -46,55 +48,43 @@ vector<ProgramData> programs = {
 };
 #endif
 
-vector<string> texturePathStage = {
-    "src/resources/images/skintexture.jpg"
-};
-vector<string> texturePath = {
-    "src/resources/images/rock_texture.jpg",
-    "src/resources/images/rock_texture.jpg",
-    "src/resources/images/shoetexture.jpg",
-    "src/resources/images/shirttexture.jpg"
-};
-
-TextObject *fps_counter;
-TextObject *collDebugText;
-TextObject *pressUText;
-GameObject *wolfRef, *playerRef;  // Used for collision testing
+GameInstance *currentGame;
 
 extern std::unique_ptr<GfxController> gfxController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
 extern std::unique_ptr<InputController> inputController;
 
-int runtime(GameInstance *currentGame);
-int mainLoop(gameInfo *gamein);
-void decorateAltScene(GameInstance *currentGame);
+int runtime();
+int mainLoop();
+void decorateAltScene();
 
 int main() {
     int errorNum;
     auto config = StudiousConfig("src/resources/config.txt");
 
-    GameInstance currentGame(config);
-    currentGame.createGameScene("3d-demo-scene");
-    currentGame.createGameScene("alternate-3d-scene");
+    GameInstance game(config);
+    currentGame = &game;
+    currentGame->createGameScene("3d-demo-scene");
+    currentGame->createGameScene("alternate-3d-scene");
 
     // Load shader programs
     for (auto program : programs) {
         gfxController.get()->loadShaders(program.programName, program.vertexShaderPath, program.fragmentShaderPath);
     }
-    decorateAltScene(&currentGame);
-    currentGame.setActiveScene("3d-demo-scene");
-    errorNum = runtime(&currentGame);
+    decorateAltScene();
+    currentGame->setActiveScene("3d-demo-scene");
+    errorNum = runtime();
     return errorNum;
 }
 
-void decorateAltScene(GameInstance *currentGame) {
+void decorateAltScene() {
     currentGame->setActiveScene("alternate-3d-scene");
     auto playerPoly = ModelImport::createPolygonFromFile(
         "src/resources/models/Dracula.obj");
 
     currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, "alt");
+        vec3(0.0f, 0.0f, 0.0f), 0.5f, "alt");
     currentGame->createSprite("src/resources/images/JTIconNoBackground.png", vec3(0), 0.5,
         ObjectAnchor::BOTTOM_LEFT, "altim");
 }
@@ -109,11 +99,9 @@ void decorateAltScene(GameInstance *currentGame) {
 
  (int) runtime returns 0 on success.
 */
-int runtime(GameInstance *currentGame) {
+int runtime() {
     cout << "Building game scene!\n";
     SDL_SetRelativeMouseMode(SDL_FALSE);
-    struct gameInfo currentGameInfo;
-    bool isDone = false;
     cout << "Creating camera.\n";
 
     // Initialize sfx
@@ -123,17 +111,12 @@ int runtime(GameInstance *currentGame) {
     // Start the background music
     currentGame->playSound("bg_music", 1, 60);
 
-    /// @todo Make loading textures for objects a little more user friendly
-    // The patterns below refer to which texture to use in the texturePath, 0 meaning the first path in the array
-    vector<int> texturePattern = {0, 1, 2, 3};
-    vector<int> texturePatternStage = {0, 0, 0, 0};
-
     cout << "Creating Map.\n";
 
-    auto mapPoly = ModelImport::createPolygonFromFile("src/resources/models/map3.obj");
+    auto mapPoly = ModelImport::createPolygonFromFile("src/resources/models/Forest Scene Tri.obj");
 
     currentGame->createGameObject(mapPoly,
-        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 0.009500f, "map");
+        vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 1.0f, "map");
 
     cout << "Creating Player\n";
 
@@ -144,30 +127,33 @@ int runtime(GameInstance *currentGame) {
         "src/resources/models/human.obj");
 
     // Ready the gameObjectInfo for the player object
-    playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
-        vec3(0.0f, 0.0f, 0.0f), 0.005f, "player");
-    auto companion = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, 0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion");
-    auto companion2 = currentGame->createGameObject(companionPoly, vec3(0.0f, 0.01f, -0.03f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion2");
-    auto companion3 = currentGame->createGameObject(companionPoly, vec3(0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion3");
-    auto companion4 = currentGame->createGameObject(companionPoly, vec3(-0.03f, 0.01f, 0.0f), vec3(0.0f, 270.0f, 0.0f), -0.003f, "companion4");
-    playerRef->addChild(companion);
-    playerRef->addChild(companion2);
-    playerRef->addChild(companion3);
-    playerRef->addChild(companion4);
-    companion->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    companion2->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    companion3->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    companion4->setRenderPriority(RENDER_PRIOR_LOW - 1);
-    playerRef->setRenderPriority(RENDER_PRIOR_LOW - 1);
+    auto playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
+        vec3(0.0f, 0.0f, 0.0f), 0.5f, "player");
+    playerRef->setVisible(true);
+    vector<SceneObject *> companions;
+    companions.push_back(currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, 2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion"));
+    companions.push_back(currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, -2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion2"));
+    companions.push_back(currentGame->createGameObject(companionPoly, vec3(2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion3"));
+    companions.push_back(currentGame->createGameObject(companionPoly, vec3(-2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion4"));
+    for (auto companion : companions) {
+        companion->setPermanentlyVisible(true);
+        playerRef->addChild(companion);
+    }
     playerRef->createCollider();
 
+    physicsController->addSceneObject(playerRef, {
+        .isKinematic = true,
+        .obeyGravity = true,
+        .elasticity = 0.0f,
+        .mass = 5.0f
+    });
 
     cout << "Creating wolf\n";
 
     auto wolfPoly = ModelImport::createPolygonFromFile("src/resources/models/wolf.obj");
 
     auto wolfObject = currentGame->createGameObject(wolfPoly,
-        vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
+        vec3(-11.0f, 1.6f, 6.0f), vec3(0.0f, 0.0f, 0.0f), 1.0f, "NPC");
 
     // Make the wolf spin :)
     auto kf = AnimationController::createKeyFrame(
@@ -180,9 +166,9 @@ int runtime(GameInstance *currentGame) {
         5.0f);                          // seconds
 
     kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
-    kf1->pos.desired = wolfObject->getPosition() + vec3(0.07f, 0.0f, 0.05f);
-    animationController.get()->addKeyFrame(wolfObject, kf);
-    animationController.get()->addKeyFrame(wolfObject, kf1);
+    kf1->pos.desired = wolfObject->getPosition() + vec3(-3.0f, 0.0f, 4.0f);
+    animationController->addKeyFrame(wolfObject, kf);
+    animationController->addKeyFrame(wolfObject, kf1);
 
     wolfObject->createCollider();
 
@@ -194,7 +180,6 @@ int runtime(GameInstance *currentGame) {
     };
     // add the wolf object to physics controller as non-kinematic
     physicsController->addSceneObject(wolfObject, parms);
-    wolfRef = wolfObject;
 
     // Configure some in-game text objects
     currentGame->createText(
@@ -206,26 +191,14 @@ int runtime(GameInstance *currentGame) {
         48,
         "studious-text");                       // ObjectName
 
-    auto contactText = currentGame->createText(
-        "Contact",                              // Message
-        vec3(25.0f, 300.0f, 0.0f),              // Position
-        0.7f,                                   // Scale
-        "src/resources/fonts/AovelSans.ttf",    // Font Path
-        0.0f,                                   // Char spacing
-        48,
-        "contact-text");                        // ObjectName
-
-    pressUText = currentGame->createText(
-        "Press 'U' to attach/detach mouse",
-        vec3(800.0f, 670.0f, 0.0f),
+    currentGame->createText(
+        "Tab/Start to Focus (detached)",
+        vec3(850.0f, 670.0f, 0.0f),
         0.7f,
         "src/resources/fonts/AovelSans.ttf",
         0.0f,
         48,
         "pressUText");
-
-    collDebugText = contactText;
-    collDebugText->setMessage("Contact: False");
 
     auto fpsText = currentGame->createText("FPS",
         vec3(25.0f, 670.0f, 0.0f),
@@ -260,32 +233,32 @@ int runtime(GameInstance *currentGame) {
         48,
         "test-text");
 
-    fps_counter = fpsText;
-    fps_counter->setMessage("FPS: 0");
+    fpsText->setMessage("FPS: 0");
 
-    auto currentCamera = currentGame->createCamera(playerRef,
-        vec3(5.140022f, 1.349999f, 2.309998f), 3.14159 / 5.0f, 16.0f / 9.0f, 4.0f, 90.0f, "mainCamera");
+    vec3 fpsCameraOffset(0.0f, 2.0f, 0.0f);
+
+    currentGame->createFPSCamera(playerRef,
+        vec3(5.140022f, 2.349999f, 2.309998f), fpsCameraOffset, 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "fpsCamera");
+    currentGame->createTPSCamera(playerRef,
+        vec3(5.140022f, 2.349999f, 2.309998f), 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "tpsCamera");
+
+
     playerRef->setRotation(vec3(0, 0, 0));
     cout << "currentGameObject tag is " << playerRef->objectName()
         << '\n';
 
-    playerRef->setPosition(vec3(-0.005f, 0.01f, 0.0f));
+    playerRef->setPosition(vec3(0.0f, 0.5f, 0.0f));
     playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
-    playerRef->setScale(0.0062f);
+    playerRef->setScale(0.5f);
 
-    currentGameInfo.isDone = &isDone;
-    currentGameInfo.gameCamera = currentCamera;
-    currentGameInfo.currentGame = currentGame;
-    currentGameInfo.gameInput = &**&inputController;
     /*
      End Scene Loading
      */
     // Additional threads should be added, pipes will most likely be required
     // Might also be a good idea to keep the parent thread local to watch for
     // unexpected failures and messages from children
-    thread rotThread(rotateShape, &currentGameInfo, playerRef);
-    mainLoop(&currentGameInfo);
-    isDone = true;
+    thread rotThread(rotateShape, playerRef);
+    mainLoop();
     rotThread.join();
     return 0;
 }
@@ -298,27 +271,18 @@ int runtime(GameInstance *currentGame) {
  (int) mainLoop returns 0 when closed successfully. When an error occurs and the
  mainLoop closes prematurely, an error code is returned.
 */
-int mainLoop(gameInfo* gamein) {
-    int collision = 0;
+int mainLoop() {
     double currentTime = 0.0, sampleTime = 1.0;
-    GameInstance *currentGame = gamein->currentGame;
     int error = 0;
     vector<double> times;
+    auto fpsText = currentGame->getSceneObject<TextObject>("fps-text");
     while (!currentGame->isShutDown()) {
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         if (error) {
             return error;
         }
-        collision = currentGame->getCollision(playerRef, wolfRef);
 
-        string collMessage;
-        if (collision == ALL_MATCH) {
-            collMessage = "Contact: True";
-        } else {
-            collMessage = "Contact: False";
-        }
-        collDebugText->setMessage(collMessage);
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;
@@ -330,7 +294,7 @@ int mainLoop(gameInfo* gamein) {
                 sum /= times.size();
                 times.clear();
                 cout << "FPS: " << 1.0 / sum << '\n';
-                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
+                fpsText->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
     }
