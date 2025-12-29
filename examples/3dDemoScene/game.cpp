@@ -19,6 +19,7 @@
 #include <iostream>
 #include <map>
 #include "game.hpp"
+#include <TextObject.hpp>
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>
 #include <FPSCameraObject.hpp>
@@ -47,10 +48,6 @@ vector<ProgramData> programs = {
 };
 #endif
 
-TextObject *fps_counter;
-TextObject *collDebugText;
-TextObject *pressUText;
-GameObject *wolfRef, *playerRef;  // Used for collision testing
 GameInstance *currentGame;
 
 extern std::unique_ptr<GfxController> gfxController;
@@ -130,7 +127,7 @@ int runtime() {
         "src/resources/models/human.obj");
 
     // Ready the gameObjectInfo for the player object
-    playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
+    auto playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.5f, "player");
     playerRef->setVisible(true);
     vector<SceneObject *> companions;
@@ -156,7 +153,7 @@ int runtime() {
     auto wolfPoly = ModelImport::createPolygonFromFile("src/resources/models/wolf.obj");
 
     auto wolfObject = currentGame->createGameObject(wolfPoly,
-        vec3(0.00f, 0.01f, -0.08f), vec3(0.0f, 0.0f, 0.0f), 0.02f, "NPC");
+        vec3(-11.0f, 1.6f, 6.0f), vec3(0.0f, 0.0f, 0.0f), 1.0f, "NPC");
 
     // Make the wolf spin :)
     auto kf = AnimationController::createKeyFrame(
@@ -169,9 +166,9 @@ int runtime() {
         5.0f);                          // seconds
 
     kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
-    kf1->pos.desired = wolfObject->getPosition() + vec3(0.07f, 0.0f, 0.05f);
-    animationController.get()->addKeyFrame(wolfObject, kf);
-    animationController.get()->addKeyFrame(wolfObject, kf1);
+    kf1->pos.desired = wolfObject->getPosition() + vec3(-3.0f, 0.0f, 4.0f);
+    animationController->addKeyFrame(wolfObject, kf);
+    animationController->addKeyFrame(wolfObject, kf1);
 
     wolfObject->createCollider();
 
@@ -183,7 +180,6 @@ int runtime() {
     };
     // add the wolf object to physics controller as non-kinematic
     physicsController->addSceneObject(wolfObject, parms);
-    wolfRef = wolfObject;
 
     // Configure some in-game text objects
     currentGame->createText(
@@ -204,7 +200,7 @@ int runtime() {
         48,
         "contact-text");                        // ObjectName
 
-    pressUText = currentGame->createText(
+    currentGame->createText(
         "Tab/Start to Focus (detached)",
         vec3(850.0f, 670.0f, 0.0f),
         0.7f,
@@ -213,8 +209,7 @@ int runtime() {
         48,
         "pressUText");
 
-    collDebugText = contactText;
-    collDebugText->setMessage("Contact: False");
+    contactText->setMessage("Contact: False");
 
     auto fpsText = currentGame->createText("FPS",
         vec3(25.0f, 670.0f, 0.0f),
@@ -249,8 +244,7 @@ int runtime() {
         48,
         "test-text");
 
-    fps_counter = fpsText;
-    fps_counter->setMessage("FPS: 0");
+    fpsText->setMessage("FPS: 0");
 
     vec3 fpsCameraOffset(0.0f, 2.0f, 0.0f);
 
@@ -293,13 +287,17 @@ int mainLoop() {
     double currentTime = 0.0, sampleTime = 1.0;
     int error = 0;
     vector<double> times;
+    auto player = currentGame->getSceneObject("player");
+    auto wolf = currentGame->getSceneObject("NPC");
+    auto collText = currentGame->getSceneObject<TextObject>("contact-text");
+    auto fpsText = currentGame->getSceneObject<TextObject>("fps-text");
     while (!currentGame->isShutDown()) {
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         if (error) {
             return error;
         }
-        collision = currentGame->getCollision(playerRef, wolfRef);
+        collision = currentGame->getCollision(player, wolf);
 
         string collMessage;
         if (collision == ALL_MATCH) {
@@ -307,7 +305,7 @@ int mainLoop() {
         } else {
             collMessage = "Contact: False";
         }
-        collDebugText->setMessage(collMessage);
+        collText->setMessage(collMessage);
         if (SHOW_FPS) {  // use sampleSize to find average FPS
             times.push_back(deltaTime);
             currentTime += deltaTime;
@@ -319,7 +317,7 @@ int mainLoop() {
                 sum /= times.size();
                 times.clear();
                 cout << "FPS: " << 1.0 / sum << '\n';
-                fps_counter->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
+                fpsText->setMessage("FPS: " + to_string(static_cast<int>(1.0 / sum)));
             }
         }
     }

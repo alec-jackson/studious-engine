@@ -167,8 +167,8 @@ void rotateShape(void *target) {
 
             if (controllerLeftStateX > JOYSTICK_DEAD_ZONE) {
                 multiplier = (static_cast<float>(controllerLeftStateX * -1)) / INT16_MAX;
-                INVERT_MULT_FPS;
             }
+            INVERT_MULT_FPS;
             UPDATE_CHAR_ANGLE(90.0f);
             UPDATE_TRAVEL_VEL;
         }
@@ -176,8 +176,8 @@ void rotateShape(void *target) {
             vec3 inputRay(-ray.z, 0, ray.x);
             if (controllerLeftStateX < -JOYSTICK_DEAD_ZONE) {
                 multiplier = static_cast<float>(controllerLeftStateX) / INT16_MAX;
-                INVERT_MULT_FPS;
             }
+            INVERT_MULT_FPS;
             UPDATE_CHAR_ANGLE(270.0f);
             UPDATE_TRAVEL_VEL;
         }
