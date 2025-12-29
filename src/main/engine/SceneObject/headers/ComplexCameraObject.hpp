@@ -30,7 +30,6 @@ class ComplexCameraObject : public CameraObject {
     bool headless_ = false;
     SDL_GameController *gameController1 = nullptr;
     vec3 cameraOffset;
-    vec3 angles;
     vec3 pos;
     bool invertX;
     bool invertY;

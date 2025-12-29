@@ -412,7 +412,7 @@ TPSCameraObject *GameInstance::createTPSCamera(SceneObject *target, vec3 offset,
     auto gameCamera = std::make_shared<TPSCameraObject>(target, offset, cameraAngle,
         aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
     if (!activeCamera_.get()) {
-        printf("GameInstance::createCamera: No active cameras detected. Setting camera %s as new active camera.\n",
+        printf("GameInstance::createTPSCamera: No active cameras detected. Setting camera %s as new active camera.\n",
                 cameraName.c_str());
         activeCamera_ = gameCamera;
     }
@@ -422,11 +422,11 @@ TPSCameraObject *GameInstance::createTPSCamera(SceneObject *target, vec3 offset,
 
 FPSCameraObject *GameInstance::createFPSCamera(SceneObject *target, vec3 offset, vec3 camPos, float cameraAngle,
     float aspectRatio, float nearClipping, float farClipping, string cameraName) {
-    printf("GameInstance::createTPSCamera: Creating TPSCameraObject %s\n", cameraName.c_str());
+    printf("GameInstance::createFPSCamera: Creating FPSCameraObject %s\n", cameraName.c_str());
     auto gameCamera = std::make_shared<FPSCameraObject>(target, offset, camPos, cameraAngle,
         aspectRatio, nearClipping, farClipping, ObjectType::CAMERA_OBJECT, cameraName, gfxController_);
     if (!activeCamera_.get()) {
-        printf("GameInstance::createCamera: No active cameras detected. Setting camera %s as new active camera.\n",
+        printf("GameInstance::createFPSCamera: No active cameras detected. Setting camera %s as new active camera.\n",
                 cameraName.c_str());
         activeCamera_ = gameCamera;
     }
@@ -510,7 +510,7 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
 
 CameraObject *GameInstance::getCamera(string cameraName) {
     CameraObject *result = nullptr;
-    auto cit = std::find_if(cameras_.begin(), cameras_.end(), [cameraName] (std::shared_ptr<CameraObject> camera) {
+    auto cit = std::find_if(cameras_.begin(), cameras_.end(), [cameraName] (SHD(CameraObject) camera) {
         return camera->objectName() == cameraName;
     });
     if (cit != cameras_.end()) {
@@ -795,7 +795,7 @@ void GameInstance::setActiveScene(string sceneName) {
     }
 }
 
-std::shared_ptr<CameraObject> GameInstance::getActiveCamera() {
+SHD(CameraObject) GameInstance::getActiveCamera() {
     return activeCamera_;
 }
 

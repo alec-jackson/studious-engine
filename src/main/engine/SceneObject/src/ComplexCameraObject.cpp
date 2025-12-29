@@ -36,7 +36,7 @@ void ComplexCameraObject::update() {
 void ComplexCameraObject::init() {
     // Replace with InputController code later...
     int numJoySticks = SDL_NumJoysticks();
-    cameraOffset = getOffset(), angles = vec3(0),
+    cameraOffset = getOffset(),
         pos = vec3(0);
     // SDL_GetRelativeMouseMode()
     gameController1 = NULL;

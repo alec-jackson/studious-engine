@@ -9,10 +9,10 @@
  *
  */
 #include "inputMonitor.hpp"
-#include "ComplexCameraObject.hpp"
-#include "InputController.hpp"
-#include "glm/trigonometric.hpp"
-#include "physics.hpp"
+#include <ComplexCameraObject.hpp>
+#include <InputController.hpp>
+#include <glm/trigonometric.hpp>
+#include <physics.hpp>
 #include <TPSCameraObject.hpp>
 #include <SDL_scancode.h>
 #include <glm/ext/quaternion_geometric.hpp>
