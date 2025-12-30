@@ -8,6 +8,9 @@
  */
 #include <ComplexCameraObject.hpp>
 #include <memory>
+#include <string>
+#include <iostream>
+#include <vector>
 #include <glm/geometric.hpp>
 #include <TPSCameraObject.hpp>
 #include <InputController.hpp>
