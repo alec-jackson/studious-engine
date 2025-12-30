@@ -264,14 +264,15 @@ int GameInstance::updateObjects() {
         return -1;
     }
     gfxController_->update();
-    // Update cameras
-    for (auto camera : cameras_) {
-        camera->setResolution(this->getResolution());
-        camera->update();
+    /* @todo This is a HACK! Re-instate all camera update behavior after InputController is ready. */
+    // Update active camera...
+    if (activeCamera_ != nullptr) {
+        activeCamera_->setResolution(getResolution());
+        activeCamera_->update();
     }
     // Update the current scene
     if (activeScene_.get() && activeCamera_.get())
-        activeScene_.get()->update(activeCamera_.get());
+        activeScene_->update(activeCamera_.get());
     return 0;
 }
 
