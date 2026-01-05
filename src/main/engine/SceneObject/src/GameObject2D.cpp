@@ -58,6 +58,12 @@ void GameObject2D::initializeTextureData() {
     SDL_FreeSurface(texture);
 }
 
+/* @todo - Move texture code to ImageExt */
+void GameObject2D::swapTexture(string texturePath) {
+    texturePath_ = texturePath;
+    initializeTextureData();
+}
+
 /**
  * @brief Updates the dimensions of the sprite. When using the splitGrid function, the image
  * itself will decrease in size, so we want to account for that. Run this to ensure the pixel

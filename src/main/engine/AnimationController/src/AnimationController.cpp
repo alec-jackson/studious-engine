@@ -154,6 +154,10 @@ void AnimationController::pauseTrack(string trackName) {
     }
 }
 
+int AnimationController::addKeyFrameEntry(KeyFrameEntry kfEntry) {
+    return addKeyFrame(kfEntry.target, kfEntry.keyFrame);
+}
+
 int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto targetName = target->objectName();
@@ -182,9 +186,9 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
     // If this is a brand new keyframe, set original values...
     if (currentKf->isNew) {
         currentKf->isNew = false;
-        currentKf->pos.original = target->getPosition();
-        currentKf->rotation.original = target->getRotation();
-        currentKf->scale.original = target->getScale();
+        currentKf->pos.original = target->getPositionRaw();
+        currentKf->rotation.original = target->getRotationRaw();
+        currentKf->scale.original = target->getScaleRaw();
         // Use stretch if UI object
         if (currentKf->type & UPDATE_STRETCH) {
             assert(target->type() == ObjectType::UI_OBJECT);

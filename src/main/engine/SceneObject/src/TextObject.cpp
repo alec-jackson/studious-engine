@@ -14,10 +14,10 @@
 #include <string>
 
 TextObject::TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
-    uint programId, string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
+    float lineSpacing, uint programId, string objectName, ObjectType type, GfxController *gfxController): SceneObject(position,
     vec3(0.0f, 0.0f, 0.0f), scale, programId, type, objectName, gfxController), charPadding_ { charSpacing },
-    message_  { message }, fontPath_ { fontPath }, charPoint_ { charPoint }, cutoff_ { vec3(0.0f, 9000.0f, 0.0f) },
-    textColor_ { vec4(1.0f) } {
+    message_  { message }, fontPath_ { fontPath }, charPoint_ { charPoint }, lineSpacing_ { lineSpacing },
+    cutoff_ { vec3(0.0f, 9000.0f, 0.0f) }, textColor_ { vec4(1.0f) } {
     printf("TextObject::TextObject: Creating message %s\n", message.c_str());
     initializeShaderVars();
     initializeText();
@@ -88,7 +88,6 @@ void TextObject::initializeText() {
 
 void TextObject::createMessage() {
     auto x = 0, y = 0;
-    auto spacing = 1.0f;  /// @todo Make this adjustable
     // Use textures to create each character as an independent object
     for (auto character : message_) {
         Character ch = characters[character];
@@ -96,9 +95,15 @@ void TextObject::createMessage() {
         float ypos = y - (ch.Size.y - ch.Bearing.y) * scale_;
         float w = ch.Size.x * scale_;
         float h = ch.Size.y * scale_;
+        printf("TextObject::createMessage: For char %c -> xpos: %f, ypos: %f\n",
+            character, xpos, ypos);
         if (character == '\n') {
             x = 0;
-            y -= (h * (spacing + 1.0f));
+            if (h == 0.0f) {
+                y -= lineSpacing_ * charPoint_;
+            }
+            y -= (h * (lineSpacing_ + 1.0f));
+            // Some fonts don't have a height for newline, so we should have a fallback
             continue;
         }
         unsigned int vao;

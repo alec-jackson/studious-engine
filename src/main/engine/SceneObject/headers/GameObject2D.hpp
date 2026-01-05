@@ -33,6 +33,7 @@ class GameObject2D : public SceneObject, public TrackExt, public ImageExt, publi
     void initializeVertexData();
     void createCollider() override;
     void setDimensions(int width, int height);
+    void swapTexture(string texturePath);
 
  protected:
     string texturePath_;
