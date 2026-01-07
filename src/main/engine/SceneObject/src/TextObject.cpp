@@ -95,8 +95,6 @@ void TextObject::createMessage() {
         float ypos = y - (ch.Size.y - ch.Bearing.y) * scale_;
         float w = ch.Size.x * scale_;
         float h = ch.Size.y * scale_;
-        printf("TextObject::createMessage: For char %c -> xpos: %f, ypos: %f\n",
-            character, xpos, ypos);
         if (character == '\n') {
             x = 0;
             if (h == 0.0f) {
