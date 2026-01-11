@@ -527,6 +527,7 @@ int GameInstance::update() {
     error = updateObjects();
     error |= updateWindow();
     updateInput();
+    inputController->update();
     animationController_->update();
     physicsController_->update();
     end = SDL_GetPerformanceCounter();

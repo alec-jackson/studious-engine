@@ -25,38 +25,13 @@ extern double deltaTime;
 ComplexCameraObject::ComplexCameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
     CameraObject(target, offset, cameraAngle, aspectRatio, nearClipping, farClipping, type, objectName, gfxController) {
-    init();
 }
 
 void ComplexCameraObject::update() {
-    if (!headless_) updateInput();
     CameraObject::update();
 }
 
-void ComplexCameraObject::init() {
-    // Replace with InputController code later...
-    int numJoySticks = SDL_NumJoysticks();
-    cameraOffset = getOffset(),
-        pos = vec3(0);
-    // SDL_GetRelativeMouseMode()
-    gameController1 = NULL;
-    hasActiveController = false;
-    if (numJoySticks < 1) {
-        cout << "No joysticks connected, continuing without joysticks\n";
-    } else {
-        for (int i = 0; i < numJoySticks; i++) {
-            if (SDL_IsGameController(i)) {
-                gameController1 = SDL_GameControllerOpen(i);
-                if (gameController1 != 0) {
-                    hasActiveController = true;
-                    break;
-                }
-            }
-        }
-    }
-}
-
-void ComplexCameraObject::updateInput() {
+void ComplexCameraObject::sendInput(float xModifier, float yModifier) {
     /*
     (vector<float>) cameraDistance takes a 3D vector containing the offset of the
     camera from the object and calculates the distance between the two with
@@ -71,38 +46,10 @@ void ComplexCameraObject::updateInput() {
     };
 
     assert(nullptr != getTarget());  // Must have a target
-    // Do nothing in relative mouse mode
-    if (!SDL_GetRelativeMouseMode()) {
-        ignoreFirstUpdate_ = true;
-        return;
-    }
-    // Calculate the X-Z angle between the camera and target
-    // Assume that the target is the origin
-    int mouseX, mouseY;
-    Sint16 controllerRightStateY = 0;
-    Sint16 controllerRightStateX = 0;
-    // Allow the mouse to capture - prevents jitters when attaching to camera
-    if (ignoreFirstUpdate_) {
-        SDL_GetRelativeMouseState(&mouseX, &mouseY);
-        ignoreFirstUpdate_ = false;
-        return;
-    }
     cameraOffset = offset_;
-    // y over x
-    SDL_GetRelativeMouseState(&mouseX, &mouseY);
-    if (hasActiveController) {
-        controllerRightStateY = SDL_GameControllerGetAxis(gameController1,
-            SDL_CONTROLLER_AXIS_RIGHTY);
-        controllerRightStateX = SDL_GameControllerGetAxis(gameController1,
-            SDL_CONTROLLER_AXIS_RIGHTX);
-    }
-    if ((mouseY != 0) || abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE) {
-        float modifier = 1.0f;
-        if (mouseY != 0) {
-            modifier = mouseY / 5.0f;
-        } else if (abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE) {
-            modifier = static_cast<float>(controllerRightStateY) / INT16_MAX;
-        }
+    // Float equal might be hairy, let's see how it works out
+    if (yModifier != 0.0f) {
+        float modifier = yModifier;
         INVERT_MODIFIER(invertY);
         vector<float> distHold = cameraDistance(cameraOffset);
         cameraOffset[1] += TRACK_TRANSFORM;
@@ -117,14 +64,10 @@ void ComplexCameraObject::updateInput() {
         cameraOffset[2] /= distFinish[0];
         cameraOffset[0] /= distFinish[1];
     }
-    if ((mouseX != 0) || abs(controllerRightStateX) > JOYSTICK_DEAD_ZONE) {
+    // Maybe we can remove the conditional? Might hurt performance though...
+    if (xModifier != 0.0f) {
         float distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-        float modifier = 1.0f;
-        if (mouseX != 0) {
-            modifier = mouseX / 5.0f;
-        } else if (abs(controllerRightStateX) > JOYSTICK_DEAD_ZONE) {
-            modifier = static_cast<float>(controllerRightStateX) / INT16_MAX;
-        }
+        float modifier = xModifier;
         INVERT_MODIFIER(invertX);
         if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
             cameraOffset[0] -= TRACK_TRANSFORM;

@@ -26,11 +26,9 @@ FPSCameraObject::FPSCameraObject(SceneObject *target, vec3 offset, vec3 camPos, 
     // Invert X/Y since camera pos inverted
     invertX = true;
     invertY = true;
-    init();
 }
 
 void FPSCameraObject::update() {
-    if (!headless_) updateInput();
     CameraObject::update();
     assert(target_ != nullptr);
     if (target_ != nullptr) {

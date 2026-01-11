@@ -10,8 +10,10 @@
  *
  */
 
+#include "ComplexCameraObject.hpp"
 #include <InputController.hpp>
 #include <SDL_gamecontroller.h>
+#include <cstdint>
 #include <map>
 #include <mutex>  //NOLINT
 #include <iostream>
@@ -50,9 +52,6 @@ std::map<Uint8, GameInput> hatInputMap = {
     { SDL_HAT_RIGHT, GameInput::EAST }
 };
 
-const int JOYSTICK_DEAD_ZONE = 4000;
-#define PI 3.14159265
-#define TRACKING_SPEED 20.0f
 #define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
 #define TRACK_TRANSFORM TRACKING_SPEED * modifier * deltaTime
 
@@ -206,9 +205,8 @@ void InputController::update() {
 }
 
 void InputController::updateCameraControls() {
-    std::unique_lock<std::mutex> sLock(cameraLock_);
     int mouseX, mouseY;
-    float xModifier, yModifier;
+    float xModifier = 0.0f, yModifier = 0.0f;
     Sint16 controllerRightStateY = 0;
     Sint16 controllerRightStateX = 0;
     // Do nothing in relative mouse mode
@@ -235,19 +233,25 @@ void InputController::updateCameraControls() {
         controllerRightStateX = SDL_GameControllerGetAxis(gameControllers[0],
             SDL_CONTROLLER_AXIS_RIGHTX);
     }
+    scopeLock.unlock();
     xModifier = fabs(mouseX) / 5.0f;
     yModifier = fabs(mouseY) / 5.0f;
     // Determine which X/Y inputs to send to cameras
-    if (mouseX == 0) {
+    if (mouseX == 0 && mouseY == 0) {
         // Convert controller to mouse coordinates
         // Check for deadzone
         xModifier = abs(controllerRightStateX) > JOYSTICK_DEAD_ZONE ? fabs(controllerRightStateX) : 0.0f;
+        yModifier = abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE ? fabs(controllerRightStateY) : 0.0f;
         xModifier /= INT16_MAX;  // Normalize between 0 and 1
-        // Question : can we preverse sign to remove an entire condition?
-        cout << controllerRightStateY << endl;
+        yModifier /= INT16_MAX;
     }
-    printf("%f, %f\n", xModifier, yModifier);
-
-    // Read joystick input
-
+    // Send process input to camera
+    std::unique_lock<MUT> camLock(cameraLock_);
+    for (auto camera : cameras_) {
+        // Check if camera is Complex
+        auto compCam = std::dynamic_pointer_cast<ComplexCameraObject>(camera);
+        if (compCam) {
+            compCam->sendInput(xModifier, yModifier);
+        }
+    }
 }

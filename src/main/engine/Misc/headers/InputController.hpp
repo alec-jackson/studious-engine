@@ -22,6 +22,8 @@
 
 #include <mutex> //NOLINT
 
+#define JOYSTICK_DEAD_ZONE 4000
+
 enum class GameInput {
     NONE,
     QUIT,

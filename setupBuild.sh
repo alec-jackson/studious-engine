@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 cleanBuild=false
 runBuild=false
