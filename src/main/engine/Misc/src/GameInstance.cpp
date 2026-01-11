@@ -537,6 +537,11 @@ int GameInstance::update() {
 
 int GameInstance::removeSceneObject(string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
+    removeSceneObject_(objectName);
+    return 0;
+}
+
+int GameInstance::removeSceneObject_(string objectName) {
     // Remove any child objects if they exist
     auto object = getSceneObject(objectName);
     if (object) {
@@ -545,16 +550,11 @@ int GameInstance::removeSceneObject(string objectName) {
             removeSceneObject_(child->objectName());
         }
     }
-    removeSceneObject_(objectName);
-    return 0;
-}
-
-int GameInstance::removeSceneObject_(string objectName) {
     animationController_->removeSceneObject(objectName);
     physicsController_->removeSceneObject(objectName);
     if (activeScene_.get()) {
         // Time will tell if we need to remove object from ALL scenes or just active...
-        activeScene_.get()->removeSceneObject(objectName);
+        activeScene_->removeSceneObject(objectName);
     }
     return 0;
 }

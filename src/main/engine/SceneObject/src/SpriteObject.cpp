@@ -78,6 +78,7 @@ SpriteObject::~SpriteObject() {
 
 void SpriteObject::render() {
     VISIBILITY_CHECK;
+    std::unique_lock<std::mutex> scopeLock(objectLock_);
     mat4 model = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);

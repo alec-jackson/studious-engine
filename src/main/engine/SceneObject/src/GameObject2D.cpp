@@ -60,6 +60,9 @@ void GameObject2D::initializeTextureData() {
 
 /* @todo - Move texture code to ImageExt */
 void GameObject2D::swapTexture(string texturePath) {
+    std::unique_lock<std::mutex> scopeLock(objectLock_);
+    // Attempt to clean up existing texture data
+    gfxController_->deleteTextures(&textureId_);
     texturePath_ = texturePath;
     initializeTextureData();
 }
