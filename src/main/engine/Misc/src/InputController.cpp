@@ -224,7 +224,7 @@ void InputController::updateCameraControls() {
      * Eventually, keyboard and mouse input will be separate from controller input,
      * but for now we are keeping legacy behavior where kb and mouse take precedence.
      */
-    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    std::unique_lock<std::mutex> controllerLock(controllerLock_);
     if (controllersConnected > 0) {
         assert(gameControllers[0] != nullptr);
         controllerRightStateY = SDL_GameControllerGetAxis(gameControllers[0],
@@ -232,7 +232,7 @@ void InputController::updateCameraControls() {
         controllerRightStateX = SDL_GameControllerGetAxis(gameControllers[0],
             SDL_CONTROLLER_AXIS_RIGHTX);
     }
-    scopeLock.unlock();
+    controllerLock.unlock();
     xModifier = mouseX / 5.0f;
     yModifier = mouseY / 5.0f;
     // Determine which X/Y inputs to send to cameras
