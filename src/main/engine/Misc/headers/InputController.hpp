@@ -56,13 +56,13 @@ class InputController {
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
     bool ignoreFirstUpdate_ = true;
-    VEC(SHD(CameraObject)) &cameras_;
+    const VEC(SHD(CameraObject)) &cameras_;
 
     MUT controllerLock_;
-    MUT &cameraLock_;
+    MUT *cameraLock_;
 
  public:
-    InputController(VEC(SHD(CameraObject)) &cameras, MUT &cameraLock);
+    InputController(const VEC(SHD(CameraObject)) &cameras, MUT *cameraLock);
     ~InputController();
     /**
      * @brief Can be used to check raw SDL scancode values. This has the same behavior as the previous

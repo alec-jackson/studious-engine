@@ -10,13 +10,12 @@
  *
  */
 
-#include "ComplexCameraObject.hpp"
 #include <InputController.hpp>
-#include <SDL_gamecontroller.h>
 #include <cstdint>
 #include <map>
 #include <mutex>  //NOLINT
 #include <iostream>
+#include <ComplexCameraObject.hpp>
 
 // GameInput maps for input devices
 std::map<SDL_Scancode, GameInput> keyboardInputMap = {
@@ -55,7 +54,7 @@ std::map<Uint8, GameInput> hatInputMap = {
 #define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
 #define TRACK_TRANSFORM TRACKING_SPEED * modifier * deltaTime
 
-InputController::InputController(VEC(SHD(CameraObject)) &cameras, MUT &cameraLock) :
+InputController::InputController(const VEC(SHD(CameraObject)) &cameras, MUT *cameraLock) :
     cameras_ { cameras }, cameraLock_ { cameraLock } {
     std::cout << "Creating Controllers!\n";
     controllersConnected = 0;
@@ -212,13 +211,13 @@ void InputController::updateCameraControls() {
     // Do nothing in relative mouse mode
     if (!SDL_GetRelativeMouseMode()) {
         ignoreFirstUpdate_ = true;
-        //return;
+        return;
     }
     // Allow the mouse to capture - prevents jitters when attaching to camera
     if (ignoreFirstUpdate_) {
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         ignoreFirstUpdate_ = false;
-        //return;
+        return;
     }
     SDL_GetRelativeMouseState(&mouseX, &mouseY);
     /**
@@ -246,7 +245,7 @@ void InputController::updateCameraControls() {
         yModifier /= INT16_MAX;
     }
     // Send process input to camera
-    std::unique_lock<MUT> camLock(cameraLock_);
+    std::unique_lock<MUT> camLock(*cameraLock_);
     for (auto camera : cameras_) {
         // Check if camera is Complex
         auto compCam = std::dynamic_pointer_cast<ComplexCameraObject>(camera);
