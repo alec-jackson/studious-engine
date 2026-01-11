@@ -56,7 +56,7 @@ class InputController {
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
     bool ignoreFirstUpdate_ = true;
-    VEC(SHD(CameraObject)) cameras_;
+    VEC(SHD(CameraObject)) &cameras_;
 
     MUT controllerLock_;
     MUT &cameraLock_;

@@ -212,13 +212,13 @@ void InputController::updateCameraControls() {
     // Do nothing in relative mouse mode
     if (!SDL_GetRelativeMouseMode()) {
         ignoreFirstUpdate_ = true;
-        return;
+        //return;
     }
     // Allow the mouse to capture - prevents jitters when attaching to camera
     if (ignoreFirstUpdate_) {
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         ignoreFirstUpdate_ = false;
-        return;
+        //return;
     }
     SDL_GetRelativeMouseState(&mouseX, &mouseY);
     /**
@@ -234,14 +234,14 @@ void InputController::updateCameraControls() {
             SDL_CONTROLLER_AXIS_RIGHTX);
     }
     scopeLock.unlock();
-    xModifier = fabs(mouseX) / 5.0f;
-    yModifier = fabs(mouseY) / 5.0f;
+    xModifier = mouseX / 5.0f;
+    yModifier = mouseY / 5.0f;
     // Determine which X/Y inputs to send to cameras
     if (mouseX == 0 && mouseY == 0) {
         // Convert controller to mouse coordinates
         // Check for deadzone
-        xModifier = abs(controllerRightStateX) > JOYSTICK_DEAD_ZONE ? fabs(controllerRightStateX) : 0.0f;
-        yModifier = abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE ? fabs(controllerRightStateY) : 0.0f;
+        xModifier = abs(controllerRightStateX) > JOYSTICK_DEAD_ZONE ? controllerRightStateX : 0.0f;
+        yModifier = abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE ? controllerRightStateY : 0.0f;
         xModifier /= INT16_MAX;  // Normalize between 0 and 1
         yModifier /= INT16_MAX;
     }

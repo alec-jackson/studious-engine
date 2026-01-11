@@ -63,9 +63,11 @@ done
 
 echo "Target: $target"
 
-if { [ "$cleanBuild" == true ]; } && [ -d build ]; then
-    echo "Performing clean build"
-    rm -rdf build
+if "$cleanBuild"; then
+    if [ -d build ]; then
+        echo "Performing clean build"
+        rm -rdf build
+    fi
 fi
 # Setup Build Directories
 if [ ! -d build ]; then
@@ -73,22 +75,22 @@ if [ ! -d build ]; then
 fi
 cd build
 # If -d flag is present, build in debug mode
-if [ "$debugBuild" == true ]; then
+if "$debugBuild"; then
     echo "RUNNING UNDER DEBUG MODE"
     ARGS="-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug"
 else
     echo "RUNNING UNDER RELEASE MODE"
     ARGS="-Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Release"
 fi
-if [ "$embeddedBuild" == true ]; then
+if "$embeddedBuild"; then
     echo "Building EMBEDDED TARGET"
     ARGS="$ARGS -DGFX_EMBEDDED=1"
 fi
-if [ "$buildAll" == true ]; then
+if "$buildAll"; then
     echo "Building with Examples"
     ARGS="$ARGS -DEXAMPLES=1"
 fi
-if [ "$runTests" == true ]; then
+if "$runTests"; then
     echo "Compiling tests"
     ARGS="$ARGS -DRUNTEST=1"
 fi
@@ -114,18 +116,18 @@ if [ $? != 0 ]; then
     echo -e "\033[0;31m --- Build errors detected! ---"
     tput init
 else
-    if [ "$installLib" == true ]; then
+    if "$installLib"; then
         echo "Installing studious library files"
         sudo cmake --install .
     fi
-    if [ "$runTests" == true ]; then
+    if "$runTests"; then
         if [ "$filter_tests" == true ]; then
             ctest --output-on-failure -j 4 -R $test_filter
         else
             ctest --output-on-failure -j 4
         fi
     else
-        if [ "$runBuild" == true ]; then
+        if "$runBuild"; then
             # Run program
             cd ..
             ./$target
