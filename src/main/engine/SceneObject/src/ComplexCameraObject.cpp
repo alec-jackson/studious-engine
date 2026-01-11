@@ -96,32 +96,11 @@ void ComplexCameraObject::updateInput() {
         controllerRightStateX = SDL_GameControllerGetAxis(gameController1,
             SDL_CONTROLLER_AXIS_RIGHTX);
     }
-    if ((mouseY < 0) || controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
+    if ((mouseY != 0) || abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE) {
         float modifier = 1.0f;
-        if (mouseY < 0) {
-            modifier = (mouseY / 5.0f) * -1;
-        } else if (controllerRightStateY < -JOYSTICK_DEAD_ZONE) {
-            modifier = (static_cast<float>(controllerRightStateY * -1)) / INT16_MAX;
-        }
-        INVERT_MODIFIER(invertY);
-        vector<float> distHold = cameraDistance(cameraOffset);
-        cameraOffset[1] -= TRACK_TRANSFORM;
-        vector<float> distFinish = cameraDistance(cameraOffset);
-        distHold[0] = sqrt(distHold[0]);
-        distHold[1] = sqrt(distHold[1]);
-        distFinish[0] = sqrt(distFinish[0]);
-        distFinish[1] = sqrt(distFinish[1]);
-        distFinish[0] /= distHold[0];
-        distFinish[1] /= distHold[1];
-        cameraOffset[1] /= ((distFinish[0] + distFinish[1]) / 2.0f);
-        cameraOffset[2] /= distFinish[0];
-        cameraOffset[0] /= distFinish[1];
-    }
-    if ((mouseY > 0) || controllerRightStateY > JOYSTICK_DEAD_ZONE) {
-        float modifier = 1.0f;
-        if (mouseY > 0) {
+        if (mouseY != 0) {
             modifier = mouseY / 5.0f;
-        } else if (controllerRightStateY > JOYSTICK_DEAD_ZONE) {
+        } else if (abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE) {
             modifier = static_cast<float>(controllerRightStateY) / INT16_MAX;
         }
         INVERT_MODIFIER(invertY);
@@ -138,42 +117,12 @@ void ComplexCameraObject::updateInput() {
         cameraOffset[2] /= distFinish[0];
         cameraOffset[0] /= distFinish[1];
     }
-    if ((mouseX < 0) || controllerRightStateX < -JOYSTICK_DEAD_ZONE) {
-        // Rotate the camera about the y axis
+    if ((mouseX != 0) || abs(controllerRightStateX) > JOYSTICK_DEAD_ZONE) {
         float distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
         float modifier = 1.0f;
-        if (mouseX < 0) {
-            modifier = (mouseX * -1.0f) / 5.0f;
-        } else if (controllerRightStateX < -JOYSTICK_DEAD_ZONE) {
-            modifier = (static_cast<float>(controllerRightStateX * -1)) / INT16_MAX;
-        }
-        INVERT_MODIFIER(invertX);
-        if (cameraOffset[0] <= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] += TRACK_TRANSFORM;
-            cameraOffset[2] -= TRACK_TRANSFORM;
-        } else if (cameraOffset[0] <= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] -= TRACK_TRANSFORM;
-            cameraOffset[2] -= TRACK_TRANSFORM;
-        } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] <= pos[2]) {
-            cameraOffset[0] += TRACK_TRANSFORM;
-            cameraOffset[2] += TRACK_TRANSFORM;
-        } else if (cameraOffset[0] >= pos[0] && cameraOffset[2] >= pos[2]) {
-            cameraOffset[0] -= TRACK_TRANSFORM;
-            cameraOffset[2] += TRACK_TRANSFORM;
-        }
-        float distFinish = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-        distHold = sqrt(distHold);
-        distFinish = sqrt(distFinish);
-        distFinish /= distHold;
-        cameraOffset[0] /= distFinish;
-        cameraOffset[2] /= distFinish;
-    }
-    if ((mouseX > 0) || controllerRightStateX > JOYSTICK_DEAD_ZONE) {
-        float distHold = cameraOffset[0] * cameraOffset[0] + cameraOffset[2] * cameraOffset[2];
-        float modifier = 1.0f;
-        if (mouseX > 0) {
+        if (mouseX != 0) {
             modifier = mouseX / 5.0f;
-        } else if (controllerRightStateX > JOYSTICK_DEAD_ZONE) {
+        } else if (abs(controllerRightStateX) > JOYSTICK_DEAD_ZONE) {
             modifier = static_cast<float>(controllerRightStateX) / INT16_MAX;
         }
         INVERT_MODIFIER(invertX);

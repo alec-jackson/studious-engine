@@ -12,9 +12,13 @@
 
 #pragma once
 
+#include <vector>
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
+#include <studious_utility.hpp>
+#include <CameraObject.hpp>
+#include <GameScene.hpp>
 
 #include <mutex> //NOLINT
 
@@ -49,11 +53,14 @@ class InputController {
     int controllersConnected;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
+    bool ignoreFirstUpdate_ = true;
+    VEC(SHD(CameraObject)) cameras_;
 
-    std::mutex controllerLock_;
+    MUT controllerLock_;
+    MUT &cameraLock_;
 
  public:
-    InputController();
+    InputController(VEC(SHD(CameraObject)) &cameras, MUT &cameraLock);
     ~InputController();
     /**
      * @brief Can be used to check raw SDL scancode values. This has the same behavior as the previous
@@ -116,4 +123,8 @@ class InputController {
     void resetController();
 
     void initController();
+
+    void update();
+
+    void updateCameraControls();
 };
