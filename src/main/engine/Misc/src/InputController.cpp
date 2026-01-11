@@ -54,7 +54,7 @@ std::map<Uint8, GameInput> hatInputMap = {
 #define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
 #define TRACK_TRANSFORM TRACKING_SPEED * modifier * deltaTime
 
-InputController::InputController(const VEC(SHD(CameraObject)) &cameras, MUT *cameraLock) :
+InputController::InputController(const VEC(SHD(CameraObject)) &cameras, std::mutex *cameraLock) :
     cameras_ { cameras }, cameraLock_ { cameraLock } {
     std::cout << "Creating Controllers!\n";
     controllersConnected = 0;
@@ -224,7 +224,7 @@ void InputController::updateCameraControls() {
      * Eventually, keyboard and mouse input will be separate from controller input,
      * but for now we are keeping legacy behavior where kb and mouse take precedence.
      */
-    std::unique_lock<MUT> scopeLock(controllerLock_);
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
     if (controllersConnected > 0) {
         assert(gameControllers[0] != nullptr);
         controllerRightStateY = SDL_GameControllerGetAxis(gameControllers[0],
@@ -245,7 +245,7 @@ void InputController::updateCameraControls() {
         yModifier /= INT16_MAX;
     }
     // Send process input to camera
-    std::unique_lock<MUT> camLock(*cameraLock_);
+    std::unique_lock<std::mutex> camLock(*cameraLock_);
     for (auto camera : cameras_) {
         // Check if camera is Complex
         auto compCam = std::dynamic_pointer_cast<ComplexCameraObject>(camera);

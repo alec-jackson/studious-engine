@@ -58,11 +58,11 @@ class InputController {
     bool ignoreFirstUpdate_ = true;
     const VEC(SHD(CameraObject)) &cameras_;
 
-    MUT controllerLock_;
-    MUT *cameraLock_;
+    std::mutex controllerLock_;
+    std::mutex *cameraLock_;
 
  public:
-    InputController(const VEC(SHD(CameraObject)) &cameras, MUT *cameraLock);
+    InputController(const VEC(SHD(CameraObject)) &cameras, std::mutex *cameraLock);
     ~InputController();
     /**
      * @brief Can be used to check raw SDL scancode values. This has the same behavior as the previous
