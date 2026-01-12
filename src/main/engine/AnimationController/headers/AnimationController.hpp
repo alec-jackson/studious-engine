@@ -23,6 +23,7 @@
 #include <UiObject.hpp>
 #include <TextObject.hpp>
 #include <SpriteObject.hpp>
+#include <studious_utility.hpp>
 
 // Update return values
 #define UPDATE_NOT_COMPLETE 0
@@ -130,9 +131,15 @@ struct KeyFrames {
     SceneObject *target;
 };
 
+struct KeyFrameEntry {
+    SHD(KeyFrame) keyFrame;
+    SceneObject *target;
+};
+
 class AnimationController {
  public:
     int addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame);
+    int addKeyFrameEntry(KeyFrameEntry kfEntry);
     void addTrack(TrackExt *target, string trackName, vector<int> trackData, int fps, bool loop);
     void update();
     UpdateData<float> updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, float timeChange);

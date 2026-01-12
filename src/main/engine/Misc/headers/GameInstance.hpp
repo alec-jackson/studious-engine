@@ -111,6 +111,7 @@ class GameInstance {
 
     bool addSceneObject(std::shared_ptr<SceneObject> sceneObject);
     std::shared_ptr<GameScene> getGameScene_(string sceneName);
+    int removeSceneObject_(string objectName);
 
  public:
     explicit GameInstance(const StudiousConfig &config);
@@ -125,7 +126,7 @@ class GameInstance {
     FPSCameraObject *createFPSCamera(SceneObject *target, vec3 offset, vec3 camPos, float cameraAngle,
         float aspectRatio, float nearClipping, float farClipping, string cameraName);
     TextObject *createText(string message, vec3 position, float scale, string fontPath, float charSpacing,
-        int charPoint, string objectName);
+        int charPoint, float lineSpacing, string objectName);
     SpriteObject *createSprite(string spritePath, vec3 position, float scale,
         ObjectAnchor anchor, string objectName);
     UiObject *createUi(string spritePath, vec3 position, float scale, float wScale, float hScale,

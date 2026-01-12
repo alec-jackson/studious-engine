@@ -141,6 +141,7 @@ UiObject::~UiObject() {
 
 void UiObject::render() {
     VISIBILITY_CHECK;
+    std::unique_lock<std::mutex> scopeLock(objectLock_);
     // Do not use the normal scale for UI - scale is used for initialization only
     auto model = translateMatrix_ * rotateMatrix_;
     gfxController_->clear(GfxClearMode::DEPTH);

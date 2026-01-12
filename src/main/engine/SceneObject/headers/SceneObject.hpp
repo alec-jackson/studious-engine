@@ -77,8 +77,11 @@ class SceneObject {
     inline const mat4 &scaleMatrix() const { return scaleMatrix_; }
     inline vec3 getPosition() const { return parent_ ? parent_->getPosition() + position : position; }
     inline vec3 getPosition(vec3 offset) const { return this->position + offset; }
+    inline vec3 getPositionRaw() const { return position; }
     inline vec3 getRotation() const { return parent_ ? parent_->getRotation() + rotation : rotation; }
+    inline vec3 getRotationRaw() const { return rotation; }
     inline float getScale() const { return parent_ ? parent_->getScale() * scale_ : scale_; }
+    inline float getScaleRaw() const { return scale_; }
     inline uint getRenderPriority() const { return this->renderPriority_; }
     inline vec3 getResolution() const { return this->resolution_; }
     inline string objectName() const { return this->objectName_; }

@@ -409,7 +409,7 @@ GfxResult<uint> OpenGlGfxController::sendFloatVector(uint variableId, size_t cou
  * @param mode method for rendering triangles.
  * @return GfxResult<uint> OK if successful; FAILURE otherwise
  */
-GfxResult<uint> OpenGlGfxController::polygonRenderMode(RenderMode mode) {
+GfxResult<uint> OpenGlGfxController::polygonRenderMode([[maybe_unused]] RenderMode mode) {
     #ifdef GFX_EMBEDDED
     return GFX_OK(uint);
     #else

@@ -188,7 +188,8 @@ int runtime() {
         1.0f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
         5.0f,                                   // Char spacing
-        48,
+        48,                                     // Font point
+        0,                                      // Newline Size
         "studious-text");                       // ObjectName
 
     currentGame->createText(
@@ -198,6 +199,7 @@ int runtime() {
         "src/resources/fonts/AovelSans.ttf",
         0.0f,
         48,
+        0,
         "pressUText");
 
     auto fpsText = currentGame->createText("FPS",
@@ -206,6 +208,7 @@ int runtime() {
         "src/resources/fonts/AovelSans.ttf",
         0.0f,
         48,
+        0,
         "fps-text");
 
     currentGame->createSprite(
@@ -231,16 +234,22 @@ int runtime() {
         "src/resources/fonts/AovelSans.ttf",
         1.0f,
         48,
+        0,
         "test-text");
 
     fpsText->setMessage("FPS: 0");
 
-    vec3 fpsCameraOffset(0.0f, 2.0f, 0.0f);
+    vec3 fpsCameraAdditionalOffset(0.0f, 2.0f, 0.0f);
+    auto offset = vec3(5.140022f, 2.349999f, 2.309998f);
+    float fovDegrees = 70.0f;
+    float aspectRatio = 16.0f / 9.0f;
+    float farClipping = 0.01f;
+    float nearClipping = 100.0f;
 
     currentGame->createFPSCamera(playerRef,
-        vec3(5.140022f, 2.349999f, 2.309998f), fpsCameraOffset, 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "fpsCamera");
+        offset, fpsCameraAdditionalOffset, fovDegrees, aspectRatio, farClipping, nearClipping, "fpsCamera");
     currentGame->createTPSCamera(playerRef,
-        vec3(5.140022f, 2.349999f, 2.309998f), 90.0f, 16.0f / 9.0f, 0.01f, 100.0f, "tpsCamera");
+        offset, fovDegrees, aspectRatio, farClipping, nearClipping, "tpsCamera");
 
 
     playerRef->setRotation(vec3(0, 0, 0));

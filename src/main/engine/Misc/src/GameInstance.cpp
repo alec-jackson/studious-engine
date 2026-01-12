@@ -435,7 +435,7 @@ FPSCameraObject *GameInstance::createFPSCamera(SceneObject *target, vec3 offset,
 }
 
 TextObject *GameInstance::createText(string message, vec3 position, float scale, string fontPath,
-    float charSpacing, int charPoint, string objectName) {
+float charSpacing, int charPoint, float lineSpacing, string objectName) {
     printf("GameInstance::createText: Creating TextObject %s\n", objectName.c_str());
     auto textProg = gfxController_->getProgramId(TEXTOBJECT_PROG_NAME);
     if (!textProg.isOk()) {
@@ -445,7 +445,7 @@ TextObject *GameInstance::createText(string message, vec3 position, float scale,
         return nullptr;
     }
     auto text = std::make_shared<TextObject>(message, position, scale, fontPath,
-        charSpacing, charPoint, textProg.get(), objectName, ObjectType::TEXT_OBJECT, gfxController_);
+        charSpacing, charPoint, lineSpacing, textProg.get(), objectName, ObjectType::TEXT_OBJECT, gfxController_);
     text.get()->setRenderPriority(RENDER_PRIOR_HIGH);
     return addSceneObject(text) ? text.get() : nullptr;
 }
@@ -538,13 +538,25 @@ int GameInstance::update() {
 
 int GameInstance::removeSceneObject(string objectName) {
     std::unique_lock<std::mutex> lock(sceneLock_);
+    removeSceneObject_(objectName);
+    return 0;
+}
+
+int GameInstance::removeSceneObject_(string objectName) {
+    // Remove any child objects if they exist
+    auto object = getSceneObject(objectName);
+    if (object) {
+        auto children = object->getChildren();
+        for (auto child : children) {
+            removeSceneObject_(child->objectName());
+        }
+    }
     animationController_->removeSceneObject(objectName);
     physicsController_->removeSceneObject(objectName);
     if (activeScene_.get()) {
         // Time will tell if we need to remove object from ALL scenes or just active...
-        activeScene_.get()->removeSceneObject(objectName);
+        activeScene_->removeSceneObject(objectName);
     }
-    printf("Remove game scene end\n");
     return 0;
 }
 

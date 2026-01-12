@@ -33,7 +33,7 @@ class TextObject : public SceneObject {
  public:
     // Constructors
     explicit TextObject(string message, vec3 position, float scale, string fontPath, float charSpacing, int charPoint,
-        uint programId, string objectName, ObjectType type, GfxController *gfxController);
+        float lineSpacing, uint programId, string objectName, ObjectType type, GfxController *gfxController);
     ~TextObject();
 
     // Setters
@@ -70,6 +70,7 @@ class TextObject : public SceneObject {
     unsigned int projectionId_;
 
     int charPoint_;
+    float lineSpacing_;
 
     mat4 modelMat_;
     vec3 cutoff_;
