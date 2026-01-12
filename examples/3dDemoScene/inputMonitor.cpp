@@ -25,7 +25,6 @@
 #include <ModelImport.hpp>
 #include <AnimationController.hpp>
 // Analog joystick dead zone
-extern const int JOYSTICK_DEAD_ZONE;
 extern GameInstance *currentGame;
 
 #define UPDATE_TRAVEL_VEL travelVel += (inputRay * speed * multiplier)
@@ -116,9 +115,6 @@ void rotateShape(void *target) {
     Sint16 controllerLeftStateX = 0;
     auto tpsCamera = currentGame->getCamera<TPSCameraObject>("tpsCamera");
     auto fpsCamera = currentGame->getCamera<FPSCameraObject>("fpsCamera");
-    // Don't update via SceneObject::update - instead update manually to avoid jitters (overkill for polish)
-    tpsCamera->setHeadless(true);
-    fpsCamera->setHeadless(true);
     currentGame->setActiveCamera("tpsCamera");
     while (!currentGame->isShutDown()) {
         updateAttachStatus();
@@ -294,7 +290,6 @@ void rotateShape(void *target) {
         currentGame->protectedGfxRequest([&] () {
             currentGame->setLuminance(currentLuminance);
             character->setRotation(charAngle);
-            activeCamera->updateInput();
         });
     }
     SDL_GameControllerClose(gameController1);

@@ -11,10 +11,11 @@
  */
 
 #include <InputController.hpp>
-#include <SDL_gamecontroller.h>
+#include <cstdint>
 #include <map>
 #include <mutex>  //NOLINT
 #include <iostream>
+#include <ComplexCameraObject.hpp>
 
 // GameInput maps for input devices
 std::map<SDL_Scancode, GameInput> keyboardInputMap = {
@@ -50,7 +51,11 @@ std::map<Uint8, GameInput> hatInputMap = {
     { SDL_HAT_RIGHT, GameInput::EAST }
 };
 
-InputController::InputController() {
+#define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
+#define TRACK_TRANSFORM TRACKING_SPEED * modifier * deltaTime
+
+InputController::InputController(const VEC(SHD(CameraObject)) &cameras, std::mutex *cameraLock) :
+    cameras_ { cameras }, cameraLock_ { cameraLock } {
     std::cout << "Creating Controllers!\n";
     controllersConnected = 0;
     keystate = SDL_GetKeyboardState(NULL);
@@ -192,4 +197,60 @@ GameInput InputController::hatToInput(Uint8 hatValue) {
         input = cimit->second;
     }
     return input;
+}
+
+void InputController::update() {
+    updateCameraControls();
+}
+
+void InputController::updateCameraControls() {
+    int mouseX, mouseY;
+    float xModifier = 0.0f, yModifier = 0.0f;
+    Sint16 controllerRightStateY = 0;
+    Sint16 controllerRightStateX = 0;
+    // Do nothing in relative mouse mode
+    if (!SDL_GetRelativeMouseMode()) {
+        ignoreFirstUpdate_ = true;
+        return;
+    }
+    // Allow the mouse to capture - prevents jitters when attaching to camera
+    if (ignoreFirstUpdate_) {
+        SDL_GetRelativeMouseState(&mouseX, &mouseY);
+        ignoreFirstUpdate_ = false;
+        return;
+    }
+    SDL_GetRelativeMouseState(&mouseX, &mouseY);
+    /**
+     * Eventually, keyboard and mouse input will be separate from controller input,
+     * but for now we are keeping legacy behavior where kb and mouse take precedence.
+     */
+    std::unique_lock<std::mutex> controllerLock(controllerLock_);
+    if (controllersConnected > 0) {
+        assert(gameControllers[0] != nullptr);
+        controllerRightStateY = SDL_GameControllerGetAxis(gameControllers[0],
+            SDL_CONTROLLER_AXIS_RIGHTY);
+        controllerRightStateX = SDL_GameControllerGetAxis(gameControllers[0],
+            SDL_CONTROLLER_AXIS_RIGHTX);
+    }
+    controllerLock.unlock();
+    xModifier = mouseX / 5.0f;
+    yModifier = mouseY / 5.0f;
+    // Determine which X/Y inputs to send to cameras
+    if (mouseX == 0 && mouseY == 0) {
+        // Convert controller to mouse coordinates
+        // Check for deadzone
+        xModifier = abs(controllerRightStateX) > JOYSTICK_DEAD_ZONE ? controllerRightStateX : 0.0f;
+        yModifier = abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE ? controllerRightStateY : 0.0f;
+        xModifier /= INT16_MAX;  // Normalize between 0 and 1
+        yModifier /= INT16_MAX;
+    }
+    // Send process input to camera
+    std::unique_lock<std::mutex> camLock(*cameraLock_);
+    for (auto camera : cameras_) {
+        // Check if camera is Complex
+        auto compCam = std::dynamic_pointer_cast<ComplexCameraObject>(camera);
+        if (compCam) {
+            compCam->sendInput(xModifier, yModifier);
+        }
+    }
 }

@@ -8,3 +8,4 @@
 
 #pragma once
 #define SHD(x) std::shared_ptr<x>
+#define VEC(x) std::vector<x>

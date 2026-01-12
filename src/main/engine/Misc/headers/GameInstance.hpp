@@ -61,8 +61,8 @@ class GameInstance {
     SDL_Renderer *renderer;
     SDL_Event event;
     SDL_GLContext mainContext;
-    vector<std::shared_ptr<CameraObject>> cameras_;
-    std::shared_ptr<CameraObject> activeCamera_;
+    vector<SHD(CameraObject)> cameras_;
+    SHD(CameraObject) activeCamera_;
     vector<string> vertShaders_;
     vector<string> fragShaders_;
     vector<string> texturePathStage_;
@@ -79,12 +79,13 @@ class GameInstance {
     mutex requestLock_;
     mutex inputLock_;
     mutex progressLock_;
+    mutex cameraLock_;
     std::condition_variable inputCv_;
     std::condition_variable progressCv_;
     queue<std::function<void(void)>> protectedGfxReqs_;
     queue<GameInput> inputQueue_;
     bool audioInitialized_ = false;
-    std::shared_ptr<GameScene> activeScene_;
+    SHD(GameScene) activeScene_;
     map<string, std::shared_ptr<GameScene>> gameScenes_;
 
     void initWindow();

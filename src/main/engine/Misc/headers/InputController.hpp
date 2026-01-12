@@ -12,11 +12,17 @@
 
 #pragma once
 
+#include <vector>
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
+#include <studious_utility.hpp>
+#include <CameraObject.hpp>
+#include <GameScene.hpp>
 
 #include <mutex> //NOLINT
+
+#define JOYSTICK_DEAD_ZONE 4000
 
 enum class GameInput {
     NONE,
@@ -49,11 +55,14 @@ class InputController {
     int controllersConnected;
     SDL_GameController *gameControllers[2];
     controllerReadout controllerInfo[2];
+    bool ignoreFirstUpdate_ = true;
+    const VEC(SHD(CameraObject)) &cameras_;
 
     std::mutex controllerLock_;
+    std::mutex *cameraLock_;
 
  public:
-    InputController();
+    InputController(const VEC(SHD(CameraObject)) &cameras, std::mutex *cameraLock);
     ~InputController();
     /**
      * @brief Can be used to check raw SDL scancode values. This has the same behavior as the previous
@@ -116,4 +125,8 @@ class InputController {
     void resetController();
 
     void initController();
+
+    void update();
+
+    void updateCameraControls();
 };

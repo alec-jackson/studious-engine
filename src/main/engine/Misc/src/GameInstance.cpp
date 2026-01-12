@@ -527,6 +527,7 @@ int GameInstance::update() {
     error = updateObjects();
     error |= updateWindow();
     updateInput();
+    inputController->update();
     animationController_->update();
     physicsController_->update();
     end = SDL_GetPerformanceCounter();
@@ -723,7 +724,7 @@ void GameInstance::processConfig(const StudiousConfig &config) {
 
     animationController = std::make_unique<AnimationController>();
     physicsController = std::make_unique<PhysicsController>(physThreads);
-    inputController = std::make_unique<InputController>();
+    inputController = std::make_unique<InputController>(cameras_, &cameraLock_);
 
     // Populate internal pointers to keep things easy
     gfxController_ = gfxController.get();
