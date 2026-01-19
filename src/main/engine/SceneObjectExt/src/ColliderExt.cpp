@@ -8,21 +8,40 @@
 #include <ColliderExt.hpp>
 #include <ColliderObject.hpp>
 
-ColliderObject *ColliderExt::getCollider() {
-    auto res = collider_.get();
+VEC(SHD(ColliderObject)) ColliderExt::getColliders() {
     // So, we don't actually want to update the collider here. When run in parallel, there are writes
     // happening to the center_ mid-read.
+    return colliders_;
+}
+
+int ColliderExt::getCollision(SHD(ColliderExt) other) {
+    int res = 0; // No collision by default
+    auto otherColliders = other->getColliders();
+    for (auto &collider : colliders_) {
+        // This is going to be n^2, but hopefully we can break early
+        for (auto &oCollider : otherColliders) {
+            int coll = collider->getCollision(oCollider);
+            // Break early if a sub-collider is colliding
+            if (coll != 0) {
+                res = coll;
+                break;
+            }
+        }
+        if (res != 0) break;
+    }
+    // Sample collision across all subcolliders
     return res;
 }
 
-int ColliderExt::getCollision(ColliderExt *other) {
-    return collider_->getCollision(other->getCollider());
-}
-
-int ColliderExt::getCollisionRaw(vec3 p1, ColliderExt *c1, vec3 p2, ColliderExt *c2) {
-    return ColliderObject::getCollisionRaw(p1, c1->getCollider(), p2, c2->getCollider());
+int ColliderExt::getCollisionRaw(vec3 p1, SHD(ColliderExt) c1, vec3 p2, SHD(ColliderExt) c2) {
+    auto theseColliders = c1->getColliders();
+    auto otherColliders = c2->getColliders();
+    bool valid = !theseColliders.empty() && !otherColliders.empty();
+    return valid ? ColliderObject::getCollisionRaw(p1, c1->getColliders().front(), p2, c2->getColliders().front()) : 0;
 }
 
 void ColliderExt::updateCollider() {
-    if (collider_.get() != nullptr) collider_->updateCollider();
+    for (auto &collider : colliders_) {
+        collider->updateCollider();
+    }
 }

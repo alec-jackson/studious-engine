@@ -158,7 +158,7 @@ int AnimationController::addKeyFrameEntry(KeyFrameEntry kfEntry) {
     return addKeyFrame(kfEntry.target, kfEntry.keyFrame);
 }
 
-int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame) {
+int AnimationController::addKeyFrame(SHD(SceneObject) target, SHD(KeyFrame) keyFrame) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto targetName = target->objectName();
     // Check if the target object exists in the keyframestore
@@ -181,7 +181,7 @@ int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFra
     return kfQueueSize;
 }
 
-UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf,
+UpdateData<float> AnimationController::updateKeyFrame(SHD(SceneObject) target, SHD(KeyFrame) currentKf,
     float timeChange) {
     // If this is a brand new keyframe, set original values...
     if (currentKf->isNew) {
@@ -287,7 +287,7 @@ void AnimationController::update() {
     }
 }
 
-int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame) {
+int AnimationController::updatePosition(SHD(SceneObject) target, SHD(KeyFrame) keyFrame) {
     // Only update if the keyframe type has POSITION
     if (!(keyFrame->type & UPDATE_POS)) {
         return POSITION_MET;
@@ -302,7 +302,7 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
     return (result.updateComplete_) ? POSITION_MET : UPDATE_NOT_COMPLETE;
 }
 
-int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame) {
+int AnimationController::updateRotation(SHD(SceneObject) target, SHD(KeyFrame) keyFrame) {
     // Only update if the keyframe type has POSITION
     if (!(keyFrame->type & UPDATE_ROTATION)) {
         return ROTATION_MET;
@@ -317,7 +317,7 @@ int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame)
     return (result.updateComplete_) ? ROTATION_MET : UPDATE_NOT_COMPLETE;
 }
 
-int AnimationController::updateScale(SceneObject *target, KeyFrame *keyFrame) {
+int AnimationController::updateScale(SHD(SceneObject) target, SHD(KeyFrame) keyFrame) {
     // Only update if the keyframe type has POSITION
     if (!(keyFrame->type & UPDATE_SCALE)) {
         return SCALE_MET;
@@ -332,7 +332,7 @@ int AnimationController::updateScale(SceneObject *target, KeyFrame *keyFrame) {
     return (result.updateComplete_) ? SCALE_MET : UPDATE_NOT_COMPLETE;
 }
 
-int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) {
+int AnimationController::updateStretch(SHD(SceneObject) target, SHD(KeyFrame) keyFrame) {
     // Only update if the keyframe type is stretch
     if (!(keyFrame->type & UPDATE_STRETCH)) {
         return STRETCH_MET;

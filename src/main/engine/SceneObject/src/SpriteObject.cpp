@@ -100,7 +100,11 @@ void SpriteObject::render() {
     gfxController_->drawTriangles(6);
     gfxController_->bindVao(0);
     gfxController_->bindTexture(0, GfxTextureType::NORMAL);
-    if (collider_.use_count() > 0) collider_.get()->update();
+    if (!colliders_.empty()) {
+        for (auto &collider : colliders_) {
+            collider->update();
+        }
+    }
 }
 
 void SpriteObject::update() {

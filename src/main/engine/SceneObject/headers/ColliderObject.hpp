@@ -14,10 +14,12 @@
 #include <string>
 #include <memory>
 #include <atomic>
+#include <vector>
 #include <Polygon.hpp>
 #include <SceneObject.hpp>
 #include <GfxController.hpp>
 #include <common.hpp>
+#include <studious_utility.hpp>
 
 #define X_MATCH 1
 #define Y_MATCH 2
@@ -28,14 +30,14 @@
 
 class ColliderObject : public SceneObject {
  public:
-    ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner);
+    ColliderObject(SHD(Model) targetModel, uint programId, SceneObject *owner);
     ColliderObject(const vector<float> &vertTexData, uint programId, SceneObject *owner);
     void updateCollider();
     void render() override;
     void update() override;
     void createCollider();
     static vec4 createCenter(const mat4 &tm, const mat4 &sm, ColliderObject *col);
-    int getCollision(ColliderObject *object);
+    int getCollision(SHD(ColliderObject) object);
     float getColliderVertices(vector<float> vertices, int axis, bool (*test)(float a, float b));
     inline vec4 center() { return center_; }
     inline vec4 offset() { return offset_; }
@@ -47,7 +49,7 @@ class ColliderObject : public SceneObject {
     inline const mat4 &pScaleMatrix() { return pScaleMatrix_; }
     inline const vec4 &minPoints() { return minPoints_; }
     inline const vec4 &originalCenter() { return originalCenter_; }
-    static int getCollisionRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2);
+    static int getCollisionRaw(vec3 p1, SHD(ColliderObject) c1, vec3 p2, SHD(ColliderObject) c2);
     static vec4 createOffset(const mat4 &tm, const mat4 &sm, const vec4 &center, ColliderObject *col);
 
  private:
@@ -56,11 +58,15 @@ class ColliderObject : public SceneObject {
     vec4 center_;
     vec4 originalCenter_;
     std::shared_ptr<Polygon> poly_;
-    std::shared_ptr<Polygon> target_;
+    std::shared_ptr<Model> targetModel_;
     // Use references to the parent object's transform matrices
     const mat4 &pTranslateMatrix_;
     const mat4 &pScaleMatrix_;
     const mat4 &pVpMatrix_;
     int mvpId_;
     inline static std::atomic<bool> drawCollider_;
+};
+
+namespace ColliderFN {
+VEC(SHD(ColliderObject)) createColliders(SHD(Polygon) target, uint programId, SceneObject *owner);
 };

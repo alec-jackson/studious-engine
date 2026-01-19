@@ -8,14 +8,15 @@
 #pragma once
 #include <memory>
 #include <ColliderObject.hpp>
+#include <studious_utility.hpp>
 
 class ColliderExt {
  public:
-    ColliderObject *getCollider();
-    int getCollision(ColliderExt *other);
+    VEC(SHD(ColliderObject)) getColliders();
+    int getCollision(SHD(ColliderExt) other);
     void updateCollider();
     virtual void createCollider() = 0;
-    static int getCollisionRaw(vec3 p1, ColliderExt *c1, vec3 p2, ColliderExt *c2);
+    static int getCollisionRaw(vec3 p1, SHD(ColliderExt) c1, vec3 p2, SHD(ColliderExt) c2);
  protected:
-    std::shared_ptr<ColliderObject> collider_;
+    VEC(SHD(ColliderObject)) colliders_;
 };

@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "ColliderObject.hpp"
 #include <GameObject2D.hpp>
 #include <string>
 #include <cstdio>
@@ -107,5 +108,10 @@ void GameObject2D::createCollider() {
             COLLIDEROBJECT_PROG_NAME);
         return;
     }
-    collider_ = std::make_shared<ColliderObject>(vertTexData_, colliderProg.get(), this);
+    /**
+     * For now, 2D objects will only have a single collider. Clearing the vector of previous
+     * colliders to prevent any accidental collision duplication.
+     */
+    colliders_.clear();
+    colliders_.push_back(std::make_shared<ColliderObject>(vertTexData_, colliderProg.get(), this));
 }

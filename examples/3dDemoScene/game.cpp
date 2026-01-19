@@ -130,7 +130,7 @@ int runtime() {
     auto playerRef = currentGame->createGameObject(playerPoly, vec3(0.0f, 0.0f, -1.0f),
         vec3(0.0f, 0.0f, 0.0f), 0.5f, "player");
     playerRef->setVisible(true);
-    vector<SceneObject *> companions;
+    VEC(SHD(SceneObject) companions;
     companions.push_back(currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, 2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion"));
     companions.push_back(currentGame->createGameObject(companionPoly, vec3(0.0f, 1.5f, -2.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion2"));
     companions.push_back(currentGame->createGameObject(companionPoly, vec3(2.0f, 1.5f, 0.0f), vec3(0.0f, 270.0f, 0.0f), 0.5f, "companion3"));

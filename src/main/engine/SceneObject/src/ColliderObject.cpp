@@ -31,10 +31,10 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
-    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), target_ { target },
-    pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
-    pVpMatrix_ { owner->vpMatrix() } {
+ColliderObject::ColliderObject(SHD(Model) targetModel, uint programId, SceneObject *owner) :
+    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()),
+    targetModel_ { targetModel }, pTranslateMatrix_ { owner->translateMatrix() },
+    pScaleMatrix_ { owner->scaleMatrix() }, pVpMatrix_ { owner->vpMatrix() } {
     programId_ = programId;
     createCollider();
 }
@@ -59,8 +59,7 @@ ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int pr
         }
         vertices.push_back(vertTexData.at(i));
     }
-    target_ = std::make_shared<Polygon>();
-    target_.get()->modelMap["generatedCollider"] = std::make_shared<Model>(vertices.size() / 3, vertices);
+    targetModel_ = std::make_shared<Model>(vertices.size() / 3, vertices);
     createCollider();
 }
 
@@ -166,18 +165,16 @@ void ColliderObject::createCollider() {
     // Set MVP ID for collider object
     mvpId_ = gfxController_->getShaderVariable(programId_, "MVP").get();
     // Go through objects and get absolute min/max points
-    for (auto &model : target_.get()->modelMap) {
-        for (int i = 0; i < 3; i++) {
-            // Calculate min
-            tempMin[i] = getColliderVertices((model.second.get()->vertices), i, [](float a, float b) { return a < b; });
-            // Calculate max
-            tempMax[i] = getColliderVertices((model.second.get()->vertices), i, [](float a, float b) { return a > b; });
-            if (tempMin[i] < min[i]) {
-                min[i] = tempMin[i];
-            }
-            if (tempMax[i] > max[i]) {
-                max[i] = tempMax[i];
-            }
+    for (int i = 0; i < 3; i++) {
+        // Calculate min
+        tempMin[i] = getColliderVertices((targetModel_->vertices), i, [](float a, float b) { return a < b; });
+        // Calculate max
+        tempMax[i] = getColliderVertices((targetModel_->vertices), i, [](float a, float b) { return a > b; });
+        if (tempMin[i] < min[i]) {
+            min[i] = tempMin[i];
+        }
+        if (tempMax[i] > max[i]) {
+            max[i] = tempMax[i];
         }
     }
     // Manually build triangles for cube collider
@@ -315,4 +312,18 @@ vec3 ColliderObject::getEdgePointPosInf(ColliderObject *object) {
     vec3 normalizedDistance = x1_delta / vec3(highestDistance);
     result = edgePoint * normalizedDistance;
     return result;  // Return half - the idea is that the other object will get the other half of this value...
+}
+
+namespace ColliderFN {
+
+VEC(SHD(ColliderObject)) createColliders(SHD(Polygon) target, uint programId, SceneObject *owner) {
+    VEC(SHD(ColliderObject)) colliders;
+    // Loop through the subobjects in the target and create colliders for them
+    for (auto model : target->modelMap) {
+        printf("ColliderFN::createColliders: Creating collider | %s[%s]\n",
+            owner->objectName().c_str(), model.first.c_str());
+        colliders.push_back(std::make_shared<ColliderObject>(model.second, programId, owner));
+    }
+    return colliders;
+}
 }

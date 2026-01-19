@@ -155,7 +155,7 @@ void GameObject::createCollider() {
             COLLIDEROBJECT_PROG_NAME);
         return;
     }
-    collider_ = std::make_shared<ColliderObject>(this->getModel(), colliderProg.get(), this);
+    colliders_ = ColliderFN::createColliders(getModel(), colliderProg.get(), this);
 }
 
 void GameObject::update() {
@@ -195,5 +195,9 @@ void GameObject::render() {
         gfxController_->drawTriangles(modelPair.second.get()->pointCount * 3);
         gfxController_->bindVao(0);
     }
-    if (collider_.use_count() > 0) collider_.get()->update();
+    if (!colliders_.empty()) {
+        for (auto &collider : colliders_) {
+            collider->update();
+        }
     }
+}

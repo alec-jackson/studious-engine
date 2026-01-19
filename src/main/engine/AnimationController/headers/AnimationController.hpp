@@ -128,26 +128,26 @@ struct KeyFrame {
 
 struct KeyFrames {
     std::queue<std::shared_ptr<KeyFrame>> kQueue;
-    SceneObject *target;
+    SHD(SceneObject) target;
 };
 
 struct KeyFrameEntry {
     SHD(KeyFrame) keyFrame;
-    SceneObject *target;
+    SHD(SceneObject) target;
 };
 
 class AnimationController {
  public:
-    int addKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> keyFrame);
+    int addKeyFrame(SHD(SceneObject) target, std::shared_ptr<KeyFrame> keyFrame);
     int addKeyFrameEntry(KeyFrameEntry kfEntry);
-    void addTrack(TrackExt *target, string trackName, vector<int> trackData, int fps, bool loop);
+    void addTrack(SHD(TrackExt) target, string trackName, vector<int> trackData, int fps, bool loop);
     void update();
-    UpdateData<float> updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, float timeChange);
-    int updatePosition(SceneObject *target, KeyFrame *keyFrame);
-    int updateRotation(SceneObject *target, KeyFrame *keyFrame);
-    int updateScale(SceneObject *target, KeyFrame *keyFrame);
-    int updateStretch(SceneObject *target, KeyFrame *keyFrame);
-    int updateText(SceneObject *target, KeyFrame *keyFrame);
+    UpdateData<float> updateKeyFrame(SHD(SceneObject) target, SHD(KeyFrame) currentKf, float timeChange);
+    int updatePosition(SHD(SceneObject) target, SHD(KeyFrame) keyFrame);
+    int updateRotation(SHD(SceneObject) target, SHD(KeyFrame) keyFrame);
+    int updateScale(SHD(SceneObject) target, SHD(KeyFrame) keyFrame);
+    int updateStretch(SHD(SceneObject) target, SHD(KeyFrame) keyFrame);
+    int updateText(SHD(SceneObject) target, SHD(KeyFrame) keyFrame);
     int updateTime(KeyFrame *keyFrame);
     /**
      * @brief Processes the color keyframe if applicable using deltaTime.
@@ -156,8 +156,8 @@ class AnimationController {
      * @return COLOR_MET if keyframe has completed, or UPDATE_NOT_COMPLETE otherwise. COLOR_MET is also
      * returned when a color change does not exist for the current keyframe.
      */
-    int updateColor(SceneObject *target, KeyFrame *keyFrame);
-    int updateTint(SceneObject *target, KeyFrame *keyFrame);
+    int updateColor(SHD(SceneObject) target, SHD(KeyFrame) keyFrame);
+    int updateTint(SHD(SceneObject) target, SHD(KeyFrame) keyFrame);
     bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
