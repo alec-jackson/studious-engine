@@ -26,11 +26,11 @@ class CameraObject : public SceneObject {
     // Setters
     inline void setOffset(vec3 offset) { offset_ = offset; }
     inline void setAspectRatio(float aspectRatio) { aspectRatio_ = aspectRatio; }
-    inline void setTarget(SceneObject *target) { target_ = target; }
+    inline void setTarget(SHD(SceneObject) target) { target_ = target; }
 
     // Getters
     inline vec3 getOffset() { return offset_; }
-    inline SceneObject *getTarget() { return target_; }
+    inline SHD(SceneObject) getTarget() { return target_; }
     inline float getAspectRatio() { return aspectRatio_; }
     inline mat4 getPerspective() const { return vpMatrixPerspective_; }
     inline mat4 getOrthographic() const { return vpMatrixOrthographic_; }
@@ -42,7 +42,7 @@ class CameraObject : public SceneObject {
 
  protected:
     void resetRenderPriorityMap_();
-    SceneObject *target_;
+    SHD(SceneObject) target_;
     vec3 offset_;
     vec3 initialTargetPos_;
     mat4 vpMatrixPerspective_;

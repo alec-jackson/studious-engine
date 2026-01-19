@@ -150,11 +150,11 @@ class GameInstance {
     int stopSound(string sfxName);
     void changeWindowMode(int mode);
     int destroySceneObject(SceneObject *object);
-    SceneObject *getSceneObject(string objectName);
+    SHD(SceneObject) getSceneObject(string objectName);
     CameraObject *getCamera(string cameraName);
 
     template<typename T>
-    inline T *getSceneObject(string objectName) { return dynamic_cast<T*>(getSceneObject(objectName)); }
+    inline SHD(T) getSceneObject(string objectName) { return std::dynamic_pointer_cast<T>(getSceneObject(objectName)); }
     template<typename T>
     inline T *getCamera(string cameraName) { return dynamic_cast<T*>(getCamera(cameraName)); }
     int removeSceneObject(string objectName);

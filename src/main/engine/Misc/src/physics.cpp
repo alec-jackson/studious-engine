@@ -255,7 +255,7 @@ TLDR; should somewhat resemble reality
  * @param gameObject to add to the list
  * @return PhysicsResult returns PHYS_OK
  */
-PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, PhysicsParams params) {
+PhysicsResult PhysicsController::addSceneObject(SHD(SceneObject) sceneObject, PhysicsParams params) {
     // Retrieve the exclusive lock for the game object list
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
 

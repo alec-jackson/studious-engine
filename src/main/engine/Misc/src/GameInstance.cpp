@@ -495,8 +495,8 @@ TileObject *GameInstance::createTileMap(map<string, string> textures, vector<Til
     return addSceneObject(tile) ? tile.get() : nullptr;
 }
 
-SceneObject *GameInstance::getSceneObject(string objectName) {
-    SceneObject *result = nullptr;
+SHD(SceneObject) GameInstance::getSceneObject(string objectName) {
+    SHD(SceneObject) result;
     // Attempt to find the scene object in the current scene
     if (!activeScene_.get()) {
         fprintf(stderr,
@@ -504,7 +504,7 @@ SceneObject *GameInstance::getSceneObject(string objectName) {
             objectName.c_str());
         return result;
     }
-    result = activeScene_.get()->getSceneObject(objectName).get();
+    result = activeScene_->getSceneObject(objectName);
     return result;
 }
 
