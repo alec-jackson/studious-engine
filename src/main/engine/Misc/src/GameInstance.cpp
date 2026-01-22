@@ -392,6 +392,33 @@ GameObject *GameInstance::createGameObject(std::shared_ptr<Polygon> characterMod
     return addSceneObject(gameObject) ? gameObject.get() : nullptr;
 }
 
+VEC(GameObject *) GameInstance::createGameObjectBatch(SHD(Polygon) characterModel, vec3 position, vec3 rotation,
+    float scale, string objectName) {
+    VEC(GameObject *) objects;
+    int index = 0;
+    printf("GameInstance::createGameObjectBatch: Creating batch GameObjects %s\n", objectName.c_str());
+    auto gameObjProg = gfxController_->getProgramId(GAMEOBJECT_PROG_NAME);
+    if (!gameObjProg.isOk()) {
+        fprintf(stderr,
+            "GameInstance::createGameObject: Failed to create GameObject! '%s' program does not exist!\n",
+            GAMEOBJECT_PROG_NAME);
+        return objects;
+    }
+    // Create a game object for each model+material pair in the Polygon
+    for (auto &entry : characterModel->modelMap) {
+        auto mit = characterModel->materialMap.find(entry.second->materialName);
+        auto subPoly = std::make_shared<Polygon>();
+        if (mit != characterModel->materialMap.end()) {
+            subPoly->materialMap.insert(*mit);
+        }
+        subPoly->modelMap.insert(entry);
+        objects.push_back(createGameObject(subPoly, position, rotation, scale, objectName + entry.first + "." + std::to_string(index++)));
+    }
+    printf("GameInstance::createGameObjectBatch:[%s] Created %lu objects\n", objectName.c_str(),
+        objects.size());
+    return objects;
+}
+
 CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping, string cameraName) {
     printf("GameInstance::createCamera: Creating CameraObject %s\n", cameraName.c_str());

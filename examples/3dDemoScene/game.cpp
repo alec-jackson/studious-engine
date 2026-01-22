@@ -115,8 +115,19 @@ int runtime() {
 
     auto mapPoly = ModelImport::createPolygonFromFile("src/resources/models/Forest Scene Tri.obj");
 
-    currentGame->createGameObject(mapPoly,
+    auto mapObjects = currentGame->createGameObjectBatch(mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 1.0f, "map");
+
+    // Generate a collider for each object
+    for (auto object : mapObjects) {
+        object->createCollider();
+        physicsController->addSceneObject(object, {
+            .isKinematic = false,
+            .obeyGravity = false,
+            .elasticity = 0.0f,
+            .mass = 5.0f
+        });
+    }
 
     cout << "Creating Player\n";
 
@@ -285,9 +296,26 @@ int mainLoop() {
     int error = 0;
     vector<double> times;
     auto fpsText = currentGame->getSceneObject<TextObject>("fps-text");
+    auto player = currentGame->getSceneObject("player");
+    vec3 lastPos = vec3(0);
+    auto posText = currentGame->createText(
+        "Textbox Example",
+        vec3(600.0f, 0.0f, 0.0f),
+        0.6f,
+        "src/resources/fonts/AovelSans.ttf",
+        1.0f,
+        48,
+        0,
+        "posText");
     while (!currentGame->isShutDown()) {
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
+        // Get the player's position
+        auto pos = player->getPosition();
+#define TSTR(x) std::to_string(x)
+        if (pos != lastPos)
+            posText->setMessage("posText: X(" + TSTR(pos.x) + ") Y(" + TSTR(pos.y) + ") Z(" + TSTR(pos.z));
+        lastPos = pos;
         if (error) {
             return error;
         }

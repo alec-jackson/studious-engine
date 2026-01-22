@@ -15,7 +15,7 @@
 #include <iostream>
 #include <memory>
 
-#define EPSILON 1e-6
+#define EPSILON 1e-2
 
 /** @todo Update - this is the old struct info
  * @brief Stores info about a GameObject's internal collider object.
@@ -264,6 +264,48 @@ float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
         }
     }
     return currentMin;
+}
+
+vec3 ColliderObject::getEdgePointRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2, vec3 epSign) {
+    vec3 result(0);
+    // Center = critical section?
+    if (c1 == nullptr || c2 == nullptr) {
+        cerr << "Error: Cannot get collision for NULL GameObjects!\n";
+        return result;
+    }
+    auto tm1 = glm::translate(mat4(1.0f), p1);
+    auto sm1 = c1->pScaleMatrix();
+    auto center1 = createCenter(tm1, sm1, c1);
+    auto offset1 = c1->offset();
+
+    auto tm2 = glm::translate(mat4(1.0f), p2);
+    auto sm2 = c2->pScaleMatrix();
+    auto center2 = createCenter(tm2, sm2, c2);
+    auto offset2 = c2->offset();
+
+    auto deltaBase = center1 - center2;
+    auto range = offset1 + offset2;
+
+    vec4 delta = abs(deltaBase);
+    vec3 edgePoint = vec3(range - delta);
+    for (int i = 0; i < 3; ++i) {
+        // Do this more efficiently
+        if ((epSign[i] > 0.0f && deltaBase[i] < 0.0f) ||
+            (epSign[i] < 0.0f && deltaBase[i] > 0.0f)) {
+            /**
+             * This is a special case where a single update results in our current object moving PASSED
+             * the center of the other object we're testing collision on. This creates a contradition
+             * between delta and epSign's sign. For proper behavior, we will add the range (both offsets)
+             * to the edge point for this axis. Realistically, this shouldn't really manifest itself as a
+             * glitch in production, but it ensures that we pop out of the other object properly. Otherwise
+             * we may see excessive collisions before the object is properly corrected. This should also
+             * reduce jerkiness of object's colliding in this case.
+             */
+            edgePoint[i] += range[i];
+        }
+    }
+    result = edgePoint;
+    return result;
 }
 
 vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 epSign) {

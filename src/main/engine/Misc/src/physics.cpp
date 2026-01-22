@@ -77,12 +77,15 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
          * If no objects are kinematic, then they phase through each other.
          */
         // What do we do when we see a collision?
-        int collState = targetCollider->getCollision(obj.second.get()->targetCollider);
+        auto tempPos = target->getPosition() + positionDelta;
+        int collState = ColliderExt::getCollisionRaw(tempPos, targetCollider,
+            obj.second->target->getPosition(), obj.second->targetCollider);
         if (collState != ALL_MATCH) continue;
         // Figure out the change in axis (which axis we are now colliding on)
         int prevCollState = ColliderExt::getCollisionRaw(prevPos,
-            targetCollider, obj.second->target->getPosition(), obj.second->targetCollider);
+            targetCollider, obj.second->prevPos, obj.second->targetCollider);
         int deltaAxis = collState ^ prevCollState;
+        bool updateVelocity = false;
         // Test the collision with the two object's previous positions to get the collstate delta.
         // If the objects match, then we need to know what the deltaAxis were...
         // Don't update non-kinematic objects
@@ -97,6 +100,8 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             // Only change velocity if the other object is kinematic
             auto v1f = v1;
             if (obj.second->isKinematic) {
+                updateVelocity = true;
+                assert(false);
                 v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
             }
 #if (PHYS_TRACE == 1)
@@ -104,20 +109,36 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
             printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
             printf("pos: %f, %f, %f\n", target->getPosition().x, target->getPosition().y, target->getPosition().z);
+            printf("otherPos: %f, %f, %f\n", obj.second->target->getPosition().x, obj.second->target->getPosition().y, obj.second->target->getPosition().z);
             printf("prevPos: %f, %f, %f\n", prevPos.x, prevPos.y, prevPos.z);
+            printf("tempPos: %f, %f, %f\n", tempPos.x, tempPos.y, tempPos.z);
 #endif
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
-            vec3 epSign = sign(prevPos - obj.second->position);
-            auto edgePoint = targetCollider->getCollider()->getEdgePoint(
-                obj.second->targetCollider->getCollider(), epSign);
+            /**
+             * Traveling in X negative (collision on X+ face) is completely FUCKED!!! Figure out why. It's only X. Z is fine.
+             * Actually, traveling in Z+ is sometimes F'd.
+             */
+            // epSign tells us which direction we are relative to the object we collided with
+            vec3 epSign = sign((targetCollider->getCenter() + positionDelta) - obj.second->targetCollider->getCenter());
+#if (PHYS_TRACE == 1)
+            printf("epSign: %f, %f, %f\n", epSign.x, epSign.y, epSign.z);
+#endif
+            auto edgePoint = targetCollider->getCollider()->getEdgePointRaw(tempPos, targetCollider->getCollider(),
+                obj.second->target->getPosition(), obj.second->targetCollider->getCollider(), epSign);
             // Sign edge point values based on previous position
             edgePoint *= epSign;
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
-                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
-                    obj.second->targetCollider->getCollider());
+                // Avoid this base case
+                // edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
+                //     obj.second->targetCollider->getCollider());
+                assert(false);
+                ColliderExt::getCollisionRaw(tempPos, targetCollider,
+                    obj.second->target->getPosition(), obj.second->targetCollider);
+                ColliderExt::getCollisionRaw(prevPos,
+                    targetCollider, obj.second->prevPos, obj.second->targetCollider);
             } else {
                 // Make edge point zero except for delta axis directions.
                 // This is a basic approach - revisit later
@@ -130,14 +151,23 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             }
             if (!obj.second->isKinematic) {
                 // We could modify velocity here, but I honestly don't care about collision spam rn
+                //edgePoint *= 2.0f;
             } else {
+                // I think this is the problem
                 edgePoint /= 2.0f;
             }
-            objLock.lock();
-            velocityDelta += v1f;
-            positionDelta += edgePoint;
-            hasCollision = true;
-            objLock.unlock();
+#if (PHYS_TRACE == 1)
+            printf("Edge point: %f, %f, %f\n", edgePoint.x, edgePoint.y, edgePoint.z);
+#endif
+            // UPDATE VALUES
+            {
+                std::unique_lock<std::mutex> scopeLock(objLock);
+                if (updateVelocity) {
+                    velocityDelta += v1f;
+                }
+                positionDelta += edgePoint;
+                hasCollision = true;
+            }
         }
     }
 }
@@ -149,15 +179,25 @@ void PhysicsObject::updateFinalize() {
 #endif
     if (!hasCollision) return;
     auto truePos = target->getPosition();
-
-    target->setPosition(truePos + positionDelta);
+    auto newPos = truePos + positionDelta;
+    target->setPosition(newPos);
     flushPosition();
     runningTime = 0.0f;
     velocity = velocityDelta;
 #if (PHYS_TRACE == 1)
     printf("PhysicsObject::finalizeCollisions: Updated velocity for %s (%f, %f, %f)\n", target->objectName().c_str(),
         velocity.x, velocity.y, velocity.z);
+    printf("PhysicsObject::finalizeCollisions: Updated pos for %s (%f, %f, %f)\n", target->objectName().c_str(),
+        newPos.x, newPos.y, newPos.z);
+    printf("PhysicsObject::finalizeCollisions: Old pos for %s (%f, %f, %f)\n", target->objectName().c_str(),
+        truePos.x, truePos.y, truePos.z);
 #endif
+    /** For later: Sanitize the collision either in the finalization loop or in update collision. What we're seeing
+     * in the map data is when 4 objects share the same position data, our position to update is multiplied by four.
+     * This causes the player to teleport pretty far forwards. While this is a bit glitchy, we should program
+     * defensively against things like this. Instead of adding the delta position, maybe we can do some passes over
+     * to determine how far is too much.
+     */
     acceleration = vec3(0.0f);
     velocityDelta = vec3(0.0f);
     positionDelta = vec3(0.0f);

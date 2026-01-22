@@ -119,6 +119,8 @@ class GameInstance {
     void init();
     GameObject *createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
+    VEC(GameObject *) createGameObjectBatch(SHD(Polygon) characterModel, vec3 position, vec3 rotation,
+        float scale, string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping, string cameraName);
     TPSCameraObject *createTPSCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
