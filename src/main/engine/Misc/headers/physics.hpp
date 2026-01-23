@@ -25,7 +25,7 @@
 #include <ColliderExt.hpp>
 #include <glm/fwd.hpp>
 
-#define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
+#define SUBSCRIPTION_PARAM std::function<PhysicsReport *(void)>
 #define PHYS_MAX_THREADS 256
 #define PHYS_TRACE 1
 #define MAX_PHYSICS_UPDATE_TIME 10.0f
@@ -34,6 +34,7 @@
 // Default thread count when not defined
 #define PHYS_THREADS 1
 #endif
+#define GRAVITY_CONST 9.81f
 
 enum PhysicsWorkType {
     POSITION,
@@ -62,6 +63,7 @@ class PhysicsObject {
     float                elasticity;
     float                mass;
     double               runningTime;
+    double               gravTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
     std::mutex           objLock;
     /**
@@ -106,9 +108,9 @@ struct PhysicsReport {
 };
 
 struct PhysicsSubscriber {
-    inline PhysicsSubscriber(string name, SUBSCRIPTION_PARAM) : name(name), callback(callback) {}
+    inline PhysicsSubscriber(string n, SUBSCRIPTION_PARAM cb) : name(n), callback(cb) {}
     string name;
-    SUBSCRIPTION_PARAM;
+    SUBSCRIPTION_PARAM callback;
 };
 
 enum class PhysicsResult {
@@ -156,11 +158,11 @@ class PhysicsController {
      * @return PhysicsResult::OK when an object is discovered and has its position set. Otherwise,
      * PhysicsResult::FAILURE is returned and no objects are changed.
      */
-    PhysicsResult setPosition(string objectName, vec3 position);
-    PhysicsResult setVelocity(string objectName, vec3 velocity);
-    PhysicsResult setAcceleration(string objectName, vec3 acceleration);
-    PhysicsResult applyForce(string objectName, vec3 force);
-    PhysicsResult applyInstantForce(string objectName, vec3 force);
+    PhysicsResult setPosition(string objectName, vec3 position, bool flush = true);
+    PhysicsResult setVelocity(string objectName, vec3 velocity, bool flush = true);
+    PhysicsResult setAcceleration(string objectName, vec3 acceleration, bool flush = true);
+    PhysicsResult applyForce(string objectName, vec3 force, bool flush = true);
+    PhysicsResult applyInstantForce(string objectName, vec3 force, bool flush = true);
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult schedulePosition();
     PhysicsResult scheduleCollision();
@@ -174,6 +176,7 @@ class PhysicsController {
     inline const map<string, std::shared_ptr<PhysicsObject>> &getPhysicsObjects() { return physicsObjects_; }
     ~PhysicsController();
     static uint getDefaultThreadSize();
+    void subscribeForEvent(string objectName, SUBSCRIPTION_PARAM);
 
  private:
     std::atomic<uint> threadNum_;

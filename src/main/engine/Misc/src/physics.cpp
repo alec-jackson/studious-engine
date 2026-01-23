@@ -20,6 +20,8 @@
 #include <ColliderObject.hpp>
 
 extern double deltaTime;
+string playerVelocity;
+mutex pvMut;
 
 void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
@@ -27,11 +29,21 @@ void PhysicsObject::updatePosition() {
     runningTime += cappedTime;
     // Acceleration
     vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
+    if (target->objectName() == "player") {
+        printf("PLAYER UPDATE\n");
+    }
+    if (obeyGravity) {
+        gravTime += cappedTime;
+        pos += vec3(0.5f) * vec3(0, -GRAVITY_CONST, 0) * vec3(gravTime * gravTime);
+    }
     // Velocity
     pos += (velocity * vec3(runningTime));
     // Position
     pos += position;
-
+    auto effVel = pos - prevPos;
+    pvMut.lock();
+    playerVelocity = "VEL (" + std::to_string(effVel.x) + ", " + std::to_string(effVel.y) + ", " + std::to_string(effVel.z) + ")";
+    pvMut.unlock();
     // Update the position of the target object
     target->setPosition(pos);
     target->updateModelMatrices();
@@ -86,6 +98,7 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             targetCollider, obj.second->prevPos, obj.second->targetCollider);
         int deltaAxis = collState ^ prevCollState;
         bool updateVelocity = false;
+        bool updateGState = false;
         // Test the collision with the two object's previous positions to get the collstate delta.
         // If the objects match, then we need to know what the deltaAxis were...
         // Don't update non-kinematic objects
@@ -116,10 +129,6 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
-            /**
-             * Traveling in X negative (collision on X+ face) is completely FUCKED!!! Figure out why. It's only X. Z is fine.
-             * Actually, traveling in Z+ is sometimes F'd.
-             */
             // epSign tells us which direction we are relative to the object we collided with
             vec3 epSign = sign((targetCollider->getCenter() + positionDelta) - obj.second->targetCollider->getCenter());
 #if (PHYS_TRACE == 1)
@@ -129,16 +138,16 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
                 obj.second->target->getPosition(), obj.second->targetCollider->getCollider(), epSign);
             // Sign edge point values based on previous position
             edgePoint *= epSign;
+            if (deltaAxis == Y_MATCH) {
+                // If you land, reset gravity...
+                updateGState = true;
+            }
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
                 // Avoid this base case
-                // edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
-                //     obj.second->targetCollider->getCollider());
+                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
+                    obj.second->targetCollider->getCollider());
                 assert(false);
-                ColliderExt::getCollisionRaw(tempPos, targetCollider,
-                    obj.second->target->getPosition(), obj.second->targetCollider);
-                ColliderExt::getCollisionRaw(prevPos,
-                    targetCollider, obj.second->prevPos, obj.second->targetCollider);
             } else {
                 // Make edge point zero except for delta axis directions.
                 // This is a basic approach - revisit later
@@ -167,6 +176,11 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
                 }
                 positionDelta += edgePoint;
                 hasCollision = true;
+                if (updateGState) {
+                    gravTime = 0.0f;
+                    flushPosition();
+                    printf("LANDING!\n");
+                }
             }
         }
     }
@@ -313,6 +327,7 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->elasticity = params.elasticity;
     poPtr->mass = params.mass;
     poPtr->runningTime = 0.0;
+    poPtr->gravTime = 0.0;
     poPtr->targetCollider = dynamic_cast<ColliderExt *>(sceneObject);
 
     // Add the object to the physics object list
@@ -479,14 +494,16 @@ PhysicsResult PhysicsController::shutdown() {
     return PhysicsResult::OK;
 }
 
-PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
+PhysicsResult PhysicsController::setPosition(string objectName, vec3 position, bool flush) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         assert(poit->second->target != nullptr);
         poit->second->target->setPosition(position);
-        poit->second->fullFlush();
+        if (flush) {
+            poit->second->fullFlush();
+        }
         result = PhysicsResult::OK;
     } else {
         printf("PhysicsController::setPosition: %s not found", objectName.c_str());
@@ -494,13 +511,15 @@ PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
     return result;
 }
 
-PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
+PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity, bool flush) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         // On velocity change, flush object position and reset time
-        poit->second.get()->fullFlush();
+        if (flush) {
+            poit->second.get()->fullFlush();
+        }
         poit->second.get()->velocity = velocity;
         result = PhysicsResult::OK;
     } else {
@@ -509,13 +528,15 @@ PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
     return result;
 }
 
-PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceleration) {
+PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceleration, bool flush) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         // On acceleration change, flush object position and reset time
-        poit->second.get()->fullFlush();
+        if (flush) {
+            poit->second.get()->fullFlush();
+        }
         poit->second.get()->acceleration = acceleration;
         result = PhysicsResult::OK;
     } else {
@@ -524,12 +545,14 @@ PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceler
     return result;
 }
 
-PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
+PhysicsResult PhysicsController::applyForce(string objectName, vec3 force, bool flush) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
-        poit->second.get()->fullFlush();
+        if (flush) {
+            poit->second.get()->fullFlush();
+        }
         // Check if the mass is zero
         if (0.0 != poit->second.get()->mass) {
             poit->second.get()->acceleration += (force / vec3(poit->second.get()->mass));
@@ -545,12 +568,14 @@ PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
     return result;
 }
 
-PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force) {
+PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force, bool flush) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
-        poit->second.get()->fullFlush();
+        if (flush) {
+            poit->second.get()->fullFlush();
+        }
         // Check if the mass is zero
         if (0.0 != poit->second.get()->mass) {
             float cappedTime = CAP_TIME(deltaTime);
