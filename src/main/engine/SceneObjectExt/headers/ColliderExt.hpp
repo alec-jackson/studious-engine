@@ -14,7 +14,7 @@ class ColliderExt {
     ColliderObject *getCollider();
     int getCollision(ColliderExt *other);
     void updateCollider();
-    virtual void createCollider() = 0;
+    virtual void createCollider(string tag) = 0;
     static int getCollisionRaw(vec3 p1, ColliderExt *c1, vec3 p2, ColliderExt *c2);
     static vec3 getEdgePointRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2, vec3 epSign);
     inline vec3 getCenter() { return collider_->center(); }

@@ -20,8 +20,7 @@
 #include <ColliderObject.hpp>
 
 extern double deltaTime;
-string playerVelocity;
-mutex pvMut;
+extern std::unique_ptr<PhysicsController> physicsController;
 
 void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
@@ -40,10 +39,6 @@ void PhysicsObject::updatePosition() {
     pos += (velocity * vec3(runningTime));
     // Position
     pos += position;
-    auto effVel = pos - prevPos;
-    pvMut.lock();
-    playerVelocity = "VEL (" + std::to_string(effVel.x) + ", " + std::to_string(effVel.y) + ", " + std::to_string(effVel.z) + ")";
-    pvMut.unlock();
     // Update the position of the target object
     target->setPosition(pos);
     target->updateModelMatrices();
@@ -472,6 +467,12 @@ PhysicsResult PhysicsController::waitPipelineComplete() {
     std::unique_lock<std::mutex> scopeLock(workQueueLock_);
     workCompletedSignal_.wait(scopeLock, [this]() { return isPipelineComplete() || shutdown_; });
     return shutdown_ ? PhysicsResult::SHUTDOWN : PhysicsResult::OK;
+}
+
+void PhysicsController::run(std::function<bool(void)> isShutDown) {
+    while (!isShutDown()) {
+        physicsController->update();
+    }
 }
 
 void PhysicsController::update() {

@@ -171,6 +171,7 @@ class PhysicsController {
     inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
     PhysicsResult waitPipelineComplete();
     void update();
+    static void run(std::function<bool(void)> isShutDown);
     PhysicsResult doWork();
     PhysicsResult shutdown();
     inline int hasShutdown() { return shutdown_; }

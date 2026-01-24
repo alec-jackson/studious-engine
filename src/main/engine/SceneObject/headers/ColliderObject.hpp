@@ -28,8 +28,8 @@
 
 class ColliderObject : public SceneObject {
  public:
-    ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner);
-    ColliderObject(const vector<float> &vertTexData, uint programId, SceneObject *owner);
+    ColliderObject(string tag, std::shared_ptr<Polygon> target, uint programId, SceneObject *owner);
+    ColliderObject(string tag, const vector<float> &vertTexData, uint programId, SceneObject *owner);
     void updateCollider();
     void render() override;
     void update() override;
@@ -62,6 +62,7 @@ class ColliderObject : public SceneObject {
     const mat4 &pTranslateMatrix_;
     const mat4 &pScaleMatrix_;
     const mat4 &pVpMatrix_;
+    const string tag_;
     int mvpId_;
     inline static std::atomic<bool> drawCollider_;
 };

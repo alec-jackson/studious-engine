@@ -57,6 +57,13 @@ void GameInstance::init() {
     initAudio();
     inputController->initController();
     initApplication();
+    initPhysics_();
+}
+
+int GameInstance::initPhysics_() {
+    // Start a separate thread that schedules phyiscs updates in parallel
+    physThread_ = std::thread(PhysicsController::run, [this] () { return isShutDown(); });
+    return 0;
 }
 
 /*
@@ -556,7 +563,8 @@ int GameInstance::update() {
     updateInput();
     inputController->update();
     animationController_->update();
-    physicsController_->update();
+    // Try moving physics scheduler to separate thread
+    //physicsController_->update();
     end = SDL_GetPerformanceCounter();
     deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
     std::this_thread::yield();

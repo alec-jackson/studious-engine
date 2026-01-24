@@ -123,7 +123,7 @@ int runtime() {
 
     // Generate a collider for each object
     for (auto object : mapObjects) {
-        object->createCollider();
+        object->createCollider("map");
         physicsController->addSceneObject(object, {
             .isKinematic = false,
             .obeyGravity = false,
@@ -153,7 +153,7 @@ int runtime() {
         companion->setPermanentlyVisible(true);
         playerRef->addChild(companion);
     }
-    playerRef->createCollider();
+    playerRef->createCollider("player");
 
     physicsController->addSceneObject(playerRef, {
         .isKinematic = true,
@@ -184,7 +184,7 @@ int runtime() {
     animationController->addKeyFrame(wolfObject, kf);
     animationController->addKeyFrame(wolfObject, kf1);
 
-    wolfObject->createCollider();
+    wolfObject->createCollider("wolf");
 
     PhysicsParams parms = {
         .isKinematic = false,
@@ -310,15 +310,6 @@ int mainLoop() {
         48,
         0,
         "posText");
-    auto vtObj = currentGame->createText(
-        "Textbox Example",
-        vec3(600.0f, 50.0f, 0.0f),
-        0.6f,
-        "src/resources/fonts/AovelSans.ttf",
-        1.0f,
-        48,
-        0,
-        "velText");
     while (!currentGame->isShutDown()) {
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
@@ -328,9 +319,6 @@ int mainLoop() {
         if (pos != lastPos)
             posText->setMessage("posText: X(" + TSTR(pos.x) + ") Y(" + TSTR(pos.y) + ") Z(" + TSTR(pos.z));
         lastPos = pos;
-        pvMut.lock();
-        vtObj->setMessage(playerVelocity);
-        pvMut.unlock();
         if (error) {
             return error;
         }

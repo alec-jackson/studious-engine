@@ -98,7 +98,7 @@ void GameObject2D::update() {
  *
  * @param programId Program used to render the collider (collider shaders)
  */
-void GameObject2D::createCollider() {
+void GameObject2D::createCollider(string tag) {
     printf("GameObject2D::createCollider: Creating collider for object %s\n", objectName_.c_str());
     auto colliderProg = gfxController_->getProgramId(COLLIDEROBJECT_PROG_NAME);
     if (!colliderProg.isOk()) {
@@ -107,5 +107,5 @@ void GameObject2D::createCollider() {
             COLLIDEROBJECT_PROG_NAME);
         return;
     }
-    collider_ = std::make_shared<ColliderObject>(vertTexData_, colliderProg.get(), this);
+    collider_ = std::make_shared<ColliderObject>(tag, vertTexData_, colliderProg.get(), this);
 }

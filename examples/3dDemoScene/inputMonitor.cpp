@@ -254,7 +254,7 @@ void rotateShape(void *target) {
                 // use the same angle as the direction vector
                 auto bullet = currentGame->createGameObject(imp, character->getPosition(), vec3(0.0f), 1.0f,
                     string("bullet") + std::to_string(bulletCount++));
-                bullet->createCollider();
+                bullet->createCollider("bullet");
             });
             auto bulletName = string("bullet") + std::to_string(bulletCount - 1);
             auto bulletObj = currentGame->getSceneObject(bulletName);

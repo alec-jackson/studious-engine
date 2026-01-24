@@ -31,10 +31,10 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
+ColliderObject::ColliderObject(string tag, std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
     SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), target_ { target },
     pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
-    pVpMatrix_ { owner->vpMatrix() } {
+    pVpMatrix_ { owner->vpMatrix() }, tag_ { tag } {
     programId_ = programId;
     createCollider();
 }
@@ -42,10 +42,10 @@ ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, 
 /**
  * @brief Constructor for 2D collider objects.
  */
-ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, SceneObject *owner) :
-    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()),
+ColliderObject::ColliderObject(string tag, const vector<float> &vertTexData, unsigned int programId,
+    SceneObject *owner) : SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()),
     pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
-    pVpMatrix_ { owner->vpMatrix() } {
+    pVpMatrix_ { owner->vpMatrix() }, tag_ { tag } {
     programId_ = programId;
     // Separate vertex data from vertTexData
     assert(vertTexData.size() % 4 == 0);
