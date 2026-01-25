@@ -113,7 +113,6 @@ class GameInstance {
     bool addSceneObject(std::shared_ptr<SceneObject> sceneObject);
     std::shared_ptr<GameScene> getGameScene_(string sceneName);
     int removeSceneObject_(string objectName);
-    int initPhysics_();
 
  public:
     explicit GameInstance(const StudiousConfig &config);

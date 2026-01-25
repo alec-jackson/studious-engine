@@ -21,11 +21,11 @@
 #include <ColliderObject.hpp>
 #include <thread>
 
-double pDeltaTime;
+extern double deltaTime;
 
 void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
-    float cappedTime = CAP_TIME(pDeltaTime);
+    float cappedTime = CAP_TIME(deltaTime);
     runningTime += cappedTime;
     // Acceleration
     vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
@@ -470,19 +470,6 @@ PhysicsResult PhysicsController::waitPipelineComplete() {
     return shutdown_ ? PhysicsResult::SHUTDOWN : PhysicsResult::OK;
 }
 
-void PhysicsController::run(PhysicsController *p) {
-    Uint64 begin, end;
-    while (!p->hasShutdown()) {
-        begin = SDL_GetPerformanceCounter();
-        printf("TICKS PER SECOND: %f\n", 1.0f / pDeltaTime);
-        p->update();
-        usleep(1000);
-        std::this_thread::yield();
-        end = SDL_GetPerformanceCounter();
-        pDeltaTime = static_cast<double>(end - begin) / SDL_GetPerformanceFrequency();
-    }
-}
-
 void PhysicsController::update() {
     // Stop updating when shutdown received
     // Physics pipeline updated here...
@@ -587,7 +574,7 @@ PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force
         }
         // Check if the mass is zero
         if (0.0 != poit->second.get()->mass) {
-            float cappedTime = CAP_TIME(pDeltaTime);
+            float cappedTime = CAP_TIME(deltaTime);
             poit->second.get()->velocity += vec3(0.5f) * (force / vec3(poit->second.get()->mass)) * vec3(cappedTime);
             printf("PhysicsController::applyInstantForce: Capped time %f\n", cappedTime);
         } else {
