@@ -62,7 +62,7 @@ void GameInstance::init() {
 
 int GameInstance::initPhysics_() {
     // Start a separate thread that schedules phyiscs updates in parallel
-    physThread_ = std::thread(PhysicsController::run, [this] () { return isShutDown(); });
+    physThread_ = std::thread(PhysicsController::run, physicsController_);
     return 0;
 }
 
@@ -207,6 +207,7 @@ void GameInstance::shutdown() {
     // Notify condition variables of shutdown
     inputCv_.notify_all();
     progressCv_.notify_all();
+    if (physThread_.joinable()) physThread_.join();
 }
 
 bool GameInstance::protectedGfxRequest(std::function<void(void)> req) {

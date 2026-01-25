@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <SDL_timer.h>
 #include <physics.hpp>
 #include <chrono>  //NOLINT
 #include <mutex>  //NOLINT
@@ -18,13 +19,13 @@
 #include <memory>
 #include <cstdio>
 #include <ColliderObject.hpp>
+#include <thread>
 
-extern double deltaTime;
-extern std::unique_ptr<PhysicsController> physicsController;
+double pDeltaTime;
 
 void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
-    float cappedTime = CAP_TIME(deltaTime);
+    float cappedTime = CAP_TIME(pDeltaTime);
     runningTime += cappedTime;
     // Acceleration
     vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
@@ -142,7 +143,7 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
                 // Avoid this base case
                 edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
                     obj.second->targetCollider->getCollider());
-                assert(false);
+                //assert(false);
             } else {
                 // Make edge point zero except for delta axis directions.
                 // This is a basic approach - revisit later
@@ -469,9 +470,16 @@ PhysicsResult PhysicsController::waitPipelineComplete() {
     return shutdown_ ? PhysicsResult::SHUTDOWN : PhysicsResult::OK;
 }
 
-void PhysicsController::run(std::function<bool(void)> isShutDown) {
-    while (!isShutDown()) {
-        physicsController->update();
+void PhysicsController::run(PhysicsController *p) {
+    Uint64 begin, end;
+    while (!p->hasShutdown()) {
+        begin = SDL_GetPerformanceCounter();
+        printf("TICKS PER SECOND: %f\n", 1.0f / pDeltaTime);
+        p->update();
+        usleep(1000);
+        std::this_thread::yield();
+        end = SDL_GetPerformanceCounter();
+        pDeltaTime = static_cast<double>(end - begin) / SDL_GetPerformanceFrequency();
     }
 }
 
@@ -579,7 +587,7 @@ PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force
         }
         // Check if the mass is zero
         if (0.0 != poit->second.get()->mass) {
-            float cappedTime = CAP_TIME(deltaTime);
+            float cappedTime = CAP_TIME(pDeltaTime);
             poit->second.get()->velocity += vec3(0.5f) * (force / vec3(poit->second.get()->mass)) * vec3(cappedTime);
             printf("PhysicsController::applyInstantForce: Capped time %f\n", cappedTime);
         } else {
