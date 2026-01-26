@@ -412,7 +412,8 @@ VEC(GameObject *) GameInstance::createGameObjectBatch(SHD(Polygon) characterMode
             subPoly->materialMap.insert(*mit);
         }
         subPoly->modelMap.insert(entry);
-        objects.push_back(createGameObject(subPoly, position, rotation, scale, objectName + entry.first + "." + std::to_string(index++)));
+        objects.push_back(createGameObject(subPoly, position, rotation, scale,
+            objectName + entry.first + "." + std::to_string(index++)));
     }
     printf("GameInstance::createGameObjectBatch:[%s] Created %lu objects\n", objectName.c_str(),
         objects.size());

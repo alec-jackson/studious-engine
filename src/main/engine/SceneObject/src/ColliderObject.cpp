@@ -288,8 +288,6 @@ vec3 ColliderObject::getEdgePointRaw(vec3 p1, ColliderObject *c1, vec3 p2, Colli
 
     vec4 delta = abs(deltaBase);
     vec3 edgePoint = vec3(range - delta);
-    printf("deltaBase is (%f, %f, %f)\n", deltaBase.x, deltaBase.y, deltaBase.z);
-    printf("epSign is (%f, %f, %f)\n", epSign.x, epSign.y, epSign.z);
     for (int i = 0; i < 3; ++i) {
         // Do this more efficiently
         if ((epSign[i] > 0.0f && deltaBase[i] < 0.0f) ||

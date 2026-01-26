@@ -18,8 +18,8 @@
 #include <condition_variable> //NOLINT
 #include <memory>
 #include <cstdio>
+#include <thread> //NOLINT
 #include <ColliderObject.hpp>
-#include <thread>
 
 extern double deltaTime;
 
@@ -118,7 +118,8 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
             printf("vd: %f, %f, %f\n", vd.x, vd.y, vd.z);
             printf("pos: %f, %f, %f\n", target->getPosition().x, target->getPosition().y, target->getPosition().z);
-            printf("otherPos: %f, %f, %f\n", obj.second->target->getPosition().x, obj.second->target->getPosition().y, obj.second->target->getPosition().z);
+            printf("otherPos: %f, %f, %f\n", obj.second->target->getPosition().x, obj.second->target->getPosition().y,
+                obj.second->target->getPosition().z);
             printf("prevPos: %f, %f, %f\n", prevPos.x, prevPos.y, prevPos.z);
             printf("tempPos: %f, %f, %f\n", tempPos.x, tempPos.y, tempPos.z);
             auto targetcenter = targetCollider->getCenter();

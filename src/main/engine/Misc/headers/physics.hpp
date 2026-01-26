@@ -21,10 +21,10 @@
 #include <condition_variable> //NOLINT
 #include <atomic>
 #include <memory>
+#include <functional>
 #include <SceneObject.hpp>
 #include <ColliderExt.hpp>
 #include <glm/fwd.hpp>
-#include <functional>
 
 #define SUBSCRIPTION_PARAM std::function<PhysicsReport *(void)>
 #define PHYS_MAX_THREADS 256
