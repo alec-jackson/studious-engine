@@ -53,6 +53,7 @@ std::map<Uint8, GameInput> hatInputMap = {
 
 #define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
 #define TRACK_TRANSFORM TRACKING_SPEED * modifier * deltaTime
+#define MOUSE_DIVISOR 600.0f
 
 InputController::InputController(const VEC(SHD(CameraObject)) &cameras, std::mutex *cameraLock) :
     cameras_ { cameras }, cameraLock_ { cameraLock } {
@@ -233,8 +234,8 @@ void InputController::updateCameraControls() {
             SDL_CONTROLLER_AXIS_RIGHTX);
     }
     controllerLock.unlock();
-    xModifier = mouseX / 600.0f;
-    yModifier = mouseY / 600.0f;
+    xModifier = mouseX / MOUSE_DIVISOR;
+    yModifier = mouseY / MOUSE_DIVISOR;
     // Determine which X/Y inputs to send to cameras
     if (mouseX == 0 && mouseY == 0) {
         // Convert controller to mouse coordinates

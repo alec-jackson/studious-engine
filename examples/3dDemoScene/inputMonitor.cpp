@@ -64,8 +64,7 @@ void rotateShape(void *target) {
     vector<GameInput> monitoredGInput = {
         GameInput::START, // Attach camera
         GameInput::B,  // fire bullet
-        GameInput::Y,  // switch FPS -> TPS
-        GameInput::A   // Jump
+        GameInput::Y  // switch FPS -> TPS
     };
 
     map<int, bool> debounceMap;
@@ -237,15 +236,6 @@ void rotateShape(void *target) {
                 character->setVisible(false);
             }
         }
-        static bool stopFlush;
-        auto doFlush = true;
-        if (inputGIMap[GameInput::A]) {
-            // Apply instant force to the object
-            physicsController->setVelocity("player", vec3(0, 10.0f, 0));
-            //travelVel += vec3(0, 50.0f, 0);
-            doFlush = false;
-            stopFlush = true;
-        }
         if (inputGIMap[GameInput::B]) {
             static int bulletCount;
             // Instantiate a bullet and shoot it
@@ -296,8 +286,7 @@ void rotateShape(void *target) {
             angle += controllerLeftStateX > 0.0f ? 90.0f : 270.0f;
             UPDATE_CHAR_ANGLE((fpsMode ? -angle + 180.0f : -angle));
         }
-        if (!stopFlush)
-            physicsController->setVelocity("player", travelVel, doFlush);
+        physicsController->setVelocity("player", travelVel);
         currentGame->protectedGfxRequest([&] () {
             currentGame->setLuminance(currentLuminance);
             character->setRotation(charAngle);

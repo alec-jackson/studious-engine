@@ -87,7 +87,6 @@ class GameInstance {
     bool audioInitialized_ = false;
     SHD(GameScene) activeScene_;
     map<string, std::shared_ptr<GameScene>> gameScenes_;
-    std::thread physThread_;
 
     void initWindow();
     void initAudio();

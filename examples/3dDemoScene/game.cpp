@@ -24,9 +24,6 @@
 #include <AnimationController.hpp>
 #include <FPSCameraObject.hpp>
 
-extern string playerVelocity;
-extern mutex pvMut;
-
 // Global Variables, should eventually be moved to a config file
 map<string, string> soundList = {
     { "bg_music", "src/resources/sfx/music/endlessNight.wav" }
@@ -303,21 +300,23 @@ int mainLoop() {
     vec3 lastPos = vec3(0);
     auto posText = currentGame->createText(
         "Textbox Example",
-        vec3(600.0f, 0.0f, 0.0f),
+        vec3(600.0f, 15.0f, 0.0f),
         0.6f,
         "src/resources/fonts/AovelSans.ttf",
         1.0f,
         48,
         0,
         "posText");
+    char posTextBuf[128];
     while (!currentGame->isShutDown()) {
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
         // Get the player's position
         auto pos = player->getPosition();
 #define TSTR(x) std::to_string(x)
+        snprintf(posTextBuf, sizeof(posTextBuf), "posText: X(%.2f), Y(%.2f), Z(%.2f)\n", pos.x, pos.y, pos.z);
         if (pos != lastPos)
-            posText->setMessage("posText: X(" + TSTR(pos.x) + ") Y(" + TSTR(pos.y) + ") Z(" + TSTR(pos.z) + ")");
+            posText->setMessage(posTextBuf);
         lastPos = pos;
         if (error) {
             return error;

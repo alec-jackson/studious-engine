@@ -28,7 +28,7 @@
 
 #define SUBSCRIPTION_PARAM std::function<PhysicsReport *(void)>
 #define PHYS_MAX_THREADS 256
-#define PHYS_TRACE 1
+#define PHYS_TRACE 0
 #define MAX_PHYSICS_UPDATE_TIME 10.0f
 #define CAP_TIME(ucTime) ucTime > MAX_PHYSICS_UPDATE_TIME ? MAX_PHYSICS_UPDATE_TIME : ucTime
 #ifndef PHYS_THREADS
@@ -160,11 +160,11 @@ class PhysicsController {
      * @return PhysicsResult::OK when an object is discovered and has its position set. Otherwise,
      * PhysicsResult::FAILURE is returned and no objects are changed.
      */
-    PhysicsResult setPosition(string objectName, vec3 position, bool flush = true);
-    PhysicsResult setVelocity(string objectName, vec3 velocity, bool flush = true);
-    PhysicsResult setAcceleration(string objectName, vec3 acceleration, bool flush = true);
-    PhysicsResult applyForce(string objectName, vec3 force, bool flush = true);
-    PhysicsResult applyInstantForce(string objectName, vec3 force, bool flush = true);
+    PhysicsResult setPosition(string objectName, vec3 position);
+    PhysicsResult setVelocity(string objectName, vec3 velocity);
+    PhysicsResult setAcceleration(string objectName, vec3 acceleration);
+    PhysicsResult applyForce(string objectName, vec3 force);
+    PhysicsResult applyInstantForce(string objectName, vec3 force);
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult schedulePosition();
     PhysicsResult scheduleCollision();
@@ -172,14 +172,12 @@ class PhysicsController {
     inline bool isPipelineComplete() { return workQueue_.empty() && freeWorkers_ == threadNum_; }
     PhysicsResult waitPipelineComplete();
     void update();
-    static void run(PhysicsController *p);
     PhysicsResult doWork();
     PhysicsResult shutdown();
     inline int hasShutdown() { return shutdown_; }
     inline const map<string, std::shared_ptr<PhysicsObject>> &getPhysicsObjects() { return physicsObjects_; }
     ~PhysicsController();
     static uint getDefaultThreadSize();
-    void subscribeForEvent(string objectName, SUBSCRIPTION_PARAM);
 
  private:
     std::atomic<uint> threadNum_;

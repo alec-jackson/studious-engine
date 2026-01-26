@@ -39,6 +39,7 @@ void PhysicsObject::updatePosition() {
     pos += (velocity * vec3(runningTime));
     // Position
     pos += position;
+
     // Update the position of the target object
     target->setPosition(pos);
     target->updateModelMatrices();
@@ -84,8 +85,8 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
          * If no objects are kinematic, then they phase through each other.
          */
         // What do we do when we see a collision?
-        auto tempPos = target->getPosition() + positionDelta;
-        int collState = ColliderExt::getCollisionRaw(tempPos, targetCollider,
+        auto shiftedPos = target->getPosition() + positionDelta;
+        int collState = ColliderExt::getCollisionRaw(shiftedPos, targetCollider,
             obj.second->target->getPosition(), obj.second->targetCollider);
         if (collState != ALL_MATCH) continue;
         // Figure out the change in axis (which axis we are now colliding on)
@@ -136,7 +137,7 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
 #if (PHYS_TRACE == 1)
             printf("epSign: %f, %f, %f\n", epSign.x, epSign.y, epSign.z);
 #endif
-            auto edgePoint = targetCollider->getCollider()->getEdgePointRaw(tempPos, targetCollider->getCollider(),
+            auto edgePoint = targetCollider->getCollider()->getEdgePointRaw(shiftedPos, targetCollider->getCollider(),
                 obj.second->target->getPosition(), obj.second->targetCollider->getCollider(), epSign);
             // Sign edge point values based on previous position
             edgePoint *= epSign;
@@ -146,10 +147,6 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             }
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
-                // Avoid this base case
-                // edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
-                //     obj.second->targetCollider->getCollider());
-                assert(false);
                 // Just go back to the last known good location...
                 edgePoint = vec3(0.0f);
                 positionDelta = lastGoodPos - target->getPosition();
@@ -166,9 +163,7 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             }
             if (!obj.second->isKinematic) {
                 // We could modify velocity here, but I honestly don't care about collision spam rn
-                //edgePoint *= 2.0f;
             } else {
-                // I think this is the problem
                 edgePoint /= 2.0f;
             }
 #if (PHYS_TRACE == 1)
@@ -183,7 +178,6 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
                 if (updateGState) {
                     gravTime = 0.0f;
                     flushPosition();
-                    // printf("LANDING!\n");
                 }
                 if (updateLastGood) {
                     lastGoodPos = prevPos;
@@ -496,16 +490,14 @@ PhysicsResult PhysicsController::shutdown() {
     return PhysicsResult::OK;
 }
 
-PhysicsResult PhysicsController::setPosition(string objectName, vec3 position, bool flush) {
+PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         assert(poit->second->target != nullptr);
         poit->second->target->setPosition(position);
-        if (flush) {
-            poit->second->fullFlush();
-        }
+        poit->second->fullFlush();
         result = PhysicsResult::OK;
     } else {
         printf("PhysicsController::setPosition: %s not found", objectName.c_str());
@@ -513,15 +505,13 @@ PhysicsResult PhysicsController::setPosition(string objectName, vec3 position, b
     return result;
 }
 
-PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity, bool flush) {
+PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         // On velocity change, flush object position and reset time
-        if (flush) {
-            poit->second.get()->fullFlush();
-        }
+        poit->second.get()->fullFlush();
         poit->second.get()->velocity = velocity;
         result = PhysicsResult::OK;
     } else {
@@ -530,15 +520,13 @@ PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity, b
     return result;
 }
 
-PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceleration, bool flush) {
+PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceleration) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         // On acceleration change, flush object position and reset time
-        if (flush) {
-            poit->second.get()->fullFlush();
-        }
+        poit->second.get()->fullFlush();
         poit->second.get()->acceleration = acceleration;
         result = PhysicsResult::OK;
     } else {
@@ -547,14 +535,12 @@ PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceler
     return result;
 }
 
-PhysicsResult PhysicsController::applyForce(string objectName, vec3 force, bool flush) {
+PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
-        if (flush) {
-            poit->second.get()->fullFlush();
-        }
+        poit->second.get()->fullFlush();
         // Check if the mass is zero
         if (0.0 != poit->second.get()->mass) {
             poit->second.get()->acceleration += (force / vec3(poit->second.get()->mass));
@@ -570,14 +556,12 @@ PhysicsResult PhysicsController::applyForce(string objectName, vec3 force, bool 
     return result;
 }
 
-PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force, bool flush) {
+PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force) {
     std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
-        if (flush) {
-            poit->second.get()->fullFlush();
-        }
+        poit->second.get()->fullFlush();
         // Check if the mass is zero
         if (0.0 != poit->second.get()->mass) {
             float cappedTime = CAP_TIME(deltaTime);

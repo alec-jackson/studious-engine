@@ -200,7 +200,6 @@ void GameInstance::shutdown() {
     // Notify condition variables of shutdown
     inputCv_.notify_all();
     progressCv_.notify_all();
-    if (physThread_.joinable()) physThread_.join();
 }
 
 bool GameInstance::protectedGfxRequest(std::function<void(void)> req) {
@@ -557,7 +556,6 @@ int GameInstance::update() {
     updateInput();
     inputController->update();
     animationController_->update();
-    // Try moving physics scheduler to separate thread
     physicsController_->update();
     std::this_thread::yield();
     end = SDL_GetPerformanceCounter();
@@ -655,8 +653,7 @@ void GameInstance::initWindow() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
-#ifndef GFX_EMBEDDED
-// #ifdef __APPLE__  // Temporarily restrict SDL AA to MACOS
+#ifndef GFX_EMBEDDED  // Should not expect AA support from OpenGL ES
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 #endif
