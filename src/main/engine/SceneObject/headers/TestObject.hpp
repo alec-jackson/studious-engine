@@ -28,7 +28,7 @@ class TestObject : public SceneObject, public ColliderExt {
     explicit TestObject(std::shared_ptr<Polygon> polygon, string name);
     void render() override;
     void update() override;
-    void createCollider() override;
+    void createCollider(string tag) override;
     inline const mat4 &getTranslationMatrix() { return translateMatrix_; }
     inline const mat4 &getRotationMatrix() { return rotateMatrix_; }
     inline const mat4 &getScaleMatrix() { return scaleMatrix_; }

@@ -115,17 +115,24 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
 #if (PHYS_TRACE == 1)
             printf("Collision %s vs %s\n", target->objectName().c_str(), obj.second->target->objectName().c_str());
             printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
-            printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
+            printf("vd: %f, %f, %f\n", vd.x, vd.y, vd.z);
             printf("pos: %f, %f, %f\n", target->getPosition().x, target->getPosition().y, target->getPosition().z);
             printf("otherPos: %f, %f, %f\n", obj.second->target->getPosition().x, obj.second->target->getPosition().y, obj.second->target->getPosition().z);
             printf("prevPos: %f, %f, %f\n", prevPos.x, prevPos.y, prevPos.z);
             printf("tempPos: %f, %f, %f\n", tempPos.x, tempPos.y, tempPos.z);
+            auto targetcenter = targetCollider->getCenter();
+            auto othercenter = obj.second->targetCollider->getCenter();
+            printf("targetCenter: %f, %f, %f\n", targetcenter.x, targetcenter.y, targetcenter.z);
+            printf("otherCenter: %f, %f, %f\n", othercenter.x, othercenter.y, othercenter.z);
 #endif
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
+            // Convert prev pos to prev center pos using deltas
+            auto targetCenterDelta = targetCollider->getCenter() - target->getPosition();
+            auto otherCenterDelta = obj.second->targetCollider->getCenter() - obj.second->target->getPosition();
             // epSign tells us which direction we are relative to the object we collided with
-            vec3 epSign = sign((targetCollider->getCenter() + positionDelta) - obj.second->targetCollider->getCenter());
+            vec3 epSign = sign((prevPos + targetCenterDelta) - (obj.second->prevPos + otherCenterDelta));
 #if (PHYS_TRACE == 1)
             printf("epSign: %f, %f, %f\n", epSign.x, epSign.y, epSign.z);
 #endif

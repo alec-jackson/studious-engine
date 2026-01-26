@@ -539,8 +539,8 @@ class GivenTwoKinematicObjects: public GivenPhysicsControllerPositionPipeline {
 
         otherObject_ = std::make_unique<TestObject>(basicModel_, otherObjectName);
         testObject_ = std::make_unique<TestObject>(basicModel_, testObjectName);
-        otherObject_->createCollider();
-        testObject_->createCollider();
+        otherObject_->createCollider("other");
+        testObject_->createCollider("test");
 
         // Use the same generic params for each object
         PhysicsParams params = {
@@ -654,8 +654,8 @@ class GivenKinematicAndNonKinematicObject: public GivenPhysicsControllerPosition
         mapObject_ = std::make_unique<TestObject>(mapModel_, mapObjectName);
         mapObject_->setScale(10.0f);  // Make the map decently large
         testObject_ = std::make_unique<TestObject>(basicModel_, testObjectName);
-        testObject_->createCollider();
-        mapObject_->createCollider();
+        testObject_->createCollider("test");
+        mapObject_->createCollider("map");
 
         // Use the same generic params for each object
         PhysicsParams kinPar = {
@@ -710,7 +710,12 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesNoPassthrough_T
     ASSERT_NE(ALL_MATCH, isColl);
 }
 
-TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollides_ThenObjectClipsToExpectedLocation) {
+/**
+ * @brief Ensures that the edge point algorithm for collisions is functioning properly. This also ensures that
+ * when an object updates and it passes through another, the epSign value properly tracks which face the
+ * object was heading towards in the previous update.
+ */
+TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesThrough_ThenObjectClipsToExpectedLocation) {
     /* Preparation */
     deltaTime = 1.0f;
     vec3 playerVel = vec3(0.0, -2.5f, 0.0f);
