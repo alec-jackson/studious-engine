@@ -15,7 +15,7 @@
 #include <iostream>
 #include <memory>
 
-#define EPSILON 1e-2
+#define EPSILON 1e-4
 
 /** @todo Update - this is the old struct info
  * @brief Stores info about a GameObject's internal collider object.

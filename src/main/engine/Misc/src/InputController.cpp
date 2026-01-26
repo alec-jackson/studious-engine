@@ -233,8 +233,8 @@ void InputController::updateCameraControls() {
             SDL_CONTROLLER_AXIS_RIGHTX);
     }
     controllerLock.unlock();
-    xModifier = mouseX / 5.0f;
-    yModifier = mouseY / 5.0f;
+    xModifier = mouseX / 600.0f;
+    yModifier = mouseY / 600.0f;
     // Determine which X/Y inputs to send to cameras
     if (mouseX == 0 && mouseY == 0) {
         // Convert controller to mouse coordinates

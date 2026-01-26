@@ -23,15 +23,14 @@
 
 extern double deltaTime;
 
+#define GRAVITY_ACCEL vec3(0.5f) * vec3(0, -GRAVITY_CONST, 0) * vec3(gravTime * gravTime)
+
 void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
     float cappedTime = CAP_TIME(deltaTime);
     runningTime += cappedTime;
     // Acceleration
     vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
-    if (target->objectName() == "player") {
-        printf("PLAYER UPDATE\n");
-    }
     if (obeyGravity) {
         gravTime += cappedTime;
         pos += vec3(0.5f) * vec3(0, -GRAVITY_CONST, 0) * vec3(gravTime * gravTime);
@@ -93,8 +92,8 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
         int prevCollState = ColliderExt::getCollisionRaw(prevPos,
             targetCollider, obj.second->prevPos, obj.second->targetCollider);
         int deltaAxis = collState ^ prevCollState;
-        bool updateVelocity = false;
         bool updateGState = false;
+        bool updateLastGood = false;
         // Test the collision with the two object's previous positions to get the collstate delta.
         // If the objects match, then we need to know what the deltaAxis were...
         // Don't update non-kinematic objects
@@ -107,11 +106,11 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
 
             // Calculate the final velocity of the main object
             // Only change velocity if the other object is kinematic
-            auto v1f = v1;
+            auto vd = vec3(0);
             if (obj.second->isKinematic) {
-                updateVelocity = true;
-                assert(false);
-                v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+                // Fetch a velocity delta from the final velocity
+                auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+                vd = (v1f - v1);
             }
 #if (PHYS_TRACE == 1)
             printf("Collision %s vs %s\n", target->objectName().c_str(), obj.second->target->objectName().c_str());
@@ -141,10 +140,14 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
                 // Avoid this base case
-                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
-                    obj.second->targetCollider->getCollider());
-                //assert(false);
+                // edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
+                //     obj.second->targetCollider->getCollider());
+                assert(false);
+                // Just go back to the last known good location...
+                edgePoint = vec3(0.0f);
+                positionDelta = lastGoodPos - target->getPosition();
             } else {
+                updateLastGood = true;
                 // Make edge point zero except for delta axis directions.
                 // This is a basic approach - revisit later
                 for (int i = 0; i < 3; ++i) {
@@ -167,15 +170,16 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             // UPDATE VALUES
             {
                 std::unique_lock<std::mutex> scopeLock(objLock);
-                if (updateVelocity) {
-                    velocityDelta += v1f;
-                }
+                velocityDelta += vd;
                 positionDelta += edgePoint;
                 hasCollision = true;
                 if (updateGState) {
                     gravTime = 0.0f;
                     flushPosition();
-                    printf("LANDING!\n");
+                    // printf("LANDING!\n");
+                }
+                if (updateLastGood) {
+                    lastGoodPos = prevPos;
                 }
             }
         }
@@ -193,7 +197,8 @@ void PhysicsObject::updateFinalize() {
     target->setPosition(newPos);
     flushPosition();
     runningTime = 0.0f;
-    velocity = velocityDelta;
+    // Need to flush acceleration/velocity
+    velocity += velocityDelta;
 #if (PHYS_TRACE == 1)
     printf("PhysicsObject::finalizeCollisions: Updated velocity for %s (%f, %f, %f)\n", target->objectName().c_str(),
         velocity.x, velocity.y, velocity.z);
@@ -202,12 +207,6 @@ void PhysicsObject::updateFinalize() {
     printf("PhysicsObject::finalizeCollisions: Old pos for %s (%f, %f, %f)\n", target->objectName().c_str(),
         truePos.x, truePos.y, truePos.z);
 #endif
-    /** For later: Sanitize the collision either in the finalization loop or in update collision. What we're seeing
-     * in the map data is when 4 objects share the same position data, our position to update is multiplied by four.
-     * This causes the player to teleport pretty far forwards. While this is a bit glitchy, we should program
-     * defensively against things like this. Instead of adding the delta position, maybe we can do some passes over
-     * to determine how far is too much.
-     */
     acceleration = vec3(0.0f);
     velocityDelta = vec3(0.0f);
     positionDelta = vec3(0.0f);

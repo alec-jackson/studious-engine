@@ -655,9 +655,10 @@ void GameInstance::initWindow() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
-#ifdef __APPLE__  // Temporarily restrict SDL AA to MACOS
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, AASAMPLES);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
+#ifndef GFX_EMBEDDED
+// #ifdef __APPLE__  // Temporarily restrict SDL AA to MACOS
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 #endif
     mainContext = SDL_GL_CreateContext(window);
     if (!mainContext) {

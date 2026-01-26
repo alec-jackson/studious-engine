@@ -112,7 +112,7 @@ int runtime() {
         currentGame->loadSound(sfx.first, sfx.second);
     }
     // Start the background music
-    currentGame->playSound("bg_music", 1, 60);
+    //currentGame->playSound("bg_music", 1, 60);
 
     cout << "Creating Map.\n";
 
@@ -199,10 +199,10 @@ int runtime() {
     currentGame->createText(
         "Studious Engine 2025",                 // Message
         vec3(25.0f, 25.0f, 0.0f),               // Position
-        1.0f,                                   // Scale
+        0.5f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
         5.0f,                                   // Char spacing
-        48,                                     // Font point
+        96,                                     // Font point
         0,                                      // Newline Size
         "studious-text");                       // ObjectName
 
@@ -317,7 +317,7 @@ int mainLoop() {
         auto pos = player->getPosition();
 #define TSTR(x) std::to_string(x)
         if (pos != lastPos)
-            posText->setMessage("posText: X(" + TSTR(pos.x) + ") Y(" + TSTR(pos.y) + ") Z(" + TSTR(pos.z));
+            posText->setMessage("posText: X(" + TSTR(pos.x) + ") Y(" + TSTR(pos.y) + ") Z(" + TSTR(pos.z) + ")");
         lastPos = pos;
         if (error) {
             return error;

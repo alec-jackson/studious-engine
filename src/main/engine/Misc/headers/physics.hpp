@@ -51,6 +51,7 @@ class PhysicsObject {
     SceneObject *        target;
     ColliderExt *        targetCollider;
     vec3                 position;
+    vec3                 lastGoodPos;
     vec3                 prevPos;
     vec3                 positionDelta = vec3(0.0f);
     vec3                 velocity;

@@ -20,7 +20,7 @@ extern std::unique_ptr<PhysicsController> physicsController;
 extern double deltaTime;
 
 #define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
-#define TRACK_TRANSFORM TRACKING_SPEED * modifier * deltaTime
+#define TRACK_TRANSFORM TRACKING_SPEED * modifier
 
 ComplexCameraObject::ComplexCameraObject(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
     float nearClipping, float farClipping, ObjectType type, string objectName, GfxController *gfxController) :
