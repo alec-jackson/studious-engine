@@ -817,6 +817,57 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndFa
     ASSERT_NE(ALL_MATCH, isColl);
 }
 
+TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndFallsGravity_ThenObjectDropsWhenExpected) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    vec3 playerVel = vec3(0.0f, 0.0f, 1.0f);
+    vec3 playerPos = vec3(9.5f, 4.0f, 9.5f);
+    vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
+    // Because of flushing, set velocity first
+    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setPosition(testObjectName, playerPos);
+    physicsController_->setPosition(mapObjectName, mapPos);
+
+    // Enable gravity for player
+    physicsController_->getPhysicsObject(testObjectName)->obeyGravity = true;
+
+    // Expected player final position
+    vec3 epfp_update1 = vec3(9.5f, 1.0f, 10.5f);
+    // The object "rolls" off the corner of the surface after the second update
+    vec3 epfp_update2 = vec3(9.5f, -3.905f, 11.5f);
+    vec3 epfp_update3 = vec3(9.5f, -18.62f, 12.5f);
+    vec3 expectedMapFinalPos = vec3(0.0f, 0.0f, 0.0f);
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    // The second object should be moving, and the first should have a different velocity
+    vec3 afp = testObject_->getPosition();
+    vec3 amfp = mapObject_->getPosition();
+    EXPECT_VEC_EQ(epfp_update1, afp);
+    EXPECT_VEC_EQ(expectedMapFinalPos, amfp);
+
+    /* Action 2 */
+    physicsController_->update();
+
+    /* Validation 2 */
+    afp = testObject_->getPosition();
+    amfp = mapObject_->getPosition();
+    EXPECT_VEC_EQ(epfp_update2, afp);
+    EXPECT_VEC_EQ(expectedMapFinalPos, amfp);
+
+    // Ensure that the objects are NO LONGER colliding after clipping to the edge point
+    auto isColl = testObject_->getCollider()->getCollision(mapObject_->getCollider());
+    ASSERT_NE(ALL_MATCH, isColl);
+
+    /* Ensure gravity acceleration is working fine */
+    physicsController_->update();
+
+    afp = testObject_->getPosition();
+    EXPECT_VEC_EQ(epfp_update3, afp);
+}
+
 TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesNoPTNegSign_ThenObjectClipsToExpectedLocation) {
     /* Preparation */
     deltaTime = 1.0f;
@@ -887,6 +938,60 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndRi
     // Ensure that the objects are NO LONGER colliding after clipping to the edge point
     auto isColl = testObject_->getCollider()->getCollision(mapObject_->getCollider());
     ASSERT_NE(ALL_MATCH, isColl);
+}
+
+/* Gravity based tests */
+class GivenPhysicsControllerWithGravity: public ::testing::Test {
+ protected:
+    void SetUp() override {
+        // Create a physics controller with 6 threads
+        physicsController_ = std::make_unique<PhysicsController>(6);
+        // Create a sample test object and add it to the physics controller
+        testObject_ = std::make_unique<TestObject>(testObjectName);
+        testObject_.get()->setPosition(vec3(0));
+        PhysicsParams params = {
+            .isKinematic = true,
+            .obeyGravity = true,
+            .elasticity = 0.0f,
+            .mass = testMassKg
+        };
+        physicsController_->addSceneObject(testObject_.get(), params);
+    }
+
+    float calculateGravityMovement(float time) {
+        return 0.5f * GRAVITY_CONST * (time * time);
+    }
+    std::unique_ptr<PhysicsController> physicsController_;
+    std::unique_ptr<TestObject> testObject_;
+};
+
+TEST_F(GivenPhysicsControllerWithGravity, WhenOneSecondPasses_ThenPositionUpdated) {
+    /* Preparation */
+    deltaTime = 1.0f;
+    auto drop = calculateGravityMovement(deltaTime);  // Should be 4.905f
+    vec3 expectedPosition(0.0f, -drop, 0.0f);
+
+    /* Action */
+    physicsController_->update();
+
+    /* Validation */
+    auto actualPosition = testObject_->getPosition();
+    EXPECT_VEC_EQ(expectedPosition, actualPosition);
+}
+
+TEST_F(GivenPhysicsControllerWithGravity, WhenTwoUpdatesHappen_ThenPositionUpdated) {
+    /* Preparation */
+    deltaTime = 1.0;
+    auto drop = calculateGravityMovement(deltaTime * 2);  // Should be 4.905
+    vec3 expectedPosition(0.0f, -drop, 0.0f);
+
+    /* Action */
+    physicsController_->update();
+    physicsController_->update();
+
+    /* Validation */
+    auto actualPosition = testObject_->getPosition();
+    EXPECT_VEC_EQ(expectedPosition, actualPosition);
 }
 
 /**

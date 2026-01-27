@@ -288,6 +288,10 @@ vec3 ColliderObject::getEdgePointRaw(vec3 p1, ColliderObject *c1, vec3 p2, Colli
 
     vec4 delta = abs(deltaBase);
     vec3 edgePoint = vec3(range - delta);
+#if (COLL_TRACE == 1)
+    printf("ColliderObject::getEdgePointRaw: deltaBase (%f, %f, %f)\n", deltaBase.x, deltaBase.y, deltaBase.z);
+    printf("ColliderObject::getEdgePointRaw: range (%f, %f, %f)\n", range.x, range.y, range.z);
+#endif
     for (int i = 0; i < 3; ++i) {
         // Do this more efficiently
         if ((epSign[i] > 0.0f && deltaBase[i] < 0.0f) ||
@@ -301,7 +305,7 @@ vec3 ColliderObject::getEdgePointRaw(vec3 p1, ColliderObject *c1, vec3 p2, Colli
              * we may see excessive collisions before the object is properly corrected. This should also
              * reduce jerkiness of object's colliding in this case.
              */
-            edgePoint[i] += range[i];
+            edgePoint[i] = (2 * range[i]) - edgePoint[i];
         }
     }
     result = edgePoint;

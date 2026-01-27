@@ -25,6 +25,8 @@
 #define ALL_MATCH 7
 #define NO_MATCH 0
 
+#define COLL_TRACE 0
+
 
 class ColliderObject : public SceneObject {
  public:

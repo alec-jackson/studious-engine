@@ -23,7 +23,7 @@
 
 extern double deltaTime;
 
-#define GRAVITY_ACCEL vec3(0.5f) * vec3(0, -GRAVITY_CONST, 0) * vec3(gravTime * gravTime)
+#define GRAV_FUNC vec3(0.5f) * vec3(0, -GRAVITY_CONST, 0) * vec3(gravTime * gravTime)
 
 void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
@@ -33,7 +33,7 @@ void PhysicsObject::updatePosition() {
     vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
     if (obeyGravity) {
         gravTime += cappedTime;
-        pos += vec3(0.5f) * vec3(0, -GRAVITY_CONST, 0) * vec3(gravTime * gravTime);
+        pos += GRAV_FUNC;
     }
     // Velocity
     pos += (velocity * vec3(runningTime));
@@ -45,13 +45,16 @@ void PhysicsObject::updatePosition() {
     target->updateModelMatrices();
     if (targetCollider) targetCollider->updateCollider();
 #if (PHYS_TRACE == 1)
-    printf("PhysicsObject::basePosUpdate: Updated position is %f, %f, %f\n", pos.x, pos.y, pos.z);
+    printf("PhysicsObject::updatePosition[%s]: gravTime %f\n", target->objectName().c_str(), gravTime);
+    printf("PhysicsObject::updatePosition[%s]: gravityInfluence %f\n", target->objectName().c_str(), (GRAV_FUNC).y);
+    printf("PhysicsObject::updatePosition[%s]: Updated position is %f, %f, %f\n", target->objectName().c_str(),
+        pos.x, pos.y, pos.z);
 #endif
 }
 
 void PhysicsObject::flushPosition() {
-    // Flush updated position to reference position
-    position = target->getPosition();
+    // Flush updated position to reference position - ignore gravity
+    position = target->getPosition() - GRAV_FUNC;
 }
 
 void PhysicsObject::flushVelocity() {
@@ -121,7 +124,7 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             printf("otherPos: %f, %f, %f\n", obj.second->target->getPosition().x, obj.second->target->getPosition().y,
                 obj.second->target->getPosition().z);
             printf("prevPos: %f, %f, %f\n", prevPos.x, prevPos.y, prevPos.z);
-            printf("tempPos: %f, %f, %f\n", tempPos.x, tempPos.y, tempPos.z);
+            printf("tempPos: %f, %f, %f\n", shiftedPos.x, shiftedPos.y, shiftedPos.z);
             auto targetcenter = targetCollider->getCenter();
             auto othercenter = obj.second->targetCollider->getCenter();
             printf("targetCenter: %f, %f, %f\n", targetcenter.x, targetcenter.y, targetcenter.z);
@@ -472,6 +475,9 @@ PhysicsResult PhysicsController::waitPipelineComplete() {
 }
 
 void PhysicsController::update() {
+#if (PHYS_TRACE == 1)
+    printf("PhysicsSController::update: deltaTime %f\n", deltaTime);
+#endif
     // Stop updating when shutdown received
     // Physics pipeline updated here...
     schedulePosition();
