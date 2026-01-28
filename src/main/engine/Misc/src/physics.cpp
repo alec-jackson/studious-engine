@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include <SDL_timer.h>
 #include <physics.hpp>
 #include <chrono>  //NOLINT
 #include <mutex>  //NOLINT
@@ -17,9 +18,12 @@
 #include <condition_variable> //NOLINT
 #include <memory>
 #include <cstdio>
+#include <thread> //NOLINT
 #include <ColliderObject.hpp>
 
 extern double deltaTime;
+
+#define GRAV_FUNC vec3(0.5f) * vec3(0, -GRAVITY_CONST, 0) * vec3(gravTime * gravTime)
 
 void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
@@ -27,6 +31,10 @@ void PhysicsObject::updatePosition() {
     runningTime += cappedTime;
     // Acceleration
     vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
+    if (obeyGravity) {
+        gravTime += cappedTime;
+        pos += GRAV_FUNC;
+    }
     // Velocity
     pos += (velocity * vec3(runningTime));
     // Position
@@ -37,13 +45,16 @@ void PhysicsObject::updatePosition() {
     target->updateModelMatrices();
     if (targetCollider) targetCollider->updateCollider();
 #if (PHYS_TRACE == 1)
-    printf("PhysicsObject::basePosUpdate: Updated position is %f, %f, %f\n", pos.x, pos.y, pos.z);
+    printf("PhysicsObject::updatePosition[%s]: gravTime %f\n", target->objectName().c_str(), gravTime);
+    printf("PhysicsObject::updatePosition[%s]: gravityInfluence %f\n", target->objectName().c_str(), (GRAV_FUNC).y);
+    printf("PhysicsObject::updatePosition[%s]: Updated position is %f, %f, %f\n", target->objectName().c_str(),
+        pos.x, pos.y, pos.z);
 #endif
 }
 
 void PhysicsObject::flushPosition() {
-    // Flush updated position to reference position
-    position = target->getPosition();
+    // Flush updated position to reference position - ignore gravity
+    position = target->getPosition() - GRAV_FUNC;
 }
 
 void PhysicsObject::flushVelocity() {
@@ -77,12 +88,15 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
          * If no objects are kinematic, then they phase through each other.
          */
         // What do we do when we see a collision?
-        int collState = targetCollider->getCollision(obj.second.get()->targetCollider);
+        auto shiftedPos = target->getPosition() + positionDelta;
+        int collState = ColliderExt::getCollisionRaw(shiftedPos, targetCollider,
+            obj.second->target->getPosition(), obj.second->targetCollider);
         if (collState != ALL_MATCH) continue;
         // Figure out the change in axis (which axis we are now colliding on)
         int prevCollState = ColliderExt::getCollisionRaw(prevPos,
-            targetCollider, obj.second->target->getPosition(), obj.second->targetCollider);
+            targetCollider, obj.second->prevPos, obj.second->targetCollider);
         int deltaAxis = collState ^ prevCollState;
+        bool updateGState = false;
         // Test the collision with the two object's previous positions to get the collstate delta.
         // If the objects match, then we need to know what the deltaAxis were...
         // Don't update non-kinematic objects
@@ -95,25 +109,45 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
 
             // Calculate the final velocity of the main object
             // Only change velocity if the other object is kinematic
-            auto v1f = v1;
+            auto vd = vec3(0);
             if (obj.second->isKinematic) {
-                v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+                // Fetch a velocity delta from the final velocity
+                auto v1f = ((m1 - m2) / (m1 + m2) * v1) + ((2 * m2) / (m1 + m2) * v2);
+                vd = (v1f - v1);
             }
 #if (PHYS_TRACE == 1)
             printf("Collision %s vs %s\n", target->objectName().c_str(), obj.second->target->objectName().c_str());
             printf("v1i: %f, %f, %f\n", v1.x, v1.y, v1.z);
-            printf("v1f: %f, %f, %f\n", v1f.x, v1f.y, v1f.z);
+            printf("vd: %f, %f, %f\n", vd.x, vd.y, vd.z);
             printf("pos: %f, %f, %f\n", target->getPosition().x, target->getPosition().y, target->getPosition().z);
+            printf("otherPos: %f, %f, %f\n", obj.second->target->getPosition().x, obj.second->target->getPosition().y,
+                obj.second->target->getPosition().z);
             printf("prevPos: %f, %f, %f\n", prevPos.x, prevPos.y, prevPos.z);
+            printf("tempPos: %f, %f, %f\n", shiftedPos.x, shiftedPos.y, shiftedPos.z);
+            auto targetcenter = targetCollider->getCenter();
+            auto othercenter = obj.second->targetCollider->getCenter();
+            printf("targetCenter: %f, %f, %f\n", targetcenter.x, targetcenter.y, targetcenter.z);
+            printf("otherCenter: %f, %f, %f\n", othercenter.x, othercenter.y, othercenter.z);
 #endif
             // Find the delta velocity for either object - lock each object individually
             // Probably replace these with macros (TODO)
             // Do we even need to lock this object?
-            vec3 epSign = sign(prevPos - obj.second->position);
-            auto edgePoint = targetCollider->getCollider()->getEdgePoint(
-                obj.second->targetCollider->getCollider(), epSign);
+            // Convert prev pos to prev center pos using deltas
+            auto targetCenterDelta = targetCollider->getCenter() - target->getPosition();
+            auto otherCenterDelta = obj.second->targetCollider->getCenter() - obj.second->target->getPosition();
+            // epSign tells us which direction we are relative to the object we collided with
+            vec3 epSign = sign((prevPos + targetCenterDelta) - (obj.second->prevPos + otherCenterDelta));
+#if (PHYS_TRACE == 1)
+            printf("epSign: %f, %f, %f\n", epSign.x, epSign.y, epSign.z);
+#endif
+            auto edgePoint = targetCollider->getCollider()->getEdgePointRaw(shiftedPos, targetCollider->getCollider(),
+                obj.second->target->getPosition(), obj.second->targetCollider->getCollider(), epSign);
             // Sign edge point values based on previous position
             edgePoint *= epSign;
+            if (deltaAxis == Y_MATCH) {
+                // If you land, reset gravity...
+                updateGState = true;
+            }
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
                 edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
@@ -133,11 +167,20 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             } else {
                 edgePoint /= 2.0f;
             }
-            objLock.lock();
-            velocityDelta += v1f;
-            positionDelta += edgePoint;
-            hasCollision = true;
-            objLock.unlock();
+#if (PHYS_TRACE == 1)
+            printf("Edge point: %f, %f, %f\n", edgePoint.x, edgePoint.y, edgePoint.z);
+#endif
+            // UPDATE VALUES
+            {
+                std::unique_lock<std::mutex> scopeLock(objLock);
+                velocityDelta += vd;
+                positionDelta += edgePoint;
+                hasCollision = true;
+                if (updateGState) {
+                    gravTime = 0.0f;
+                    flushPosition();
+                }
+            }
         }
     }
 }
@@ -149,14 +192,19 @@ void PhysicsObject::updateFinalize() {
 #endif
     if (!hasCollision) return;
     auto truePos = target->getPosition();
-
-    target->setPosition(truePos + positionDelta);
+    auto newPos = truePos + positionDelta;
+    target->setPosition(newPos);
     flushPosition();
     runningTime = 0.0f;
-    velocity = velocityDelta;
+    // Need to flush acceleration/velocity
+    velocity += velocityDelta;
 #if (PHYS_TRACE == 1)
     printf("PhysicsObject::finalizeCollisions: Updated velocity for %s (%f, %f, %f)\n", target->objectName().c_str(),
         velocity.x, velocity.y, velocity.z);
+    printf("PhysicsObject::finalizeCollisions: Updated pos for %s (%f, %f, %f)\n", target->objectName().c_str(),
+        newPos.x, newPos.y, newPos.z);
+    printf("PhysicsObject::finalizeCollisions: Old pos for %s (%f, %f, %f)\n", target->objectName().c_str(),
+        truePos.x, truePos.y, truePos.z);
 #endif
     acceleration = vec3(0.0f);
     velocityDelta = vec3(0.0f);
@@ -273,6 +321,7 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->elasticity = params.elasticity;
     poPtr->mass = params.mass;
     poPtr->runningTime = 0.0;
+    poPtr->gravTime = 0.0;
     poPtr->targetCollider = dynamic_cast<ColliderExt *>(sceneObject);
 
     // Add the object to the physics object list
@@ -420,6 +469,9 @@ PhysicsResult PhysicsController::waitPipelineComplete() {
 }
 
 void PhysicsController::update() {
+#if (PHYS_TRACE == 1)
+    printf("PhysicsSController::update: deltaTime %f\n", deltaTime);
+#endif
     // Stop updating when shutdown received
     // Physics pipeline updated here...
     schedulePosition();

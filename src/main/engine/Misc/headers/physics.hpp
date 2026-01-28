@@ -21,11 +21,12 @@
 #include <condition_variable> //NOLINT
 #include <atomic>
 #include <memory>
+#include <functional>
 #include <SceneObject.hpp>
 #include <ColliderExt.hpp>
 #include <glm/fwd.hpp>
 
-#define SUBSCRIPTION_PARAM void(*callback)(PhysicsReport*)  // NOLINT
+#define SUBSCRIPTION_PARAM std::function<PhysicsReport *(void)>
 #define PHYS_MAX_THREADS 256
 #define PHYS_TRACE 0
 #define MAX_PHYSICS_UPDATE_TIME 10.0f
@@ -34,6 +35,7 @@
 // Default thread count when not defined
 #define PHYS_THREADS 1
 #endif
+#define GRAVITY_CONST 9.81f
 
 enum PhysicsWorkType {
     POSITION,
@@ -62,6 +64,7 @@ class PhysicsObject {
     float                elasticity;
     float                mass;
     double               runningTime;
+    double               gravTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
     std::mutex           objLock;
     /**
@@ -106,9 +109,9 @@ struct PhysicsReport {
 };
 
 struct PhysicsSubscriber {
-    inline PhysicsSubscriber(string name, SUBSCRIPTION_PARAM) : name(name), callback(callback) {}
+    inline PhysicsSubscriber(string n, SUBSCRIPTION_PARAM cb) : name(n), callback(cb) {}
     string name;
-    SUBSCRIPTION_PARAM;
+    SUBSCRIPTION_PARAM callback;
 };
 
 enum class PhysicsResult {

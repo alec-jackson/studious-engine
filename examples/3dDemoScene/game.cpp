@@ -115,8 +115,19 @@ int runtime() {
 
     auto mapPoly = ModelImport::createPolygonFromFile("src/resources/models/Forest Scene Tri.obj");
 
-    currentGame->createGameObject(mapPoly,
+    auto mapObjects = currentGame->createGameObjectBatch(mapPoly,
         vec3(-0.006f, -0.019f, 0.0f), vec3(0.0f, 0.0f, 0.0f), 1.0f, "map");
+
+    // Generate a collider for each object
+    for (auto object : mapObjects) {
+        object->createCollider("map");
+        physicsController->addSceneObject(object, {
+            .isKinematic = false,
+            .obeyGravity = false,
+            .elasticity = 0.0f,
+            .mass = 5.0f
+        });
+    }
 
     cout << "Creating Player\n";
 
@@ -139,7 +150,7 @@ int runtime() {
         companion->setPermanentlyVisible(true);
         playerRef->addChild(companion);
     }
-    playerRef->createCollider();
+    playerRef->createCollider("player");
 
     physicsController->addSceneObject(playerRef, {
         .isKinematic = true,
@@ -162,15 +173,14 @@ int runtime() {
 
     kf->rotation.desired = vec3(0.0f, 0.0f, 720.0f);
     auto kf1 = AnimationController::createKeyFrame(
-        UPDATE_ROTATION | UPDATE_POS,   // Rotate and move
+        UPDATE_ROTATION,   // Rotate and move
         5.0f);                          // seconds
 
     kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
-    kf1->pos.desired = wolfObject->getPosition() + vec3(-3.0f, 0.0f, 4.0f);
     animationController->addKeyFrame(wolfObject, kf);
     animationController->addKeyFrame(wolfObject, kf1);
 
-    wolfObject->createCollider();
+    wolfObject->createCollider("wolf");
 
     PhysicsParams parms = {
         .isKinematic = false,
@@ -185,10 +195,10 @@ int runtime() {
     currentGame->createText(
         "Studious Engine 2025",                 // Message
         vec3(25.0f, 25.0f, 0.0f),               // Position
-        1.0f,                                   // Scale
+        0.5f,                                   // Scale
         "src/resources/fonts/AovelSans.ttf",    // Font Path
         5.0f,                                   // Char spacing
-        48,                                     // Font point
+        96,                                     // Font point
         0,                                      // Newline Size
         "studious-text");                       // ObjectName
 
@@ -285,9 +295,28 @@ int mainLoop() {
     int error = 0;
     vector<double> times;
     auto fpsText = currentGame->getSceneObject<TextObject>("fps-text");
+    auto player = currentGame->getSceneObject("player");
+    vec3 lastPos = vec3(0);
+    auto posText = currentGame->createText(
+        "Textbox Example",
+        vec3(600.0f, 15.0f, 0.0f),
+        0.6f,
+        "src/resources/fonts/AovelSans.ttf",
+        1.0f,
+        48,
+        0,
+        "posText");
+    char posTextBuf[128];
     while (!currentGame->isShutDown()) {
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
+        // Get the player's position
+        auto pos = player->getPosition();
+#define TSTR(x) std::to_string(x)
+        snprintf(posTextBuf, sizeof(posTextBuf), "posText: X(%.2f), Y(%.2f), Z(%.2f)\n", pos.x, pos.y, pos.z);
+        if (pos != lastPos)
+            posText->setMessage(posTextBuf);
+        lastPos = pos;
         if (error) {
             return error;
         }

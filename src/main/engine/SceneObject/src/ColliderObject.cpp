@@ -15,7 +15,7 @@
 #include <iostream>
 #include <memory>
 
-#define EPSILON 1e-6
+#define EPSILON 1e-4
 
 /** @todo Update - this is the old struct info
  * @brief Stores info about a GameObject's internal collider object.
@@ -31,10 +31,10 @@
  * @param collider(polygon*) The polygon data for the box collider drawn around a
  *    GameObject it is attached to.
  */
-ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
+ColliderObject::ColliderObject(string tag, std::shared_ptr<Polygon> target, uint programId, SceneObject *owner) :
     SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()), target_ { target },
     pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
-    pVpMatrix_ { owner->vpMatrix() } {
+    pVpMatrix_ { owner->vpMatrix() }, tag_ { tag } {
     programId_ = programId;
     createCollider();
 }
@@ -42,10 +42,10 @@ ColliderObject::ColliderObject(std::shared_ptr<Polygon> target, uint programId, 
 /**
  * @brief Constructor for 2D collider objects.
  */
-ColliderObject::ColliderObject(const vector<float> &vertTexData, unsigned int programId, SceneObject *owner) :
-    SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()),
+ColliderObject::ColliderObject(string tag, const vector<float> &vertTexData, unsigned int programId,
+    SceneObject *owner) : SceneObject(owner->type(), owner->objectName() + "-Collider", owner->gfxController()),
     pTranslateMatrix_ { owner->translateMatrix() }, pScaleMatrix_ { owner->scaleMatrix() },
-    pVpMatrix_ { owner->vpMatrix() } {
+    pVpMatrix_ { owner->vpMatrix() }, tag_ { tag } {
     programId_ = programId;
     // Separate vertex data from vertTexData
     assert(vertTexData.size() % 4 == 0);
@@ -264,6 +264,52 @@ float ColliderObject::getColliderVertices(vector<float> vertices, int axis,
         }
     }
     return currentMin;
+}
+
+vec3 ColliderObject::getEdgePointRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2, vec3 epSign) {
+    vec3 result(0);
+    // Center = critical section?
+    if (c1 == nullptr || c2 == nullptr) {
+        cerr << "Error: Cannot get collision for NULL GameObjects!\n";
+        return result;
+    }
+    auto tm1 = glm::translate(mat4(1.0f), p1);
+    auto sm1 = c1->pScaleMatrix();
+    auto center1 = createCenter(tm1, sm1, c1);
+    auto offset1 = c1->offset();
+
+    auto tm2 = glm::translate(mat4(1.0f), p2);
+    auto sm2 = c2->pScaleMatrix();
+    auto center2 = createCenter(tm2, sm2, c2);
+    auto offset2 = c2->offset();
+
+    auto deltaBase = center1 - center2;
+    auto range = offset1 + offset2;
+
+    vec4 delta = abs(deltaBase);
+    vec3 edgePoint = vec3(range - delta);
+#if (COLL_TRACE == 1)
+    printf("ColliderObject::getEdgePointRaw: deltaBase (%f, %f, %f)\n", deltaBase.x, deltaBase.y, deltaBase.z);
+    printf("ColliderObject::getEdgePointRaw: range (%f, %f, %f)\n", range.x, range.y, range.z);
+#endif
+    for (int i = 0; i < 3; ++i) {
+        // Do this more efficiently
+        if ((epSign[i] > 0.0f && deltaBase[i] < 0.0f) ||
+            (epSign[i] < 0.0f && deltaBase[i] > 0.0f)) {
+            /**
+             * This is a special case where a single update results in our current object moving PASSED
+             * the center of the other object we're testing collision on. This creates a contradition
+             * between delta and epSign's sign. For proper behavior, we will add the range (both offsets)
+             * to the edge point for this axis. Realistically, this shouldn't really manifest itself as a
+             * glitch in production, but it ensures that we pop out of the other object properly. Otherwise
+             * we may see excessive collisions before the object is properly corrected. This should also
+             * reduce jerkiness of object's colliding in this case.
+             */
+            edgePoint[i] = (2 * range[i]) - edgePoint[i];
+        }
+    }
+    result = edgePoint;
+    return result;
 }
 
 vec3 ColliderObject::getEdgePoint(ColliderObject *object, vec3 epSign) {

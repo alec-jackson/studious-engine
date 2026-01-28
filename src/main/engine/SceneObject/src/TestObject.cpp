@@ -35,6 +35,6 @@ void TestObject::update() {
     SceneObject::updateModelMatrices();
 }
 
-void TestObject::createCollider() {
-    collider_ = std::make_shared<ColliderObject>(polygon_, UINT_MAX, this);
+void TestObject::createCollider(string tag) {
+    collider_ = std::make_shared<ColliderObject>(tag, polygon_, UINT_MAX, this);
 }

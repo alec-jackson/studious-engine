@@ -23,6 +23,10 @@ int ColliderExt::getCollisionRaw(vec3 p1, ColliderExt *c1, vec3 p2, ColliderExt 
     return ColliderObject::getCollisionRaw(p1, c1->getCollider(), p2, c2->getCollider());
 }
 
+vec3 ColliderExt::getEdgePointRaw(vec3 p1, ColliderObject *c1, vec3 p2, ColliderObject *c2, vec3 epSign) {
+    return ColliderObject::getEdgePointRaw(p1, c1, p2, c2, epSign);
+}
+
 void ColliderExt::updateCollider() {
     if (collider_.get() != nullptr) collider_->updateCollider();
 }

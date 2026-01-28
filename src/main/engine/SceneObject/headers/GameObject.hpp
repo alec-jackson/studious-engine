@@ -40,7 +40,7 @@ class GameObject: public SceneObject, public ColliderExt {
     inline std::shared_ptr<Polygon> getModel() { return model_; }
 
     // Other methods
-    void createCollider() override;
+    void createCollider(string tag) override;
     void configureOpenGl();
 
     void render() override;

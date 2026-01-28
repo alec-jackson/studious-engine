@@ -3,3 +3,4 @@ resY=720
 enableVsync=1
 physThreads=1
 gfx=OpenGL
+AASamples=8

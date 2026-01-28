@@ -121,7 +121,7 @@ else
         sudo cmake --install .
     fi
     if "$runTests"; then
-        if [ "$filter_tests" == true ]; then
+        if "$filter_tests"; then
             ctest --output-on-failure -j 4 -R $test_filter
         else
             ctest --output-on-failure -j 4

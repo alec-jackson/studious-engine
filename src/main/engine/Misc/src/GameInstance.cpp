@@ -392,6 +392,34 @@ GameObject *GameInstance::createGameObject(std::shared_ptr<Polygon> characterMod
     return addSceneObject(gameObject) ? gameObject.get() : nullptr;
 }
 
+VEC(GameObject *) GameInstance::createGameObjectBatch(SHD(Polygon) characterModel, vec3 position, vec3 rotation,
+    float scale, string objectName) {
+    VEC(GameObject *) objects;
+    int index = 0;
+    printf("GameInstance::createGameObjectBatch: Creating batch GameObjects %s\n", objectName.c_str());
+    auto gameObjProg = gfxController_->getProgramId(GAMEOBJECT_PROG_NAME);
+    if (!gameObjProg.isOk()) {
+        fprintf(stderr,
+            "GameInstance::createGameObject: Failed to create GameObject! '%s' program does not exist!\n",
+            GAMEOBJECT_PROG_NAME);
+        return objects;
+    }
+    // Create a game object for each model+material pair in the Polygon
+    for (auto &entry : characterModel->modelMap) {
+        auto mit = characterModel->materialMap.find(entry.second->materialName);
+        auto subPoly = std::make_shared<Polygon>();
+        if (mit != characterModel->materialMap.end()) {
+            subPoly->materialMap.insert(*mit);
+        }
+        subPoly->modelMap.insert(entry);
+        objects.push_back(createGameObject(subPoly, position, rotation, scale,
+            objectName + entry.first + "." + std::to_string(index++)));
+    }
+    printf("GameInstance::createGameObjectBatch:[%s] Created %lu objects\n", objectName.c_str(),
+        objects.size());
+    return objects;
+}
+
 CameraObject *GameInstance::createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping, string cameraName) {
     printf("GameInstance::createCamera: Creating CameraObject %s\n", cameraName.c_str());
@@ -530,9 +558,9 @@ int GameInstance::update() {
     inputController->update();
     animationController_->update();
     physicsController_->update();
+    std::this_thread::yield();
     end = SDL_GetPerformanceCounter();
     deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
-    std::this_thread::yield();
     return error;
 }
 
@@ -626,9 +654,12 @@ void GameInstance::initWindow() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
-#ifdef __APPLE__  // Temporarily restrict SDL AA to MACOS
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, AASAMPLES);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, AASAMPLES);
+#ifndef GFX_EMBEDDED  // Should not expect AA support from OpenGL ES
+    // Only enable AA if samples > 0 to allow for disabling AA completely
+    if (aasamples_ > 0) {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, aasamples_);
+    }
 #endif
     mainContext = SDL_GL_CreateContext(window);
     if (!mainContext) {
@@ -714,6 +745,8 @@ void GameInstance::processConfig(const StudiousConfig &config) {
     auto cfgVsync = config.getIField("enableVsync");
     auto cfgPhysThreads = config.getUField("physThreads");
     auto cfgGfx = config.getSField("gfx");
+    auto cfgAaSamples = config.getUField("AASamples");
+    aasamples_ = cfgAaSamples.success() ? cfgAaSamples.data : DEFAULT_AASAMPLES;
     width_ = cfgWidth.success() ? cfgWidth.data : DEFAULT_WIDTH;
     height_ = cfgHeight.success() ? cfgHeight.data : DEFAULT_HEIGHT;
     vsync_ = cfgVsync.success() ? cfgVsync.data : DEFAULT_VSYNC;

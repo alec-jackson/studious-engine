@@ -40,7 +40,7 @@
 #include <studious_utility.hpp>
 
 // Number of samples to use for anti-aliasing
-#define AASAMPLES 8
+#define DEFAULT_AASAMPLES 0
 
 extern double deltaTime;
 
@@ -72,6 +72,7 @@ class GameInstance {
     float luminance;
     int width_, height_;
     int vsync_;
+    uint aasamples_;
     int audioID;
     std::atomic<int> shutdown_;
     mutex sceneLock_;
@@ -119,6 +120,8 @@ class GameInstance {
     void init();
     GameObject *createGameObject(std::shared_ptr<Polygon> characterModel, vec3 position, vec3 rotation, float scale,
         string objectName);
+    VEC(GameObject *) createGameObjectBatch(SHD(Polygon) characterModel, vec3 position, vec3 rotation,
+        float scale, string objectName);
     CameraObject *createCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,
               float nearClipping, float farClipping, string cameraName);
     TPSCameraObject *createTPSCamera(SceneObject *target, vec3 offset, float cameraAngle, float aspectRatio,

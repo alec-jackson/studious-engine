@@ -88,13 +88,13 @@ int runtime(GameInstance *currentGame) {
 
     playerAccessory->setParent(player);
     playerAccessoryToo->setParent(player);
-    player->createCollider();
+    player->createCollider("player");
 
     auto obstacle = currentGame->createSprite("src/resources/images/dot_image.png",
         vec3(300, 500, 0), 10, ObjectAnchor::CENTER, "obstacle");
 
     obstacle->createAnimation(5, 4, 24);
-    obstacle->createCollider();
+    obstacle->createCollider("obstacle");
 
     /* Create an animation track for the obstacle */
     vector<int> animationTrack = {
