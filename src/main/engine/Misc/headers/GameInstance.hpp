@@ -40,7 +40,7 @@
 #include <studious_utility.hpp>
 
 // Number of samples to use for anti-aliasing
-#define AASAMPLES 8
+#define DEFAULT_AASAMPLES 0
 
 extern double deltaTime;
 
@@ -72,6 +72,7 @@ class GameInstance {
     float luminance;
     int width_, height_;
     int vsync_;
+    uint aasamples_;
     int audioID;
     std::atomic<int> shutdown_;
     mutex sceneLock_;

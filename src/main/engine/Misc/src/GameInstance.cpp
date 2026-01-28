@@ -655,8 +655,11 @@ void GameInstance::initWindow() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
 #ifndef GFX_EMBEDDED  // Should not expect AA support from OpenGL ES
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
+    // Only enable AA if samples > 0 to allow for disabling AA completely
+    if (aasamples_ > 0) {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, aasamples_);
+    }
 #endif
     mainContext = SDL_GL_CreateContext(window);
     if (!mainContext) {
@@ -742,6 +745,8 @@ void GameInstance::processConfig(const StudiousConfig &config) {
     auto cfgVsync = config.getIField("enableVsync");
     auto cfgPhysThreads = config.getUField("physThreads");
     auto cfgGfx = config.getSField("gfx");
+    auto cfgAaSamples = config.getUField("AASamples");
+    aasamples_ = cfgAaSamples.success() ? cfgAaSamples.data : DEFAULT_AASAMPLES;
     width_ = cfgWidth.success() ? cfgWidth.data : DEFAULT_WIDTH;
     height_ = cfgHeight.success() ? cfgHeight.data : DEFAULT_HEIGHT;
     vsync_ = cfgVsync.success() ? cfgVsync.data : DEFAULT_VSYNC;
