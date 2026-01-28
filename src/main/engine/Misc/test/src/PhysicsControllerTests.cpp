@@ -819,7 +819,8 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndFa
     ASSERT_NE(ALL_MATCH, isColl);
 }
 
-TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndFallsGravity_ThenObjectDropsWhenExpected) {
+TEST_F(GivenKinematicAndNonKinematicObject,
+    WhenKinematicCollidesWithCornerAndFallsGravity_ThenObjectDropsWhenExpected) {
     /* Preparation */
     deltaTime = 1.0f;
     vec3 playerVel = vec3(0.0f, 0.0f, 1.0f);
