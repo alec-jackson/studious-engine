@@ -20,6 +20,8 @@
 #include <physics.hpp>
 #include <TestObject.hpp>
 
+#define TEST_OBJ_PRE(x) "TESTOBJECT" x
+
 extern double deltaTime;
 
 const char *testObjectName = "testObject";
@@ -992,6 +994,88 @@ TEST_F(GivenPhysicsControllerWithGravity, WhenTwoUpdatesHappen_ThenPositionUpdat
     /* Validation */
     auto actualPosition = testObject_->getPosition();
     EXPECT_VEC_EQ(expectedPosition, actualPosition);
+}
+
+// Simulate two objects that crush a single object from both sides
+class GivenCrushCollision: public GivenPhysicsControllerPositionPipeline {
+ protected:
+    void SetUp() override {
+        physicsController_ = std::make_unique<PhysicsController>(1);
+        // Create the polygons for the test objects
+        basicModel_ = std::make_shared<Polygon>();
+
+        vector<float> bmVertices = {
+            // Dummy vertex points here - just want offset to be 1 and center 0
+            -1.0f, -1.0f, -1.0f,  // vertex 1
+            1.0f, 1.0f, 1.0f  // vertex 2
+        };
+        basicModel_->modelMap["to"] = std::make_shared<Model>(bmVertices.size() / 3, bmVertices);
+
+        auto left = std::make_shared<TestObject>(basicModel_, TEST_OBJ_PRE("-left"));
+        auto middle = std::make_shared<TestObject>(basicModel_, TEST_OBJ_PRE("-middle"));
+        auto right = std::make_shared<TestObject>(basicModel_, TEST_OBJ_PRE("-right"));
+
+        left->createCollider("left");
+        middle->createCollider("middle");
+        right->createCollider("right");
+
+        testObjects_.push_back(left);
+        testObjects_.push_back(middle);
+        testObjects_.push_back(right);
+
+        // Use the same generic params for each object
+        PhysicsParams kinPar = {
+            .isKinematic = true,
+            .obeyGravity = false,
+            .elasticity = 0.0f,
+            .mass = testMassKg
+        };
+        physicsController_->addSceneObject(left.get(), kinPar);
+        physicsController_->addSceneObject(middle.get(), kinPar);
+        physicsController_->addSceneObject(right.get(), kinPar);
+    }
+    std::shared_ptr<Polygon> basicModel_;
+    std::vector<std::shared_ptr<SceneObject>> testObjects_;
+};
+
+/**
+ * @brief Ensures that crush collisions are calculated as expected. This test is pretty simple,
+ * but we may want to add more complex tests in the future. This case is non-deterministic because
+ * the order in which certain threads and updates are executed will determine the final position
+ * of the middle object. Because of this, I've left it as a simple 1-dimensional example.
+ */
+TEST_F(GivenCrushCollision, WhenMiddleIsCrushedAfterTwoUpdates_ThenWillPopOut) {
+    deltaTime = 1.0f;
+    /* Preparation */
+    auto left = physicsController_->getPhysicsObject(TEST_OBJ_PRE("-left"));
+    auto middle = physicsController_->getPhysicsObject(TEST_OBJ_PRE("-middle"));
+    auto right = physicsController_->getPhysicsObject(TEST_OBJ_PRE("-right"));
+
+    auto expectedFinalPos = vec3(0.0f);
+    // Disable kinematics for left and right
+    left->isKinematic = false;
+    right->isKinematic = false;
+    // Set starting positions
+    physicsController_->setPosition(TEST_OBJ_PRE("-left"), vec3(-1.5f, 0.0f, 0.0f));
+    physicsController_->setPosition(TEST_OBJ_PRE("-middle"), vec3(0.0f, 0.0f, 0.0f));
+    physicsController_->setPosition(TEST_OBJ_PRE("-right"), vec3(1.5f, 0.0f, 0.0f));
+    // Set velocities of left and right
+    left->velocity = vec3(1.0f, 0.0f, 0.0f);
+    right->velocity = vec3(-1.0f, 0.0f, 0.0f);
+
+    /* Action */
+    physicsController_->update();
+
+    // Stop velocities for left and right
+    physicsController_->setVelocity(TEST_OBJ_PRE("-left"), vec3(0));
+    physicsController_->setVelocity(TEST_OBJ_PRE("-right"), vec3(0));
+
+    // Update again to trigger edge point pos algorithm failsafe
+    physicsController_->update();
+
+    /* Validation */
+    auto actualFinalPos = middle->target->getPosition();
+    ASSERT_VEC_EQ(expectedFinalPos, actualFinalPos);
 }
 
 /**

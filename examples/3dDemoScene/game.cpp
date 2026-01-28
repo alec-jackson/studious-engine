@@ -173,11 +173,10 @@ int runtime() {
 
     kf->rotation.desired = vec3(0.0f, 0.0f, 720.0f);
     auto kf1 = AnimationController::createKeyFrame(
-        UPDATE_ROTATION | UPDATE_POS,   // Rotate and move
+        UPDATE_ROTATION,   // Rotate and move
         5.0f);                          // seconds
 
     kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);
-    kf1->pos.desired = wolfObject->getPosition() + vec3(-3.0f, 0.0f, 4.0f);
     animationController->addKeyFrame(wolfObject, kf);
     animationController->addKeyFrame(wolfObject, kf1);
 

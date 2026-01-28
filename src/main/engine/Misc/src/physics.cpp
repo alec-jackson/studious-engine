@@ -97,7 +97,6 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             targetCollider, obj.second->prevPos, obj.second->targetCollider);
         int deltaAxis = collState ^ prevCollState;
         bool updateGState = false;
-        bool updateLastGood = false;
         // Test the collision with the two object's previous positions to get the collstate delta.
         // If the objects match, then we need to know what the deltaAxis were...
         // Don't update non-kinematic objects
@@ -151,11 +150,9 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             }
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
-                // Just go back to the last known good location...
-                edgePoint = vec3(0.0f);
-                positionDelta = lastGoodPos - target->getPosition();
+                edgePoint = targetCollider->getCollider()->getEdgePointPosInf(
+                    obj.second->targetCollider->getCollider());
             } else {
-                updateLastGood = true;
                 // Make edge point zero except for delta axis directions.
                 // This is a basic approach - revisit later
                 for (int i = 0; i < 3; ++i) {
@@ -182,9 +179,6 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
                 if (updateGState) {
                     gravTime = 0.0f;
                     flushPosition();
-                }
-                if (updateLastGood) {
-                    lastGoodPos = prevPos;
                 }
             }
         }
