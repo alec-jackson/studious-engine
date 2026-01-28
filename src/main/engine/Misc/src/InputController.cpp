@@ -54,6 +54,7 @@ std::map<Uint8, GameInput> hatInputMap = {
 #define INVERT_MODIFIER(flag) if (flag) modifier *= -1.0f
 #define TRACK_TRANSFORM TRACKING_SPEED * modifier * deltaTime
 #define MOUSE_DIVISOR 600.0f
+#define STICK_DIVISOR 300.0f
 
 InputController::InputController(const VEC(SHD(CameraObject)) &cameras, std::mutex *cameraLock) :
     cameras_ { cameras }, cameraLock_ { cameraLock } {
@@ -244,6 +245,9 @@ void InputController::updateCameraControls() {
         yModifier = abs(controllerRightStateY) > JOYSTICK_DEAD_ZONE ? controllerRightStateY : 0.0f;
         xModifier /= INT16_MAX;  // Normalize between 0 and 1
         yModifier /= INT16_MAX;
+        // Reduce speed with divisor
+        xModifier /= STICK_DIVISOR;
+        yModifier /= STICK_DIVISOR;
     }
     // Send process input to camera
     std::unique_lock<std::mutex> camLock(*cameraLock_);

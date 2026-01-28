@@ -109,7 +109,7 @@ int runtime() {
         currentGame->loadSound(sfx.first, sfx.second);
     }
     // Start the background music
-    //currentGame->playSound("bg_music", 1, 60);
+    currentGame->playSound("bg_music", 1, 60);
 
     cout << "Creating Map.\n";
 
