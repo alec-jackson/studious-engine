@@ -275,8 +275,7 @@ void rotateShape(void *target) {
                 float magnitude = 0.01f;
                 // angles.y is the rotation of the character on some axis??
                 printf("Detected rot %f %f %f\n", charAngle.x, charAngle.y, charAngle.z);
-
-                physicsController->setVelocity(bulletName, vec3(ray.x * magnitude, 0.0f, ray.z * magnitude));
+                physicsController->setVelocity(bulletName, bulletName, vec3(ray.x * magnitude, 0.0f, ray.z * magnitude));
             }
         }
         // Set character rotation based on joysticks
@@ -286,7 +285,8 @@ void rotateShape(void *target) {
             angle += controllerLeftStateX > 0.0f ? 90.0f : 270.0f;
             UPDATE_CHAR_ANGLE((fpsMode ? -angle + 180.0f : -angle));
         }
-        physicsController->setVelocity("player", travelVel);
+        travelVel = vec3(1.0f, 0.0f, 0.0f);
+        physicsController->setVelocity("player", "travel", travelVel);
         currentGame->protectedGfxRequest([&] () {
             currentGame->setLuminance(currentLuminance);
             character->setRotation(charAngle);

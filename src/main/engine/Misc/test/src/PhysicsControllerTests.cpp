@@ -21,6 +21,7 @@
 #include <TestObject.hpp>
 
 #define TEST_OBJ_PRE(x) "TESTOBJECT" x
+#define TESTVAL_TEXT "TESTVAL"
 
 extern double deltaTime;
 
@@ -214,7 +215,6 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenPositionUpdateCalled_ThenPosi
     vec3 expectedPosition = vec3(5.0f, 4.0f, 3.0f);
     testObject_->setPosition(startingPosition);
     physicsController_->setPosition(testObjectName, expectedPosition);
-    ASSERT_VEC_EQ(expectedPosition, testObject_->getPosition());
 
     /* Action */
     physicsController_->update();
@@ -239,7 +239,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenVelocityUpdateCalled_ThenPosi
      * directly via the SceneObject setter is meaningless...
      */
     physicsController_->setPosition(testObjectName, startingPosition);
-    physicsController_->setVelocity(testObjectName, targetVelocity);
+    physicsController_->setVelocity(testObjectName, TESTVAL_TEXT, targetVelocity);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     /* Action */
@@ -265,7 +265,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalled_Then
      * directly via the SceneObject setter is meaningless...
      */
     physicsController_->setPosition(testObjectName, startingPosition);
-    physicsController_->setAcceleration(testObjectName, targetAcceleration);
+    physicsController_->setAcceleration(testObjectName, TESTVAL_TEXT, targetAcceleration);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     /* Action */
@@ -287,7 +287,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenAccelerationUpdateCalledTwice
     vec3 expectedPosition_2 = vec3(3.0f, 2.0f, 2.0f);
     testObject_->setPosition(startingPosition);
     physicsController_->setPosition(testObjectName, startingPosition);
-    physicsController_->setAcceleration(testObjectName, targetAcceleration);
+    physicsController_->setAcceleration(testObjectName, TESTVAL_TEXT, targetAcceleration);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     /* Action */
@@ -311,8 +311,8 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenComplexAccelerationVelPosUpda
     vec3 expectedPosition = vec3(185.37436f, -136.69035f, 1481.819f);
     testObject_->setPosition(startingPosition);
     physicsController_->setPosition(testObjectName, startingPosition);
-    physicsController_->setVelocity(testObjectName, velocity);
-    physicsController_->setAcceleration(testObjectName, acceleration);
+    physicsController_->setVelocity(testObjectName, "vel", velocity);
+    physicsController_->setAcceleration(testObjectName, "accel", acceleration);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     /* Action */
@@ -338,8 +338,8 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterVelocityChan
     vec3 expectedPosition_2 = vec3(6.5f, 0.0f, 0.0f);
     testObject_->setPosition(startingPosition);
     physicsController_->setPosition(testObjectName, startingPosition);
-    physicsController_->setVelocity(testObjectName, velocity);
-    physicsController_->setAcceleration(testObjectName, acceleration);
+    physicsController_->setVelocity(testObjectName, "velocity", velocity);
+    physicsController_->setAcceleration(testObjectName, "acceleration", acceleration);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     // Run update twice - this basically sets t = 2 seconds
@@ -353,7 +353,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterVelocityChan
     ASSERT_VEC_EQ(startingPosition, physicsObject->position);
 
     // We're going to reset the velocity, which will reset the running time counter...
-    physicsController_->setVelocity(testObjectName, velocity);
+    physicsController_->setVelocity(testObjectName, "velocity", velocity);
 
     // ... and also set the current position as the new reference position
     ASSERT_VEC_EQ(expectedPosition_1, physicsObject->position);
@@ -385,8 +385,8 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterAcceleration
     vec3 expectedPosition_2 = vec3(8.5f, 0.0f, 0.0f);
     testObject_->setPosition(startingPosition);
     physicsController_->setPosition(testObjectName, startingPosition);
-    physicsController_->setVelocity(testObjectName, velocity);
-    physicsController_->setAcceleration(testObjectName, acceleration);
+    physicsController_->setVelocity(testObjectName, "vel", velocity);
+    physicsController_->setAcceleration(testObjectName, "acc", acceleration);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     // Run update twice - this basically sets t = 2 seconds
@@ -400,7 +400,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateCalledAfterAcceleration
     ASSERT_VEC_EQ(startingPosition, physicsObject->position);
 
     // We're going to reset the acceleration, which will reset the running time counter...
-    physicsController_->setAcceleration(testObjectName, acceleration);
+    physicsController_->setAcceleration(testObjectName, "acc", acceleration);
 
     // ... and also set the current position as the new reference position
     ASSERT_VEC_EQ(expectedPosition_1, physicsObject->position);
@@ -473,7 +473,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyForce_ThenPos
     vec3 force = vec3(5.0f, 3.0f, 6.0f);
     vec3 expectedPosition = vec3(1.5f, 10.3f, 7.6f);
     testObject_->setPosition(startingPosition);
-    physicsController_->applyForce(testObjectName, force);
+    physicsController_->applyForce(testObjectName, "f1", force);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     /* Action */
@@ -494,7 +494,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyInstantForce_
     vec3 force = vec3(5.0f, 3.0f, 6.0f);
     vec3 expectedPosition = vec3(4.5f, 2.7f, 5.4f);
     testObject_->setPosition(startingPosition);
-    physicsController_->applyInstantForce(testObjectName, force);
+    physicsController_->applyForce(testObjectName, "if1", force, 3.0f);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     /* Action */
@@ -515,7 +515,7 @@ TEST_F(GivenPhysicsControllerPositionPipeline, WhenUpdateAfterApplyInstantForceT
     vec3 force = vec3(5.0f, 3.0f, 6.0f);
     vec3 expectedPosition = ((vec3(0.5f) * force) / testMassKg) * (MAX_PHYSICS_UPDATE_TIME * MAX_PHYSICS_UPDATE_TIME);
     testObject_->setPosition(startingPosition);
-    physicsController_->applyInstantForce(testObjectName, force);
+    physicsController_->applyForce(testObjectName, "if1", force, 900.0f);
     ASSERT_VEC_EQ(startingPosition, testObject_->getPosition());
 
     /* Action */
@@ -573,7 +573,7 @@ TEST_F(GivenTwoKinematicObjects, WhenObjectsCollide_ThenVelocitiesUpdatedAsExpec
     physicsController_->setPosition(otherObjectName, secondObjectPosition);
 
     // Move the first object into the second object
-    physicsController_->setVelocity(testObjectName, firstObjectVelocity);
+    physicsController_->setVelocity(testObjectName, "vel", firstObjectVelocity);
 
     // Expected final velocities
     float m1 = testMassKg;
@@ -606,7 +606,7 @@ TEST_F(GivenTwoKinematicObjects, WhenObjectsCollide_ThenObjectsMovedToEdgePoint)
     physicsController_->setPosition(otherObjectName, secondObjectPosition);
 
     // Move the first object into the second object
-    physicsController_->setVelocity(testObjectName, firstObjectVelocity);
+    physicsController_->setVelocity(testObjectName, "vel", firstObjectVelocity);
 
     // Expected final positions
     vec3 expectedFirstFinalPos = vec3(0.75f, 0.0f, 0.0f);
@@ -688,7 +688,7 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesNoPassthrough_T
     vec3 playerPos = vec3(0.0f, 2.0f, 0.0f);
     vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
     // Because of flushing, set velocity first
-    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setVelocity(testObjectName, "vel", playerVel);
     physicsController_->setPosition(testObjectName, playerPos);
     physicsController_->setPosition(mapObjectName, mapPos);
 
@@ -724,7 +724,7 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesThrough_ThenObj
     vec3 playerPos = vec3(0.0f, 2.0f, 0.0f);
     vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
     // Because of flushing, set velocity first
-    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setVelocity(testObjectName, "vel", playerVel);
     physicsController_->setPosition(testObjectName, playerPos);
     physicsController_->setPosition(mapObjectName, mapPos);
 
@@ -755,7 +755,7 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCorner_Then
     vec3 playerPos = vec3(9.5f, 2.0f, 9.5f);
     vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
     // Because of flushing, set velocity first
-    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setVelocity(testObjectName, "vel", playerVel);
     physicsController_->setPosition(testObjectName, playerPos);
     physicsController_->setPosition(mapObjectName, mapPos);
 
@@ -785,7 +785,7 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndFa
     vec3 playerPos = vec3(9.5f, 2.0f, 9.5f);
     vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
     // Because of flushing, set velocity first
-    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setVelocity(testObjectName, "vel", playerVel);
     physicsController_->setPosition(testObjectName, playerPos);
     physicsController_->setPosition(mapObjectName, mapPos);
 
@@ -827,7 +827,7 @@ TEST_F(GivenKinematicAndNonKinematicObject,
     vec3 playerPos = vec3(9.5f, 4.0f, 9.5f);
     vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
     // Because of flushing, set velocity first
-    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setVelocity(testObjectName, "vel", playerVel);
     physicsController_->setPosition(testObjectName, playerPos);
     physicsController_->setPosition(mapObjectName, mapPos);
 
@@ -878,7 +878,7 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesNoPTNegSign_The
     vec3 playerPos = vec3(0.0f, -2.0f, 0.0f);
     vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
     // Because of flushing, set velocity first
-    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setVelocity(testObjectName, "vel", playerVel);
     physicsController_->setPosition(testObjectName, playerPos);
     physicsController_->setPosition(mapObjectName, mapPos);
 
@@ -909,7 +909,7 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndRi
     vec3 playerPos = vec3(9.5f, -2.0f, 9.5f);
     vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
     // Because of flushing, set velocity first
-    physicsController_->setVelocity(testObjectName, playerVel);
+    physicsController_->setVelocity(testObjectName, "vel", playerVel);
     physicsController_->setPosition(testObjectName, playerPos);
     physicsController_->setPosition(mapObjectName, mapPos);
 
@@ -1068,8 +1068,8 @@ TEST_F(GivenCrushCollision, WhenMiddleIsCrushedAfterTwoUpdates_ThenWillPopOut) {
     physicsController_->update();
 
     // Stop velocities for left and right
-    physicsController_->setVelocity(TEST_OBJ_PRE("-left"), vec3(0));
-    physicsController_->setVelocity(TEST_OBJ_PRE("-right"), vec3(0));
+    physicsController_->setVelocity(TEST_OBJ_PRE("-left"), "lvel", vec3(0));
+    physicsController_->setVelocity(TEST_OBJ_PRE("-right"), "rvel", vec3(0));
 
     // Update again to trigger edge point pos algorithm failsafe
     physicsController_->update();

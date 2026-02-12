@@ -28,16 +28,35 @@ extern double deltaTime;
 void PhysicsObject::updatePosition() {
     prevPos = target->getPosition();
     float cappedTime = CAP_TIME(deltaTime);
-    runningTime += cappedTime;
-    // Acceleration
-    vec3 pos = vec3(0.5f) * acceleration * vec3(runningTime * runningTime);
-    if (obeyGravity) {
-        gravTime += cappedTime;
-        pos += GRAV_FUNC;
+    vec3 pos(0);
+    vector<string> deferredDeleteKts;
+    for (auto kt : kinTransforms) {
+        if (kt.second == nullptr) {
+            fprintf(stderr, "PhysicsObject::updatePosition: No data for %s\n",
+                kt.first.c_str());
+            assert(false);
+            continue;
+        }
+        assert(kt.second != nullptr);
+        printf("Transforming with %s (%f, %f, %f)\n", kt.first.c_str(),
+            kt.second->kinVec.x, kt.second->kinVec.y, kt.second->kinVec.z);
+        //assert(kt.second->kinVec.x >= 0.0f);
+        // Apply capped time to transformations
+        kt.second->updateTime(cappedTime);
+
+        if (kt.second->isDone()) {
+            // If we're done, flush to position - will be added later
+            position += kt.second->calculatePos();
+            deferredDeleteKts.push_back(kt.first);
+        } else {
+            pos += kt.second->calculatePos();
+        }
     }
-    // Velocity
-    pos += (velocity * vec3(runningTime));
-    // Position
+
+    for (auto ktName : deferredDeleteKts) {
+        kinTransforms.erase(ktName);
+    }
+
     pos += position;
 
     // Update the position of the target object
@@ -52,26 +71,9 @@ void PhysicsObject::updatePosition() {
 #endif
 }
 
-void PhysicsObject::flushPosition() {
-    // Flush updated position to reference position - ignore gravity
-    position = target->getPosition() - GRAV_FUNC;
-}
-
-void PhysicsObject::flushVelocity() {
-    // Update velocity using acceleration
-    velocity = (acceleration * vec3(runningTime)) + velocity;
-}
-
-// Does nothing for now, but will be used when jerk implemented...
-// DELETE if we never implement jerk :)
-void PhysicsObject::flushAcceleration() {
-}
-
-void PhysicsObject::fullFlush() {
-    flushPosition();
-    flushVelocity();
-    flushAcceleration();
-    runningTime = 0.0;
+void PhysicsObject::wipeAllTransforms() {
+    std::unique_lock<std::mutex> scopeLock(objLock);
+    kinTransforms.clear();
 }
 
 void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObject>> &objects) {
@@ -177,8 +179,10 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
                 positionDelta += edgePoint;
                 hasCollision = true;
                 if (updateGState) {
-                    gravTime = 0.0f;
-                    flushPosition();
+                    // Reset gravity
+                    auto git = kinTransforms.find(GRAVITY_ACC_KEY);
+                    if (git != kinTransforms.end())
+                        git->second.reset();
                 }
             }
         }
@@ -194,10 +198,18 @@ void PhysicsObject::updateFinalize() {
     auto truePos = target->getPosition();
     auto newPos = truePos + positionDelta;
     target->setPosition(newPos);
-    flushPosition();
-    runningTime = 0.0f;
-    // Need to flush acceleration/velocity
-    velocity += velocityDelta;
+    // Reset ALL kinematic transformations??? REVISIT!!!
+    // for (auto kt : kinTransforms) {
+    //     kt.second.reset();
+    // }
+    auto ktit = kinTransforms.find(COLL_VEL_KEY);
+    if (ktit != kinTransforms.end()) {
+        position += ktit->second->reset();
+        ktit->second->kinVec = velocityDelta;
+    } else {
+        auto pkd = std::make_shared<PhysicsKinData>(velocityDelta, PhysicsKinType::VELOCITY);
+        kinTransforms.insert({COLL_VEL_KEY, pkd});
+    }
 #if (PHYS_TRACE == 1)
     printf("PhysicsObject::finalizeCollisions: Updated velocity for %s (%f, %f, %f)\n", target->objectName().c_str(),
         velocity.x, velocity.y, velocity.z);
@@ -323,6 +335,9 @@ PhysicsResult PhysicsController::addSceneObject(SceneObject *sceneObject, Physic
     poPtr->runningTime = 0.0;
     poPtr->gravTime = 0.0;
     poPtr->targetCollider = dynamic_cast<ColliderExt *>(sceneObject);
+
+    // Create gravity acceleration if requested
+
 
     // Add the object to the physics object list
     assert(!sceneObject->objectName().empty());
@@ -469,6 +484,7 @@ PhysicsResult PhysicsController::waitPipelineComplete() {
 }
 
 void PhysicsController::update() {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
 #if (PHYS_TRACE == 1)
     printf("PhysicsSController::update: deltaTime %f\n", deltaTime);
 #endif
@@ -492,13 +508,12 @@ PhysicsResult PhysicsController::shutdown() {
 }
 
 PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
-    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
         assert(poit->second->target != nullptr);
-        poit->second->target->setPosition(position);
-        poit->second->fullFlush();
+        poit->second->position = position;
         result = PhysicsResult::OK;
     } else {
         printf("PhysicsController::setPosition: %s not found", objectName.c_str());
@@ -506,82 +521,44 @@ PhysicsResult PhysicsController::setPosition(string objectName, vec3 position) {
     return result;
 }
 
-PhysicsResult PhysicsController::setVelocity(string objectName, vec3 velocity) {
-    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
-    auto result = PhysicsResult::FAILURE;
-    auto poit = physicsObjects_.find(objectName);
-    if (poit != physicsObjects_.end()) {
-        // On velocity change, flush object position and reset time
-        poit->second.get()->fullFlush();
-        poit->second.get()->velocity = velocity;
-        result = PhysicsResult::OK;
-    } else {
-        printf("PhysicsController::setVelocity: %s not found", objectName.c_str());
+PhysicsResult PhysicsController::setVelocity(string objectName, string kinName, vec3 velocity) {
+    auto res = addKinematicData_(objectName, kinName, velocity, PhysicsKinType::VELOCITY);
+    if (res == PhysicsResult::FAILURE) {
+        fprintf(stderr, "PhysicsController::setVelocity: Failed to add %s to object %s."
+            " Object not found\n",
+            objectName.c_str(), kinName.c_str());
     }
-    return result;
+    return res;
 }
 
-PhysicsResult PhysicsController::setAcceleration(string objectName, vec3 acceleration) {
-    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
-    auto result = PhysicsResult::FAILURE;
-    auto poit = physicsObjects_.find(objectName);
-    if (poit != physicsObjects_.end()) {
-        // On acceleration change, flush object position and reset time
-        poit->second.get()->fullFlush();
-        poit->second.get()->acceleration = acceleration;
-        result = PhysicsResult::OK;
-    } else {
-        printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());
+PhysicsResult PhysicsController::setAcceleration(string objectName, string kinName, vec3 acceleration) {
+    auto res = addKinematicData_(objectName, kinName, acceleration, PhysicsKinType::ACCELERATION);
+    if (res == PhysicsResult::FAILURE) {
+        fprintf(stderr, "PhysicsController::setAcceleration: Failed to add %s to object %s."
+            " Object not found\n",
+            objectName.c_str(), kinName.c_str());
     }
-    return result;
+    return res;
 }
 
-PhysicsResult PhysicsController::applyForce(string objectName, vec3 force) {
-    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
+PhysicsResult PhysicsController::applyForce(string objectName, string kinName, vec3 force, float maxTime) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
-        poit->second.get()->fullFlush();
-        // Check if the mass is zero
-        if (0.0 != poit->second.get()->mass) {
-            poit->second.get()->acceleration += (force / vec3(poit->second.get()->mass));
-        } else {
-            fprintf(stderr,
-                "PhysicsController::applyForce: Failed to apply force! Target object %s has no mass set!",
-                poit->second.get()->target->objectName().c_str());
+        auto mass = poit->second->mass;
+        if (mass != 0.0f) {
+            auto effForce = force / mass;
+            auto pkd = std::make_shared<PhysicsKinData>(effForce, PhysicsKinType::ACCELERATION, maxTime);
+            poit->second->kinTransforms.insert({kinName, pkd});
+            result = PhysicsResult::OK;
         }
-        result = PhysicsResult::OK;
-    } else {
-        printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());
-    }
-    return result;
-}
-
-PhysicsResult PhysicsController::applyInstantForce(string objectName, vec3 force) {
-    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
-    auto result = PhysicsResult::FAILURE;
-    auto poit = physicsObjects_.find(objectName);
-    if (poit != physicsObjects_.end()) {
-        poit->second.get()->fullFlush();
-        // Check if the mass is zero
-        if (0.0 != poit->second.get()->mass) {
-            float cappedTime = CAP_TIME(deltaTime);
-            poit->second.get()->velocity += vec3(0.5f) * (force / vec3(poit->second.get()->mass)) * vec3(cappedTime);
-            printf("PhysicsController::applyInstantForce: Capped time %f\n", cappedTime);
-        } else {
-            fprintf(stderr,
-                "PhysicsController::applyForce: Failed to apply force! Target object %s has no mass set!",
-                poit->second.get()->target->objectName().c_str());
-        }
-        result = PhysicsResult::OK;
-    } else {
-        printf("PhysicsController::setAcceleration: %s not found", objectName.c_str());
     }
     return result;
 }
 
 PhysicsResult PhysicsController::translate(string objectName, vec3 translation) {
-    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
     auto result = PhysicsResult::FAILURE;
     auto poit = physicsObjects_.find(objectName);
     if (poit != physicsObjects_.end()) {
@@ -601,4 +578,81 @@ uint PhysicsController::getDefaultThreadSize() {
     }
     printf("PhysicsController::getDefaultThreadSize: %u\n", poolSize);
     return poolSize;
+}
+
+PhysicsResult PhysicsController::addKinematicData_(string objectName, string kinName, vec3 kv,
+    PhysicsKinType kt, float mt) {
+    std::unique_lock<std::mutex> scopeLock(controllerLock_);
+    auto result = PhysicsResult::FAILURE;
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
+        // Check if the kin object exists
+        auto kit = poit->second->kinTransforms.find(kinName);
+        if (kit != poit->second->kinTransforms.end()) {
+            auto fp = kit->second->reset();
+            auto pos = poit->second->position;
+            printf("Flushing velocity to position pos(%f, %f, %f) + fp(%f, %f, %f)\n",
+                pos.x, pos.y, pos.z, fp.x, fp.y, fp.z);
+            poit->second->position += fp;
+            kit->second->kinVec = kv;
+            kit->second->kinType = kt;
+        } else {
+            auto pkd = std::make_shared<PhysicsKinData>(kv, kt, mt);
+            poit->second->kinTransforms.insert({kinName, pkd});
+        }
+        result = PhysicsResult::OK;
+    }
+    return result;
+}
+
+vec3 PhysicsKinData::calculateVel() {
+    vec3 res(0);
+    switch (kinType) {
+        case PhysicsKinType::VELOCITY:
+            res = kinVec;
+            break;
+        case PhysicsKinType::ACCELERATION:
+            res = kinVec * vec3(currentTime);
+            break;
+        default:
+            fprintf(stderr, "PhysicsKinData::calculateVel: Unknown kintype %d\n",
+                static_cast<int>(kinType));
+            break;
+    }
+    return res;
+}
+
+vec3 PhysicsKinData::calculatePos() {
+    vec3 res = calculateVel();
+    switch (kinType) {
+        case PhysicsKinType::VELOCITY:
+            res *= currentTime;
+            break;
+        case PhysicsKinType::ACCELERATION:
+            res *= (0.5f * currentTime);
+            break;
+        default:
+            fprintf(stderr, "PhysicsKinData::calculatePos: Unknown kintype %d\n",
+                static_cast<int>(kinType));
+            break;
+    }
+    return res;
+}
+
+void PhysicsKinData::updateTime(float time) {
+    currentTime += time;
+    if (maxTime > 0.0f) {
+        currentTime = std::min(currentTime, maxTime);
+    }
+}
+
+// REVISIT if float EQ becomes problematic here
+bool PhysicsKinData::isDone() {
+    return currentTime == maxTime;
+}
+
+vec3 PhysicsKinData::reset() {
+    auto res = calculatePos();
+    currentTime = 0.0f;
+    return res;
 }

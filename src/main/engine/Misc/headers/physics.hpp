@@ -25,10 +25,11 @@
 #include <SceneObject.hpp>
 #include <ColliderExt.hpp>
 #include <glm/fwd.hpp>
+#include <studious_utility.hpp>
 
 #define SUBSCRIPTION_PARAM std::function<PhysicsReport *(void)>
 #define PHYS_MAX_THREADS 256
-#define PHYS_TRACE 0
+#define PHYS_TRACE 1
 #define MAX_PHYSICS_UPDATE_TIME 10.0f
 #define CAP_TIME(ucTime) ucTime > MAX_PHYSICS_UPDATE_TIME ? MAX_PHYSICS_UPDATE_TIME : ucTime
 #ifndef PHYS_THREADS
@@ -37,12 +38,34 @@
 #endif
 #define GRAVITY_CONST 9.81f
 
+#define GRAVITY_ACC_KEY "GRAVITY"
+#define COLL_VEL_KEY "COLLISION"
+
 enum PhysicsWorkType {
     POSITION,
     COLLISION,
     FINALIZE,
     SUBMIT,
     DIE
+};
+
+enum class PhysicsKinType {
+    VELOCITY,
+    ACCELERATION
+};
+
+struct PhysicsKinData {
+    vec3 kinVec;
+    PhysicsKinType kinType;
+    float maxTime;
+    float currentTime = 0.0f;
+    vec3 calculatePos();
+    vec3 calculateVel();
+    vec3 reset();
+    void updateTime(float time);
+    bool isDone();
+    inline explicit PhysicsKinData(vec3 kv, PhysicsKinType kt, float mt = -1.0f) : kinVec { kv }, kinType { kt },
+        maxTime { mt } {}
 };
 
 // Internal - used in physics component
@@ -55,6 +78,7 @@ class PhysicsObject {
     vec3                 positionDelta = vec3(0.0f);
     vec3                 velocity;
     vec3                 velocityDelta = vec3(0.0f);
+    map<string, SHD(PhysicsKinData)> kinTransforms;
     bool                 hasCollision = false;
     vec3                 acceleration;
     vec3                 jerk;
@@ -71,25 +95,7 @@ class PhysicsObject {
      * @brief Updates the position of the target object using the position formula.
      */
     void updatePosition();
-    /**
-     * @brief Resets the reference position to the object's real position to allow the runningTime
-     * counter to be reset without moving the object backwards.
-     */
-    void flushPosition();
-    /**
-     * @brief Updates the reference velocity to velocity + acceleration * runningTime to maintain
-     * momentum of objects before a runningTime reset.
-     */
-    void flushVelocity();
-    /**
-     * @brief Does nothing for now, but will be useful when jerk is implemented.
-     */
-    void flushAcceleration();
-    /**
-     * @brief Runs position, velocity, acceleration flushes and resets the runningTime counter back
-     * to zero.
-     */
-    void fullFlush();
+    void wipeAllTransforms();
 
     void updateCollision(const map<string, std::shared_ptr<PhysicsObject>> &objects);
     void updateFinalize();
@@ -160,10 +166,9 @@ class PhysicsController {
      * PhysicsResult::FAILURE is returned and no objects are changed.
      */
     PhysicsResult setPosition(string objectName, vec3 position);
-    PhysicsResult setVelocity(string objectName, vec3 velocity);
-    PhysicsResult setAcceleration(string objectName, vec3 acceleration);
-    PhysicsResult applyForce(string objectName, vec3 force);
-    PhysicsResult applyInstantForce(string objectName, vec3 force);
+    PhysicsResult setVelocity(string objectName, string kinName, vec3 velocity);
+    PhysicsResult setAcceleration(string objectName, string kinName, vec3 acceleration);
+    PhysicsResult applyForce(string objectName, string kinName, vec3 force, float maxTime = -1.0f);
     PhysicsResult translate(string objectName, vec3 direction);
     PhysicsResult schedulePosition();
     PhysicsResult scheduleCollision();
@@ -185,10 +190,12 @@ class PhysicsController {
     std::shared_mutex physicsObjectQueueLock_;
     std::mutex subscriberLock_;
     std::mutex workQueueLock_;
+    std::mutex controllerLock_;
     std::atomic<uint> freeWorkers_;
     map<string, std::shared_ptr<PhysicsObject>> physicsObjects_;
     queue<std::shared_ptr<PhysicsObject>> workQueue_;
     vector<PhysicsSubscriber> subscribers_;
     std::condition_variable workAvailableSignal_;
     std::condition_variable workCompletedSignal_;
+    PhysicsResult addKinematicData_(string objectName, string kinName, vec3 kv, PhysicsKinType kt, float mt = -1.0f);
 };
