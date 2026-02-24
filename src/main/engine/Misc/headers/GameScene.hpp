@@ -14,6 +14,7 @@
 #include <vector>
 #include <SceneObject.hpp>
 #include <CameraObject.hpp>
+#include <ProcessMgr.hpp>
 
 class GameScene {
  public:
@@ -23,7 +24,7 @@ class GameScene {
     void removeSceneObject(std::string objectName);
     std::shared_ptr<SceneObject> getSceneObject(std::string objectName);
 
-    void update(CameraObject *camera);
+    void update(CameraObject *camera, ProcessMgr *executor);
 
     void loadGameScene(std::string path);
     void saveGameScene(std::string path);

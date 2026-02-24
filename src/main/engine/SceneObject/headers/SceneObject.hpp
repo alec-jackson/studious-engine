@@ -126,6 +126,8 @@ class SceneObject {
     virtual void render() = 0;
     virtual void update() = 0;
 
+    std::function<void(void)> gameUpdate;
+
  protected:
     mat4 translateMatrix_;
     mat4 scaleMatrix_;

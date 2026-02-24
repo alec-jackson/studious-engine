@@ -57,7 +57,7 @@ void GameScene::refresh() {
     }
 }
 
-void GameScene::update(CameraObject *camera) {
+void GameScene::update(CameraObject *camera, ProcessMgr *executor) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
     if (camera == nullptr) {
         fprintf(stderr, "GameScene::update: Camera missing!\n");
@@ -68,8 +68,6 @@ void GameScene::update(CameraObject *camera) {
     auto orthoMat = camera->getOrthographic();
     auto orthoMatBase = camera->getOrthographicBase();
     for (auto &obj : renderPriorityMap_) {
-        // Send the current screen res to each object
-        /// @todo Maybe use a global variable for resolution?
         auto objList = obj.second;
         for (auto objPtr : objList) {
             objPtr->setResolution(resolution);
@@ -94,8 +92,13 @@ void GameScene::update(CameraObject *camera) {
             }
             // Render the object -> the map iterator will sort keys automatically
             objPtr->update();
+            // Send gameUpdate functions to the executor
+            if (objPtr->gameUpdate)
+                executor->sendTask(objPtr->gameUpdate);
         }
     }
+    // Wait for the executor to finish
+    executor->waitComplete();
 }
 
 void GameScene::resetRenderPriorityMap() {

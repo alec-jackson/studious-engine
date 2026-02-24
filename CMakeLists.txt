@@ -67,6 +67,7 @@ add_library(${PROJECT_NAME} SHARED
   src/main/utilities/src/ModelImport.cpp
   src/main/engine/Misc/src/GameInstance.cpp
   src/main/engine/Misc/src/GameScene.cpp
+  src/main/engine/Misc/src/ProcessMgr.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
   src/main/engine/SceneObject/src/GameObject.cpp
   src/main/engine/SceneObject/src/SpriteObject.cpp
@@ -293,6 +294,7 @@ install (FILES
   src/main/engine/Misc/headers/GameInstance.hpp
   src/main/engine/Misc/headers/InputController.hpp
   src/main/engine/Misc/headers/GameScene.hpp
+  src/main/engine/Misc/headers/ProcessMgr.hpp
   src/main/engine/Misc/headers/Image.hpp
   src/main/engine/Misc/headers/physics.hpp
   src/main/misc/headers/config.hpp

@@ -38,6 +38,7 @@
 #include <TPSCameraObject.hpp>
 #include <FPSCameraObject.hpp>
 #include <studious_utility.hpp>
+#include <ProcessMgr.hpp>
 
 // Number of samples to use for anti-aliasing
 #define DEFAULT_AASAMPLES 0
@@ -88,6 +89,8 @@ class GameInstance {
     bool audioInitialized_ = false;
     SHD(GameScene) activeScene_;
     map<string, std::shared_ptr<GameScene>> gameScenes_;
+
+    std::unique_ptr<ProcessMgr> objectExecutor_;
 
     void initWindow();
     void initAudio();

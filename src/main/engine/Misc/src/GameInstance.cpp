@@ -270,8 +270,8 @@ int GameInstance::updateObjects() {
         camera->update();
     }
     // Update the current scene
-    if (activeScene_.get() && activeCamera_.get())
-        activeScene_.get()->update(activeCamera_.get());
+    if (activeScene_ && activeCamera_)
+        activeScene_->update(activeCamera_.get(), objectExecutor_.get());
     return 0;
 }
 
@@ -746,12 +746,14 @@ void GameInstance::processConfig(const StudiousConfig &config) {
     auto cfgPhysThreads = config.getUField("physThreads");
     auto cfgGfx = config.getSField("gfx");
     auto cfgAaSamples = config.getUField("AASamples");
+    auto cfgExecutorThreads = config.getUField("objectExecutorThreads");
     aasamples_ = cfgAaSamples.success() ? cfgAaSamples.data : DEFAULT_AASAMPLES;
     width_ = cfgWidth.success() ? cfgWidth.data : DEFAULT_WIDTH;
     height_ = cfgHeight.success() ? cfgHeight.data : DEFAULT_HEIGHT;
     vsync_ = cfgVsync.success() ? cfgVsync.data : DEFAULT_VSYNC;
     uint physThreads = cfgPhysThreads.success() ? cfgPhysThreads.data : PhysicsController::getDefaultThreadSize();
     string gfxBackend = cfgGfx.success() ? cfgGfx.data : DEFAULT_GFX;
+    uint objExecThreads = cfgExecutorThreads.success() ? cfgExecutorThreads.data : DEFAULT_OBJ_EXEC_THREADS;
 
     // Load in controllers based on settings
     if (gfxBackend.compare(GFX_OPENGL_CFG_STRING) == 0) {
@@ -770,6 +772,7 @@ void GameInstance::processConfig(const StudiousConfig &config) {
     animationController = std::make_unique<AnimationController>();
     physicsController = std::make_unique<PhysicsController>(physThreads);
     inputController = std::make_unique<InputController>(cameras_, &cameraLock_);
+    objectExecutor_ = std::make_unique<ProcessMgr>(objExecThreads);
 
     // Populate internal pointers to keep things easy
     gfxController_ = gfxController.get();
