@@ -93,8 +93,8 @@ void GameScene::update(CameraObject *camera, ProcessMgr *executor) {
             // Render the object -> the map iterator will sort keys automatically
             objPtr->update();
             // Send gameUpdate functions to the executor
-            if (objPtr->gameUpdate)
-                executor->sendTask(objPtr->gameUpdate);
+            if (objPtr->process)
+                executor->sendTask([objPtr] { objPtr->process(objPtr.get()); });
         }
     }
     // Wait for the executor to finish

@@ -19,6 +19,7 @@
 #include <iostream>
 #include <map>
 #include "game.hpp"
+#include "examples/3dDemoScene/inputMonitor.hpp"
 #include <TextObject.hpp>
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>
@@ -270,15 +271,14 @@ int runtime() {
     playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
     playerRef->setScale(0.5f);
 
+    // Create a BASE OBJECT that will run our global game code...
+    playerRef->process = InputMonitor::process;
+    playerRef->ready = InputMonitor::ready;
     /*
      End Scene Loading
      */
-    // Additional threads should be added, pipes will most likely be required
-    // Might also be a good idea to keep the parent thread local to watch for
-    // unexpected failures and messages from children
-    thread rotThread(rotateShape, playerRef);
+
     mainLoop();
-    rotThread.join();
     return 0;
 }
 

@@ -28,6 +28,8 @@
 #define RENDER_PRIOR_HIGH 40u
 #define RENDER_PRIOR_HIGHEST 100u
 
+#define OBJ_SCRIPT_FUNC std::function<void(SceneObject *)>
+
 /* MISC */
 #define VISIBILITY_CHECK if ((!visible_ || (parent_ && !parent_->visible())) && !visPerm_) return
 
@@ -55,6 +57,10 @@ class SceneObject {
         ObjectType type, string objectName, GfxController *gfxController):
             position(position), rotation(rotation), objectName_(objectName), scale_(scale), programId_(programId),
             type_ { type }, gfxController_ { gfxController } {}
+    inline explicit SceneObject(OBJ_SCRIPT_FUNC func, ObjectType type, string objectName,
+        GfxController *gfxController) : process { func },
+        position { 0 }, rotation { 0 }, objectName_ { objectName }, scale_ { 0.0f }, type_ { type },
+        gfxController_ { gfxController } {}
     inline explicit SceneObject(ObjectType type, string objectName, GfxController *gfxController):
         position { 0 }, rotation { 0 }, objectName_ { objectName }, scale_ { 0.0f }, type_ { type },
         gfxController_ { gfxController } {}
@@ -126,7 +132,9 @@ class SceneObject {
     virtual void render() = 0;
     virtual void update() = 0;
 
-    std::function<void(void)> gameUpdate;
+    std::function<void(SceneObject *)> process;
+    std::function<void(SceneObject *)> ready;
+    std::function<void(SceneObject *)> cleanup;
 
  protected:
     mat4 translateMatrix_;

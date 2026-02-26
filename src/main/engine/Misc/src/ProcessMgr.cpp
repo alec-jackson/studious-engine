@@ -60,7 +60,9 @@ void ProcessMgr::taskExecutor(std::queue<Task> &tasks, std::condition_variable &
 }
 
 void ProcessMgr::sendTask(std::function<void(void)> taskFn) {
+    std::unique_lock<std::mutex> scopeLock(taskLock_);
     tasks_.push({ TaskType::FUNC, taskFn });
+    taskCv_.notify_all();
 }
 
 void ProcessMgr::waitComplete() {

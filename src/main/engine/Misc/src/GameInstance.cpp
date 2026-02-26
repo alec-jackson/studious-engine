@@ -367,7 +367,8 @@ bool GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
         assert(false);
         return false;
     }
-    activeScene_.get()->addSceneObject(sceneObject);
+    activeScene_->addSceneObject(sceneObject);
+    if (sceneObject->ready) sceneObject->ready(sceneObject.get());
     return true;
 }
 
@@ -523,6 +524,11 @@ TileObject *GameInstance::createTileMap(map<string, string> textures, vector<Til
     return addSceneObject(tile) ? tile.get() : nullptr;
 }
 
+BaseObject *GameInstance::createBaseObject(std::function<void(SceneObject *)> func, string objectName) {
+    auto bo = std::make_shared<BaseObject>(objectName, func);
+    return addSceneObject(bo) ? bo.get() : nullptr;
+}
+
 SceneObject *GameInstance::getSceneObject(string objectName) {
     SceneObject *result = nullptr;
     // Attempt to find the scene object in the current scene
@@ -558,7 +564,6 @@ int GameInstance::update() {
     inputController->update();
     animationController_->update();
     physicsController_->update();
-    std::this_thread::yield();
     end = SDL_GetPerformanceCounter();
     deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
     return error;

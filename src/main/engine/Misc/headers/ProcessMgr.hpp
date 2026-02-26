@@ -13,6 +13,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <queue>
+#include <SceneObject.hpp>
 
 enum class TaskType {
     FUNC,
@@ -29,6 +30,7 @@ struct Task {
  * just be able to throw in function pointers as tasks, and convenience
  * methods will help synchronize and get statistics on those tasks.
  */
+
 class ProcessMgr {
  public:
     explicit ProcessMgr(uint numThreads);

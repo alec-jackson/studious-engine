@@ -9,3 +9,4 @@
 #pragma once
 #define SHD(x) std::shared_ptr<x>
 #define VEC(x) std::vector<x>
+#define UNUSED(x) ((void*)0 || x)
