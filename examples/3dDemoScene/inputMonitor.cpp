@@ -96,8 +96,7 @@ auto populateInputMaps(map<int, bool> &inputMap, map<GameInput, bool> &inputGIMa
     }
 };
 
-void ready(SceneObject *self) {
-    UNUSED(self);
+void ready([[maybe_unused]] SceneObject *self) {
     // Initialize global variables here
     numJoySticks = SDL_NumJoysticks();
     initDebounceMaps();

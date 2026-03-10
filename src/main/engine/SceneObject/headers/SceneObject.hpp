@@ -12,6 +12,7 @@
 #include <set>
 #include <common.hpp>
 #include <GfxController.hpp>
+#include <functional>
 
 /* Define constants for shader names */
 #define UIOBJECT_PROG_NAME "uiObject"
