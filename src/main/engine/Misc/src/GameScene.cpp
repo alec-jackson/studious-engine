@@ -39,6 +39,7 @@ void GameScene::removeSceneObject(std::string objectName) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
     auto soit = sceneObjects_.find(objectName);
     if (soit != sceneObjects_.end()) {
+        soit->second->cleanup(soit->second.get());
         sceneObjects_.erase(soit);
         resetRenderPriorityMap();
     } else {

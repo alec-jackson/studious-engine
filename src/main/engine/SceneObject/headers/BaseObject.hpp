@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include <string>
 #include <SceneObject.hpp>
 
 class BaseObject : public SceneObject {

@@ -7,6 +7,7 @@
  */
 #include <FPSCameraObject.hpp>
 #include <memory>
+#include <string>
 #include <InputController.hpp>
 #include <AnimationController.hpp>
 #include <physics.hpp>

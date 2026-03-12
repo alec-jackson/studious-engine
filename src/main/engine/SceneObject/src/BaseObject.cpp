@@ -7,6 +7,7 @@
  */
 
 #include <BaseObject.hpp>
+#include <string>
 
 BaseObject::BaseObject(string objectName, std::function<void(SceneObject *)> func) :
     SceneObject(func, ObjectType::UNDEFINED, objectName, nullptr) {

@@ -1,3 +1,11 @@
+/**
+ * @file ProcessMgr.cpp
+ * @brief Simple object for managing thread pool task execution.
+ * @date 03-11-2026
+ * @author Christian Galvez
+ * @copyright Studious Engine 2026
+ */
+
 #include <ProcessMgr.hpp>
 #include <mutex>
 #include <cstdio>
