@@ -39,7 +39,6 @@
 #include <FPSCameraObject.hpp>
 #include <studious_utility.hpp>
 #include <ProcessMgr.hpp>
-#include <BaseObject.hpp>
 
 // Number of samples to use for anti-aliasing
 #define DEFAULT_AASAMPLES 0
@@ -140,7 +139,6 @@ class GameInstance {
         ObjectAnchor anchor, string objectName);
     TileObject *createTileMap(map<string, string> textures, vector<TileData> mapData,
         vec3 position, float scale, ObjectAnchor anchor, string objectName);
-    BaseObject *createBaseObject(std::function<void(SceneObject *)> func, string objectName);
     int getWidth();
     int getHeight();
     vec3 getResolution();

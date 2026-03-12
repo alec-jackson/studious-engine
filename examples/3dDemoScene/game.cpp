@@ -271,7 +271,6 @@ int runtime() {
     playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
     playerRef->setScale(0.5f);
 
-    // Create a BASE OBJECT that will run our global game code...
     playerRef->process = InputMonitor::process;
     playerRef->ready = InputMonitor::ready;
     /*

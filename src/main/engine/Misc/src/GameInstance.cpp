@@ -524,11 +524,6 @@ TileObject *GameInstance::createTileMap(map<string, string> textures, vector<Til
     return addSceneObject(tile) ? tile.get() : nullptr;
 }
 
-BaseObject *GameInstance::createBaseObject(std::function<void(SceneObject *)> func, string objectName) {
-    auto bo = std::make_shared<BaseObject>(objectName, func);
-    return addSceneObject(bo) ? bo.get() : nullptr;
-}
-
 SceneObject *GameInstance::getSceneObject(string objectName) {
     SceneObject *result = nullptr;
     // Attempt to find the scene object in the current scene

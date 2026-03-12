@@ -69,7 +69,6 @@ add_library(${PROJECT_NAME} SHARED
   src/main/engine/Misc/src/GameScene.cpp
   src/main/engine/Misc/src/ProcessMgr.cpp
   src/main/engine/SceneObject/src/SceneObject.cpp
-  src/main/engine/SceneObject/src/BaseObject.cpp
   src/main/engine/SceneObject/src/GameObject.cpp
   src/main/engine/SceneObject/src/SpriteObject.cpp
   src/main/engine/SceneObject/src/UiObject.cpp
