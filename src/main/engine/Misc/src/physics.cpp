@@ -26,6 +26,8 @@ extern double deltaTime;
 #define GRAV_FUNC vec3(0.5f) * vec3(0, -GRAVITY_CONST, 0) * vec3(gravTime * gravTime)
 
 void PhysicsObject::updatePosition() {
+    // Reset landed flag on update...
+    onFloor = 0;
     prevPos = target->getPosition();
     float cappedTime = CAP_TIME(deltaTime);
     runningTime += cappedTime;
@@ -147,6 +149,9 @@ void PhysicsObject::updateCollision(const map<string, std::shared_ptr<PhysicsObj
             if (deltaAxis == Y_MATCH) {
                 // If you land, reset gravity...
                 updateGState = true;
+                onFloor = 1;
+                // Kill Y velocity on land...
+                vd = vec3(0, -v1.y, 0);
             }
             // This is messy, so change it later
             if (deltaAxis == NO_MATCH) {
@@ -589,6 +594,18 @@ PhysicsResult PhysicsController::translate(string objectName, vec3 translation) 
         result = PhysicsResult::OK;
     } else {
         printf("PhysicsController::translate: %s not found", objectName.c_str());
+    }
+    return result;
+}
+
+int PhysicsController::isOnFloor(string objectName) {
+    std::unique_lock<std::shared_mutex> scopeLock(physicsObjectQueueLock_);
+    auto result = -1;
+    auto poit = physicsObjects_.find(objectName);
+    if (poit != physicsObjects_.end()) {
+        result = poit->second->onFloor;
+    } else {
+        printf("PhysicsController::isOnFloor: %s not found", objectName.c_str());
     }
     return result;
 }

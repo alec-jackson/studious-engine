@@ -712,6 +712,40 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesNoPassthrough_T
     ASSERT_NE(ALL_MATCH, isColl);
 }
 
+TEST_F(GivenKinematicAndNonKinematicObject, WhenKinLandsWithGravity_ThenDoesNotBounce) {
+    /* Preparation */
+    // Gravity is 9.81ms^2, so we should reduce the delta time to 0.25s to avoid clipping through
+    deltaTime = 0.25f;
+    vec3 playerPos = vec3(0.0f, 2.0f, 0.0f);
+    vec3 mapPos = vec3(0.0f, 0.0f, 0.0f);
+    // Enable gravity for the kinematic object
+    auto po = physicsController_->getPhysicsObject(testObjectName);
+    po->obeyGravity = true;
+    // Because of flushing, set velocity first
+    physicsController_->setPosition(testObjectName, playerPos);
+    physicsController_->setPosition(mapObjectName, mapPos);
+
+
+    // Expected final positions
+    vec3 expectedPlayerFinalPos = vec3(0.0f, 1.0f, 0.0f);
+    vec3 expectedMapFinalPos = vec3(0.0f, 0.0f, 0.0f);
+
+    /* Action */
+    physicsController_->update();
+    physicsController_->update();
+
+    /* Validation */
+    // The second object should be moving, and the first should have a different velocity
+    vec3 actualPlayerFinalPos = testObject_->getPosition();
+    vec3 actualMapFinalPos = mapObject_->getPosition();
+    EXPECT_VEC_EQ(expectedPlayerFinalPos, actualPlayerFinalPos);
+    EXPECT_VEC_EQ(expectedMapFinalPos, actualMapFinalPos);
+
+    // Ensure that the kinematic object has been marked as LANDED
+    auto landed = physicsController_->isOnFloor(testObjectName);
+    EXPECT_TRUE(landed);
+}
+
 /**
  * @brief Ensures that the edge point algorithm for collisions is functioning properly. This also ensures that
  * when an object updates and it passes through another, the epSign value properly tracks which face the
@@ -804,6 +838,8 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndFa
     vec3 amfp = mapObject_->getPosition();
     EXPECT_VEC_EQ(epfp_update1, afp);
     EXPECT_VEC_EQ(expectedMapFinalPos, amfp);
+    // We need to set the velocity again because of our "debouncing" trick
+    physicsController_->setVelocity(testObjectName, playerVel);
 
     /* Action 2 */
     physicsController_->update();
@@ -928,6 +964,8 @@ TEST_F(GivenKinematicAndNonKinematicObject, WhenKinematicCollidesWithCornerAndRi
     vec3 amfp = mapObject_->getPosition();
     EXPECT_VEC_EQ(epfp_update1, afp);
     EXPECT_VEC_EQ(expectedMapFinalPos, amfp);
+    // Set velocity again due to debounce logic
+    physicsController_->setVelocity(testObjectName, playerVel);
 
     /* Action 2 */
     physicsController_->update();

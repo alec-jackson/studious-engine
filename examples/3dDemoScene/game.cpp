@@ -19,7 +19,7 @@
 #include <iostream>
 #include <map>
 #include "game.hpp"
-#include "examples/3dDemoScene/inputMonitor.hpp"
+#include "inputMonitor.hpp"
 #include <TextObject.hpp>
 #include <OpenGlGfxController.hpp>
 #include <AnimationController.hpp>

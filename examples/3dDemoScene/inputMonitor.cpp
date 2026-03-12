@@ -44,6 +44,7 @@ void initGlobals(SceneObject *self);
 int numJoySticks;
 float currentLuminance = 1.0f;
 auto fpsMode = false;
+vec3 jumpVelocity = vec3(0, 15, 0);
 /** Input map code example from BOTHWORLDS */
 vector<int> monitoredInput = {
     SDL_SCANCODE_6,
@@ -56,7 +57,8 @@ vector<int> monitoredInput = {
 vector<GameInput> monitoredGInput = {
     GameInput::START, // Attach camera
     GameInput::B,  // fire bullet
-    GameInput::Y  // switch FPS -> TPS
+    GameInput::Y,  // switch FPS -> TPS
+    GameInput::A   // Jump
 };
 
 map<int, bool> debounceMap;
@@ -230,6 +232,12 @@ void process(SceneObject *self) {
         auto enableStatus = ColliderObject::getDrawCollider();
         ColliderObject::setDrawCollider(!enableStatus);
     }
+    if (inputGIMap[GameInput::A]) {
+        auto isOnFloor = physicsController->isOnFloor("player");
+        if (isOnFloor == 1) {
+            physicsController->setVelocity("player", jumpVelocity);
+        }
+    }
     if (inputGIMap[GameInput::Y]) {
         // Switch the active camera
         if (activeCamera->objectName() == "fpsCamera") {
@@ -296,7 +304,7 @@ void process(SceneObject *self) {
         angle += controllerLeftStateX > 0.0f ? 90.0f : 270.0f;
         UPDATE_CHAR_ANGLE((fpsMode ? -angle + 180.0f : -angle));
     }
-    physicsController->setVelocity("player", travelVel);
+    physicsController->translate("player", travelVel * vec3(deltaTime));
     currentGame->setLuminance(currentLuminance);
     self->setRotation(charAngle);
 }

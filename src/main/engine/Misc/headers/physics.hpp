@@ -67,6 +67,7 @@ class PhysicsObject {
     double               gravTime;
     PhysicsWorkType      workType;  // Might want to move this to a work queue specific class...
     std::mutex           objLock;
+    int                  onFloor = 0;
     /**
      * @brief Updates the position of the target object using the position formula.
      */
@@ -165,6 +166,7 @@ class PhysicsController {
     PhysicsResult applyForce(string objectName, vec3 force);
     PhysicsResult applyInstantForce(string objectName, vec3 force);
     PhysicsResult translate(string objectName, vec3 direction);
+    int isOnFloor(string objectName);
     PhysicsResult schedulePosition();
     PhysicsResult scheduleCollision();
     PhysicsResult scheduleFinalize();
