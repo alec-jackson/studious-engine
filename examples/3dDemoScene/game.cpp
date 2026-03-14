@@ -271,8 +271,8 @@ int runtime() {
     playerRef->setRotation(vec3(0.0f, 180.0f, 0.0f));
     playerRef->setScale(0.5f);
 
-    playerRef->process = InputMonitor::process;
-    playerRef->ready = InputMonitor::ready;
+    playerRef->setProcessFunc(InputMonitor::process);
+    playerRef->setReadyFunc(InputMonitor::ready);
     /*
      End Scene Loading
      */

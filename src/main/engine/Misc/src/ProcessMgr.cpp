@@ -7,13 +7,13 @@
  */
 
 #include <ProcessMgr.hpp>
-#include <mutex>
+#include <mutex>  //NOLINT
 #include <cstdio>
 
 ProcessMgr::ProcessMgr(uint numThreads) : numThreads_ { numThreads }, freeWorkers_ { numThreads } {
     for (uint i = 0; i < numThreads; ++i) {
-        threadPool_.push_back(std::thread(&ProcessMgr::taskExecutor, std::ref(tasks_), std::ref(taskCv_),
-            std::ref(taskLock_), std::ref(freeWorkers_)));
+        threadPool_.push_back(std::thread(&ProcessMgr::taskExecutor, &tasks_, &taskCv_,
+            &taskLock_, &freeWorkers_));
     }
 }
 
@@ -32,14 +32,14 @@ ProcessMgr::~ProcessMgr() {
     }
 }
 
-void ProcessMgr::taskExecutor(std::queue<Task> &tasks, std::condition_variable &cv, std::mutex &tl, uint &fw) {
+void ProcessMgr::taskExecutor(std::queue<Task> *tasks, std::condition_variable *cv, std::mutex *tl, uint *fw) {
     while (1) {
-        std::unique_lock<std::mutex> scopeLock(tl);
+        std::unique_lock<std::mutex> scopeLock(*tl);
         // Check for any tasks in the queue
-        cv.wait(scopeLock, [&tasks] { return !tasks.empty(); });
+        cv->wait(scopeLock, [tasks] { return !tasks->empty(); });
         // Pull task and unlock
-        auto task = tasks.front();
-        tasks.pop();
+        auto task = tasks->front();
+        tasks->pop();
         fw--;  // Reduce the number of free workers
         scopeLock.unlock();
 
@@ -52,7 +52,7 @@ void ProcessMgr::taskExecutor(std::queue<Task> &tasks, std::condition_variable &
                 // Kill the task
                 scopeLock.lock();
                 fw++;
-                cv.notify_all();
+                cv->notify_all();
                 return;
             default:
                 fprintf(stderr, "ProcessMgr::taskExecutor: Unknown task type %d\n",
@@ -63,7 +63,7 @@ void ProcessMgr::taskExecutor(std::queue<Task> &tasks, std::condition_variable &
         // Signal this worker is now free
         scopeLock.lock();
         fw++;
-        cv.notify_all();
+        cv->notify_all();
     }
 }
 

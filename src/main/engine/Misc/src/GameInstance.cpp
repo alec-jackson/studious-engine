@@ -368,7 +368,6 @@ bool GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
         return false;
     }
     activeScene_->addSceneObject(sceneObject);
-    if (sceneObject->ready) sceneObject->ready(sceneObject.get());
     return true;
 }
 

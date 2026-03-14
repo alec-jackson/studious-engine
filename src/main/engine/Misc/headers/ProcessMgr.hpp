@@ -8,10 +8,10 @@
  */
 
 #pragma once
-#include <thread>
+#include <thread>  //NOLINT
 #include <vector>
-#include <condition_variable>
-#include <mutex>
+#include <condition_variable>  //NOLINT
+#include <mutex>  //NOLINT
 #include <queue>
 #include <SceneObject.hpp>
 
@@ -37,7 +37,7 @@ class ProcessMgr {
     ~ProcessMgr();
     void waitComplete();
     void sendTask(std::function<void(void)> taskFn);
-    static void taskExecutor(std::queue<Task> &tasks, std::condition_variable &cv, std::mutex &tl, uint &fw);
+    static void taskExecutor(std::queue<Task> *tasks, std::condition_variable *cv, std::mutex *tl, uint *fw);
 
  private:
     uint numThreads_;

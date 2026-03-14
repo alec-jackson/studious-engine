@@ -39,7 +39,7 @@ void GameScene::removeSceneObject(std::string objectName) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
     auto soit = sceneObjects_.find(objectName);
     if (soit != sceneObjects_.end()) {
-        soit->second->cleanup(soit->second.get());
+        soit->second->cleanupFunc();
         sceneObjects_.erase(soit);
         resetRenderPriorityMap();
     } else {
@@ -94,8 +94,10 @@ void GameScene::update(CameraObject *camera, ProcessMgr *executor) {
             // Render the object -> the map iterator will sort keys automatically
             objPtr->update();
             // Send gameUpdate functions to the executor
-            if (objPtr->process)
-                executor->sendTask([objPtr] { objPtr->process(objPtr.get()); });
+            // Run ready if object has not been inited yet - don't add to threadpool to guarantee execution order
+            if (!objPtr->hasInited()) objPtr->readyFunc();
+            if (objPtr->hasProcessFunc())
+                executor->sendTask([objPtr] { objPtr->processFunc(); });
         }
     }
     // Wait for the executor to finish
