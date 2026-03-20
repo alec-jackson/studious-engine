@@ -43,6 +43,9 @@
 // Number of samples to use for anti-aliasing
 #define DEFAULT_AASAMPLES 0
 
+// This feature is experimental and is currently broken
+#define MAINTAIN_GAME_ASPECT 0
+
 extern double deltaTime;
 
 /*
