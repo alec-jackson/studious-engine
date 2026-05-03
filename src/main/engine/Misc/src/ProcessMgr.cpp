@@ -40,7 +40,7 @@ void ProcessMgr::taskExecutor(std::queue<Task> *tasks, std::condition_variable *
         // Pull task and unlock
         auto task = tasks->front();
         tasks->pop();
-        fw--;  // Reduce the number of free workers
+        (*fw)--;  // Reduce the number of free workers
         scopeLock.unlock();
 
         switch (task.type) {
@@ -51,7 +51,7 @@ void ProcessMgr::taskExecutor(std::queue<Task> *tasks, std::condition_variable *
             case TaskType::DONE:
                 // Kill the task
                 scopeLock.lock();
-                fw++;
+                (*fw)++;
                 cv->notify_all();
                 return;
             default:
@@ -62,7 +62,7 @@ void ProcessMgr::taskExecutor(std::queue<Task> *tasks, std::condition_variable *
 
         // Signal this worker is now free
         scopeLock.lock();
-        fw++;
+        (*fw)++;
         cv->notify_all();
     }
 }
