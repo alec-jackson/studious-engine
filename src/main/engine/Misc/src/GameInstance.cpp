@@ -12,6 +12,7 @@
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
+#include <SDL_video.h>
 #include <algorithm>
 #include <condition_variable> //NOLINT
 #include <cstddef>
@@ -371,7 +372,10 @@ void GameInstance::updateInput() {
 
                     glViewport(dW, dH, tempWidth, tempHeight);
 #endif  // MAINTAIN_GAME_ASPECT
-                    glViewport(0, 0, event.window.data1, event.window.data2);
+                    // Apply display scale to window resize
+                    float scale = getDisplayScale();
+                    glViewport(0, 0, scale * event.window.data1, scale * event.window.data2);
+
                 }
                 break;
             }
@@ -903,4 +907,14 @@ void GameInstance::setActiveCamera(string cameraName) {
     } else {
         fprintf(stderr, "GameInstance::setActiveCamera: Unable to find camera %s\n", cameraName.c_str());
     }
+}
+
+float GameInstance::getDisplayScale() {
+    int drawableWidth, drawableHeight;
+    int windowWidth, windowHeight;
+    // Determine display scaling with Window Size vs Drawable Size
+    SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
+    return static_cast<float>(drawableWidth) / static_cast<float>(windowWidth);
 }

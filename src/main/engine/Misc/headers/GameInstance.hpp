@@ -226,4 +226,5 @@ class GameInstance {
     std::shared_ptr<CameraObject> getActiveCamera();
     template<typename T>
     inline SHD(T) getActiveCamera() { return std::dynamic_pointer_cast<T>(getActiveCamera()); }
+    float getDisplayScale();
 };
