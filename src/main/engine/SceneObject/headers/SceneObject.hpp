@@ -136,7 +136,10 @@ class SceneObject {
     virtual void update() = 0;
 
     inline void processFunc() { if (process_) process_(this); }
-    inline void readyFunc() { if (ready_) { ready_(this); } hasInited_ = true; }
+    inline void readyFunc() {
+        if (ready_) ready_(this);
+        hasInited_ = true;
+    }
     inline void cleanupFunc() { if (cleanup_) cleanup_(this); }
 
  protected:

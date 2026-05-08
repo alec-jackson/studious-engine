@@ -375,7 +375,6 @@ void GameInstance::updateInput() {
                     // Apply display scale to window resize
                     float scale = getDisplayScale();
                     glViewport(0, 0, scale * event.window.data1, scale * event.window.data2);
-
                 }
                 break;
             }
