@@ -14,11 +14,9 @@
 #include <memory>
 #include <iostream>
 #include <string>
-#include <set>
 
 using std::endl;
 using std::cout;
-using std::set;
 
 template<typename T>
 void ASSERT_VEC_EQ(T actual, T expected) {
@@ -204,6 +202,67 @@ TEST_F(GivenASceneObject, WhenAddSameChildTwice_ThenOnlyOneInSet) {
     // Make sure the parent is set as the fixture object's parent
     ASSERT_EQ(&parent, object_.getParent());
 }
+
+enum SceneObjectFuncType {
+    READY,
+    PROCESS,
+    CLEANUP
+};
+
+class GivenASceneObjectFuncParam :
+    public ::testing::TestWithParam<std::tuple<SceneObjectFuncType, bool, int>> {
+ protected:
+    TestObject object_;
+};
+
+/**
+ * @brief Ensures that a ready/process/cleanup function callback is made when set. Some test
+ * cases validate that we can safely call these functions even when not yet set.
+ */
+TEST_P(GivenASceneObjectFuncParam, WhenFuncAdded_ThenFuncCalledIfAvailable) {
+    /* Preparation */
+    auto type = std::get<0>(GetParam());
+    auto hasFunc = std::get<1>(GetParam());
+    const auto expectedRunCount = std::get<2>(GetParam());
+    auto runCount = 0;
+
+    auto cb = [&runCount](auto) {
+        runCount++;
+    };
+
+    /* Action */
+    switch (type) {
+        case SceneObjectFuncType::READY:
+            if (hasFunc) object_.setReadyFunc(cb);
+            object_.readyFunc();
+            break;
+        case SceneObjectFuncType::PROCESS:
+            if (hasFunc) object_.setProcessFunc(cb);
+            object_.processFunc();
+            break;
+        case SceneObjectFuncType::CLEANUP:
+            if (hasFunc) object_.setCleanupFunc(cb);
+            object_.cleanupFunc();
+            break;
+        default:
+            EXPECT_TRUE(false);
+            break;
+    }
+
+    /* Validation */
+    EXPECT_EQ(expectedRunCount, runCount);
+}
+
+INSTANTIATE_TEST_SUITE_P(SceneObjectFunctionTests, GivenASceneObjectFuncParam,
+    ::testing::Values(
+        std::make_tuple(SceneObjectFuncType::READY, true, 1),
+        std::make_tuple(SceneObjectFuncType::READY, false, 0),
+        std::make_tuple(SceneObjectFuncType::PROCESS, true, 1),
+        std::make_tuple(SceneObjectFuncType::PROCESS, false, 0),
+        std::make_tuple(SceneObjectFuncType::CLEANUP, true, 1),
+        std::make_tuple(SceneObjectFuncType::CLEANUP, false, 0)
+    )
+);
 
 class GivenASceneObjectWithParent: public ::testing::Test {
  protected:
