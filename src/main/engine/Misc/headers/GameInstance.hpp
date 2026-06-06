@@ -38,9 +38,13 @@
 #include <TPSCameraObject.hpp>
 #include <FPSCameraObject.hpp>
 #include <studious_utility.hpp>
+#include <ProcessMgr.hpp>
 
 // Number of samples to use for anti-aliasing
 #define DEFAULT_AASAMPLES 0
+
+// This feature is experimental and is currently broken
+#define MAINTAIN_GAME_ASPECT 0
 
 extern double deltaTime;
 
@@ -88,6 +92,8 @@ class GameInstance {
     bool audioInitialized_ = false;
     SHD(GameScene) activeScene_;
     map<string, std::shared_ptr<GameScene>> gameScenes_;
+
+    std::unique_ptr<ProcessMgr> objectExecutor_;
 
     void initWindow();
     void initAudio();
@@ -220,4 +226,5 @@ class GameInstance {
     std::shared_ptr<CameraObject> getActiveCamera();
     template<typename T>
     inline SHD(T) getActiveCamera() { return std::dynamic_pointer_cast<T>(getActiveCamera()); }
+    float getDisplayScale();
 };

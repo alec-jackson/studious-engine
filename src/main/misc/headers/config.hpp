@@ -15,6 +15,7 @@
 #define DEFAULT_WIDTH 1280
 #define DEFAULT_HEIGHT 720
 #define DEFAULT_VSYNC 1
+#define DEFAULT_OBJ_EXEC_THREADS 6
 #define DEFAULT_GFX "OpenGL"
 
 enum class ConfigStatus {

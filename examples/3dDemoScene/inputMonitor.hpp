@@ -17,6 +17,10 @@ extern std::unique_ptr<GfxController> gfxController;
 extern std::unique_ptr<AnimationController> animationController;
 extern std::unique_ptr<PhysicsController> physicsController;
 extern double deltaTime;
-void rotateShape(void *target);
+
+namespace InputMonitor {
+void ready(SceneObject *self);
+void process(SceneObject *self);
+}
 float convertNegToDeg(float degree);
 float angleOfPoint(vec3 p1, vec3 p2);

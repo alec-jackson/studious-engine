@@ -12,6 +12,7 @@
 #include <SDL_gamecontroller.h>
 #include <SDL_keyboard.h>
 #include <SDL_scancode.h>
+#include <SDL_video.h>
 #include <algorithm>
 #include <condition_variable> //NOLINT
 #include <cstddef>
@@ -270,8 +271,8 @@ int GameInstance::updateObjects() {
         camera->update();
     }
     // Update the current scene
-    if (activeScene_.get() && activeCamera_.get())
-        activeScene_.get()->update(activeCamera_.get());
+    if (activeScene_ && activeCamera_)
+        activeScene_->update(activeCamera_.get(), objectExecutor_.get());
     return 0;
 }
 
@@ -292,45 +293,93 @@ int GameInstance::updateWindow() {
 void GameInstance::updateInput() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_KEYDOWN) {
-            // Lock access to the input queue
-            std::unique_lock<std::mutex> scopeLock(inputLock_);
-            // printf("Keyboard pressed %d\n", event.key.keysym.scancode);
-            // Let's just use the queue as a mailbox for now
-            auto input = inputController->scancodeToInput(event.key.keysym.scancode);
-            if (inputQueue_.empty() && input != GameInput::NONE) {
-                inputQueue_.push(input);
+        switch (event.type) {
+            case SDL_KEYDOWN: {
+                // Lock access to the input queue
+                std::unique_lock<std::mutex> scopeLock(inputLock_);
+                // printf("Keyboard pressed %d\n", event.key.keysym.scancode);
+                // Let's just use the queue as a mailbox for now
+                auto input = inputController->scancodeToInput(event.key.keysym.scancode);
+                if (inputQueue_.empty() && input != GameInput::NONE) {
+                    inputQueue_.push(input);
+                }
+                // Signal data is available
+                inputCv_.notify_all();
+                break;
             }
-            // Signal data is available
-            inputCv_.notify_all();
-        } else if (event.type == SDL_JOYBUTTONDOWN) {
-            // Lock access to the input queue
-            std::unique_lock<std::mutex> scopeLock(inputLock_);
-            // printf("Button pressed %d\n", event.jbutton.button);
-            // Let's just use the queue as a mailbox for now
-            auto input = inputController->buttonToInput(static_cast<SDL_GameControllerButton>(event.jbutton.button));
-            if (inputQueue_.empty() && input != GameInput::NONE) {
-                inputQueue_.push(input);
+            case SDL_JOYBUTTONDOWN: {
+                // Lock access to the input queue
+                std::unique_lock<std::mutex> scopeLock(inputLock_);
+                // printf("Button pressed %d\n", event.jbutton.button);
+                // Let's just use the queue as a mailbox for now
+                auto input = inputController->buttonToInput(
+                    static_cast<SDL_GameControllerButton>(event.jbutton.button));
+                if (inputQueue_.empty() && input != GameInput::NONE) {
+                    inputQueue_.push(input);
+                }
+                // Signal data is available
+                inputCv_.notify_all();
+                break;
             }
-            // Signal data is available
-            inputCv_.notify_all();
-        } else if (event.type == SDL_JOYHATMOTION) {
-            // Lock access to the input queue
-            std::unique_lock<std::mutex> scopeLock(inputLock_);
-            // printf("Hat pressed %d\n", event.jhat.value);
-            // Let's just use the queue as a mailbox for now
-            auto input = inputController->hatToInput(static_cast<Uint8>(event.jhat.value));
-            if (inputQueue_.empty() && input != GameInput::NONE) {
-                inputQueue_.push(input);
+            case SDL_JOYHATMOTION: {
+                // Lock access to the input queue
+                std::unique_lock<std::mutex> scopeLock(inputLock_);
+                // printf("Hat pressed %d\n", event.jhat.value);
+                // Let's just use the queue as a mailbox for now
+                auto input = inputController->hatToInput(static_cast<Uint8>(event.jhat.value));
+                if (inputQueue_.empty() && input != GameInput::NONE) {
+                    inputQueue_.push(input);
+                }
+                // Signal data is available
+                inputCv_.notify_all();
+                break;
             }
-            // Signal data is available
-            inputCv_.notify_all();
-        } else if (event.type == SDL_QUIT) {
-            shutdown();
-        } else if (event.type == SDL_JOYDEVICEADDED || event.type == SDL_JOYDEVICEREMOVED) {
-            // Connect to new controllers on the fly...
-            inputController->resetController();
-            inputController->initController();
+            case SDL_QUIT:
+                shutdown();
+                break;
+            case SDL_JOYDEVICEADDED:
+            case SDL_JOYDEVICEREMOVED:
+                // Connect to new controllers on the fly...
+                inputController->resetController();
+                inputController->initController();
+                break;
+            case SDL_WINDOWEVENT: {
+                auto windowEvent = event.window.event;
+                if (windowEvent == SDL_WINDOWEVENT_RESIZED || windowEvent == SDL_WINDOWEVENT_SIZE_CHANGED) {
+#if MAINTAIN_GAME_ASPECT
+                    int tempWidth = event.window.data1;
+                    int tempHeight = event.window.data2;
+                    printf("Resize (%d, %d)\n",
+                        tempWidth, tempHeight);
+                    // Assume 16:9 target aspect ratio
+                    float targetAr = 16.0f / 9.0f;
+                    float invTargetAr = 1.0f / targetAr;
+                    float resizeAr = static_cast<float>(tempWidth) / static_cast<float>(tempHeight);
+
+                    int dW = 0, dH = 0;
+
+                    if (resizeAr > targetAr) {
+                        dW = (targetAr * tempHeight) - tempWidth;
+                        tempWidth += dW;  // Image itself should have the target aspect ratio
+                        dW /= -2;  // Left side padding should be 1/2 total pad size
+                    } else {
+                        dH = (invTargetAr * tempWidth) - tempHeight;
+                        tempHeight += dH;
+                        dH /= -2;  // Same transformation as above, but for height
+                    }
+                    printf("dW: %d, dH: %d, tempWidth: %d, tempHeight: %d\n",
+                        dW, dH, tempWidth, tempHeight);
+
+                    glViewport(dW, dH, tempWidth, tempHeight);
+#endif  // MAINTAIN_GAME_ASPECT
+                    // Apply display scale to window resize
+                    float scale = getDisplayScale();
+                    glViewport(0, 0, scale * event.window.data1, scale * event.window.data2);
+                }
+                break;
+            }
+            default:
+                break;
         }
     }
 }
@@ -367,7 +416,7 @@ bool GameInstance::addSceneObject(std::shared_ptr<SceneObject> sceneObject) {
         assert(false);
         return false;
     }
-    activeScene_.get()->addSceneObject(sceneObject);
+    activeScene_->addSceneObject(sceneObject);
     return true;
 }
 
@@ -558,7 +607,6 @@ int GameInstance::update() {
     inputController->update();
     animationController_->update();
     physicsController_->update();
-    std::this_thread::yield();
     end = SDL_GetPerformanceCounter();
     deltaTime = static_cast<double>(end - begin) / (SDL_GetPerformanceFrequency());
     return error;
@@ -746,12 +794,14 @@ void GameInstance::processConfig(const StudiousConfig &config) {
     auto cfgPhysThreads = config.getUField("physThreads");
     auto cfgGfx = config.getSField("gfx");
     auto cfgAaSamples = config.getUField("AASamples");
+    auto cfgExecutorThreads = config.getUField("objectExecutorThreads");
     aasamples_ = cfgAaSamples.success() ? cfgAaSamples.data : DEFAULT_AASAMPLES;
     width_ = cfgWidth.success() ? cfgWidth.data : DEFAULT_WIDTH;
     height_ = cfgHeight.success() ? cfgHeight.data : DEFAULT_HEIGHT;
     vsync_ = cfgVsync.success() ? cfgVsync.data : DEFAULT_VSYNC;
     uint physThreads = cfgPhysThreads.success() ? cfgPhysThreads.data : PhysicsController::getDefaultThreadSize();
     string gfxBackend = cfgGfx.success() ? cfgGfx.data : DEFAULT_GFX;
+    uint objExecThreads = cfgExecutorThreads.success() ? cfgExecutorThreads.data : DEFAULT_OBJ_EXEC_THREADS;
 
     // Load in controllers based on settings
     if (gfxBackend.compare(GFX_OPENGL_CFG_STRING) == 0) {
@@ -770,6 +820,7 @@ void GameInstance::processConfig(const StudiousConfig &config) {
     animationController = std::make_unique<AnimationController>();
     physicsController = std::make_unique<PhysicsController>(physThreads);
     inputController = std::make_unique<InputController>(cameras_, &cameraLock_);
+    objectExecutor_ = std::make_unique<ProcessMgr>(objExecThreads);
 
     // Populate internal pointers to keep things easy
     gfxController_ = gfxController.get();
@@ -855,4 +906,14 @@ void GameInstance::setActiveCamera(string cameraName) {
     } else {
         fprintf(stderr, "GameInstance::setActiveCamera: Unable to find camera %s\n", cameraName.c_str());
     }
+}
+
+float GameInstance::getDisplayScale() {
+    int drawableWidth, drawableHeight;
+    int windowWidth, windowHeight;
+    // Determine display scaling with Window Size vs Drawable Size
+    SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
+    return static_cast<float>(drawableWidth) / static_cast<float>(windowWidth);
 }

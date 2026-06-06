@@ -7,6 +7,7 @@
  */
 #include <TPSCameraObject.hpp>
 #include <memory>
+#include <string>
 #include <glm/geometric.hpp>
 #include <InputController.hpp>
 #include <AnimationController.hpp>

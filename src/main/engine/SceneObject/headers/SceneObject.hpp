@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <string>
 #include <set>
+#include <functional>
 #include <common.hpp>
 #include <GfxController.hpp>
 
@@ -27,6 +28,8 @@
 #define RENDER_PRIOR_MEDIUM 20u
 #define RENDER_PRIOR_HIGH 40u
 #define RENDER_PRIOR_HIGHEST 100u
+
+#define OBJ_SCRIPT_FUNC std::function<void(SceneObject *)>
 
 /* MISC */
 #define VISIBILITY_CHECK if ((!visible_ || (parent_ && !parent_->visible())) && !visPerm_) return
@@ -91,6 +94,9 @@ class SceneObject {
     inline std::set<SceneObject *> &getChildren() { return children_; }
     inline SceneObject *getParent() { return parent_; }
 
+    inline bool hasInited() const { return hasInited_; }
+    inline bool hasProcessFunc() const { return process_ != nullptr; }
+
     // Misc
     /**
      * @brief Updates translate, rotate and scale matrices. Will modify model attributes if the scene object has an
@@ -113,6 +119,9 @@ class SceneObject {
      * @param child - Pointer to the child object to remove.
      */
     void removeChild(SceneObject *child);
+    inline void setProcessFunc(OBJ_SCRIPT_FUNC process) { process_ = process; }
+    inline void setReadyFunc(OBJ_SCRIPT_FUNC ready) { ready_ = ready; }
+    inline void setCleanupFunc(OBJ_SCRIPT_FUNC cleanup) { cleanup_ = cleanup; }
 
     void shiftRenderPriorityBy(int change);
     inline void modifyPosition(vec3 pos) { position += pos; }
@@ -125,6 +134,13 @@ class SceneObject {
     // Interface methods
     virtual void render() = 0;
     virtual void update() = 0;
+
+    inline void processFunc() { if (process_) process_(this); }
+    inline void readyFunc() {
+        if (ready_) ready_(this);
+        hasInited_ = true;
+    }
+    inline void cleanupFunc() { if (cleanup_) cleanup_(this); }
 
  protected:
     mat4 translateMatrix_;
@@ -151,4 +167,9 @@ class SceneObject {
     mutex objectLock_;
     bool visible_ = true;
     bool visPerm_ = false;
+    bool hasInited_ = false;
+
+    OBJ_SCRIPT_FUNC process_;
+    OBJ_SCRIPT_FUNC ready_;
+    OBJ_SCRIPT_FUNC cleanup_;
 };
