@@ -419,9 +419,9 @@ int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
     // Refresh delta time counter independently
     keyFrame->currentDTime += deltaTime;
     // Don't update currentDTime until an update is detected
-    int prevUpdates = keyFrame->lastDTime / keyFrame->deltaObject.updatesPerSecond;
+    int prevUpdates = keyFrame->lastDTime * keyFrame->deltaObject.updatesPerSecond;
     // Determine number of times deltaFunc should be called...
-    int targetUpdates = keyFrame->currentDTime / keyFrame->deltaObject.updatesPerSecond;
+    int targetUpdates = keyFrame->currentDTime * keyFrame->deltaObject.updatesPerSecond;
     // Cap per-frame update count to avoid scary situations
     if (targetUpdates - prevUpdates > MAX_DELTA_UPDATES) {
         targetUpdates = MAX_DELTA_UPDATES;
@@ -431,7 +431,6 @@ int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
         assert(false);
     }
     auto result = false;
-    // printf("Seeing deltaUpdates: %d, %d\n", prevUpdates, targetUpdates);
     // Call deltaFunc up to targetUpdate count
     for (int i = prevUpdates; i < targetUpdates; ++i) {
         result = keyFrame->deltaObject.deltaFunc(target);
