@@ -227,6 +227,7 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
     result |= updateScale(target, currentKf.get());
     result |= updateColor(target, currentKf.get());
     result |= updateTint(target, currentKf.get());
+    result |= updateDelta(target, currentKf.get());
     return UpdateData<float>(overflowTime - targetTime, (result == done));
 }
 
@@ -401,6 +402,39 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
     imEx->setTint(result.updatedValue_);
 
     return (result.updateComplete_) ? TINT_MET : UPDATE_NOT_COMPLETE;
+}
+
+int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
+    // Only update if the keyframe type has COLOR
+    if (!(keyFrame->type & UPDATE_DELTA)) {
+        return DELTA_MET;
+    }
+    if (!keyFrame->deltaObject.deltaFunc) {
+        printf("AnimationController::updateDelta: Invalid deltaFunc - skipping\n");
+        return DELTA_MET;
+    }
+    int prevUpdates = keyFrame->currentTime / keyFrame->deltaObject.updatesPerSecond;
+    // Determine number of times deltaFunc should be called...
+    int targetUpdates = keyFrame->targetTime / keyFrame->deltaObject.updatesPerSecond;
+    // Cap per-frame update count to avoid scary situations
+    if (targetUpdates - prevUpdates > MAX_DELTA_UPDATES) {
+        targetUpdates = MAX_DELTA_UPDATES;
+        printf("AnimationController::updateDelta: WARNING! Capping targetUpdates to %d\n",
+            targetUpdates);
+        // Assert for now ... ( remove later )
+        assert(false);
+    }
+    auto result = false;
+    // Call deltaFunc up to targetUpdate count
+    for (int i = prevUpdates; i < targetUpdates; ++i) {
+        result = keyFrame->deltaObject.deltaFunc(target);
+        if (result) break;
+    }
+    // Call the update function if an update occurred
+    if (prevUpdates != targetUpdates && keyFrame->deltaObject.updateFunc)
+        keyFrame->deltaObject.updateFunc(target);
+
+    return (result) ? DELTA_MET : UPDATE_NOT_COMPLETE;
 }
 
 float AnimationController::linearFloatTransform(float original, float desired, KeyFrame *keyFrame) {
