@@ -183,6 +183,7 @@ int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFra
 
 UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf,
     float timeChange) {
+    // printf("AnimationController::updateKeyFrame\n");
     // If this is a brand new keyframe, set original values...
     if (currentKf->isNew) {
         currentKf->isNew = false;
@@ -212,7 +213,8 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
     }
 
     auto result = UPDATE_NOT_COMPLETE;
-    auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET | TINT_MET;
+    auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET | TINT_MET |
+        DELTA_MET;
     auto &currentTime = currentKf.get()->currentTime;
     auto &targetTime = currentKf.get()->targetTime;
     auto overflowTime = currentTime + timeChange;
@@ -405,6 +407,7 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
 }
 
 int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
+    // printf("updateDelta: Entry\n");
     // Only update if the keyframe type has COLOR
     if (!(keyFrame->type & UPDATE_DELTA)) {
         return DELTA_MET;
@@ -413,9 +416,12 @@ int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
         printf("AnimationController::updateDelta: Invalid deltaFunc - skipping\n");
         return DELTA_MET;
     }
-    int prevUpdates = keyFrame->currentTime / keyFrame->deltaObject.updatesPerSecond;
+    // Refresh delta time counter independently
+    keyFrame->currentDTime += deltaTime;
+    // Don't update currentDTime until an update is detected
+    int prevUpdates = keyFrame->lastDTime / keyFrame->deltaObject.updatesPerSecond;
     // Determine number of times deltaFunc should be called...
-    int targetUpdates = keyFrame->targetTime / keyFrame->deltaObject.updatesPerSecond;
+    int targetUpdates = keyFrame->currentDTime / keyFrame->deltaObject.updatesPerSecond;
     // Cap per-frame update count to avoid scary situations
     if (targetUpdates - prevUpdates > MAX_DELTA_UPDATES) {
         targetUpdates = MAX_DELTA_UPDATES;
@@ -425,14 +431,19 @@ int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
         assert(false);
     }
     auto result = false;
+    // printf("Seeing deltaUpdates: %d, %d\n", prevUpdates, targetUpdates);
     // Call deltaFunc up to targetUpdate count
     for (int i = prevUpdates; i < targetUpdates; ++i) {
         result = keyFrame->deltaObject.deltaFunc(target);
         if (result) break;
     }
     // Call the update function if an update occurred
-    if (prevUpdates != targetUpdates && keyFrame->deltaObject.updateFunc)
-        keyFrame->deltaObject.updateFunc(target);
+    if (prevUpdates != targetUpdates) {
+        keyFrame->lastDTime = keyFrame->currentDTime;
+        if (keyFrame->deltaObject.updateFunc)
+            keyFrame->deltaObject.updateFunc(target);
+    }
+
 
     return (result) ? DELTA_MET : UPDATE_NOT_COMPLETE;
 }
@@ -517,7 +528,7 @@ int AnimationController::updateTime(KeyFrame *keyFrame) {
     // Literally just check if we've reached the time quota
     auto result = UPDATE_NOT_COMPLETE;
     if (keyFrame->currentTime >= keyFrame->targetTime) {
-        result = UPDATE_TIME;
+        result = TIME_MET;
     }
     return result;
 }

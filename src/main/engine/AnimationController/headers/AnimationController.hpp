@@ -130,6 +130,8 @@ struct KeyFrame {
     DeltaObject deltaObject;
     float targetTime;
     float currentTime = 0.0f;
+    float currentDTime = 0.0f;
+    float lastDTime = 0.0f;
     int type;
     ANIMATION_COMPLETE_CB;
     bool hasCb;
