@@ -557,7 +557,7 @@ UiObject *GameInstance::createUi(string spritePath, vec3 position, float scale, 
     return addSceneObject(ui) ? ui.get() : nullptr;
 }
 
-TileObject *GameInstance::createTileMap(map<string, string> textures, vector<TileData> mapData,
+TileObject *GameInstance::createTileMap(map<int, string> textures, vector<TileData> mapData,
     vec3 position, float scale, ObjectAnchor anchor, string objectName) {
     auto tileProg = gfxController_->getProgramId(TILEOBJECT_PROG_NAME);
     if (!tileProg.isOk()) {
