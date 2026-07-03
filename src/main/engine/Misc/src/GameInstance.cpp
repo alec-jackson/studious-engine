@@ -272,7 +272,7 @@ int GameInstance::updateObjects() {
     }
     // Update the current scene
     if (activeScene_ && activeCamera_)
-        activeScene_->update(activeCamera_.get(), objectExecutor_.get());
+        activeScene_->update(activeCamera_.get(), objectExecutor_.get(), gfxController_);
     return 0;
 }
 

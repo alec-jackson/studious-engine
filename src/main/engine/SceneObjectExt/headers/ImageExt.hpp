@@ -7,6 +7,8 @@
  * @copyright studious-engine 2025
  */
 #pragma once
+#include <memory>
+#include <GfxController.hpp>
 #include <glm/glm.hpp>
 
 using glm::vec4;
@@ -18,4 +20,11 @@ class ImageExt {
     inline vec4 getTint() const { return tint_; }
  protected:
     vec4 tint_;
+};
+
+struct ImageData {
+    int w;
+    int h;
+    std::shared_ptr<uint8_t []> data;
+    TexFormat format;
 };

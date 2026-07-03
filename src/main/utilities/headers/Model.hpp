@@ -34,5 +34,6 @@ class Model {
     vector<float> normalCoords;  // 2D vector for normal coord data
     uint pointCount;  // no. of distinct points in shape
     string materialName;
+    Material *mat = nullptr;
     uint vao;
 };

@@ -1,0 +1,32 @@
+# Blender 5.1.2 MTL File: 'None'
+# www.blender.org
+
+newmtl Material.001
+Ns 500.091278
+Ka 1.000000 1.000000 1.000000
+Kd 0.801740 0.233125 0.489397
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+
+newmtl Material.002
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd /Users/weetsy/Programs/studious-engine/src/resources/models/donut/donut base.001.png
+
+newmtl Sprinkles
+Ns 368.228302
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2

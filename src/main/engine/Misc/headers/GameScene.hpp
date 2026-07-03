@@ -24,7 +24,7 @@ class GameScene {
     void removeSceneObject(std::string objectName);
     std::shared_ptr<SceneObject> getSceneObject(std::string objectName);
 
-    void update(CameraObject *camera, ProcessMgr *executor);
+    void update(CameraObject *camera, ProcessMgr *executor, GfxController *gfx);
 
     void loadGameScene(std::string path);
     void saveGameScene(std::string path);

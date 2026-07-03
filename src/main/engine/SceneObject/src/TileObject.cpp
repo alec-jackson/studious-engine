@@ -178,7 +178,6 @@ void TileObject::update() {
 void TileObject::render() {
     VISIBILITY_CHECK;
     // No additional model updates will be performed. This is a one-and-done thing.
-    gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloatVector(tintId_, 1, VectorType::GFX_3D, glm::value_ptr(tint_));

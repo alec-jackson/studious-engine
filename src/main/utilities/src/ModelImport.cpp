@@ -22,6 +22,7 @@
 namespace ModelImport {
 Result processObjectFile(string modelPath, std::shared_ptr<Polygon> polygon);
 Result processMaterialFile(string modelPath, std::shared_ptr<Polygon> polygon);
+Result linkMaterialToModel(std::shared_ptr<Polygon> polygon);
 std::shared_ptr<Model> buildModel(string matName, const vector<float> &vF, const vector<float> &tF,
 const vector<float> &nF, const vector<int> &commands);
 
@@ -31,7 +32,26 @@ std::shared_ptr<Polygon> createPolygonFromFile(string modelPath) {
     // Re-think data encapsulation - what do we want from each function call?
     // Read mat
     processMaterialFile(modelPath, polygon);
+    linkMaterialToModel(polygon);
     return polygon;
+}
+
+Result linkMaterialToModel(std::shared_ptr<Polygon> polygon) {
+    // Iterate through each submodel and link its material in the material library
+    for (auto model : polygon->modelMap) {
+        if (!model.second->materialName.empty()) {
+            // Search for the material
+            auto mmit = polygon->materialMap.find(model.second->materialName);
+            if (mmit != polygon->materialMap.end()) {
+                model.second->mat = mmit->second.get();
+            } else if (model.second->materialName.compare("None") != 0) {
+                printf("ERROR: We have a material defined [%s] that is not provided by a material file!\n",
+                    model.second->materialName.c_str());
+                assert(false);
+            }
+        }
+    }
+    return Result::OK;
 }
 
 Result processMaterialFile(string modelPath, std::shared_ptr<Polygon> polygon) {
@@ -42,7 +62,7 @@ Result processMaterialFile(string modelPath, std::shared_ptr<Polygon> polygon) {
     if (std::string::npos != lastPathDelim) {
         objectDirectory = modelPath.substr(0, lastPathDelim) + "/";
     }
-    string materialPath = objectDirectory + polygon.get()->materialLibrary;
+    string materialPath = objectDirectory + polygon->materialLibrary;
     // Read the material file
     ifstream file;
     file.open(materialPath);
@@ -66,6 +86,11 @@ Result processMaterialFile(string modelPath, std::shared_ptr<Polygon> polygon) {
             polygon.get()->materialMap[currentMaterial].get()->name = std::string(miscbuffer);
         } else if (charBuffer.compare(0, 2, "Ns") == 0) {
             sscanf(charBuffer.c_str(), "Ns %f\n", &polygon.get()->materialMap[currentMaterial].get()->Ns);
+        } else if (charBuffer.compare(0, 2, "Kd") == 0) {
+            assert(sscanf(charBuffer.c_str(), "Kd %f %f %f\n",
+                &polygon->materialMap[currentMaterial]->Kd.x,
+                &polygon->materialMap[currentMaterial]->Kd.y,
+                &polygon->materialMap[currentMaterial]->Kd.z) == 3);
         } else if (charBuffer.compare(0, 6, "map_Kd") == 0) {
             sscanf(charBuffer.c_str(), "map_Kd %s\n", miscbuffer);
             polygon.get()->materialMap[currentMaterial].get()->map_Kd = miscbuffer;
@@ -153,9 +178,11 @@ Result processObjectFile(string modelPath, std::shared_ptr<Polygon> polygon) {
             matName = materialName;
         } else if (charBuffer.size() > 7 && charBuffer.compare(0, 7, "mtllib ") == 0) {
             memset(miscbuffer, 0, sizeof(miscbuffer));
-            sscanf(charBuffer.c_str(), "mtllib %s\n", miscbuffer);
-            string matlib(miscbuffer);
-            polygon.get()->materialLibrary = matlib;
+            // Don't use sscanf, it will strip whitespace...
+            // sscanf(charBuffer.c_str(), "mtllib %s\n", miscbuffer);
+
+            string matlib = charBuffer.substr(7, std::string::npos);
+            polygon->materialLibrary = matlib;
         } else {
             fprintf(stderr, "ModelImport::processLine: Discarding line %s\n",
                 charBuffer.c_str());

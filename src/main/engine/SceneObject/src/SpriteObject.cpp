@@ -18,8 +18,10 @@ SpriteObject::SpriteObject(string spritePath, vec3 position, float scale, unsign
         string objectName, ObjectType type, ObjectAnchor anchor, GfxController *gfxController): GameObject2D(
             spritePath, position, scale, programId, objectName, type, anchor, gfxController) {
     printf("SpriteObject::SpriteObject: Creating sprite %s\n", objectName.c_str());
-    GameObject2D::initializeTextureData();
-    initializeVertexData();
+    if (!spritePath.empty()) {
+        GameObject2D::initializeTextureData();
+        initializeVertexData();
+    }
     initializeShaderVars();
 }
 
@@ -80,9 +82,7 @@ void SpriteObject::render() {
     VISIBILITY_CHECK;
     std::unique_lock<std::mutex> scopeLock(objectLock_);
     // For sprites, ignore Z-axis scale effect for consistency
-    scaleMatrix_[2][2] = 1.0f;
     mat4 model = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
-    gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     // Send shader variables

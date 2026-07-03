@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
+#include "glm/gtc/type_ptr.hpp"
 #include <GameObject.hpp>
 #include <string>
 #include <cstdio>
@@ -48,6 +49,7 @@ GameObject::GameObject(std::shared_ptr<Polygon> characterModel, vec3 position, v
     directionalLightId = gfxController_->getShaderVariable(programId_, "directionalLight").get();
     luminanceId = gfxController_->getShaderVariable(programId_, "luminance").get();
     rollOffId = gfxController_->getShaderVariable(programId_, "rollOff").get();
+    kdId = gfxController_->getShaderVariable(programId_, "Kd").get();
     vpMatrix_ = mat4(1.0f);  // Default VP matrix to identity matrix
 }
 
@@ -174,6 +176,7 @@ void GameObject::render() {
     // Send GameObject to render method
     // Draw each shape individually
     for (auto &modelPair : model_.get()->modelMap) {
+        vec3 kd = modelPair.second->mat == nullptr ? vec3(0.35, 0.35, 0.35) : modelPair.second->mat->Kd;
         int hasTexture = modelPair.second.get()->textureCoordsId != UINT_MAX ? 1 : 0;
         gfxController_->setProgram(programId_);
         gfxController_->polygonRenderMode(RenderMode::FILL);
@@ -181,6 +184,7 @@ void GameObject::render() {
         // Send our shared variables over to our program (shader)
         gfxController_->sendFloat(luminanceId, luminance);
         gfxController_->sendFloat(rollOffId, rollOff);
+        gfxController_->sendFloatVector(kdId, 1, VectorType::GFX_3D, glm::value_ptr(kd));
         gfxController_->sendFloatVector(directionalLightId, 1, VectorType::GFX_3D, glm::value_ptr(directionalLight));
         gfxController_->sendFloatMatrix(vpId, 1, glm::value_ptr(vpMatrix_));
         gfxController_->sendFloatMatrix(modelId, 1, glm::value_ptr(modelMatrix));
