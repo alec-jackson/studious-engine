@@ -108,6 +108,7 @@ Result processObjectFile(string modelPath, std::shared_ptr<Polygon> polygon) {
         cerr << "Model path does not exist!";
         return Result::FAILURE;
     }
+    int objIdx = 0;
     string charBuffer;
     vector<float> vertexFrame;
     vector<float> textureFrame;
@@ -170,7 +171,7 @@ Result processObjectFile(string modelPath, std::shared_ptr<Polygon> polygon) {
                 // Add the model to the polygon
                 polygon.get()->modelMap[prevObjectName] = model;
             }
-            prevObjectName = objectName;
+            prevObjectName = objectName + std::to_string(objIdx++);
         } else if (charBuffer.size() > 7 && charBuffer.compare(0, 7, "usemtl ") == 0) {
             memset(miscbuffer, 0, sizeof(miscbuffer));
             sscanf(charBuffer.c_str(), "usemtl %s\n", miscbuffer);
