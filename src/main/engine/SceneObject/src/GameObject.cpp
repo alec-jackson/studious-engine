@@ -8,7 +8,6 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "glm/gtc/type_ptr.hpp"
 #include <GameObject.hpp>
 #include <string>
 #include <cstdio>

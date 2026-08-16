@@ -26,28 +26,18 @@
 #include <studious_utility.hpp>
 
 // Update return values
-#define UPDATE_NOT_COMPLETE (0)
-#define POSITION_MET (1<<0)
-#define STRETCH_MET (1<<1)
-#define TEXT_MET (1<<2)
-#define TIME_MET (1<<3)
-#define ROTATION_MET (1<<4)
-#define SCALE_MET (1<<5)
-#define COLOR_MET (1<<6)
-#define TINT_MET (1<<7)
-#define DELTA_MET (1<<8)
+#define ANIM_NONE       (0)
+#define ANIM_POSITION   (1<<0)
+#define ANIM_STRETCH    (1<<1)
+#define ANIM_TEXT       (1<<2)
+#define ANIM_TIME       (1<<3)
+#define ANIM_ROTATION   (1<<4)
+#define ANIM_SCALE      (1<<5)
+#define ANIM_COLOR      (1<<6)
+#define ANIM_TINT       (1<<7)
+#define ANIM_DELTA      (1<<8)
 
-// Update Types
-#define UPDATE_NONE (0)
-#define UPDATE_POS (1<<0)
-#define UPDATE_STRETCH (1<<1)
-#define UPDATE_TEXT (1<<2)
-#define UPDATE_TIME (1<<3)
-#define UPDATE_ROTATION (1<<4)
-#define UPDATE_SCALE (1<<5)
-#define UPDATE_COLOR (1<<6)
-#define UPDATE_TINT (1<<7)
-#define UPDATE_DELTA (1<<8)
+#define ANIM_FINISHED_MASK 0x01FF
 
 // MISC
 #define CAP_POS 1
@@ -160,7 +150,7 @@ class AnimationController {
     int updateScale(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
-    int updateTime(KeyFrame *keyFrame);
+    int updateTime(SceneObject *target, KeyFrame *keyFrame);
     /**
      * @brief Processes the color keyframe if applicable using deltaTime.
      * @param target - The SceneObject to apply the animation to.

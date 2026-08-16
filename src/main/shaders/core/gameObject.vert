@@ -15,7 +15,6 @@ uniform vec3 Kd;
 out vec3 Color;
 
 const vec3 ka = 0.3*vec3(.5, 0.5, 0.5);
-// const vec3 kd = 0.7*vec3(.5, 0.5, 0.5);
 
 void main() {
   vec3 lightPosition = directionalLight;

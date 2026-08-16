@@ -276,7 +276,7 @@ void process(SceneObject *self) {
             auto delcb = [bulletName] () {
                 currentGame->removeSceneObject(bulletName);
             };
-            auto bkf = AnimationController::createKeyFrameCb(UPDATE_NONE, delcb, expireTime);
+            auto bkf = AnimationController::createKeyFrameCb(ANIM_NONE, delcb, expireTime);
             animationController->addKeyFrame(bulletObj, bkf);
 
             PhysicsParams params = {

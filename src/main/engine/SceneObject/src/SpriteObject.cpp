@@ -81,7 +81,6 @@ SpriteObject::~SpriteObject() {
 void SpriteObject::render() {
     VISIBILITY_CHECK;
     std::unique_lock<std::mutex> scopeLock(objectLock_);
-    // For sprites, ignore Z-axis scale effect for consistency
     mat4 model = translateMatrix_ * rotateMatrix_ * scaleMatrix_;
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
