@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <GameObject.hpp>
+#include <studious_utility.hpp>
 #include FT_FREETYPE_H
 
 /**
@@ -44,7 +45,7 @@ class TextObject : public SceneObject {
     inline void setCharPadding(float padding) { charPadding_ = padding; }
 
     // Getters
-    inline string getMessage() { return this->message_; }
+    inline string getMessage() { SLK sl(objectLock_); return this->message_; }
     inline vec3 getCutoff() { return cutoff_; }
     inline vec4 getColor() { return textColor_; }
     inline float getCharPadding() { return charPadding_; }

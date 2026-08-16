@@ -26,31 +26,24 @@
 #include <studious_utility.hpp>
 
 // Update return values
-#define UPDATE_NOT_COMPLETE 0
-#define POSITION_MET 1
-#define STRETCH_MET 2
-#define TEXT_MET 4
-#define TIME_MET 8
-#define ROTATION_MET 16
-#define SCALE_MET 32
-#define COLOR_MET 64
-#define TINT_MET 128
+#define ANIM_NONE       (0)
+#define ANIM_POSITION   (1<<0)
+#define ANIM_STRETCH    (1<<1)
+#define ANIM_TEXT       (1<<2)
+#define ANIM_TIME       (1<<3)
+#define ANIM_ROTATION   (1<<4)
+#define ANIM_SCALE      (1<<5)
+#define ANIM_COLOR      (1<<6)
+#define ANIM_TINT       (1<<7)
+#define ANIM_DELTA      (1<<8)
 
-// Update Types
-#define UPDATE_NONE 0
-#define UPDATE_POS 1
-#define UPDATE_STRETCH 2
-#define UPDATE_TEXT 4
-#define UPDATE_TIME 8
-#define UPDATE_ROTATION 16
-#define UPDATE_SCALE 32
-#define UPDATE_COLOR 64
-#define UPDATE_TINT 128
+#define ANIM_FINISHED_MASK 0x01FF
 
 // MISC
 #define CAP_POS 1
 #define CAP_NEG 2
 #define ANIMATION_COMPLETE_CB std::function<void(void)> callback
+#define MAX_DELTA_UPDATES 4000
 
 extern double deltaTime;
 
@@ -86,6 +79,13 @@ struct TrackConfiguration {
         trackData { tD }, trackName { tN }, targetFps { tF }, loop { l } {};
 };
 
+struct DeltaObject {
+    std::function<bool(SceneObject *)> deltaFunc;
+    std::function<void(SceneObject *)> updateFunc;
+    bool terminated = false;
+    double updatesPerSecond;
+};
+
 /**
  * @brief Contains a set of tracks for a target object.
  */
@@ -118,8 +118,11 @@ struct KeyFrame {
     AnimationData<float> scale;
     AnimationData<vec4> color;
     AnimationData<vec4> tint;
+    DeltaObject deltaObject;
     float targetTime;
     float currentTime = 0.0f;
+    float currentDTime = 0.0f;
+    float lastDTime = 0.0f;
     int type;
     ANIMATION_COMPLETE_CB;
     bool hasCb;
@@ -148,7 +151,7 @@ class AnimationController {
     int updateScale(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
-    int updateTime(KeyFrame *keyFrame);
+    int updateTime(SceneObject *target, KeyFrame *keyFrame);
     /**
      * @brief Processes the color keyframe if applicable using deltaTime.
      * @param target - The SceneObject to apply the animation to.
@@ -158,6 +161,7 @@ class AnimationController {
      */
     int updateColor(SceneObject *target, KeyFrame *keyFrame);
     int updateTint(SceneObject *target, KeyFrame *keyFrame);
+    int updateDelta(SceneObject *target, KeyFrame *keyFrame);
     bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
     static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
     static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);

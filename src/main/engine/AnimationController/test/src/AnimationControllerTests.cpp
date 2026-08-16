@@ -359,7 +359,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenUpdateFloatCalled_ThenFloatUpdated) 
     float kfTargetTime = 2.0f;
     float kfCurrentTime = 0.5f;
     float expectedTransformation = originalValue + ((desiredValue - originalValue) * (kfCurrentTime / kfTargetTime));
-    auto keyframe = AnimationController::createKeyFrame(UPDATE_NONE, kfTargetTime);
+    auto keyframe = AnimationController::createKeyFrame(ANIM_NONE, kfTargetTime);
     keyframe->currentTime = kfCurrentTime;
 
     /* Action */
@@ -380,7 +380,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenUpdateFloatFinishesKeyFrameExactly_T
     float originalValue = 1.0f;
     float desiredValue = 5.0f;
     float kfTargetTime = 2.0f;
-    auto keyframe = AnimationController::createKeyFrame(UPDATE_NONE, kfTargetTime);
+    auto keyframe = AnimationController::createKeyFrame(ANIM_NONE, kfTargetTime);
     keyframe->currentTime = kfTargetTime;
 
     /* Action */
@@ -405,7 +405,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenFirstKeyFrameAddedForObject_ThenKeyF
     float expTime = 1.0f;
     int expKfStoreSize = 1;
     int expQueueSize = 1;
-    auto keyFrame = AnimationController::createKeyFrame(UPDATE_NONE, expTime);
+    auto keyFrame = AnimationController::createKeyFrame(ANIM_NONE, expTime);
 
     /* Action */
     animationController_.addKeyFrame(&obj, keyFrame);
@@ -418,7 +418,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenFirstKeyFrameAddedForObject_ThenKeyF
     ASSERT_EQ(expQueueSize, kfStore.at(DUMMY_OBJ_NAME).kQueue.size());
     // Check that the keyframe data looks correct
     ASSERT_EQ(expTime, kfStore.at(DUMMY_OBJ_NAME).kQueue.front().get()->targetTime);
-    ASSERT_EQ(UPDATE_NONE, kfStore.at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
+    ASSERT_EQ(ANIM_NONE, kfStore.at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
 }
 
 /**
@@ -432,8 +432,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenSecondKeyFrameAddedForObject_ThenBot
     float expTimeSecond = 2.0f;
     int expKfStoreSize = 1;
     int expQueueSize = 2;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_NONE, expTimeFirst);
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, expTimeSecond);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_NONE, expTimeFirst);
+    auto keyFrame_2 = AnimationController::createKeyFrame(ANIM_POSITION, expTimeSecond);
 
     /* Action */
     animationController_.addKeyFrame(&obj, keyFrame_1);
@@ -447,9 +447,9 @@ TEST_F(GivenAnAnimationControllerReady, WhenSecondKeyFrameAddedForObject_ThenBot
     ASSERT_EQ(expQueueSize, kfStore.at(DUMMY_OBJ_NAME).kQueue.size());
     // Check that the keyframe data looks correct
     ASSERT_EQ(expTimeFirst, kfStore.at(DUMMY_OBJ_NAME).kQueue.front().get()->targetTime);
-    ASSERT_EQ(UPDATE_NONE, kfStore.at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
+    ASSERT_EQ(ANIM_NONE, kfStore.at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
     ASSERT_EQ(expTimeSecond, kfStore.at(DUMMY_OBJ_NAME).kQueue.back().get()->targetTime);
-    ASSERT_EQ(UPDATE_POS, kfStore.at(DUMMY_OBJ_NAME).kQueue.back().get()->type);
+    ASSERT_EQ(ANIM_POSITION, kfStore.at(DUMMY_OBJ_NAME).kQueue.back().get()->type);
 }
 
 /**
@@ -465,7 +465,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdates_ThenFloatTransformat
     deltaTime = 1.0f;
     float expectedTransformation = originalScale + ((desiredScale - originalScale) * (deltaTime / targetTime));
     int expectedKeyFrames = 1;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime);
 
     obj.setScale(originalScale);
     keyFrame_1.get()->scale.desired = desiredScale;
@@ -492,7 +492,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesMultipleTimes_ThenFlo
     float targetTime = 3.0f;
     deltaTime = 1.0f;
     float expectedTransformation = originalScale + ((desiredScale - originalScale) * ((deltaTime * 2) / targetTime));
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime);
     int expectedKeyFrames = 1;
     obj.setScale(originalScale);
     keyFrame_1.get()->scale.desired = desiredScale;
@@ -520,7 +520,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKFUpdatesMultTimesComplete_ThenFinal
     float targetTime = 3.0f;
     deltaTime = 1.0f;
     float expectedTransformation = desiredScale;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime);
 
     obj.setScale(originalScale);
     keyFrame_1.get()->scale.desired = desiredScale;
@@ -549,7 +549,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenFloatKeyFrameCompletes_ThenFinalUpda
     float targetTime = 3.0f;
     deltaTime = targetTime;
     float expectedTransformation = desiredScale;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime);
 
     obj.setScale(originalScale);
     keyFrame_1.get()->scale.desired = desiredScale;
@@ -576,7 +576,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenFloatKeyFrameCompletesWithOverflow_T
     float targetTime = 7.0f;
     deltaTime = targetTime;
     float expectedTransformation = desiredScale;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime);
 
     obj.setScale(originalScale);
     keyFrame_1.get()->scale.desired = desiredScale;
@@ -604,7 +604,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdates_ThenVectorTransforma
     vec3 expectedTransformation = originalPosition +
         ((desiredPosition - originalPosition) * vec3(deltaTime / targetTime));
     int expectedKeyFrames = 1;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime);
 
     obj.setPosition(expectedTransformation);
     keyFrame_1.get()->pos.desired = desiredPosition;
@@ -633,7 +633,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameUpdatesTwice_ThenVectorTrans
     vec3 expectedTransformation = originalPosition +
         ((desiredPosition - originalPosition) * vec3((deltaTime * 2) / targetTime));
     int expectedKeyFrames = 1;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime);
 
     obj.setPosition(expectedTransformation);
     keyFrame_1.get()->pos.desired = desiredPosition;
@@ -661,7 +661,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletes_ThenFinalVectorTra
     float targetTime = 3.0f;
     deltaTime = 1.0f;
     vec3 expectedTransformation = desiredPosition;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_POSITION, targetTime);
 
     obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
@@ -690,7 +690,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesEntirely_ThenFinalV
     float targetTime = 3.0f;
     deltaTime = 3.0f;
     vec3 expectedTransformation = desiredPosition;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_POSITION, targetTime);
 
     obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
@@ -718,7 +718,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesWithOverflow_ThenFi
     float targetTime = 3.0f;
     deltaTime = 7.0f;
     vec3 expectedTransformation = desiredPosition;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_POSITION, targetTime);
 
     obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
@@ -751,8 +751,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFramesAddedForMultipleObjects_The
         ((desiredPosition - originalPosition_1) * vec3((deltaTime) / targetTime));
     vec3 expectedTransformation_2 = originalPosition_2 +
         ((desiredPosition - originalPosition_2) * vec3((deltaTime) / targetTime));
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_POSITION, targetTime);
+    auto keyFrame_2 = AnimationController::createKeyFrame(ANIM_POSITION, targetTime);
 
     obj_1.setPosition(originalPosition_1);
     obj_2.setPosition(originalPosition_2);
@@ -797,8 +797,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesForOneObject_ThenOt
     vec3 expectedTransformation_1 = desiredPosition;  // This keyframe should complete
     vec3 expectedTransformation_2 = originalPosition_2 +
         ((desiredPosition - originalPosition_2) * vec3(deltaTime / targetTime_2));
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_1);
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_2);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_POSITION, targetTime_1);
+    auto keyFrame_2 = AnimationController::createKeyFrame(ANIM_POSITION, targetTime_2);
 
     obj_1.setPosition(originalPosition_1);
     obj_2.setPosition(originalPosition_2);
@@ -836,7 +836,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletes_ThenCallBackIsRun)
     auto callback = [&passTest]() {
         passTest = true;
     };
-    auto keyFrame_1 = AnimationController::createKeyFrameCb(UPDATE_NONE, callback, targetTime_1);
+    auto keyFrame_1 = AnimationController::createKeyFrameCb(ANIM_NONE, callback, targetTime_1);
 
     animationController_.addKeyFrame(&obj, keyFrame_1);
 
@@ -863,11 +863,11 @@ TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockO
     float targetTime_2 = 5.0f;  // Different target time for the second keyframe
     deltaTime = 3.0f;
 
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_2);
+    auto keyFrame_2 = AnimationController::createKeyFrame(ANIM_POSITION, targetTime_2);
     auto addKfCb = [&keyFrame_2, &obj, this]() {
         animationController_.addKeyFrame(&obj, keyFrame_2);
     };
-    auto keyFrame_1 = AnimationController::createKeyFrameCb(UPDATE_NONE, addKfCb, targetTime_1);
+    auto keyFrame_1 = AnimationController::createKeyFrameCb(ANIM_NONE, addKfCb, targetTime_1);
 
     animationController_.addKeyFrame(&obj, keyFrame_1);
 
@@ -882,7 +882,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockO
     // The second keyframe should be in the queue
     ASSERT_EQ(1, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.size());
     // The second keyframe should be the one we added
-    ASSERT_EQ(UPDATE_POS, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
+    ASSERT_EQ(ANIM_POSITION, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
     ASSERT_EQ(targetTime_2,
         animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->targetTime);
 }
@@ -901,7 +901,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenProcessTextTransformation_ThenTextTr
     float targetTime_1 = 3.0f;
     deltaTime = 1.0f;
 
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_TEXT, targetTime_1);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_TEXT, targetTime_1);
     keyFrame_1.get()->text.desired = desiredText;
     animationController_.addKeyFrame(&obj, keyFrame_1);
 
@@ -928,7 +928,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenTextTransformationCompletes_ThenText
     float targetTime_1 = 3.0f;
     deltaTime = 3.0f;
 
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_TEXT, targetTime_1);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_TEXT, targetTime_1);
     keyFrame_1.get()->text.desired = desiredText;
     animationController_.addKeyFrame(&obj, keyFrame_1);
 
@@ -954,7 +954,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenZeroTimeKeyFrameUpdates_ThenObjectUp
     float targetTime = 0.0f;
     deltaTime = 1.0f;
     float expectedTransformation = desiredScale;  // Since target time is 0, we expect the desired value immediately
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime);
 
     obj.setScale(originalScale);
     keyFrame_1.get()->scale.desired = desiredScale;
@@ -985,9 +985,9 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameTimeOverflows_ThenNextKeyFra
     float targetTime_3 = 1.0f;
     deltaTime = 6.0f;
     float expectedTransformation = desiredScale_3;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime_1);
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime_2);
-    auto keyFrame_3 = AnimationController::createKeyFrame(UPDATE_SCALE, targetTime_3);
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime_1);
+    auto keyFrame_2 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime_2);
+    auto keyFrame_3 = AnimationController::createKeyFrame(ANIM_SCALE, targetTime_3);
 
     obj.setScale(originalScale);
     keyFrame_1.get()->scale.desired = desiredScale_1;
@@ -1003,4 +1003,69 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameTimeOverflows_ThenNextKeyFra
     /* Validation */
     ASSERT_EQ(expectedTransformation, obj.getScale());
     ASSERT_TRUE(animationController_.getKeyFrameStore().empty());
+}
+
+/**
+ * @brief Ensures basic anim delta functionality.
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenDeltaTransformConfigured_ThenUpdatedAsExpected) {
+    /* Preparation */
+    TestObject obj(DUMMY_OBJ_NAME);
+    int deltaFuncCalls = 0;
+    int updateFuncCalls = 0;
+    int expectedDeltaFuncCalls = 2;
+    int expectedUpdateFuncCalls = 1;
+    float totalTime = 5.0f;  // 5 seconds
+    deltaTime = 1.0f;
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_DELTA, totalTime);
+    keyFrame_1->deltaObject.updatesPerSecond = 2;
+    keyFrame_1->deltaObject.deltaFunc = [&deltaFuncCalls] (SceneObject *obj[[maybe_unused]]) {
+        deltaFuncCalls++;
+        return false;
+    };
+    keyFrame_1->deltaObject.updateFunc = [&updateFuncCalls] (SceneObject *obj[[maybe_unused]]) {
+        updateFuncCalls++;
+    };
+    animationController_.addKeyFrame(&obj, keyFrame_1);
+
+    /* Action */
+    animationController_.update();
+
+    /* Validation */
+    ASSERT_EQ(expectedDeltaFuncCalls, deltaFuncCalls);
+    ASSERT_EQ(expectedUpdateFuncCalls, updateFuncCalls);
+}
+
+/**
+ * @brief Ensures that delta animations terminate when delta func returns true.
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenDeltaFinished_ThenNoLongerUpdate) {
+    /* Preparation */
+    TestObject obj(DUMMY_OBJ_NAME);
+    int deltaFuncCalls = 0;
+    int updateFuncCalls = 0;
+    int expectedDeltaFuncCalls = 10;  // (1, 2, 3, 4) + (5, 6, 7, 8) + (9, 10)
+    int expectedUpdateFuncCalls = 3;  // 4 -> 8 -> 10
+    float totalTime = 10.0f;  // 10 seconds
+    int numUpdates = 10;
+    deltaTime = 1.0f;
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_DELTA, totalTime);
+    keyFrame_1->deltaObject.updatesPerSecond = 4;
+    keyFrame_1->deltaObject.deltaFunc = [&deltaFuncCalls] (SceneObject *obj[[maybe_unused]]) {
+        deltaFuncCalls++;
+        return deltaFuncCalls >= 10;  // return true early - after 10 updates
+    };
+    keyFrame_1->deltaObject.updateFunc = [&updateFuncCalls] (SceneObject *obj[[maybe_unused]]) {
+        updateFuncCalls++;
+    };
+    animationController_.addKeyFrame(&obj, keyFrame_1);
+
+    /* Action */
+    for (int i = 0; i < numUpdates; ++i) {
+        animationController_.update();
+    }
+
+    /* Validation */
+    ASSERT_EQ(expectedDeltaFuncCalls, deltaFuncCalls);
+    ASSERT_EQ(expectedUpdateFuncCalls, updateFuncCalls);
 }

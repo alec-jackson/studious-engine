@@ -50,7 +50,8 @@ class GameObject: public SceneObject, public ColliderExt {
     std::shared_ptr<Polygon> model_;
 
     unsigned int vpId, modelId,
-        hasTextureId, directionalLightId, luminanceId, rollOffId;
+        hasTextureId, directionalLightId, luminanceId, rollOffId,
+        kdId;
 
     float luminance;
     float rollOff;

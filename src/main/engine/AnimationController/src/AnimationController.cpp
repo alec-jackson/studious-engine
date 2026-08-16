@@ -20,17 +20,17 @@
 
 std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
     auto keyframe = createKeyFrame(type, time);
-    keyframe.get()->callback = callback;
-    keyframe.get()->hasCb = true;
+    keyframe->callback = callback;
+    keyframe->hasCb = true;
     return keyframe;
 }
 
 std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float time) {
     auto keyframe = std::make_shared<KeyFrame>();
-    keyframe.get()->targetTime = time;
-    keyframe.get()->currentTime = 0.0f;
-    keyframe.get()->type = type;
-    keyframe.get()->hasCb = false;
+    keyframe->targetTime = time;
+    keyframe->currentTime = 0.0f;
+    keyframe->type = type;
+    keyframe->hasCb = false;
     return keyframe;
 }
 
@@ -124,7 +124,7 @@ void AnimationController::playTrack(string trackName) {
     auto tp = std::make_shared<ActiveTrackEntry>(
         tsit->second.track,
         secondsPerFrame,
-        secondsPerFrame * tsit->second.track.get()->trackData.size(),
+        secondsPerFrame * tsit->second.track->trackData.size(),
         0,
         trackPtr);
     activeTracks_[objectName] = tp;
@@ -190,31 +190,31 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
         currentKf->rotation.original = target->getRotationRaw();
         currentKf->scale.original = target->getScaleRaw();
         // Use stretch if UI object
-        if (currentKf->type & UPDATE_STRETCH) {
+        if (currentKf->type & ANIM_STRETCH) {
             assert(target->type() == ObjectType::UI_OBJECT);
             auto cTarget = static_cast<UiObject *>(target);
             currentKf->stretch.original = cTarget->getStretch();
         }
-        if (currentKf->type & UPDATE_TEXT) {
+        if (currentKf->type & ANIM_TEXT) {
             assert(target->type() == ObjectType::TEXT_OBJECT);
             auto cTarget = static_cast<TextObject *>(target);
             currentKf->text.original = cTarget->getMessage();
         }
-        if (currentKf->type & UPDATE_COLOR) {
+        if (currentKf->type & ANIM_COLOR) {
             assert(target->type() == ObjectType::TEXT_OBJECT);
             auto cTarget = static_cast<TextObject *>(target);
             currentKf->color.original = cTarget->getColor();
         }
-        if (currentKf->type & UPDATE_TINT) {
+        if (currentKf->type & ANIM_TINT) {
             auto imEx = dynamic_cast<ImageExt *>(target);
             currentKf->tint.original = imEx->getTint();
         }
     }
 
-    auto result = UPDATE_NOT_COMPLETE;
-    auto done = POSITION_MET | STRETCH_MET | TEXT_MET | TIME_MET | ROTATION_MET | SCALE_MET | COLOR_MET | TINT_MET;
-    auto &currentTime = currentKf.get()->currentTime;
-    auto &targetTime = currentKf.get()->targetTime;
+    auto result = ANIM_NONE;
+    auto done = ANIM_FINISHED_MASK;
+    auto &currentTime = currentKf->currentTime;
+    auto &targetTime = currentKf->targetTime;
     auto overflowTime = currentTime + timeChange;
     // Update the time passed since keyframe has started
     currentTime = std::min<float>(overflowTime, targetTime);
@@ -222,11 +222,12 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
     result |= updatePosition(target, currentKf.get());
     result |= updateStretch(target, currentKf.get());
     result |= updateText(target, currentKf.get());
-    result |= updateTime(currentKf.get());
+    result |= updateTime(target, currentKf.get());
     result |= updateRotation(target, currentKf.get());
     result |= updateScale(target, currentKf.get());
     result |= updateColor(target, currentKf.get());
     result |= updateTint(target, currentKf.get());
+    result |= updateDelta(target, currentKf.get());
     return UpdateData<float>(overflowTime - targetTime, (result == done));
 }
 
@@ -289,8 +290,8 @@ void AnimationController::update() {
 
 int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has POSITION
-    if (!(keyFrame->type & UPDATE_POS)) {
-        return POSITION_MET;
+    if (!(keyFrame->type & ANIM_POSITION)) {
+        return ANIM_POSITION;
     }
     auto result = updateVector(
         keyFrame->pos.original,
@@ -299,13 +300,13 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
 
     target->setPosition(result.updatedValue_);
 
-    return (result.updateComplete_) ? POSITION_MET : UPDATE_NOT_COMPLETE;
+    return (result.updateComplete_) ? ANIM_POSITION : ANIM_NONE;
 }
 
 int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has POSITION
-    if (!(keyFrame->type & UPDATE_ROTATION)) {
-        return ROTATION_MET;
+    if (!(keyFrame->type & ANIM_ROTATION)) {
+        return ANIM_ROTATION;
     }
     auto result = updateVector(
         keyFrame->rotation.original,
@@ -314,13 +315,13 @@ int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame)
 
     target->setRotation(result.updatedValue_);
 
-    return (result.updateComplete_) ? ROTATION_MET : UPDATE_NOT_COMPLETE;
+    return (result.updateComplete_) ? ANIM_ROTATION : ANIM_NONE;
 }
 
 int AnimationController::updateScale(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has POSITION
-    if (!(keyFrame->type & UPDATE_SCALE)) {
-        return SCALE_MET;
+    if (!(keyFrame->type & ANIM_SCALE)) {
+        return ANIM_SCALE;
     }
     auto result = updateFloat(
         keyFrame->scale.original,
@@ -329,13 +330,13 @@ int AnimationController::updateScale(SceneObject *target, KeyFrame *keyFrame) {
 
     target->setScale(result.updatedValue_);
 
-    return (result.updateComplete_) ? SCALE_MET : UPDATE_NOT_COMPLETE;
+    return (result.updateComplete_) ? ANIM_SCALE : ANIM_NONE;
 }
 
 int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type is stretch
-    if (!(keyFrame->type & UPDATE_STRETCH)) {
-        return STRETCH_MET;
+    if (!(keyFrame->type & ANIM_STRETCH)) {
+        return ANIM_STRETCH;
     }
     // Update the stretch components for the target (if supported)
     if (target->type() != ObjectType::UI_OBJECT) {
@@ -352,13 +353,13 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
     cTarget->setWStretch(updated.updatedValue_.x);
     cTarget->setHStretch(updated.updatedValue_.y);
 
-    return (updated.updateComplete_) ? STRETCH_MET : UPDATE_NOT_COMPLETE;
+    return (updated.updateComplete_) ? ANIM_STRETCH : ANIM_NONE;
 }
 
 int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has COLOR
-    if (!(keyFrame->type & UPDATE_COLOR)) {
-        return COLOR_MET;
+    if (!(keyFrame->type & ANIM_COLOR)) {
+        return ANIM_COLOR;
     }
     // Check if the target is a text object
     if (target->type() != ObjectType::TEXT_OBJECT) {
@@ -376,13 +377,13 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
 
     cTarget->setColor(result.updatedValue_);
 
-    return (result.updateComplete_) ? COLOR_MET : UPDATE_NOT_COMPLETE;
+    return (result.updateComplete_) ? ANIM_COLOR : ANIM_NONE;
 }
 
 int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has COLOR
-    if (!(keyFrame->type & UPDATE_TINT)) {
-        return TINT_MET;
+    if (!(keyFrame->type & ANIM_TINT)) {
+        return ANIM_TINT;
     }
     // This is the pattern that should be followed for stuff like this:
     auto imEx = dynamic_cast<ImageExt *>(target);
@@ -391,7 +392,7 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
             "AnimationController::updateTint: Image Extension NOT present in object %s!\n",
             target->objectName().c_str());
         assert(0);
-        return TINT_MET;
+        return ANIM_TINT;
     }
     auto result = updateVector(
         keyFrame->tint.original,
@@ -400,7 +401,49 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
 
     imEx->setTint(result.updatedValue_);
 
-    return (result.updateComplete_) ? TINT_MET : UPDATE_NOT_COMPLETE;
+    return (result.updateComplete_) ? ANIM_TINT : ANIM_NONE;
+}
+
+int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
+    if (!(keyFrame->type & ANIM_DELTA) || keyFrame->deltaObject.terminated) {
+        return ANIM_DELTA;
+    }
+    if (!keyFrame->deltaObject.deltaFunc) {
+        printf("AnimationController::updateDelta: Invalid deltaFunc - skipping\n");
+        return ANIM_DELTA;
+    }
+    // Refresh delta time counter independently
+    keyFrame->currentDTime += deltaTime;
+    // Don't update currentDTime until an update is detected
+    int prevUpdates = keyFrame->lastDTime * keyFrame->deltaObject.updatesPerSecond;
+    // Determine number of times deltaFunc should be called...
+    int targetUpdates = keyFrame->currentDTime * keyFrame->deltaObject.updatesPerSecond;
+    // Cap per-frame update count to avoid scary situations
+    if (targetUpdates - prevUpdates > MAX_DELTA_UPDATES) {
+        targetUpdates = MAX_DELTA_UPDATES;
+        printf("AnimationController::updateDelta: WARNING! Capping targetUpdates to %d\n",
+            targetUpdates);
+        // Assert for now ... ( remove later )
+        assert(false);
+    }
+    auto result = false;
+    // Call deltaFunc up to targetUpdate count
+    for (int i = prevUpdates; i < targetUpdates; ++i) {
+        result = keyFrame->deltaObject.deltaFunc(target);
+        printf("Running delta func %d\n", i);
+        if (result) {
+            keyFrame->deltaObject.terminated = true;
+            break;
+        }
+    }
+    // Call the update function if an update occurred
+    if (prevUpdates != targetUpdates) {
+        keyFrame->lastDTime = keyFrame->currentDTime;
+        if (keyFrame->deltaObject.updateFunc)
+            keyFrame->deltaObject.updateFunc(target);
+    }
+
+    return (result) ? ANIM_DELTA : ANIM_NONE;
 }
 
 float AnimationController::linearFloatTransform(float original, float desired, KeyFrame *keyFrame) {
@@ -456,8 +499,8 @@ UpdateData<string> AnimationController::updateString(string original, string des
 
 int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
     // Check if the keyframe type has text
-    if (!(keyFrame->type & UPDATE_TEXT)) {
-        return TEXT_MET;
+    if (!(keyFrame->type & ANIM_TEXT)) {
+        return ANIM_TEXT;
     }
     // Check if the target is a text object
     if (target->type() != ObjectType::TEXT_OBJECT) {
@@ -476,14 +519,14 @@ int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
 
     cTarget->setMessage(result.updatedValue_);
 
-    return result.updateComplete_ ? TEXT_MET : UPDATE_NOT_COMPLETE;
+    return result.updateComplete_ ? ANIM_TEXT : ANIM_NONE;
 }
 
-int AnimationController::updateTime(KeyFrame *keyFrame) {
+int AnimationController::updateTime(SceneObject *target[[maybe_unused]], KeyFrame *keyFrame) {
     // Literally just check if we've reached the time quota
-    auto result = UPDATE_NOT_COMPLETE;
+    auto result = ANIM_NONE;
     if (keyFrame->currentTime >= keyFrame->targetTime) {
-        result = UPDATE_TIME;
+        result = ANIM_TIME;
     }
     return result;
 }
