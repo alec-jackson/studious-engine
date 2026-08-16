@@ -405,7 +405,7 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
 }
 
 int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
-    if (!(keyFrame->type & ANIM_DELTA)) {
+    if (!(keyFrame->type & ANIM_DELTA) || keyFrame->deltaObject.terminated) {
         return ANIM_DELTA;
     }
     if (!keyFrame->deltaObject.deltaFunc) {
@@ -430,7 +430,11 @@ int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
     // Call deltaFunc up to targetUpdate count
     for (int i = prevUpdates; i < targetUpdates; ++i) {
         result = keyFrame->deltaObject.deltaFunc(target);
-        if (result) break;
+        printf("Running delta func %d\n", i);
+        if (result) {
+            keyFrame->deltaObject.terminated = true;
+            break;
+        }
     }
     // Call the update function if an update occurred
     if (prevUpdates != targetUpdates) {

@@ -82,6 +82,7 @@ struct TrackConfiguration {
 struct DeltaObject {
     std::function<bool(SceneObject *)> deltaFunc;
     std::function<void(SceneObject *)> updateFunc;
+    bool terminated = false;
     double updatesPerSecond;
 };
 

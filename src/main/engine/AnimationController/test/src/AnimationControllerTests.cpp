@@ -5,6 +5,7 @@
  * @author Christian Galvez
  * @date 2025-04-13
  */
+#include "AnimationController.hpp"
 #include <AnimationControllerTests.hpp>
 #include <gtest/gtest.h>
 #include <vector>
@@ -1003,4 +1004,69 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameTimeOverflows_ThenNextKeyFra
     /* Validation */
     ASSERT_EQ(expectedTransformation, obj.getScale());
     ASSERT_TRUE(animationController_.getKeyFrameStore().empty());
+}
+
+/**
+ * @brief Ensures basic anim delta functionality.
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenDeltaTransformConfigured_ThenUpdatedAsExpected) {
+    /* Preparation */
+    TestObject obj(DUMMY_OBJ_NAME);
+    int deltaFuncCalls = 0;
+    int updateFuncCalls = 0;
+    int expectedDeltaFuncCalls = 2;
+    int expectedUpdateFuncCalls = 1;
+    float totalTime = 5.0f;  // 5 seconds
+    deltaTime = 1.0f;
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_DELTA, totalTime);
+    keyFrame_1->deltaObject.updatesPerSecond = 2;
+    keyFrame_1->deltaObject.deltaFunc = [&deltaFuncCalls] (SceneObject *obj[[maybe_unused]]) {
+        deltaFuncCalls++;
+        return false;
+    };
+    keyFrame_1->deltaObject.updateFunc = [&updateFuncCalls] (SceneObject *obj[[maybe_unused]]) {
+        updateFuncCalls++;
+    };
+    animationController_.addKeyFrame(&obj, keyFrame_1);
+
+    /* Action */
+    animationController_.update();
+
+    /* Validation */
+    ASSERT_EQ(expectedDeltaFuncCalls, deltaFuncCalls);
+    ASSERT_EQ(expectedUpdateFuncCalls, updateFuncCalls);
+}
+
+/**
+ * @brief Ensures that delta animations terminate when delta func returns true.
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenDeltaFinished_ThenNoLongerUpdate) {
+    /* Preparation */
+    TestObject obj(DUMMY_OBJ_NAME);
+    int deltaFuncCalls = 0;
+    int updateFuncCalls = 0;
+    int expectedDeltaFuncCalls = 10;  // (1, 2, 3, 4) + (5, 6, 7, 8) + (9, 10)
+    int expectedUpdateFuncCalls = 3;  // 4 -> 8 -> 10
+    float totalTime = 10.0f;  // 10 seconds
+    int numUpdates = 10;
+    deltaTime = 1.0f;
+    auto keyFrame_1 = AnimationController::createKeyFrame(ANIM_DELTA, totalTime);
+    keyFrame_1->deltaObject.updatesPerSecond = 4;
+    keyFrame_1->deltaObject.deltaFunc = [&deltaFuncCalls] (SceneObject *obj[[maybe_unused]]) {
+        deltaFuncCalls++;
+        return deltaFuncCalls >= 10; // return true early - after 10 updates
+    };
+    keyFrame_1->deltaObject.updateFunc = [&updateFuncCalls] (SceneObject *obj[[maybe_unused]]) {
+        updateFuncCalls++;
+    };
+    animationController_.addKeyFrame(&obj, keyFrame_1);
+
+    /* Action */
+    for (int i = 0; i < numUpdates; ++i) {
+        animationController_.update();
+    }
+
+    /* Validation */
+    ASSERT_EQ(expectedDeltaFuncCalls, deltaFuncCalls);
+    ASSERT_EQ(expectedUpdateFuncCalls, updateFuncCalls);
 }
