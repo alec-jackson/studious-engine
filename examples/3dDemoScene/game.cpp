@@ -167,9 +167,6 @@ int runtime() {
     auto wolfObject = currentGame->createGameObject(wolfPoly,
         vec3(-11.0f, 1.6f, 6.0f), vec3(0.0f, 0.0f, 0.0f), 1.0f, "NPC");
 
-    auto donutPoly = ModelImport::createPolygonFromFile("src/resources/models/donut/donut.obj");
-    currentGame->createGameObject(donutPoly, vec3(-20, -15, -15), vec3(0), 100.0f, "donut");
-
     // Make the wolf spin :)
     auto kf = AnimationController::createKeyFrame(
         UPDATE_ROTATION,        // Rotate
