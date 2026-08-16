@@ -25,6 +25,6 @@ class ImageExt {
 struct ImageData {
     int w;
     int h;
-    std::shared_ptr<uint8_t []> data;
+    std::shared_ptr<uint8_t[]> data;
     TexFormat format;
 };

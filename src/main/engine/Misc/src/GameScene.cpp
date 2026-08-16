@@ -6,7 +6,6 @@
  * @date 09-13-2025
  * @copyright Studious Engine 2025
  */
-#include "GfxController.hpp"
 #include <GameScene.hpp>
 #include <cassert>
 #include <mutex>  //NOLINT

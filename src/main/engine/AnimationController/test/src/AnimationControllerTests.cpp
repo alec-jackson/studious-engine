@@ -5,7 +5,6 @@
  * @author Christian Galvez
  * @date 2025-04-13
  */
-#include "AnimationController.hpp"
 #include <AnimationControllerTests.hpp>
 #include <gtest/gtest.h>
 #include <vector>
@@ -1054,7 +1053,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenDeltaFinished_ThenNoLongerUpdate) {
     keyFrame_1->deltaObject.updatesPerSecond = 4;
     keyFrame_1->deltaObject.deltaFunc = [&deltaFuncCalls] (SceneObject *obj[[maybe_unused]]) {
         deltaFuncCalls++;
-        return deltaFuncCalls >= 10; // return true early - after 10 updates
+        return deltaFuncCalls >= 10;  // return true early - after 10 updates
     };
     keyFrame_1->deltaObject.updateFunc = [&updateFuncCalls] (SceneObject *obj[[maybe_unused]]) {
         updateFuncCalls++;
