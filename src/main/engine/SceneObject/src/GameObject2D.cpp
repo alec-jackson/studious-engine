@@ -93,6 +93,26 @@ void GameObject2D::update() {
     render();
 }
 
+void GameObject2D::processTextureDataRaw(ImageData image) {
+    auto textureFormat = image.format;
+    auto packedData = image.data;
+    // Send texture image to OpenGL
+    gfxController_->generateTexture(&textureId_);
+    gfxController_->bindTexture(textureId_, GfxTextureType::NORMAL);
+    gfxController_->sendTextureData(image.w, image.h, textureFormat, packedData.get());
+    gfxController_->setTexParam(TexParam::WRAP_MODE_S, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+    gfxController_->setTexParam(TexParam::WRAP_MODE_T, TexVal(TexValType::CLAMP_TO_EDGE), GfxTextureType::NORMAL);
+    gfxController_->setTexParam(TexParam::MAGNIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR),
+        GfxTextureType::NORMAL);
+    gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_MIPMAP),
+        GfxTextureType::NORMAL);
+    gfxController_->setTexParam(TexParam::MIPMAP_LEVEL, TexVal(10), GfxTextureType::NORMAL);
+    gfxController_->generateMipMap();
+
+    textureWidth_ = image.w;
+    textureHeight_ = image.h;
+}
+
 /**
  * @brief Creates a collider for this game object
  *

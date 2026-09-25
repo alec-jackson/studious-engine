@@ -15,7 +15,7 @@
 #include <cstdio>
 #include <Image.hpp>
 
-TileObject::TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
+TileObject::TileObject(map<int, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
     float scale, ObjectType type, uint programId, string objectName,
     ObjectAnchor anchor, GfxController *gfxController) : SceneObject(position, rotation, scale,
     programId, type, objectName, gfxController), mapData_ { mapData }, anchor_ { anchor } {
@@ -79,11 +79,11 @@ void TileObject::processMapData() {
         // We need to create the model matrix
         mat4 model = mat4(1.0f);
         // Ignore parent rendering for tile maps... I don't see why we would want that
-        model = glm::translate(model, vec3(entry.x * width_ * scale_, entry.y * height_ * scale_, 0.0f) + position);
+        model = glm::translate(model, vec3(entry.x * width_ * scale_, entry.y * height_ * scale_, entry.z) + position);
         model = glm::scale(model, glm::vec3(scale_));
         modelMatrices.get()[index] = model;
         // Save the current texture as an index in the texture array
-        layerIndices.get()[index] = static_cast<float>(textureToIndexMap_.at(entry.texture));
+        layerIndices.get()[index] = static_cast<float>(textureKeyToIndexMap_.at(entry.textureKey));
         index++;
     }
 
@@ -108,7 +108,7 @@ void TileObject::processMapData() {
     gfxController_->bindVao(0);
 }
 
-void TileObject::generateTextureData(map<string, string> textures) {
+void TileObject::generateTextureData(map<int, string> textures) {
     uint currentIndex = 0;
     auto layerCount = textures.size();
     for (auto texturePath : textures) {
@@ -158,7 +158,7 @@ void TileObject::generateTextureData(map<string, string> textures) {
         GfxTextureType::ARRAY);
         gfxController_->setTexParam(TexParam::MINIFICATION_FILTER, TexVal(TexValType::NEAREST_NEIGHBOR),
             GfxTextureType::ARRAY);
-        textureToIndexMap_[texturePath.first] = currentIndex;
+        textureKeyToIndexMap_[texturePath.first] = currentIndex;
         SDL_FreeSurface(surface);
         currentIndex++;
     }
@@ -167,7 +167,7 @@ void TileObject::generateTextureData(map<string, string> textures) {
 void TileObject::sanityCheck() {
     // make sure none of the tiles use a texture we aren't expecting
     for (auto entry : mapData_) {
-        assert(textureToIndexMap_.find(entry.texture) != textureToIndexMap_.end());
+        assert(textureKeyToIndexMap_.find(entry.textureKey) != textureKeyToIndexMap_.end());
     }
 }
 
@@ -178,7 +178,6 @@ void TileObject::update() {
 void TileObject::render() {
     VISIBILITY_CHECK;
     // No additional model updates will be performed. This is a one-and-done thing.
-    gfxController_->clear(GfxClearMode::DEPTH);
     gfxController_->setProgram(programId_);
     gfxController_->polygonRenderMode(RenderMode::FILL);
     gfxController_->sendFloatVector(tintId_, 1, VectorType::GFX_3D, glm::value_ptr(tint_));

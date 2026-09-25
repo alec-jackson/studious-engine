@@ -18,22 +18,23 @@
 struct TileData {
     int x;
     int y;
-    const char *texture;
+    int z;
+    int textureKey;
 };
 
 class TileObject : public SceneObject, public ImageExt {
  public:
-    explicit TileObject(map<string, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
+    explicit TileObject(map<int, string> textures, vector<TileData> mapData, vec3 position, vec3 rotation,
         float scale, ObjectType type, uint programId, string objectName, ObjectAnchor anchor,
         GfxController *gfxController);
     void update() override;
     void render() override;
 
  private:
-    void generateTextureData(map<string, string> textures);
+    void generateTextureData(map<int, string> textures);
     void processMapData();
     void sanityCheck();
-    map<string, int> textureToIndexMap_;
+    map<int, int> textureKeyToIndexMap_;
     vector<TileData> mapData_;
     uint projectionId_;
     uint tintId_;

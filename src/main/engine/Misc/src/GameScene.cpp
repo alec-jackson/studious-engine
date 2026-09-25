@@ -58,7 +58,7 @@ void GameScene::refresh() {
     }
 }
 
-void GameScene::update(CameraObject *camera, ProcessMgr *executor) {
+void GameScene::update(CameraObject *camera, ProcessMgr *executor, GfxController *gfx) {
     std::unique_lock<std::mutex> scopeLock(sceneLock_);
     if (camera == nullptr) {
         fprintf(stderr, "GameScene::update: Camera missing!\n");
@@ -69,6 +69,8 @@ void GameScene::update(CameraObject *camera, ProcessMgr *executor) {
     auto orthoMat = camera->getOrthographic();
     auto orthoMatBase = camera->getOrthographicBase();
     for (auto &obj : renderPriorityMap_) {
+        // Clear buffer depth between render layers
+        gfx->clear(GfxClearMode::DEPTH);
         auto objList = obj.second;
         for (auto objPtr : objList) {
             objPtr->setResolution(resolution);

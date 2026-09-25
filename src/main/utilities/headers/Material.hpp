@@ -14,7 +14,9 @@ using std::string;
 struct Material {
     float Ns;
     vec3 Ka;
-    vec3 Kd;
+    // This gives the "studious classic" look to objects with a material
+    // defined, but no albedo.
+    vec3 Kd = vec3(0.35, 0.35, 0.35);
     vec3 Ks;
     vec3 Ke;
     float Ni;
