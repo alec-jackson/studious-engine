@@ -169,12 +169,12 @@ int runtime() {
 
     // Make the wolf spin :)
     auto kf = AnimationController::createKeyFrame(
-        ANIM_ROTATION,        // Rotate
+        UPDATE_ROTATION,        // Rotate
         5.0f);                 // Spin for 5 seconds
 
     kf->rotation.desired = vec3(0.0f, 0.0f, 720.0f);
     auto kf1 = AnimationController::createKeyFrame(
-        ANIM_ROTATION,   // Rotate and move
+        UPDATE_ROTATION,   // Rotate and move
         5.0f);                          // seconds
 
     kf1->rotation.desired = vec3(0.0f, 360.0f, 720.0f);

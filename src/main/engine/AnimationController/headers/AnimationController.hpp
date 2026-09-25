@@ -26,16 +26,16 @@
 #include <studious_utility.hpp>
 
 // Update return values
-#define ANIM_NONE       (0)
-#define ANIM_POSITION   (1<<0)
-#define ANIM_STRETCH    (1<<1)
-#define ANIM_TEXT       (1<<2)
-#define ANIM_TIME       (1<<3)
-#define ANIM_ROTATION   (1<<4)
-#define ANIM_SCALE      (1<<5)
-#define ANIM_COLOR      (1<<6)
-#define ANIM_TINT       (1<<7)
-#define ANIM_DELTA      (1<<8)
+#define UPDATE_NONE       (0)
+#define UPDATE_POSITION   (1<<0)
+#define UPDATE_STRETCH    (1<<1)
+#define UPDATE_TEXT       (1<<2)
+#define UPDATE_TIME       (1<<3)
+#define UPDATE_ROTATION   (1<<4)
+#define UPDATE_SCALE      (1<<5)
+#define UPDATE_COLOR      (1<<6)
+#define UPDATE_TINT       (1<<7)
+#define UPDATE_DELTA      (1<<8)
 
 #define ANIM_FINISHED_MASK 0x01FF
 

@@ -190,28 +190,28 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
         currentKf->rotation.original = target->getRotationRaw();
         currentKf->scale.original = target->getScaleRaw();
         // Use stretch if UI object
-        if (currentKf->type & ANIM_STRETCH) {
+        if (currentKf->type & UPDATE_STRETCH) {
             assert(target->type() == ObjectType::UI_OBJECT);
             auto cTarget = static_cast<UiObject *>(target);
             currentKf->stretch.original = cTarget->getStretch();
         }
-        if (currentKf->type & ANIM_TEXT) {
+        if (currentKf->type & UPDATE_TEXT) {
             assert(target->type() == ObjectType::TEXT_OBJECT);
             auto cTarget = static_cast<TextObject *>(target);
             currentKf->text.original = cTarget->getMessage();
         }
-        if (currentKf->type & ANIM_COLOR) {
+        if (currentKf->type & UPDATE_COLOR) {
             assert(target->type() == ObjectType::TEXT_OBJECT);
             auto cTarget = static_cast<TextObject *>(target);
             currentKf->color.original = cTarget->getColor();
         }
-        if (currentKf->type & ANIM_TINT) {
+        if (currentKf->type & UPDATE_TINT) {
             auto imEx = dynamic_cast<ImageExt *>(target);
             currentKf->tint.original = imEx->getTint();
         }
     }
 
-    auto result = ANIM_NONE;
+    auto result = UPDATE_NONE;
     auto done = ANIM_FINISHED_MASK;
     auto &currentTime = currentKf->currentTime;
     auto &targetTime = currentKf->targetTime;
@@ -290,8 +290,8 @@ void AnimationController::update() {
 
 int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has POSITION
-    if (!(keyFrame->type & ANIM_POSITION)) {
-        return ANIM_POSITION;
+    if (!(keyFrame->type & UPDATE_POSITION)) {
+        return UPDATE_POSITION;
     }
     auto result = updateVector(
         keyFrame->pos.original,
@@ -300,13 +300,13 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
 
     target->setPosition(result.updatedValue_);
 
-    return (result.updateComplete_) ? ANIM_POSITION : ANIM_NONE;
+    return (result.updateComplete_) ? UPDATE_POSITION : UPDATE_NONE;
 }
 
 int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has POSITION
-    if (!(keyFrame->type & ANIM_ROTATION)) {
-        return ANIM_ROTATION;
+    if (!(keyFrame->type & UPDATE_ROTATION)) {
+        return UPDATE_ROTATION;
     }
     auto result = updateVector(
         keyFrame->rotation.original,
@@ -315,13 +315,13 @@ int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame)
 
     target->setRotation(result.updatedValue_);
 
-    return (result.updateComplete_) ? ANIM_ROTATION : ANIM_NONE;
+    return (result.updateComplete_) ? UPDATE_ROTATION : UPDATE_NONE;
 }
 
 int AnimationController::updateScale(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has POSITION
-    if (!(keyFrame->type & ANIM_SCALE)) {
-        return ANIM_SCALE;
+    if (!(keyFrame->type & UPDATE_SCALE)) {
+        return UPDATE_SCALE;
     }
     auto result = updateFloat(
         keyFrame->scale.original,
@@ -330,13 +330,13 @@ int AnimationController::updateScale(SceneObject *target, KeyFrame *keyFrame) {
 
     target->setScale(result.updatedValue_);
 
-    return (result.updateComplete_) ? ANIM_SCALE : ANIM_NONE;
+    return (result.updateComplete_) ? UPDATE_SCALE : UPDATE_NONE;
 }
 
 int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type is stretch
-    if (!(keyFrame->type & ANIM_STRETCH)) {
-        return ANIM_STRETCH;
+    if (!(keyFrame->type & UPDATE_STRETCH)) {
+        return UPDATE_STRETCH;
     }
     // Update the stretch components for the target (if supported)
     if (target->type() != ObjectType::UI_OBJECT) {
@@ -353,13 +353,13 @@ int AnimationController::updateStretch(SceneObject *target, KeyFrame *keyFrame) 
     cTarget->setWStretch(updated.updatedValue_.x);
     cTarget->setHStretch(updated.updatedValue_.y);
 
-    return (updated.updateComplete_) ? ANIM_STRETCH : ANIM_NONE;
+    return (updated.updateComplete_) ? UPDATE_STRETCH : UPDATE_NONE;
 }
 
 int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has COLOR
-    if (!(keyFrame->type & ANIM_COLOR)) {
-        return ANIM_COLOR;
+    if (!(keyFrame->type & UPDATE_COLOR)) {
+        return UPDATE_COLOR;
     }
     // Check if the target is a text object
     if (target->type() != ObjectType::TEXT_OBJECT) {
@@ -377,13 +377,13 @@ int AnimationController::updateColor(SceneObject *target, KeyFrame *keyFrame) {
 
     cTarget->setColor(result.updatedValue_);
 
-    return (result.updateComplete_) ? ANIM_COLOR : ANIM_NONE;
+    return (result.updateComplete_) ? UPDATE_COLOR : UPDATE_NONE;
 }
 
 int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has COLOR
-    if (!(keyFrame->type & ANIM_TINT)) {
-        return ANIM_TINT;
+    if (!(keyFrame->type & UPDATE_TINT)) {
+        return UPDATE_TINT;
     }
     // This is the pattern that should be followed for stuff like this:
     auto imEx = dynamic_cast<ImageExt *>(target);
@@ -392,7 +392,7 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
             "AnimationController::updateTint: Image Extension NOT present in object %s!\n",
             target->objectName().c_str());
         assert(0);
-        return ANIM_TINT;
+        return UPDATE_TINT;
     }
     auto result = updateVector(
         keyFrame->tint.original,
@@ -401,16 +401,16 @@ int AnimationController::updateTint(SceneObject *target, KeyFrame *keyFrame) {
 
     imEx->setTint(result.updatedValue_);
 
-    return (result.updateComplete_) ? ANIM_TINT : ANIM_NONE;
+    return (result.updateComplete_) ? UPDATE_TINT : UPDATE_NONE;
 }
 
 int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
-    if (!(keyFrame->type & ANIM_DELTA) || keyFrame->deltaObject.terminated) {
-        return ANIM_DELTA;
+    if (!(keyFrame->type & UPDATE_DELTA) || keyFrame->deltaObject.terminated) {
+        return UPDATE_DELTA;
     }
     if (!keyFrame->deltaObject.deltaFunc) {
         printf("AnimationController::updateDelta: Invalid deltaFunc - skipping\n");
-        return ANIM_DELTA;
+        return UPDATE_DELTA;
     }
     // Refresh delta time counter independently
     keyFrame->currentDTime += deltaTime;
@@ -443,7 +443,7 @@ int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
             keyFrame->deltaObject.updateFunc(target);
     }
 
-    return (result) ? ANIM_DELTA : ANIM_NONE;
+    return (result) ? UPDATE_DELTA : UPDATE_NONE;
 }
 
 float AnimationController::linearFloatTransform(float original, float desired, KeyFrame *keyFrame) {
@@ -499,8 +499,8 @@ UpdateData<string> AnimationController::updateString(string original, string des
 
 int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
     // Check if the keyframe type has text
-    if (!(keyFrame->type & ANIM_TEXT)) {
-        return ANIM_TEXT;
+    if (!(keyFrame->type & UPDATE_TEXT)) {
+        return UPDATE_TEXT;
     }
     // Check if the target is a text object
     if (target->type() != ObjectType::TEXT_OBJECT) {
@@ -519,14 +519,14 @@ int AnimationController::updateText(SceneObject *target, KeyFrame *keyFrame) {
 
     cTarget->setMessage(result.updatedValue_);
 
-    return result.updateComplete_ ? ANIM_TEXT : ANIM_NONE;
+    return result.updateComplete_ ? UPDATE_TEXT : UPDATE_NONE;
 }
 
 int AnimationController::updateTime(SceneObject *target[[maybe_unused]], KeyFrame *keyFrame) {
     // Literally just check if we've reached the time quota
-    auto result = ANIM_NONE;
+    auto result = UPDATE_NONE;
     if (keyFrame->currentTime >= keyFrame->targetTime) {
-        result = ANIM_TIME;
+        result = UPDATE_TIME;
     }
     return result;
 }
