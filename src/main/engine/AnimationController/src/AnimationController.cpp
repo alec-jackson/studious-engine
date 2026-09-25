@@ -430,7 +430,6 @@ int AnimationController::updateDelta(SceneObject *target, KeyFrame *keyFrame) {
     // Call deltaFunc up to targetUpdate count
     for (int i = prevUpdates; i < targetUpdates; ++i) {
         result = keyFrame->deltaObject.deltaFunc(target);
-        printf("Running delta func %d\n", i);
         if (result) {
             keyFrame->deltaObject.terminated = true;
             break;
