@@ -18,14 +18,14 @@
 #include <ImageExt.hpp>
 #include <SceneObject.hpp>
 
-std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time) {
+std::shared_ptr<KeyFrame> AnimationController::createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, double time) {
     auto keyframe = createKeyFrame(type, time);
     keyframe->callback = callback;
     keyframe->hasCb = true;
     return keyframe;
 }
 
-std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, float time) {
+std::shared_ptr<KeyFrame> AnimationController::createKeyFrame(int type, double time) {
     auto keyframe = std::make_shared<KeyFrame>();
     keyframe->targetTime = time;
     keyframe->currentTime = 0.0f;
@@ -181,8 +181,8 @@ int AnimationController::addKeyFrame(SceneObject *target, std::shared_ptr<KeyFra
     return kfQueueSize;
 }
 
-UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf,
-    float timeChange) {
+UpdateData<double> AnimationController::updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf,
+    double timeChange) {
     // If this is a brand new keyframe, set original values...
     if (currentKf->isNew) {
         currentKf->isNew = false;
@@ -228,7 +228,7 @@ UpdateData<float> AnimationController::updateKeyFrame(SceneObject *target, std::
     result |= updateColor(target, currentKf.get());
     result |= updateTint(target, currentKf.get());
     result |= updateDelta(target, currentKf.get());
-    return UpdateData<float>(overflowTime - targetTime, (result == done));
+    return UpdateData<double>(overflowTime - targetTime, (result == done));
 }
 
 void AnimationController::update() {
@@ -237,7 +237,7 @@ void AnimationController::update() {
     vector<std::function<void(void)>> callbacks;
     vector<string> deferredDelete;
     auto isOverflow = false;
-    float timeChange = deltaTime;
+    double timeChange = deltaTime;
     // Run update methods on each object here
     for (auto &entry : keyFrameStore_) {
         do {

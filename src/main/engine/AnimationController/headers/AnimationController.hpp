@@ -101,12 +101,12 @@ struct TrackStoreEntry {
 struct ActiveTrackEntry {
     TrackState state = TrackState::RUNNING;
     std::shared_ptr<TrackConfiguration> track;
-    float secondsPerFrame;
-    float sequenceTime;
-    float currentTime = 0.0f;
+    double secondsPerFrame;
+    double sequenceTime;
+    double currentTime = 0.0;
     int currentTrackIdx;
     TrackExt *target;
-    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, float sPF, float sT, int cTI, TrackExt *ta) :
+    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, double sPF, double sT, int cTI, TrackExt *ta) :
         track { tr }, secondsPerFrame { sPF }, sequenceTime { sT }, currentTrackIdx { cTI }, target { ta } {};
 };
 
@@ -119,10 +119,10 @@ struct KeyFrame {
     AnimationData<vec4> color;
     AnimationData<vec4> tint;
     DeltaObject deltaObject;
-    float targetTime;
-    float currentTime = 0.0f;
-    float currentDTime = 0.0f;
-    float lastDTime = 0.0f;
+    double targetTime;
+    double currentTime = 0.0f;
+    double currentDTime = 0.0f;
+    double lastDTime = 0.0f;
     int type;
     ANIMATION_COMPLETE_CB;
     bool hasCb;
@@ -145,7 +145,7 @@ class AnimationController {
     int addKeyFrameEntry(KeyFrameEntry kfEntry);
     void addTrack(TrackExt *target, string trackName, vector<int> trackData, int fps, bool loop);
     void update();
-    UpdateData<float> updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, float timeChange);
+    UpdateData<double> updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, double timeChange);
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateRotation(SceneObject *target, KeyFrame *keyFrame);
     int updateScale(SceneObject *target, KeyFrame *keyFrame);
@@ -163,8 +163,8 @@ class AnimationController {
     int updateTint(SceneObject *target, KeyFrame *keyFrame);
     int updateDelta(SceneObject *target, KeyFrame *keyFrame);
     bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
-    static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
-    static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
+    static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, double time);
+    static std::shared_ptr<KeyFrame> createKeyFrame(int type, double time);
     static bool cap(float *cur, float target, float dv);
     float linearFloatTransform(float original, float desired, KeyFrame *keyFrame);
     /**
