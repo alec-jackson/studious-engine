@@ -172,6 +172,7 @@ void TextObject::update() {
  * @param message Incoming message to set TextObject to.
  */
 void TextObject::setMessage(string message) {
+    SLK sl(objectLock_);
     if (!message.compare(message_)) return;
     // Perform cleanup on existing VAOs
     gfxController_->bindVao(0);

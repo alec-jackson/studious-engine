@@ -29,6 +29,7 @@ class GameObject2D : public SceneObject, public TrackExt, public ImageExt, publi
     void render() override;
     void update() override;
     void initializeTextureData();
+    void processTextureDataRaw(ImageData image);
     virtual void initializeShaderVars() = 0;
     void initializeVertexData();
     void createCollider(string tag) override;

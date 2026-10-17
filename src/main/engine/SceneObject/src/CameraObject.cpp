@@ -28,7 +28,7 @@ CameraObject::~CameraObject() {
 void CameraObject::render() {
     vec3 eye = vec3(0);
     vec3 center = vec3(0.0f, 0.01f, 0.0f);
-    orthographicMatrix_ = ortho(0.0f, 1280.0f, 0.0f, 720.0f, -1.0f, 1.0f);
+    orthographicMatrix_ = ortho(0.0f, 1280.0f, 0.0f, 720.0f, -15.0f, 10.0f);
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
     mat4 viewMatrix(1.0f);

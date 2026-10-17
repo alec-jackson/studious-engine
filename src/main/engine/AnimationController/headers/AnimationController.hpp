@@ -26,31 +26,24 @@
 #include <studious_utility.hpp>
 
 // Update return values
-#define UPDATE_NOT_COMPLETE 0
-#define POSITION_MET 1
-#define STRETCH_MET 2
-#define TEXT_MET 4
-#define TIME_MET 8
-#define ROTATION_MET 16
-#define SCALE_MET 32
-#define COLOR_MET 64
-#define TINT_MET 128
+#define UPDATE_NONE       (0)
+#define UPDATE_POSITION   (1<<0)
+#define UPDATE_STRETCH    (1<<1)
+#define UPDATE_TEXT       (1<<2)
+#define UPDATE_TIME       (1<<3)
+#define UPDATE_ROTATION   (1<<4)
+#define UPDATE_SCALE      (1<<5)
+#define UPDATE_COLOR      (1<<6)
+#define UPDATE_TINT       (1<<7)
+#define UPDATE_DELTA      (1<<8)
 
-// Update Types
-#define UPDATE_NONE 0
-#define UPDATE_POS 1
-#define UPDATE_STRETCH 2
-#define UPDATE_TEXT 4
-#define UPDATE_TIME 8
-#define UPDATE_ROTATION 16
-#define UPDATE_SCALE 32
-#define UPDATE_COLOR 64
-#define UPDATE_TINT 128
+#define ANIM_FINISHED_MASK 0x01FF
 
 // MISC
 #define CAP_POS 1
 #define CAP_NEG 2
 #define ANIMATION_COMPLETE_CB std::function<void(void)> callback
+#define MAX_DELTA_UPDATES 4000
 
 extern double deltaTime;
 
@@ -86,6 +79,13 @@ struct TrackConfiguration {
         trackData { tD }, trackName { tN }, targetFps { tF }, loop { l } {};
 };
 
+struct DeltaObject {
+    std::function<bool(SceneObject *)> deltaFunc;
+    std::function<void(SceneObject *)> updateFunc;
+    bool terminated = false;
+    double updatesPerSecond;
+};
+
 /**
  * @brief Contains a set of tracks for a target object.
  */
@@ -101,12 +101,12 @@ struct TrackStoreEntry {
 struct ActiveTrackEntry {
     TrackState state = TrackState::RUNNING;
     std::shared_ptr<TrackConfiguration> track;
-    float secondsPerFrame;
-    float sequenceTime;
-    float currentTime = 0.0f;
+    double secondsPerFrame;
+    double sequenceTime;
+    double currentTime = 0.0;
     int currentTrackIdx;
     TrackExt *target;
-    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, float sPF, float sT, int cTI, TrackExt *ta) :
+    inline ActiveTrackEntry(std::shared_ptr<TrackConfiguration> tr, double sPF, double sT, int cTI, TrackExt *ta) :
         track { tr }, secondsPerFrame { sPF }, sequenceTime { sT }, currentTrackIdx { cTI }, target { ta } {};
 };
 
@@ -118,8 +118,11 @@ struct KeyFrame {
     AnimationData<float> scale;
     AnimationData<vec4> color;
     AnimationData<vec4> tint;
-    float targetTime;
-    float currentTime = 0.0f;
+    DeltaObject deltaObject;
+    double targetTime;
+    double currentTime = 0.0f;
+    double currentDTime = 0.0f;
+    double lastDTime = 0.0f;
     int type;
     ANIMATION_COMPLETE_CB;
     bool hasCb;
@@ -142,13 +145,13 @@ class AnimationController {
     int addKeyFrameEntry(KeyFrameEntry kfEntry);
     void addTrack(TrackExt *target, string trackName, vector<int> trackData, int fps, bool loop);
     void update();
-    UpdateData<float> updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, float timeChange);
+    UpdateData<double> updateKeyFrame(SceneObject *target, std::shared_ptr<KeyFrame> currentKf, double timeChange);
     int updatePosition(SceneObject *target, KeyFrame *keyFrame);
     int updateRotation(SceneObject *target, KeyFrame *keyFrame);
     int updateScale(SceneObject *target, KeyFrame *keyFrame);
     int updateStretch(SceneObject *target, KeyFrame *keyFrame);
     int updateText(SceneObject *target, KeyFrame *keyFrame);
-    int updateTime(KeyFrame *keyFrame);
+    int updateTime(SceneObject *target, KeyFrame *keyFrame);
     /**
      * @brief Processes the color keyframe if applicable using deltaTime.
      * @param target - The SceneObject to apply the animation to.
@@ -158,9 +161,10 @@ class AnimationController {
      */
     int updateColor(SceneObject *target, KeyFrame *keyFrame);
     int updateTint(SceneObject *target, KeyFrame *keyFrame);
+    int updateDelta(SceneObject *target, KeyFrame *keyFrame);
     bool updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback);
-    static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, float time);
-    static std::shared_ptr<KeyFrame> createKeyFrame(int type, float time);
+    static std::shared_ptr<KeyFrame> createKeyFrameCb(int type, ANIMATION_COMPLETE_CB, double time);
+    static std::shared_ptr<KeyFrame> createKeyFrame(int type, double time);
     static bool cap(float *cur, float target, float dv);
     float linearFloatTransform(float original, float desired, KeyFrame *keyFrame);
     /**

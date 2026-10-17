@@ -11,11 +11,11 @@ uniform mat4 model;
 uniform mat4 VP;
 uniform vec3 directionalLight;
 uniform float rollOff;
+uniform vec3 Kd;
 
 out vec3 Color;
 
 const vec3 ka = 0.3*vec3(.5, 0.5, 0.5);
-const vec3 kd = 0.7*vec3(.5, 0.5, 0.5);
 
 void main() {
   vec3 lightPosition = directionalLight;
@@ -30,7 +30,7 @@ void main() {
   f_texcoord = texcoord;
 
   intensity = max(0.0, intensity);
-  intensity = (400.0 * intensity) / (distance * distance * 0.4);
+  intensity = (400 * intensity) / (distance * distance * 0.4);
 
-  Color = intensity * LightIntensity * kd + ka;
+  Color = intensity * LightIntensity * Kd + ka;
 }
