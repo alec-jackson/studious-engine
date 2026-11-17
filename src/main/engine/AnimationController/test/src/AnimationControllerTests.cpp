@@ -433,7 +433,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenSecondKeyFrameAddedForObject_ThenBot
     int expKfStoreSize = 1;
     int expQueueSize = 2;
     auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_NONE, expTimeFirst);
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POSITION, expTimeSecond);
+    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, expTimeSecond);
 
     /* Action */
     animationController_.addKeyFrame(&obj, keyFrame_1);
@@ -449,7 +449,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenSecondKeyFrameAddedForObject_ThenBot
     ASSERT_EQ(expTimeFirst, kfStore.at(DUMMY_OBJ_NAME).kQueue.front().get()->targetTime);
     ASSERT_EQ(UPDATE_NONE, kfStore.at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
     ASSERT_EQ(expTimeSecond, kfStore.at(DUMMY_OBJ_NAME).kQueue.back().get()->targetTime);
-    ASSERT_EQ(UPDATE_POSITION, kfStore.at(DUMMY_OBJ_NAME).kQueue.back().get()->type);
+    ASSERT_EQ(UPDATE_POS, kfStore.at(DUMMY_OBJ_NAME).kQueue.back().get()->type);
 }
 
 /**
@@ -661,7 +661,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletes_ThenFinalVectorTra
     float targetTime = 3.0f;
     deltaTime = 1.0f;
     vec3 expectedTransformation = desiredPosition;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POSITION, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 
     obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
@@ -690,7 +690,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesEntirely_ThenFinalV
     float targetTime = 3.0f;
     deltaTime = 3.0f;
     vec3 expectedTransformation = desiredPosition;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POSITION, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 
     obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
@@ -718,7 +718,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesWithOverflow_ThenFi
     float targetTime = 3.0f;
     deltaTime = 7.0f;
     vec3 expectedTransformation = desiredPosition;
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POSITION, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 
     obj.setPosition(originalPosition);
     keyFrame_1.get()->pos.desired = desiredPosition;
@@ -751,8 +751,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFramesAddedForMultipleObjects_The
         ((desiredPosition - originalPosition_1) * vec3((deltaTime) / targetTime));
     vec3 expectedTransformation_2 = originalPosition_2 +
         ((desiredPosition - originalPosition_2) * vec3((deltaTime) / targetTime));
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POSITION, targetTime);
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POSITION, targetTime);
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
+    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime);
 
     obj_1.setPosition(originalPosition_1);
     obj_2.setPosition(originalPosition_2);
@@ -797,8 +797,8 @@ TEST_F(GivenAnAnimationControllerReady, WhenKeyFrameCompletesForOneObject_ThenOt
     vec3 expectedTransformation_1 = desiredPosition;  // This keyframe should complete
     vec3 expectedTransformation_2 = originalPosition_2 +
         ((desiredPosition - originalPosition_2) * vec3(deltaTime / targetTime_2));
-    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POSITION, targetTime_1);
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POSITION, targetTime_2);
+    auto keyFrame_1 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_1);
+    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_2);
 
     obj_1.setPosition(originalPosition_1);
     obj_2.setPosition(originalPosition_2);
@@ -863,7 +863,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockO
     float targetTime_2 = 5.0f;  // Different target time for the second keyframe
     deltaTime = 3.0f;
 
-    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POSITION, targetTime_2);
+    auto keyFrame_2 = AnimationController::createKeyFrame(UPDATE_POS, targetTime_2);
     auto addKfCb = [&keyFrame_2, &obj, this]() {
         animationController_.addKeyFrame(&obj, keyFrame_2);
     };
@@ -882,7 +882,7 @@ TEST_F(GivenAnAnimationControllerReady, WhenCallbackAddsKeyFrame_ThenNoDeadLockO
     // The second keyframe should be in the queue
     ASSERT_EQ(1, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.size());
     // The second keyframe should be the one we added
-    ASSERT_EQ(UPDATE_POSITION, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
+    ASSERT_EQ(UPDATE_POS, animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->type);
     ASSERT_EQ(targetTime_2,
         animationController_.getKeyFrameStore().at(DUMMY_OBJ_NAME).kQueue.front().get()->targetTime);
 }

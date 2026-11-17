@@ -27,7 +27,7 @@
 
 // Update return values
 #define UPDATE_NONE       (0)
-#define UPDATE_POSITION   (1<<0)
+#define UPDATE_POS        (1<<0)
 #define UPDATE_STRETCH    (1<<1)
 #define UPDATE_TEXT       (1<<2)
 #define UPDATE_TIME       (1<<3)

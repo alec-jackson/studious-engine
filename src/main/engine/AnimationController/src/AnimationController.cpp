@@ -290,8 +290,8 @@ void AnimationController::update() {
 
 int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame) {
     // Only update if the keyframe type has POSITION
-    if (!(keyFrame->type & UPDATE_POSITION)) {
-        return UPDATE_POSITION;
+    if (!(keyFrame->type & UPDATE_POS)) {
+        return UPDATE_POS;
     }
     auto result = updateVector(
         keyFrame->pos.original,
@@ -300,7 +300,7 @@ int AnimationController::updatePosition(SceneObject *target, KeyFrame *keyFrame)
 
     target->setPosition(result.updatedValue_);
 
-    return (result.updateComplete_) ? UPDATE_POSITION : UPDATE_NONE;
+    return (result.updateComplete_) ? UPDATE_POS : UPDATE_NONE;
 }
 
 int AnimationController::updateRotation(SceneObject *target, KeyFrame *keyFrame) {
