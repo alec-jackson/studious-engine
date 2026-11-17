@@ -330,6 +330,28 @@ TEST_F(GivenAnAnimationControllerToTestRunning, WhenPausedInMiddleOfPlayback_The
 }
 
 /**
+ * @brief Ensures that calling PLAY on an animation track does not restart that animation track.
+ */
+TEST_F(GivenAnAnimationControllerToTestRunning, WhenPlayedInMiddleOfPlayback_ThenPlayDoesNotRestart) {
+    /* Preparation */
+    int framesPassedStart = 2;
+    int framesPassedEnd = 4;
+    deltaTime = (1.0 / TARGET_FPS) * INDEX_SHIFT * framesPassedStart;
+    animationController_.update();
+    /* Make sure the animation updated (sanity check) */
+    EXPECT_EQ(spriteObject_->getCurrentFrame(), REFERENCE_TRACK.at(framesPassedStart));
+    EXPECT_EQ(activeTracks_.at(DUMMY_OBJ_NAME)->currentTrackIdx, framesPassedStart);
+
+    /* Action */
+    /* Play animation when already running */
+    animationController_.playTrack(DUMMY_TRACK_NAME);
+    animationController_.update();
+
+    /* Validation - Track should progress further than before */
+    validateActiveTracks(1, TrackState::RUNNING, INDEX_SHIFT * framesPassedEnd);
+}
+
+/**
  * @brief Ensures that float values are updated as expected for linear transformations. The scenario for updating the
  * float value is described below:
  *
