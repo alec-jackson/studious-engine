@@ -87,8 +87,8 @@ void AnimationController::addTrack(TrackExt *target, string trackName, vector<in
  * @param trackName The name of the track to play.
  * @note Will return early and not play the animation if the track does not exist. If the active track for the object
  * the same as the queried one through trackName, then there are some special cases. If the active track was paused,
- * then it will be resumed WHERE IT LEFT OFF. If the active track is currently running, then it will be replaced and
- * started from the beginning. This is a slight nuance, but is important to know about for proper usage.
+ * then it will be resumed WHERE IT LEFT OFF. If the active track is currently running, then it will be IGNORED.
+ * This is a slight nuance, but is important to know about for proper usage.
  */
 void AnimationController::playTrack(string trackName) {
     std::unique_lock<std::mutex> scopeLock(controllerLock_);
@@ -105,28 +105,34 @@ void AnimationController::playTrack(string trackName) {
     /* Check if the animation is still in the active list */
     auto ait = activeTracks_.find(objectName);
     if (ait != activeTracks_.end()) {
-        auto match = ait->second.get()->track.get()->trackName.compare(trackName);
-        auto &state = ait->second.get()->state;
-        /* If the active track is the same track, let's resume it if paused... */
-        if (!match && state == TrackState::PAUSED) {
-            /* Resume the animation from where it left off if so */
-            ait->second.get()->state = TrackState::RUNNING;
-            printf("AnimationController::playTrack: Resuming previously active track %s\n",
-                trackName.c_str());
-            return;
+        auto match = ait->second->track->trackName.compare(trackName) == 0;
+        auto &state = ait->second->state;
+        if (match) {
+            switch (state) {
+                /* If the active track is the same track, let's resume it if paused... */
+                case TrackState::PAUSED:
+                    /* Resume the animation from where it left off if so */
+                    ait->second->state = TrackState::RUNNING;
+                    printf("AnimationController::playTrack: Resuming previously active track %s\n",
+                        trackName.c_str());
+                    return;
+                case TrackState::RUNNING:
+                    /* Do nothing if already running */
+                    return;
+                default:
+                    break;
+            }
         }
-        /* If the track is already running, we'll just fall through and restart it */
     }
     // Create a ActiveTrackEntry and add it to the playing queue
-    float secondsPerFrame = 1.0 / tsit->second.track.get()->targetFps;
-    printf("AnimationController::playTrack: Starting track %s\n",
-        trackName.c_str());
+    float secondsPerFrame = 1.0 / tsit->second.track->targetFps;
     auto tp = std::make_shared<ActiveTrackEntry>(
         tsit->second.track,
         secondsPerFrame,
         secondsPerFrame * tsit->second.track->trackData.size(),
         0,
         trackPtr);
+    tp->state = TrackState::RUNNING;
     activeTracks_[objectName] = tp;
 }
 
@@ -147,7 +153,7 @@ void AnimationController::pauseTrack(string trackName) {
     auto objectName = sit->second.target->getObj()->objectName();
     auto it = activeTracks_.find(objectName);
     if (it != activeTracks_.end()) {
-        it->second.get()->state = TrackState::PAUSED;
+        it->second->state = TrackState::PAUSED;
     } else {
         fprintf(stderr, "AnimationController::pauseTrack: %s has no active animations.",
             objectName.c_str());
@@ -537,23 +543,23 @@ int AnimationController::updateTime(SceneObject *target[[maybe_unused]], KeyFram
  * @return true if the track is complete, false if it's still ongoing.
  */
 bool AnimationController::updateTrack(std::shared_ptr<ActiveTrackEntry> trackPlayback) {
-    auto tp = trackPlayback.get();
-    auto target = trackPlayback.get()->target;
-    auto track = tp->track.get()->trackData;
+    auto tp = trackPlayback;
+    auto target = trackPlayback->target;
+    auto track = tp->track->trackData;
     /* Update timings and current frame */
     tp->currentTime += deltaTime;
     /* Break the update early if loop is enabled */
-    if (!tp->track.get()->loop && tp->currentTime >= tp->sequenceTime) {
-        target->setCurrentFrame(tp->track.get()->trackData.at(tp->track.get()->trackData.size() - 1));
+    if (!tp->track->loop && tp->currentTime >= tp->sequenceTime) {
+        target->setCurrentFrame(tp->track->trackData.at(tp->track->trackData.size() - 1));
         return true;
     }
     /* Wrap time around sequence time */
     tp->currentTime = std::fmod(tp->currentTime, tp->sequenceTime);
     /* Determine current frame based on current time */
-    int trackIdx = (tp->currentTime / tp->sequenceTime) * tp->track.get()->trackData.size();
+    int trackIdx = (tp->currentTime / tp->sequenceTime) * tp->track->trackData.size();
     tp->currentTrackIdx = trackIdx;
     /* Grab the real frame number with the track idx */
-    auto frameNumber = tp->track.get()->trackData.at(trackIdx);
+    auto frameNumber = tp->track->trackData.at(trackIdx);
     /* Set the sprite object's frame number to the frame number calculated */
     target->setCurrentFrame(frameNumber);
     return false;
