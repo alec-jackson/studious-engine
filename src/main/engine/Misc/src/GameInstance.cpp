@@ -464,7 +464,7 @@ VEC(GameObject *) GameInstance::createGameObjectBatch(SHD(Polygon) characterMode
         objects.push_back(createGameObject(subPoly, position, rotation, scale,
             objectName + entry.first + "." + std::to_string(index++)));
     }
-    printf("GameInstance::createGameObjectBatch:[%s] Created %lu objects\n", objectName.c_str(),
+    printf("GameInstance::createGameObjectBatch:[%s] Created %zu objects\n", objectName.c_str(),
         objects.size());
     return objects;
 }
