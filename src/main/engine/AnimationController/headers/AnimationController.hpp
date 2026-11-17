@@ -64,7 +64,9 @@ class UpdateData {
 
 enum class TrackState {
     PAUSED,
-    RUNNING
+    RUNNING,
+    COMPLETED,
+    FAILED
 };
 
 /**
