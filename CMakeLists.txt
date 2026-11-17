@@ -119,9 +119,7 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC ${FREETYPE_LIBRARIES}
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
-
 
 if (GTest_FOUND AND RUNTEST)
 # ======================================== ModelImportTests ========================================
