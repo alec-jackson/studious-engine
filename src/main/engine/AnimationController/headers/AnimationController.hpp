@@ -99,7 +99,7 @@ struct TrackStoreEntry {
  * for an active animation track.
  */
 struct ActiveTrackEntry {
-    TrackState state = TrackState::PAUSED;
+    TrackState state = TrackState::RUNNING;
     std::shared_ptr<TrackConfiguration> track;
     double secondsPerFrame;
     double sequenceTime;

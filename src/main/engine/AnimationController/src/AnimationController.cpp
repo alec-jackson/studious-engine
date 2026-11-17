@@ -132,7 +132,6 @@ void AnimationController::playTrack(string trackName) {
         secondsPerFrame * tsit->second.track->trackData.size(),
         0,
         trackPtr);
-    tp->state = TrackState::RUNNING;
     activeTracks_[objectName] = tp;
 }
 
