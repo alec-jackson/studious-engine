@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 enable_testing()
-project(studious VERSION 1.0.0)
+project(studious VERSION 0.5.0) # This should match the github release
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -119,6 +120,8 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+
 
 if (GTest_FOUND AND RUNTEST)
 # ======================================== ModelImportTests ========================================
@@ -306,10 +309,4 @@ install (DIRECTORY
   src/main/opengl/headers/core
   src/main/opengl/headers/es
   DESTINATION include/studious
-)
-
-install(EXPORT studiousTargets
-    FILE studious-config.cmake
-    NAMESPACE studious::
-    DESTINATION lib/cmake/studious
 )
