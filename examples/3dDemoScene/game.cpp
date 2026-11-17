@@ -25,6 +25,8 @@
 #include <AnimationController.hpp>
 #include <FPSCameraObject.hpp>
 
+#define POS_TEXT_DEBUG 0
+
 // Global Variables, should eventually be moved to a config file
 map<string, string> soundList = {
     { "bg_music", "src/resources/sfx/music/endlessNight.wav" }
@@ -294,8 +296,8 @@ int mainLoop() {
     int error = 0;
     vector<double> times;
     auto fpsText = currentGame->getSceneObject<TextObject>("fps-text");
+#if POS_TEXT_DEBUG
     auto player = currentGame->getSceneObject("player");
-    vec3 lastPos = vec3(0);
     auto posText = currentGame->createText(
         "Textbox Example",
         vec3(600.0f, 15.0f, 0.0f),
@@ -306,16 +308,19 @@ int mainLoop() {
         0,
         "posText");
     char posTextBuf[128];
+    vec3 lastPos = vec3(0);
+#endif  // POS_TEXT_DEBUG
     while (!currentGame->isShutDown()) {
         if (inputController->pollInput(GameInput::QUIT)) currentGame->shutdown();
         error = currentGame->update();
+#if POS_TEXT_DEBUG
         // Get the player's position
         auto pos = player->getPosition();
-#define TSTR(x) std::to_string(x)
         snprintf(posTextBuf, sizeof(posTextBuf), "posText: X(%.2f), Y(%.2f), Z(%.2f)\n", pos.x, pos.y, pos.z);
         if (pos != lastPos)
             posText->setMessage(posTextBuf);
         lastPos = pos;
+#endif  // POS_TEXT_DEBUG
         if (error) {
             return error;
         }
