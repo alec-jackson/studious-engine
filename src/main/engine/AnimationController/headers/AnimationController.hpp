@@ -129,6 +129,13 @@ struct KeyFrame {
     ANIMATION_COMPLETE_CB;
     bool hasCb;
     bool isNew = true;
+    bool loop = false;
+
+    /**
+     * @brief Resets keyframe to original state.
+     * @param target - Target to apply original transformation to.
+     */
+    void resetKeyframe(SceneObject *target);
 };
 
 struct KeyFrames {

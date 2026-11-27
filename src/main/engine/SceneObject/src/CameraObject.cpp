@@ -26,8 +26,8 @@ CameraObject::~CameraObject() {
 }
 
 void CameraObject::render() {
-    vec3 eye = vec3(0);
-    vec3 center = vec3(0.0f, 0.01f, 0.0f);
+    vec3 eye = position;
+    vec3 center = center_;
     orthographicMatrix_ = ortho(0.0f, 1280.0f, 0.0f, 720.0f, -15.0f, 10.0f);
     mat4 projectionMatrix = perspective(radians(cameraAngle_), aspectRatio_,
         nearClipping_, farClipping_);
@@ -48,6 +48,9 @@ void CameraObject::render() {
         } else {
             viewMatrix = lookAt(eye, center, vec3(0, 1, 0));
         }
+    } else {
+        // When no target is present, use lookAt matrix
+        viewMatrix = lookAt(eye, center, vec3(0, 1, 0));
     }
     vpMatrixPerspective_ = projectionMatrix * viewMatrix * rotateMatrix_;
 }
