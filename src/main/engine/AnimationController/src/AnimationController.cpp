@@ -252,13 +252,18 @@ void AnimationController::update() {
             auto result = updateKeyFrame(target, currentKf, timeChange);
             // Only remove the keyframe when all updates are done...
             if (result.updateComplete_) {
-                printf("AnimationController::update: Finished keyframe for %s\n", target->objectName().c_str());
-                // Remove the keyframe from the queue
-                entry.second.kQueue.pop();
-                // Call the callback associated with the keyframe
-                if (currentKf->hasCb) callbacks.push_back(currentKf->callback);
-                if (entry.second.kQueue.empty())
-                    deferredDelete.push_back(entry.first);
+                if (currentKf->loop) {
+                    currentKf->resetKeyframe(target);
+                } else {
+                    printf("AnimationController::update: Finished keyframe for %s\n", target->objectName().c_str());
+                    // Do NOT remove the keyframe if looping is enabled
+                    // Remove the keyframe from the queue
+                    entry.second.kQueue.pop();
+                    // Call the callback associated with the keyframe
+                    if (currentKf->hasCb) callbacks.push_back(currentKf->callback);
+                    if (entry.second.kQueue.empty())
+                        deferredDelete.push_back(entry.first);
+                }
             }
             // Move onto the next key frame if overflow time has been detected and a next keyframe exists
             isOverflow = result.updatedValue_ > 0.0f && !entry.second.kQueue.empty();
@@ -586,4 +591,32 @@ void AnimationController::removeSceneObject(string objectName) {
     auto kfit = keyFrameStore_.find(objectName);
     if (kfit != keyFrameStore_.end())
         keyFrameStore_.erase(kfit);
+}
+
+void KeyFrame::resetKeyframe(SceneObject *target) {
+    if (type & UPDATE_POS) target->setPosition(pos.original);
+    if (type & UPDATE_STRETCH) {
+        assert(target->type() == ObjectType::UI_OBJECT);
+        auto cTarget = static_cast<UiObject *>(target);
+        cTarget->setWStretch(stretch.original.x);
+        cTarget->setHStretch(stretch.original.y);
+    }
+    if (type & UPDATE_TEXT) {
+        assert(target->type() == ObjectType::TEXT_OBJECT);
+        auto cTarget = static_cast<TextObject *>(target);
+        cTarget->setMessage(text.original);
+    }
+    if (type & UPDATE_ROTATION) target->setRotation(rotation.original);
+    if (type & UPDATE_SCALE) target->setScale(scale.original);
+    if (type & UPDATE_COLOR) {
+        assert(target->type() == ObjectType::TEXT_OBJECT);
+        auto cTarget = static_cast<TextObject *>(target);
+        cTarget->setColor(color.original);
+    }
+    if (type & UPDATE_TINT) {
+        auto imEx = dynamic_cast<ImageExt *>(target);
+        imEx->setTint(tint.original);
+    }
+    // No reset required for delta funcs... At least for now
+    currentTime = 0.0;
 }

@@ -26,7 +26,6 @@ class SpriteObject : public GameObject2D {
     // Gfx specific functions
     void initializeShaderVars() override;
     void initializeVertexData();
-    void processTextureDataRaw(ImageData image);
     void render() override;
     void update() override;
 

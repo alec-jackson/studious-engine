@@ -27,6 +27,7 @@ class CameraObject : public SceneObject {
     inline void setOffset(vec3 offset) { offset_ = offset; }
     inline void setAspectRatio(float aspectRatio) { aspectRatio_ = aspectRatio; }
     inline void setTarget(SceneObject *target) { target_ = target; }
+    inline void setCenter(vec3 center) { center_ = center; }
 
     // Getters
     inline vec3 getOffset() { return offset_; }
@@ -35,6 +36,7 @@ class CameraObject : public SceneObject {
     inline mat4 getPerspective() const { return vpMatrixPerspective_; }
     inline mat4 getOrthographic() const { return vpMatrixOrthographic_; }
     inline mat4 getOrthographicBase() const { return orthographicMatrix_; }
+    inline vec3 getCenter() const { return center_; }
 
     // Camera Specific Methods
     void render() override;
@@ -48,6 +50,8 @@ class CameraObject : public SceneObject {
     mat4 vpMatrixPerspective_;
     mat4 vpMatrixOrthographic_;
     mat4 orthographicMatrix_;
+
+    vec3 center_ = vec3(0.0f, 0.01f, 0.0f);
 
     float cameraAngle_;
     float aspectRatio_;

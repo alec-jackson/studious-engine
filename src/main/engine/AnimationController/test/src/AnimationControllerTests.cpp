@@ -1091,3 +1091,28 @@ TEST_F(GivenAnAnimationControllerReady, WhenDeltaFinished_ThenNoLongerUpdate) {
     ASSERT_EQ(expectedDeltaFuncCalls, deltaFuncCalls);
     ASSERT_EQ(expectedUpdateFuncCalls, updateFuncCalls);
 }
+
+/**
+ * @brief Ensures that animation looping works.
+ */
+TEST_F(GivenAnAnimationControllerReady, WhenLoopEnabled_ThenAnimationLoops) {
+    /* Preparation */
+    TestObject obj(DUMMY_OBJ_NAME);
+    obj.setPosition(vec3(0));
+    vec3 expectedPos = vec3(1, 1, 1);
+    float totalTime = 3.0f;
+    deltaTime = 2.0f;
+    auto kf = AnimationController::createKeyFrame(UPDATE_POS, totalTime);
+    kf->loop = true;
+    kf->pos.desired = vec3(3, 3, 3);
+    animationController_.addKeyFrame(&obj, kf);
+
+    /* Action */
+    animationController_.update();
+    animationController_.update();
+
+    /* Validation */
+    // After 4 total seconds, the object should be at (1,1,1)
+    ASSERT_VEC_EQ(obj.getPosition(), expectedPos);
+    ASSERT_EQ(animationController_.getKeyFrameStore().size(), 1);
+}
